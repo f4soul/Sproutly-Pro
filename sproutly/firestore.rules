@@ -1,0 +1,146 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: deposits
+    // Document ID: {userId}_{localId} or {uuid}
+    // Fields:
+    //   - userId: string (required) - Owner's UID
+    //   - bank: string (required) - Bank name
+    //   - amount: number (required) - Deposit amount
+    //   - rate: number (required) - Interest rate
+    //   - startDate: timestamp/string (required) - Opening date
+    //   - endDate: timestamp/string/null (optional) - Closing date
+    //   - currency: string (optional) - Currency symbol
+    //   - formula: string (optional) - Calculation formula
+    //   - isClosed: bool (optional) - Status
+    //   - isArchived: bool/number (optional) - Archive status
+    //   - splitIncome: bool (optional) - Income splitting
+    //   - sourceNote: string (optional) - Source information
+    //   - comment: string (optional) - User comment
+    //   - updatedAt: number (optional) - Sync timestamp
+    //
+    // Collection: userSettings
+    // Document ID: {userId}
+    // Fields:
+    //   - userId: string (required)
+    //   - theme: string (optional)
+    //   - bankSortOrder: string (optional)
+    //   - updatedAt: number (optional)
+    //
+    // Collection: banks
+    // Document ID: {userId}_{name}
+    // Fields:
+    //   - userId: string (required)
+    //   - name: string (required)
+    //   - logoUrl: string (optional)
+    //   - isCustom: bool (optional)
+    //   - updatedAt: number (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isNewDocOwner() {
+      return isAuthenticated() && request.auth.uid == request.resource.data.userId;
+    }
+
+    function isValidDate(date) {
+      return date is timestamp || date is string || date == null;
+    }
+
+    // ===============================================================
+    // Validation Functions
+    // ===============================================================
+    
+    function isValidDeposit(data) {
+      let allowedFields = ['userId', 'bank', 'amount', 'rate', 'startDate', 'endDate', 'currency', 'formula', 'isClosed', 'isArchived', 'splitIncome', 'sourceNote', 'comment', 'updatedAt', 'isTest'];
+      return data.keys().hasOnly(allowedFields) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.bank is string && data.bank.size() > 0 && data.bank.size() <= 100 &&
+             data.amount is number && data.amount >= 0 &&
+             data.rate is number &&
+             (data.startDate is timestamp || data.startDate is string) &&
+             (!('endDate' in data) || data.endDate == null || data.endDate is timestamp || data.endDate is string) &&
+             (!('currency' in data) || (data.currency is string && data.currency.size() <= 20)) &&
+             (!('formula' in data) || (data.formula is string && data.formula.size() <= 50)) &&
+             (!('isClosed' in data) || data.isClosed is bool) &&
+             (!('isArchived' in data) || data.isArchived is bool || data.isArchived is number) &&
+             (!('splitIncome' in data) || data.splitIncome is bool) &&
+             (!('sourceNote' in data) || (data.sourceNote is string && data.sourceNote.size() <= 500)) &&
+             (!('comment' in data) || (data.comment is string && data.comment.size() <= 2000)) &&
+             (!('updatedAt' in data) || data.updatedAt is number) &&
+             (!('isTest' in data) || data.isTest is bool);
+    }
+
+    function isValidSettings(data) {
+      let allowedFields = ['userId', 'theme', 'bankSortOrder', 'updatedAt', 'defaultNdflRate', 'defaultLimit2025', 'id', 'bankSortBy', 'showDevTools'];
+      return data.keys().hasOnly(allowedFields) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             (!('theme' in data) || data.theme in ['light', 'dark']) &&
+             (!('bankSortOrder' in data) || data.bankSortOrder in ['asc', 'desc']) &&
+             (!('updatedAt' in data) || data.updatedAt is number);
+    }
+
+    function isValidBank(data) {
+      let allowedFields = ['userId', 'name', 'logoUrl', 'isCustom', 'updatedAt', 'color', 'logoText', 'iconScale', 'iconOffsetX', 'iconOffsetY'];
+      return data.keys().hasOnly(allowedFields) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             (!('logoUrl' in data) || (data.logoUrl is string && data.logoUrl.size() <= 2000)) &&
+             (!('isCustom' in data) || data.isCustom is bool) &&
+             (!('updatedAt' in data) || data.updatedAt is number);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /deposits/{depositId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidDeposit(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidDeposit(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+
+    match /userSettings/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidSettings(request.resource.data);
+      allow update: if isOwner(userId) && isValidSettings(request.resource.data);
+    }
+
+    match /banks/{bankId} {
+      allow read: if isDocOwner();
+      allow create: if isNewDocOwner() && isValidBank(request.resource.data);
+      allow update: if isDocOwner() && isNewDocOwner() && isValidBank(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+    
+    match /users/{userId} {
+      function isAdmin() {
+        return isAuthenticated() &&
+          (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+            (request.auth.token.email == "filimlive@gmail.com" && request.auth.token.email_verified == true));
+      }
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

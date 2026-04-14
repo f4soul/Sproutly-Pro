@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Deposit": {
+      "title": "Deposit",
+      "description": "Information about a bank deposit",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner's UID" },
+        "bank": { "type": "string", "description": "Bank name" },
+        "startDate": { "type": "string", "format": "date-time", "description": "Opening date" },
+        "endDate": { "type": "string", "format": "date-time", "description": "Closing date" },
+        "amount": { "type": "number", "description": "Deposit amount" },
+        "currency": { "type": "string", "description": "Currency symbol" },
+        "rate": { "type": "number", "description": "Interest rate percentage" },
+        "formula": { "type": "string", "description": "Calculation formula type" },
+        "isClosed": { "type": "boolean", "description": "Whether the deposit is closed" },
+        "isArchived": { "type": "number", "description": "Archive status (0 or 1)" },
+        "splitIncome": { "type": "boolean", "description": "Whether to split income across years" },
+        "updatedAt": { "type": "number", "description": "Last updated timestamp" }
+      },
+      "required": ["userId", "bank", "amount", "rate"]
+    },
+    "AppSettings": {
+      "title": "AppSettings",
+      "description": "User application settings",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner's UID" },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "bankSortOrder": { "type": "string", "enum": ["asc", "desc"] },
+        "updatedAt": { "type": "number", "description": "Last updated timestamp" }
+      }
+    },
+    "Bank": {
+      "title": "Bank",
+      "description": "Custom bank information",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner's UID" },
+        "name": { "type": "string", "description": "Bank name" },
+        "logoUrl": { "type": "string", "description": "Logo data URL" },
+        "isCustom": { "type": "boolean" },
+        "updatedAt": { "type": "number" }
+      }
+    }
+  },
+  "firestore": {
+    "/deposits/{depositId}": {
+      "schema": "Deposit",
+      "description": "Collection of user deposits"
+    },
+    "/userSettings/{userId}": {
+      "schema": "AppSettings",
+      "description": "User specific application settings"
+    },
+    "/banks/{bankId}": {
+      "schema": "Bank",
+      "description": "Custom banks created by users"
+    }
+  }
+}

@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-primary: #007AFF;
+  --color-primary-dark: #0A84FF;
+  
+  /* Apple-inspired ultra-minimalistic palette */
+  --color-apple-blue: #007AFF;
+  --color-apple-royal-blue: #0051FF;
+  
+  /* Dark Theme Colors */
+  --color-dark-bg: #101114;
+  --color-dark-card: #1A1D21;
+  --color-dark-border: rgba(255, 255, 255, 0.04);
+  --color-dark-text-primary: #F5F5F7;
+  --color-dark-text-secondary: #8E8E93;
+  
+  /* Light Theme Colors */
+  --color-light-bg: #FFFFFF;
+  --color-light-card: #FFFFFF;
+  --color-light-border: #F2F2F7;
+  --color-light-text-primary: #1D1D1F;
+  --color-light-text-secondary: #86868B;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply antialiased selection:bg-blue-100 selection:text-blue-900;
+    @apply text-light-text-primary bg-light-bg dark:text-dark-text-primary dark:bg-dark-bg;
+    transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Global interactive elements */
+  button, [role="button"], a, input[type="submit"], input[type="button"] {
+    @apply cursor-pointer active:scale-[0.98] transition-transform duration-200;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.2);
+    border-radius: 10px;
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(107, 114, 128, 0.3);
+  }
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.2);
+    border-radius: 10px;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(107, 114, 128, 0.3);
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Hide number input arrows */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  /* Input and Select refinements */
+  input, select, textarea {
+    @apply transition-all duration-200 focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 outline-none;
+  }
+  
+  ::placeholder {
+    @apply text-sm;
+  }
+}
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-3xl bg-white/80 dark:bg-dark-bg/80;
+  }
+
+  .apple-card {
+    @apply bg-light-card dark:bg-dark-card rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.02)] dark:shadow-[0_16px_48px_rgba(0,0,0,0.2)] border border-light-border dark:border-dark-border transition-all duration-500;
+  }
+
+  .apple-button {
+    @apply px-4 py-2.5 rounded-2xl font-semibold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none cursor-pointer;
+  }
+
+  .apple-input {
+    @apply bg-[#F5F5F7] dark:bg-white/5 border border-transparent focus:bg-white dark:focus:bg-dark-bg rounded-2xl px-4 py-3 transition-all font-medium text-sm;
+  }
+
+  .apple-glass {
+    @apply backdrop-blur-3xl bg-white/80 dark:bg-dark-bg/80 border border-light-border dark:border-dark-border;
+  }
+}
+
+/* Datepicker Custom Styles */
+.react-datepicker-wrapper {
+  @apply w-full;
+}
+
+.react-datepicker {
+  @apply !font-sans !border-none !rounded-[2rem] !shadow-2xl !bg-white/95 dark:!bg-dark-card/95 !backdrop-blur-2xl !p-6 !border !border-light-border dark:!border-dark-border;
+}
+
+.react-datepicker__header {
+  @apply !bg-transparent !border-none !pb-6;
+}
+
+.react-datepicker__current-month {
+  @apply !text-light-text-primary dark:!text-dark-text-primary !font-bold !text-xl !tracking-tight;
+}
+
+.react-datepicker__day-name {
+  @apply !text-light-text-secondary dark:!text-dark-text-secondary !font-bold !uppercase !text-[10px] !tracking-widest !w-10;
+}
+
+.react-datepicker__day {
+  @apply !text-light-text-primary dark:!text-dark-text-primary !rounded-2xl hover:!bg-blue-50 dark:hover:!bg-blue-900/20 !transition-all !w-10 !h-10 !leading-10 !font-medium !m-0.5;
+}
+
+.react-datepicker__day--selected {
+  @apply !bg-blue-600 !text-white hover:!bg-blue-700 !font-bold !shadow-lg !shadow-blue-500/20;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply !bg-blue-100 dark:!bg-blue-900/30 !text-blue-600 dark:!text-blue-400;
+}
+
+.react-datepicker__day--outside-month {
+  @apply !opacity-20;
+}
+
+.react-datepicker__navigation {
+  @apply !top-8;
+}
+
+.react-datepicker__navigation--previous {
+  @apply !left-6;
+}
+
+.react-datepicker__navigation--next {
+  @apply !right-6;
+}
+
+.react-datepicker__navigation-icon::before {
+  @apply !border-light-text-secondary dark:!border-dark-text-secondary !border-t-2 !border-r-2 !w-2 !h-2;
+}
