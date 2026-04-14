@@ -98,7 +98,7 @@ export const useAppState = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const lastSyncedStateRef = useRef<string>('');
 
-  const addToast = (message: string, type: 'success' | 'info' = 'success') => {
+  const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
     const id = Math.random().toString(36).substr(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);

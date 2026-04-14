@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Plus, Trash2, Copy, ChevronDown } from 'lucide-react';
+import { Calendar, Plus, Trash2, Copy, ChevronDown, Settings } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -22,7 +22,7 @@ export const YearTabs = ({
   setIsDeleteYearModalOpen,
   setIsClearModalOpen,
   prevYear,
-  copyFromPreviousYear
+  copyFromPreviousYear,
 }: YearTabsProps) => {
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
 

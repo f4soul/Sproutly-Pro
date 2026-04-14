@@ -22,6 +22,24 @@ export const exportToXLSX = (deposits: Deposit[]) => {
   XLSX.writeFile(workbook, `sproutly_export_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
 
+export const exportOverviewToXLSX = (data: any, year: number) => {
+  const summaryData = [
+    { 'Показатель': 'Год', 'Значение': year },
+    { 'Показатель': 'Общий Доход (Gross)', 'Значение': data.totalGross },
+    { 'Показатель': 'Чистый Доход (Net)', 'Значение': data.totalNet },
+    { 'Показатель': 'Всего Налогов', 'Значение': data.totalTax },
+    { 'Показатель': 'Налог уплачен (13%)', 'Значение': data.taxPaid },
+    { 'Показатель': 'Налог к доплате', 'Значение': data.taxToBePaid },
+    { 'Показатель': 'Доход от зарплаты', 'Значение': data.salaryGross },
+    { 'Показатель': 'Доход от вкладов', 'Значение': data.depositsIncome },
+  ];
+
+  const worksheet = XLSX.utils.json_to_sheet(summaryData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Сводка');
+  XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+};
+
 export const exportToPDF = async (elementId: string, deposits?: Deposit[]) => {
   const element = document.getElementById(elementId);
   if (!element) return;

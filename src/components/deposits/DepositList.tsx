@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { Deposit } from '../../types';
 import { db } from '../../db';
 import { DepositForm } from './DepositForm';
-import { calculateIncome } from '../../lib/calculations';
+import { calculateIncome } from '../../lib/depositCalculations';
 import { SmartActionBar } from './SmartActionBar';
 import { DepositRow } from './DepositRow';
 import { DepositCard } from './DepositCard';

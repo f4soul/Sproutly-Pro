@@ -4,7 +4,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Deposit } from '../../types';
 import { formatCurrency, formatPercent, cn } from '../../lib/utils';
-import { calculateIncome } from '../../lib/calculations';
+import { calculateIncome } from '../../lib/depositCalculations';
 import { getBankDetails } from '../../lib/banks';
 
 interface DepositRowProps {

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { TrendingUp, LogIn, LogOut, Settings, Sun, Moon } from 'lucide-react';
+import { TrendingUp, LogIn, LogOut, Settings, Sun, Moon, Sprout } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { User, signInWithGoogle, logout } from '../firebase';
@@ -42,13 +42,13 @@ export const Header = ({
   return (
     <header className="flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 relative z-50">
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-blue-600 dark:bg-blue-500 rounded-xl text-white">
-          <TrendingUp size={24} />
+        <div className="p-2 bg-blue-600 dark:bg-blue-500 rounded-xl text-white shadow-lg shadow-blue-500/20">
+          <Sprout size={24} className="stroke-[2px]" />
         </div>
         <div>
           <div className="flex items-baseline gap-1">
-            <h1 className="text-xl md:text-2xl font-black tracking-tighter text-gray-900 dark:text-white font-mono">
-              INCOME<span className="inline-block w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse mx-1" />PRO
+            <h1 className="text-xl md:text-2xl font-black tracking-tighter text-gray-900 dark:text-white font-mono uppercase">
+              SPROUTLY<span className="inline-block w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse mx-1" />PRO
             </h1>
           </div>
           <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em]">Progressive Made Simple</p>

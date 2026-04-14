@@ -1,7 +1,7 @@
 import React, { useMemo, Fragment, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Listbox, Transition, Menu } from '@headlessui/react';
-import { calculateIncomeByYears, calculateTax } from '../lib/calculations';
+import { calculateIncomeByYears, calculateTax } from '../lib/depositCalculations';
 import { getBankDetails } from '../lib/banks';
 import { Deposit, TaxYearSettings, AppSettings } from '../types';
 import { formatCurrency, cn } from '../lib/utils';
@@ -20,7 +20,7 @@ interface DashboardProps {
   appSettings: AppSettings;
 }
 
-export function Dashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings }: DashboardProps) {
+export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings }: DashboardProps) {
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
 
   const currentYearSettings = useMemo(() => 

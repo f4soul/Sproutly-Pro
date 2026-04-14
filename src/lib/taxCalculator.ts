@@ -6,6 +6,7 @@ export const calculateProgressiveTaxDetailed = (
   year: number, 
   taxBrackets: Record<number, TaxBracket[]>
 ) => {
+  // gross here should be the total taxable income (e.g. Salary + Taxable Deposit Interest)
   let remaining = gross;
   let tax = 0;
   const brackets = [];

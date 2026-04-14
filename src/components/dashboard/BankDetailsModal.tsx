@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 import { Deposit } from '../../types';
 import { formatCurrency } from '../../lib/utils';
 import { getBankDetails } from '../../lib/banks';
-import { calculateIncomeByYears } from '../../lib/calculations';
+import { calculateIncomeByYears } from '../../lib/depositCalculations';
 
 interface BankDetailsModalProps {
   selectedBank: string | null;

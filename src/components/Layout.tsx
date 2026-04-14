@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Sprout, Moon, Sun, User, LogOut, Wrench } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Sprout, Moon, Sun, User, LogOut, Wrench, Landmark, Wallet } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { auth, signIn, logout } from '../firebase';
+import { auth, signInWithGoogle, logout } from '../firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { db } from '../db';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,8 +10,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'dashboard' | 'deposits' | 'settings';
-  onTabChange: (tab: 'dashboard' | 'deposits' | 'settings') => void;
+  activeTab: 'overview' | 'dashboard' | 'deposits' | 'ndfl' | 'settings';
+  onTabChange: (tab: 'overview' | 'dashboard' | 'deposits' | 'ndfl' | 'settings') => void;
   theme: 'light' | 'dark';
 }
 
@@ -55,7 +55,11 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             <div className="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-500/20 transition-all group-hover:scale-105 active:scale-95">
               <Sprout className="w-5 h-5 text-white stroke-[2px]" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-light-text-primary dark:text-dark-text-primary">Sproutly</span>
+            <div className="flex items-baseline gap-1">
+              <span className="font-black text-xl tracking-tighter text-light-text-primary dark:text-dark-text-primary font-mono uppercase">
+                SPROUTLY<span className="inline-block w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse mx-1" />PRO
+              </span>
+            </div>
           </div>
           <button 
             onClick={toggleTheme}
@@ -67,16 +71,28 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
         <nav className="flex flex-col gap-2">
           <NavItem 
+            active={activeTab === 'overview'} 
+            onClick={() => onTabChange('overview')}
+            icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
+            label="Общий Обзор"
+          />
+          <NavItem 
             active={activeTab === 'dashboard'} 
             onClick={() => onTabChange('dashboard')}
-            icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
-            label="Дашборд"
+            icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
+            label="Дашборд Вкладов"
           />
           <NavItem 
             active={activeTab === 'deposits'} 
             onClick={() => onTabChange('deposits')}
             icon={<ListOrdered className="w-5 h-5 stroke-[1.5px]" />}
             label="Мои Вклады"
+          />
+          <NavItem 
+            active={activeTab === 'ndfl'} 
+            onClick={() => onTabChange('ndfl')}
+            icon={<Wallet className="w-5 h-5 stroke-[1.5px]" />}
+            label="Мои Доходы (НДФЛ)"
           />
           <NavItem 
             active={activeTab === 'settings'} 
@@ -168,7 +184,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             </Menu>
           ) : (
             <button 
-              onClick={signIn}
+              onClick={signInWithGoogle}
               className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#0051FF] hover:bg-blue-600 text-white rounded-2xl font-bold transition-all text-sm shadow-lg shadow-blue-500/20 cursor-pointer active:scale-95"
             >
               <User className="w-4 h-4 stroke-[2px]" />
@@ -184,7 +200,11 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           <div className="bg-blue-600 p-2.5 rounded-xl shadow-lg shadow-blue-500/30">
             <Sprout className="w-5 h-5 text-white stroke-[2.5px]" />
           </div>
-          <span className="font-bold text-xl tracking-tight text-light-text-primary dark:text-dark-text-primary">Sproutly</span>
+          <div className="flex items-baseline gap-1">
+            <span className="font-black text-xl tracking-tighter text-light-text-primary dark:text-dark-text-primary font-mono uppercase">
+              SPROUTLY<span className="inline-block w-1.5 h-1.5 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse mx-1" />PRO
+            </span>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -267,7 +287,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
               </Transition>
             </Menu>
           ) : (
-            <button onClick={signIn} className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 cursor-pointer active:scale-90">
+            <button onClick={signInWithGoogle} className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 cursor-pointer active:scale-90">
               <User className="w-4 h-4 stroke-[2px]" />
             </button>
           )}
@@ -276,9 +296,10 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
       {/* Bottom Nav for Mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-t border-light-border dark:border-dark-border flex justify-around p-4 z-50 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Дашборд" />
-        <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<ListOrdered className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
-        <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Настройки" />
+        <MobileNavItem active={activeTab === 'overview'} onClick={() => onTabChange('overview')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
+        <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
+        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<Wallet className="w-5 h-5 stroke-[1.5px]" />} label="НДФЛ" />
+        <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
       <main className="flex-1 md:ml-64 pt-28 md:pt-12 p-4 md:p-8 lg:p-8 pb-32 md:pb-12 min-h-screen flex flex-col">
