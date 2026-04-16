@@ -15,7 +15,7 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
             className={cn(
-              "px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 pointer-events-auto",
+              "apple-card px-4 py-3 flex items-center gap-3 pointer-events-auto",
               toast.type === 'success' 
                 ? "bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
                 : "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200"

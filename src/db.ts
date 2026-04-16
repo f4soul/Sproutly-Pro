@@ -6,14 +6,16 @@ export class MyDepositsDB extends Dexie {
   taxYearSettings!: Table<TaxYearSettings>;
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
+  incomeState!: Table<any>;
 
   constructor() {
     super('MyDepositsDB');
-    this.version(3).stores({
+    this.version(4).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       taxYearSettings: 'year',
       appSettings: 'id',
-      banks: '++id, userId, name'
+      banks: '++id, userId, name',
+      incomeState: 'id'
     });
   }
 }
@@ -143,6 +145,21 @@ export async function syncWithFirebase() {
     }
   }
 
+  // Upload Income State
+  const localIncomeState = await db.incomeState.get('main');
+  if (localIncomeState) {
+    const path = `users/${user.uid}/data`;
+    try {
+      await setDoc(doc(firestore, path, 'income'), {
+        ...localIncomeState,
+        userId: user.uid,
+        updatedAt: localIncomeState.updatedAt || Date.now()
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, path);
+    }
+  }
+
   // 2. Download remote changes from Firebase
   // Deposits
   const depositsPath = 'deposits';
@@ -216,6 +233,21 @@ export async function syncWithFirebase() {
     handleFirestoreError(error, OperationType.GET, banksPath);
   }
 
+  // Income State
+  const incomePath = `users/${user.uid}/data/income`;
+  try {
+    const incomeSnap = await getDoc(doc(firestore, 'users', user.uid, 'data', 'income'));
+    if (incomeSnap.exists()) {
+      const remoteIncome = incomeSnap.data();
+      const localIncome = await db.incomeState.get('main');
+      if (!localIncome || (remoteIncome.updatedAt && remoteIncome.updatedAt > (localIncome.updatedAt || 0))) {
+        await db.incomeState.put({ ...remoteIncome, id: 'main' });
+      }
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, incomePath);
+  }
+
   emitSyncEvent('success');
 } catch (error) {
   emitSyncEvent('error');
@@ -236,62 +268,126 @@ export async function initDB() {
 
   const taxSettingsCount = await db.taxYearSettings.count();
   if (taxSettingsCount === 0) {
-    await db.taxYearSettings.add({
-      year: 2024,
-      limit: 150000,
-      ndflRate: 13
-    });
-    await db.taxYearSettings.add({
-      year: 2025,
-      limit: 210000,
-      ndflRate: 13
-    });
-    await db.taxYearSettings.add({
-      year: 2026,
-      limit: 250000,
-      ndflRate: 13
-    });
+    await db.taxYearSettings.bulkAdd([
+      { year: 2024, limit: 150000, ndflRate: 13 },
+      { year: 2025, limit: 210000, ndflRate: 13 },
+      { year: 2026, limit: 250000, ndflRate: 13 }
+    ]);
   }
 
   const depositsCount = await db.deposits.count();
   if (depositsCount === 0) {
-    const currentYear = new Date().getFullYear();
     await db.deposits.bulkAdd([
       {
-        bank: 'Газпромбанк',
-        startDate: new Date(currentYear, 0, 10),
-        endDate: new Date(currentYear, 3, 10),
-        amount: 1000000,
-        currency: '₽',
-        rate: 23.6,
-        formula: 'simple_days',
-        sourceNote: 'Мои',
-        isClosed: true,
-        splitIncome: false
-      },
-      {
-        bank: 'ВТБ',
-        startDate: new Date(currentYear, 1, 28),
-        endDate: new Date(currentYear, 4, 30),
-        amount: 500000,
-        currency: '₽',
-        rate: 24.5,
-        formula: 'simple_days',
-        sourceNote: 'Папа 50/50',
+        bank: "ВТБ",
         isClosed: false,
-        splitIncome: false
+        updatedAt: 1775221673760,
+        sourceNote: "Папа 50/50",
+        endDate: new Date("2026-05-29T21:00:00.000Z"),
+        currency: "₽",
+        startDate: new Date("2026-02-27T21:00:00.000Z"),
+        splitIncome: false,
+        amount: 500000,
+        rate: 24.5,
+        formula: "simple_days"
       },
       {
-        bank: 'Альфа-Банк',
-        startDate: new Date(currentYear - 1, 11, 1),
-        endDate: new Date(currentYear, 2, 1),
-        amount: 800000,
-        currency: '₽',
-        rate: 18,
-        formula: 'simple_days',
-        sourceNote: 'Мои',
+        sourceNote: "Мои",
+        updatedAt: 1776087843319,
         isClosed: true,
-        splitIncome: true
+        bank: "Альфа-Банк",
+        currency: "₽",
+        endDate: new Date("2026-02-28T21:00:00.000Z"),
+        amount: 800000,
+        rate: 18,
+        formula: "simple_days",
+        startDate: new Date("2025-11-30T21:00:00.000Z"),
+        splitIncome: true,
+        isArchived: 0
+      },
+      {
+        bank: "БСПБ",
+        startDate: new Date("2026-01-14T21:00:00.000Z"),
+        endDate: new Date("2026-07-14T21:00:00.000Z"),
+        amount: 2500000,
+        currency: "₽",
+        rate: 21,
+        formula: "simple_days",
+        sourceNote: "Тестовый вклад 1",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155897196,
+        isTest: true
+      },
+      {
+        bank: "МКБ",
+        startDate: new Date("2026-01-31T21:00:00.000Z"),
+        endDate: new Date("2027-01-31T21:00:00.000Z"),
+        amount: 1500000,
+        currency: "₽",
+        rate: 19.5,
+        formula: "compound_monthly",
+        sourceNote: "Тестовый вклад 2",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155897196,
+        isTest: true
+      },
+      {
+        bank: "Ренессанс",
+        startDate: new Date("2026-01-14T21:00:00.000Z"),
+        endDate: new Date("2026-07-14T21:00:00.000Z"),
+        amount: 2500000,
+        currency: "₽",
+        rate: 21,
+        formula: "simple_days",
+        sourceNote: "Тестовый вклад 1",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155898155,
+        isTest: true
+      },
+      {
+        bank: "ПСБ",
+        startDate: new Date("2026-01-31T21:00:00.000Z"),
+        endDate: new Date("2027-01-31T21:00:00.000Z"),
+        amount: 1500000,
+        currency: "₽",
+        rate: 19.5,
+        formula: "compound_monthly",
+        sourceNote: "Тестовый вклад 2",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155898155,
+        isTest: true
+      },
+      {
+        bank: "Совкомбанк",
+        startDate: new Date("2026-01-14T21:00:00.000Z"),
+        endDate: new Date("2026-07-14T21:00:00.000Z"),
+        amount: 2500000,
+        currency: "₽",
+        rate: 21,
+        formula: "simple_days",
+        sourceNote: "Тестовый вклад 1",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155898688,
+        isTest: true
+      },
+      {
+        bank: "ОТП Банк",
+        startDate: new Date("2026-01-31T21:00:00.000Z"),
+        endDate: new Date("2027-01-31T21:00:00.000Z"),
+        amount: 1500000,
+        currency: "₽",
+        rate: 19.5,
+        formula: "compound_monthly",
+        sourceNote: "Тестовый вклад 2",
+        isClosed: false,
+        splitIncome: true,
+        updatedAt: 1776155898688,
+        isTest: true
       }
     ]);
   }

@@ -4,10 +4,13 @@ import { DEFAULT_TAX_BRACKETS } from './constants';
 export const calculateProgressiveTaxDetailed = (
   gross: number, 
   year: number, 
-  taxBrackets: Record<number, TaxBracket[]>
+  taxBrackets: Record<number, TaxBracket[]>,
+  deduction: number = 0
 ) => {
   // gross here should be the total taxable income (e.g. Salary + Taxable Deposit Interest)
-  let remaining = gross;
+  // deduction reduces the taxable base
+  let taxableBase = Math.max(0, gross - deduction);
+  let remaining = taxableBase;
   let tax = 0;
   const brackets = [];
   const scale = taxBrackets[year] || taxBrackets[2025] || DEFAULT_TAX_BRACKETS[2025];

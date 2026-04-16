@@ -124,13 +124,13 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-slate-50/30 dark:bg-slate-800/10 overflow-hidden"
+            className="bg-[#F5F5F7]/30 dark:bg-white/5 overflow-hidden"
           >
-            <td colSpan={8} className="hidden xl:table-cell px-4 py-3 border-b border-slate-100 dark:border-slate-800/50">
+            <td colSpan={8} className="hidden xl:table-cell px-4 py-3 border-b border-light-border dark:border-dark-border">
               <div className="flex flex-row flex-wrap items-center gap-6 text-[11px]">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Формула расчета:</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Формула расчета:</span>
+                  <span className="font-bold text-light-text-primary dark:text-dark-text-primary">
                     {deposit.formula === 'simple_days' ? 'В конце срока' : 
                      deposit.formula === 'simple_months' ? 'Ежемесячно (без капитализации)' : 
                      deposit.formula === 'compound_monthly' ? 'Ежемесячная капитализация' :
@@ -141,25 +141,25 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
                 </div>
                 {deposit.sourceNote && (
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 font-medium">Примечание:</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{deposit.sourceNote}</span>
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Примечание:</span>
+                    <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{deposit.sourceNote}</span>
                   </div>
                 )}
                 {deposit.comment && (
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-slate-500 font-medium shrink-0">Дополнительно:</span>
-                    <span className="text-slate-600 dark:text-slate-400 truncate" title={deposit.comment}>
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium shrink-0">Дополнительно:</span>
+                    <span className="text-light-text-primary dark:text-dark-text-primary truncate" title={deposit.comment}>
                       {deposit.comment}
                     </span>
                   </div>
                 )}
               </div>
             </td>
-            <td colSpan={6} className="table-cell xl:hidden px-4 py-3 border-b border-slate-100 dark:border-slate-800/50">
+            <td colSpan={6} className="table-cell xl:hidden px-4 py-3 border-b border-light-border dark:border-dark-border">
               <div className="flex flex-row flex-wrap items-center gap-6 text-[11px]">
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Формула расчета:</span>
-                  <span className="font-bold text-slate-700 dark:text-slate-300">
+                  <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Формула расчета:</span>
+                  <span className="font-bold text-light-text-primary dark:text-dark-text-primary">
                     {deposit.formula === 'simple_days' ? 'В конце срока' : 
                      deposit.formula === 'simple_months' ? 'Ежемесячно (без капитализации)' : 
                      deposit.formula === 'compound_monthly' ? 'Ежемесячная капитализация' :
@@ -170,14 +170,14 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
                 </div>
                 {deposit.sourceNote && (
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-500 font-medium">Примечание:</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300">{deposit.sourceNote}</span>
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium">Примечание:</span>
+                    <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{deposit.sourceNote}</span>
                   </div>
                 )}
                 {deposit.comment && (
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="text-slate-500 font-medium shrink-0">Дополнительно:</span>
-                    <span className="text-slate-600 dark:text-slate-400 truncate" title={deposit.comment}>
+                    <span className="text-light-text-secondary dark:text-dark-text-secondary font-medium shrink-0">Дополнительно:</span>
+                    <span className="text-light-text-primary dark:text-dark-text-primary truncate" title={deposit.comment}>
                       {deposit.comment}
                     </span>
                   </div>

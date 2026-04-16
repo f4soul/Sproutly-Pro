@@ -40,7 +40,7 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
   XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
 
-export const exportToPDF = async (elementId: string, deposits?: Deposit[]) => {
+export const exportToPDF = async (elementId: string, summary?: any, deposits?: Deposit[]) => {
   const element = document.getElementById(elementId);
   if (!element) return;
 
@@ -69,12 +69,64 @@ export const exportToPDF = async (elementId: string, deposits?: Deposit[]) => {
     document.body.appendChild(container);
 
     // Add Title
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '40px';
+    header.style.borderBottom = `2px solid ${borderColor}`;
+    header.style.paddingBottom = '20px';
+
+    const titleContainer = document.createElement('div');
     const title = document.createElement('h1');
-    title.innerText = 'Sproutly - Отчет по вкладам';
-    title.style.fontSize = '32px';
+    title.innerText = 'ФИНАНСОВЫЙ ОТЧЕТ (PDF)';
+    title.style.fontSize = '28px';
     title.style.fontWeight = '900';
-    title.style.marginBottom = '24px';
-    container.appendChild(title);
+    title.style.letterSpacing = '-1px';
+    title.style.margin = '0';
+    titleContainer.appendChild(title);
+
+    const subtitle = document.createElement('p');
+    subtitle.innerText = `Сформировано в Sproutly Pro • ${format(new Date(), 'dd.MM.yyyy HH:mm')}`;
+    subtitle.style.fontSize = '12px';
+    subtitle.style.opacity = '0.6';
+    subtitle.style.margin = '4px 0 0 0';
+    titleContainer.appendChild(subtitle);
+    header.appendChild(titleContainer);
+
+    const logo = document.createElement('div');
+    logo.innerHTML = '<span style="font-weight: 900; font-size: 20px; color: #2563eb;">SPROUTLY</span>';
+    header.appendChild(logo);
+    container.appendChild(header);
+
+    // Add Summary if provided
+    if (summary) {
+      const summaryGrid = document.createElement('div');
+      summaryGrid.style.display = 'grid';
+      summaryGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      summaryGrid.style.gap = '20px';
+      summaryGrid.style.marginBottom = '40px';
+
+      const createStat = (label: string, value: string, color: string = textColor) => {
+        const div = document.createElement('div');
+        div.style.padding = '20px';
+        div.style.backgroundColor = isDark ? 'rgba(255,255,255,0.05)' : '#f8fafc';
+        div.style.borderRadius = '16px';
+        div.style.border = `1px solid ${borderColor}`;
+        div.innerHTML = `
+          <p style="font-size: 10px; font-weight: 800; text-transform: uppercase; opacity: 0.5; margin-bottom: 8px;">${label}</p>
+          <p style="font-size: 20px; font-weight: 900; color: ${color};">${value}</p>
+        `;
+        return div;
+      };
+
+      summaryGrid.appendChild(createStat('Общий Gross', summary.totalGross?.toLocaleString('ru-RU') + ' ₽'));
+      summaryGrid.appendChild(createStat('Чистый Net', summary.totalNet?.toLocaleString('ru-RU') + ' ₽', '#10b981'));
+      summaryGrid.appendChild(createStat('Всего налогов', summary.totalTax?.toLocaleString('ru-RU') + ' ₽', '#ef4444'));
+      summaryGrid.appendChild(createStat('Эфф. ставка', (summary.effectiveRate || 0).toFixed(1) + ' %', '#6366f1'));
+      
+      container.appendChild(summaryGrid);
+    }
 
     // Clone and add the dashboard/element
     const clone = element.cloneNode(true) as HTMLElement;
@@ -145,10 +197,11 @@ export const exportToPDF = async (elementId: string, deposits?: Deposit[]) => {
       format: [img.width, img.height]
     });
     
-    pdf.addImage(dataUrl, 'PNG', 0, 0, img.width, img.height);
     pdf.save(`sproutly_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    return true;
   } catch (error) {
     console.error('Error exporting to PDF:', error);
+    return false;
   }
 };
 
@@ -181,12 +234,35 @@ export const exportToImage = async (elementId: string, deposits?: Deposit[]) => 
     document.body.appendChild(container);
 
     // Add Title
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.marginBottom = '40px';
+    header.style.borderBottom = `2px solid ${borderColor}`;
+    header.style.paddingBottom = '20px';
+
+    const titleContainer = document.createElement('div');
     const title = document.createElement('h1');
-    title.innerText = 'Sproutly - Отчет по вкладам';
-    title.style.fontSize = '32px';
+    title.innerText = 'ФИНАНСОВЫЙ ОТЧЕТ (IMG)';
+    title.style.fontSize = '28px';
     title.style.fontWeight = '900';
-    title.style.marginBottom = '24px';
-    container.appendChild(title);
+    title.style.letterSpacing = '-1px';
+    title.style.margin = '0';
+    titleContainer.appendChild(title);
+
+    const subtitle = document.createElement('p');
+    subtitle.innerText = `Сформировано в Sproutly Pro • ${format(new Date(), 'dd.MM.yyyy HH:mm')}`;
+    subtitle.style.fontSize = '12px';
+    subtitle.style.opacity = '0.6';
+    subtitle.style.margin = '4px 0 0 0';
+    titleContainer.appendChild(subtitle);
+    header.appendChild(titleContainer);
+
+    const logo = document.createElement('div');
+    logo.innerHTML = '<span style="font-weight: 900; font-size: 20px; color: #2563eb;">SPROUTLY</span>';
+    header.appendChild(logo);
+    container.appendChild(header);
 
     // Clone and add the dashboard/element
     const clone = element.cloneNode(true) as HTMLElement;

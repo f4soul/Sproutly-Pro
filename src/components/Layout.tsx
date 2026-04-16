@@ -10,8 +10,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'overview' | 'dashboard' | 'deposits' | 'ndfl' | 'settings';
-  onTabChange: (tab: 'overview' | 'dashboard' | 'deposits' | 'ndfl' | 'settings') => void;
+  activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings';
+  onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'settings') => void;
   theme: 'light' | 'dark';
 }
 
@@ -63,7 +63,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           </div>
           <button 
             onClick={toggleTheme}
-            className="p-2 bg-[#F5F5F7] dark:bg-white/5 rounded-xl text-light-text-secondary dark:text-dark-text-secondary transition-all active:scale-90 cursor-pointer border border-light-border dark:border-dark-border/50 hover:bg-white dark:hover:bg-white/10"
+            className="apple-button p-2 bg-[#F5F5F7] dark:bg-white/5 text-light-text-secondary dark:text-dark-text-secondary border border-light-border dark:border-dark-border/50 hover:bg-white dark:hover:bg-white/10"
           >
             {theme === 'light' ? <Moon className="w-4 h-4 stroke-[1.5px]" /> : <Sun className="w-4 h-4 stroke-[1.5px]" />}
           </button>
@@ -71,28 +71,22 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
         <nav className="flex flex-col gap-2">
           <NavItem 
-            active={activeTab === 'overview'} 
-            onClick={() => onTabChange('overview')}
-            icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
-            label="Общий Обзор"
-          />
-          <NavItem 
             active={activeTab === 'dashboard'} 
             onClick={() => onTabChange('dashboard')}
-            icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
-            label="Дашборд Вкладов"
+            icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
+            label="Дашборд"
           />
           <NavItem 
             active={activeTab === 'deposits'} 
             onClick={() => onTabChange('deposits')}
-            icon={<ListOrdered className="w-5 h-5 stroke-[1.5px]" />}
+            icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
             label="Мои Вклады"
           />
           <NavItem 
             active={activeTab === 'ndfl'} 
             onClick={() => onTabChange('ndfl')}
             icon={<Wallet className="w-5 h-5 stroke-[1.5px]" />}
-            label="Мои Доходы (НДФЛ)"
+            label="Мои Доходы"
           />
           <NavItem 
             active={activeTab === 'settings'} 
@@ -185,7 +179,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           ) : (
             <button 
               onClick={signInWithGoogle}
-              className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#0051FF] hover:bg-blue-600 text-white rounded-2xl font-bold transition-all text-sm shadow-lg shadow-blue-500/20 cursor-pointer active:scale-95"
+              className="apple-button w-full flex items-center justify-center gap-3 px-6 py-4 bg-[#0051FF] hover:bg-blue-600 text-white font-bold text-sm shadow-lg shadow-blue-500/20"
             >
               <User className="w-4 h-4 stroke-[2px]" />
               Войти
@@ -210,7 +204,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         <div className="flex items-center gap-3">
           <button 
             onClick={toggleTheme}
-            className="p-2 bg-[#F5F5F7] dark:bg-white/5 rounded-xl text-light-text-secondary dark:text-dark-text-secondary transition-all active:scale-90 cursor-pointer border border-light-border dark:border-dark-border/50 hover:bg-white dark:hover:bg-white/10"
+            className="apple-button p-2 bg-[#F5F5F7] dark:bg-white/5 text-light-text-secondary dark:text-dark-text-secondary border border-light-border dark:border-dark-border/50 hover:bg-white dark:hover:bg-white/10"
           >
             {theme === 'light' ? <Moon className="w-4 h-4 stroke-[1.5px]" /> : <Sun className="w-4 h-4 stroke-[1.5px]" />}
           </button>
@@ -287,7 +281,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
               </Transition>
             </Menu>
           ) : (
-            <button onClick={signInWithGoogle} className="p-2.5 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20 cursor-pointer active:scale-90">
+            <button onClick={signInWithGoogle} className="apple-button p-2.5 bg-blue-600 text-white shadow-lg shadow-blue-500/20">
               <User className="w-4 h-4 stroke-[2px]" />
             </button>
           )}
@@ -296,8 +290,8 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
       {/* Bottom Nav for Mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-3xl border-t border-light-border dark:border-dark-border flex justify-around p-4 z-50 pb-safe shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-        <MobileNavItem active={activeTab === 'overview'} onClick={() => onTabChange('overview')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
-        <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
+        <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
+        <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
         <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<Wallet className="w-5 h-5 stroke-[1.5px]" />} label="НДФЛ" />
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>

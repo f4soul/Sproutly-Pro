@@ -17,7 +17,13 @@ export const calculateYearTotals = (yearData: YearData, taxBrackets: Record<numb
     return base + bonus;
   });
   const totalGross = calcMonths.reduce((a, b) => a + b, 0) + yearData.additionalIncome;
-  const { tax: progressiveTax } = calculateProgressiveTaxDetailed(totalGross, yearData.year, taxBrackets);
+  
+  const totalDeductions = (yearData.iisContribution || 0) + 
+    (yearData.deductions?.social || 0) + 
+    (yearData.deductions?.property || 0) + 
+    (yearData.deductions?.standard || 0);
+
+  const { tax: progressiveTax } = calculateProgressiveTaxDetailed(totalGross, yearData.year, taxBrackets, totalDeductions);
   const finalNet = totalGross - progressiveTax;
   return { totalGross, finalNet };
 };
@@ -36,6 +42,9 @@ export const generateDefaultYear = (year: number): YearData => {
       year,
       additionalIncome: 0,
       bonusBase: 169500,
+      baseSalary: 0,
+      iisContribution: 0,
+      deductions: { social: 0, property: 0, standard: 0 },
       months: Array.from({ length: 12 }, (_, i) => ({
         normDays: norms[i] || 21,
         factDays: norms[i] || 21,
@@ -63,6 +72,9 @@ export const generateDefaultYear = (year: number): YearData => {
       year,
       additionalIncome: 0,
       bonusBase: 169500,
+      baseSalary: 0,
+      iisContribution: 0,
+      deductions: { social: 0, property: 0, standard: 0 },
       months: Array.from({ length: 12 }, (_, i) => ({
         normDays: norms[i] || 21,
         factDays: norms[i] || 21,
@@ -80,10 +92,43 @@ export const generateDefaultYear = (year: number): YearData => {
     };
   }
 
+  if (year === 2026) {
+    const salary2026 = [
+      185000.00, 185000.00, 185000.00, 195000.00, 195000.00, 195000.00,
+      195000.00, 195000.00, 195000.00, 210000.00, 210000.00, 210000.00
+    ];
+
+    return {
+      year,
+      additionalIncome: 0,
+      bonusBase: 195000,
+      baseSalary: 0,
+      iisContribution: 0,
+      deductions: { social: 0, property: 0, standard: 0 },
+      months: Array.from({ length: 12 }, (_, i) => ({
+        normDays: norms[i] || 21,
+        factDays: norms[i] || 21,
+        salary: salary2026[i],
+      })),
+      quarters: [
+        { bonusCoef: 0.85, bonusAmount: 165750 },
+        { bonusCoef: 0.85, bonusAmount: 165750 },
+        { bonusCoef: 1.1, bonusAmount: 214500 },
+        { bonusCoef: 1.3, bonusAmount: 253500 }
+      ],
+      annualBonusCoef: 2.8,
+      annualBonusAmount: 546000,
+      extraBonusAmount: 0,
+    };
+  }
+
   return {
     year,
     additionalIncome: 0,
     bonusBase: 169500,
+    baseSalary: 0,
+    iisContribution: 0,
+    deductions: { social: 0, property: 0, standard: 0 },
     months: Array.from({ length: 12 }, (_, i) => ({
       normDays: norms[i] || 21,
       factDays: norms[i] || 21,

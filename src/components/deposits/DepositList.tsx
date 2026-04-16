@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { Landmark, Plus } from 'lucide-react';
+import { Landmark, Plus, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Deposit } from '../../types';
-import { db } from '../../db';
+import { db, syncWithFirebase } from '../../db';
+import { exportToPDF } from '../../services/ExportService';
 import { DepositForm } from './DepositForm';
 import { calculateIncome } from '../../lib/depositCalculations';
 import { SmartActionBar } from './SmartActionBar';
@@ -108,6 +109,7 @@ export function DepositList({ deposits }: DepositListProps) {
   const confirmDelete = async () => {
     if (depositToDelete && depositToDelete.id) {
       await db.deposits.update(depositToDelete.id as any, { isArchived: 1, updatedAt: Date.now() });
+      syncWithFirebase();
       setDepositToDelete(null);
     }
   };
@@ -132,6 +134,23 @@ export function DepositList({ deposits }: DepositListProps) {
         isScrolled={isScrolled}
       />
 
+      <div className="flex justify-end px-1">
+        <button 
+          onClick={async () => {
+            const success = await exportToPDF('deposits-list-content', null, filteredDeposits);
+            if (success) {
+              window.dispatchEvent(new CustomEvent('app:toast', { 
+                detail: { message: 'Список вкладов экспортирован в PDF', type: 'success' } 
+              }));
+            }
+          }}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all whitespace-nowrap"
+        >
+          <Download className="w-4 h-4" />
+          Экспорт PDF
+        </button>
+      </div>
+
       {/* Floating Action Button for Mobile */}
       <div className="lg:hidden fixed bottom-15 right-6 z-50">
         <motion.button
@@ -148,7 +167,7 @@ export function DepositList({ deposits }: DepositListProps) {
         </motion.button>
       </div>
 
-      <div id="deposits-list" className="apple-card overflow-hidden">
+      <div id="deposits-list-content" className="apple-card overflow-hidden">
         {/* Desktop & Landscape Tablet Table */}
         <div className="hidden lg:block w-full overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
@@ -176,8 +195,8 @@ export function DepositList({ deposits }: DepositListProps) {
               )) : (
                 <tr>
                   <td colSpan={9} className="py-24 text-center">
-                    <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                    <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
+                    <p className="text-light-text-secondary dark:text-dark-text-secondary font-bold text-lg">Вклады не найдены</p>
                   </td>
                 </tr>
               )}
@@ -197,8 +216,8 @@ export function DepositList({ deposits }: DepositListProps) {
               />
             )) : (
               <div className="py-24 text-center">
-                <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
-                <p className="text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
+                <p className="text-light-text-secondary dark:text-dark-text-secondary font-bold text-lg">Вклады не найдены</p>
               </div>
             )}
           </div>

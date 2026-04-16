@@ -21,9 +21,9 @@ export const YearSummary = ({
   handleCopy
 }: YearSummaryProps) => {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-2 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-3 gap-4">
       {/* Net (Hero) */}
-      <div className="col-span-2 md:col-span-2 xl:col-span-2 bg-gradient-to-br from-indigo-500 to-indigo-700 p-4 sm:p-6 rounded-3xl shadow-[0_8px_30px_rgb(99,102,241,0.2)] text-white flex flex-col justify-between relative overflow-hidden group">
+      <div className="col-span-2 md:col-span-2 xl:col-span-1 bg-gradient-to-br from-indigo-500 to-indigo-700 p-4 sm:p-6 rounded-3xl shadow-[0_8px_30px_rgb(99,102,241,0.2)] text-white flex flex-col justify-between relative overflow-hidden group">
         <div className="absolute bottom-4 right-4 opacity-10 transition-all duration-500 ease-out group-hover:scale-125 group-hover:-rotate-12 group-hover:-translate-y-2 group-hover:-translate-x-2 pointer-events-none">
           <Calculator className="w-20 h-20 sm:w-[100px] sm:h-[100px]" />
         </div>

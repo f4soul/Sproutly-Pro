@@ -32,26 +32,26 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-6 max-w-md w-full"
+            className="apple-card p-6 max-w-md w-full"
           >
             <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+              <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+                <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
                   <Trash2 size={24} />
                 </div>
-                <h3 className="text-xl font-bold">Удалить год?</h3>
+                <h3 className="text-xl font-bold text-light-text-primary dark:text-dark-text-primary">Удалить год?</h3>
               </div>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+              <button onClick={onClose} className="text-light-text-secondary hover:text-light-text-primary dark:hover:text-dark-text-primary cursor-pointer transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-light-text-secondary dark:text-dark-text-secondary mb-6">
               Вы уверены, что хотите полностью удалить вкладку и данные за <strong>{year} год</strong>? Это действие нельзя отменить.
             </p>
             <div className="flex justify-end gap-3">
               <button 
                 onClick={onClose}
-                className="px-4 py-2 font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors cursor-pointer"
+                className="apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary hover:bg-black/5 dark:hover:bg-white/10"
               >
                 Отмена
               </button>
@@ -60,7 +60,7 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
                   onConfirm();
                   onClose();
                 }}
-                className="px-4 py-2 font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors cursor-pointer"
+                className="apple-button bg-rose-600 text-white shadow-sm"
               >
                 Да, удалить
               </button>

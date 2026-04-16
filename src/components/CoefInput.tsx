@@ -14,7 +14,7 @@ export const CoefInput = ({ value, onChange, className }: { value: number, onCha
       onBlur={() => setFocused(false)}
       onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
       className={cn(
-        "w-full bg-transparent border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/30 outline-none px-1 py-1 text-center transition-all font-mono tabular-nums rounded-md",
+        "apple-input w-full px-1 py-1 text-center font-mono tabular-nums",
         className
       )}
     />

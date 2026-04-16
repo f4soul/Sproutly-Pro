@@ -157,13 +157,13 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           <div className="flex gap-2 shrink-0">
             <button 
               onClick={exportData}
-              className="p-2.5 bg-[#F5F5F7] dark:bg-white/5 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600 cursor-pointer"
+              className="apple-button p-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600"
               title="Экспорт"
             >
               <Download className="w-4 h-4 stroke-[2px]" />
             </button>
             <label 
-              className="p-2.5 bg-[#F5F5F7] dark:bg-white/5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600 cursor-pointer"
+              className="apple-button p-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600"
               title="Импорт"
             >
               <Upload className="w-4 h-4 stroke-[2px]" />
@@ -193,7 +193,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                 key={year}
                 onClick={() => setSelectedBracketYear(year)}
                 className={cn(
-                  "px-3 py-1.5 rounded-xl text-sm font-medium transition-colors cursor-pointer",
+                  "apple-button px-3 py-1.5 text-sm font-medium transition-colors",
                   selectedBracketYear === year 
                     ? "bg-indigo-600 text-white" 
                     : "bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -220,7 +220,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                   type="text" 
                   value={bracket.label ?? ''} 
                   onChange={(e) => handleBracketChange(index, 'label', e.target.value)}
-                  className="w-full bg-white dark:bg-gray-800 border border-light-border dark:border-dark-border rounded-lg sm:rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm focus:ring-1 focus:ring-indigo-500 outline-none"
+                  className="apple-input w-full px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm"
                 />
               </div>
               <div className="col-span-4">
@@ -242,7 +242,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                     type="number" 
                     value={bracket.rate != null ? Math.round(bracket.rate * 100) : ''} 
                     onChange={(e) => handleBracketChange(index, 'rate', (parseFloat(e.target.value) || 0) / 100)}
-                    className="w-full bg-white dark:bg-gray-800 border border-light-border dark:border-dark-border rounded-lg sm:rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm focus:ring-1 focus:ring-indigo-500 outline-none font-mono pr-4 sm:pr-6"
+                    className="apple-input w-full px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm font-mono pr-4 sm:pr-6"
                   />
                   <span className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] sm:text-xs">%</span>
                 </div>
@@ -291,7 +291,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
             )}
             <button 
               onClick={addYear}
-              className="w-8 h-8 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all active:scale-90 cursor-pointer shadow-lg shadow-emerald-500/20 flex items-center justify-center"
+              className="apple-button w-8 h-8 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
             >
               <Plus className="w-4 h-4 stroke-[2.5px]" />
             </button>
@@ -323,7 +323,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       type="number" 
                       value={setting.limit}
                       onChange={(e) => updateYearSetting(setting.year, 'limit', Number(e.target.value))}
-                      className="w-full bg-white dark:bg-gray-800 border border-light-border dark:border-dark-border rounded-lg px-2 py-1 text-xs font-mono text-right focus:ring-1 focus:ring-emerald-500 outline-none pr-5"
+                      className="apple-input w-full px-2 py-1 text-xs font-mono text-right pr-5"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-light-text-secondary">₽</span>
                   </div>
@@ -335,7 +335,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       type="number" 
                       value={setting.ndflRate}
                       onChange={(e) => updateYearSetting(setting.year, 'ndflRate', Number(e.target.value))}
-                      className="w-full bg-white dark:bg-gray-800 border border-light-border dark:border-dark-border rounded-lg px-2 py-1 text-xs font-mono text-right focus:ring-1 focus:ring-emerald-500 outline-none pr-5"
+                      className="apple-input w-full px-2 py-1 text-xs font-mono text-right pr-5"
                     />
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-light-text-secondary">%</span>
                   </div>
@@ -368,7 +368,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl border border-light-border dark:border-dark-border"
+              className="apple-card p-6 max-w-sm w-full"
             >
               <h3 className="text-lg font-bold text-light-text-primary dark:text-dark-text-primary mb-2">Удалить период?</h3>
               <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-6">
@@ -377,13 +377,13 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               <div className="flex gap-3">
                 <button 
                   onClick={() => setYearToDelete(null)}
-                  className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                  className="flex-1 apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary hover:bg-black/5 dark:hover:bg-white/10"
                 >
                   Отмена
                 </button>
                 <button 
                   onClick={confirmDeleteYear}
-                  className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold hover:bg-rose-700 transition-colors cursor-pointer"
+                  className="flex-1 apple-button bg-rose-600 text-white hover:bg-rose-700 shadow-sm"
                 >
                   Удалить
                 </button>

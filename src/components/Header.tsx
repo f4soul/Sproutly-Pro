@@ -40,7 +40,7 @@ export const Header = ({
   }, [setIsProfileMenuOpen]);
 
   return (
-    <header className="flex justify-between items-center bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 relative z-50">
+    <header className="flex justify-between items-center apple-card p-4 relative z-50">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-blue-600 dark:bg-blue-500 rounded-xl text-white shadow-lg shadow-blue-500/20">
           <Sprout size={24} className="stroke-[2px]" />
@@ -71,7 +71,7 @@ export const Header = ({
       
       {/* Desktop Actions & Mobile Dropdown */}
       <div className={cn(
-        "absolute top-full right-0 mt-2 w-56 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/60 dark:border-slate-700/60 p-2 flex-col gap-1 z-50 md:static md:w-auto md:bg-transparent md:dark:bg-transparent md:shadow-none md:border-none md:p-0 md:flex-row md:flex md:gap-3 transition-all duration-200 origin-top-right",
+        "absolute top-full right-0 mt-2 w-56 bg-white/90 dark:bg-dark-card/90 backdrop-blur-xl rounded-[24px] shadow-2xl border border-light-border dark:border-dark-border p-2 flex-col gap-1 z-50 md:static md:w-auto md:bg-transparent md:dark:bg-transparent md:shadow-none md:border-none md:p-0 md:flex-row md:flex md:gap-3 transition-all duration-200 origin-top-right",
         isMobileMenuOpen 
           ? "opacity-100 scale-100 pointer-events-auto flex" 
           : "opacity-0 scale-95 pointer-events-none flex md:opacity-100 md:scale-100 md:pointer-events-auto"
@@ -129,18 +129,18 @@ export const Header = ({
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-48 bg-white/90 dark:bg-slate-800/90 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 py-2 z-50 overflow-hidden hidden md:block"
+                  className="absolute right-0 mt-2 w-48 bg-white/90 dark:bg-dark-card/90 backdrop-blur-xl rounded-[24px] shadow-xl border border-light-border dark:border-dark-border py-2 z-50 overflow-hidden hidden md:block"
                 >
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700 mb-1">
-                    <p className="text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">Аккаунт</p>
-                    <p className="text-sm font-bold text-gray-800 dark:text-gray-200 truncate">{user.displayName}</p>
+                  <div className="px-4 py-2 border-b border-light-border dark:border-dark-border mb-1">
+                    <p className="text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">Аккаунт</p>
+                    <p className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary truncate">{user.displayName}</p>
                   </div>
                   <button 
                     onClick={() => {
                       logout();
                       setIsProfileMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-left cursor-pointer"
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors text-left cursor-pointer"
                   >
                     <LogOut size={16} />
                     <span className="font-bold">Выйти из профиля</span>
@@ -159,17 +159,17 @@ export const Header = ({
           </button>
         )}
 
-        <div className="h-px bg-slate-200 dark:bg-slate-700 my-1 md:hidden"></div>
+        <div className="h-px bg-light-border dark:bg-dark-border my-1 md:hidden"></div>
 
         <button 
           onClick={() => {
             setIsSettingsModalOpen(true);
             setIsMobileMenuOpen(false);
           }} 
-          className="w-full md:w-10 h-10 flex items-center justify-start md:justify-center gap-3 px-3 md:px-0 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 md:bg-white md:dark:bg-gray-800/50 md:border md:border-gray-200 md:dark:border-gray-700 md:hover:border-blue-400 md:dark:hover:border-blue-500 transition-all cursor-pointer text-slate-700 dark:text-slate-200 md:text-gray-500 md:dark:text-gray-400 shadow-none md:shadow-sm" 
+          className="w-full md:w-10 h-10 flex items-center justify-start md:justify-center gap-3 px-3 md:px-0 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/5 md:bg-white md:dark:bg-dark-card md:border md:border-light-border md:dark:border-dark-border md:hover:border-blue-400 md:dark:hover:border-blue-500 transition-all cursor-pointer text-light-text-primary dark:text-dark-text-primary md:text-light-text-secondary md:dark:text-dark-text-secondary shadow-none md:shadow-sm" 
           title="Настройки и Данные"
         >
-          <Settings size={18} className="md:w-5 md:h-5 text-slate-500 dark:text-slate-400" />
+          <Settings size={18} className="md:w-5 md:h-5 text-light-text-secondary dark:text-dark-text-secondary" />
           <span className="md:hidden text-sm font-medium">Настройки</span>
         </button>
         <button 
@@ -177,10 +177,10 @@ export const Header = ({
             setIsDarkMode(!isDarkMode);
             setIsMobileMenuOpen(false);
           }} 
-          className="w-full md:w-10 h-10 flex items-center justify-start md:justify-center gap-3 px-3 md:px-0 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/50 md:bg-white md:dark:bg-gray-800/50 md:border md:border-gray-200 md:dark:border-gray-700 md:hover:border-blue-400 md:dark:hover:border-blue-500 transition-all cursor-pointer text-slate-700 dark:text-slate-200 md:text-gray-500 md:dark:text-gray-400 shadow-none md:shadow-sm" 
+          className="w-full md:w-10 h-10 flex items-center justify-start md:justify-center gap-3 px-3 md:px-0 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/5 md:bg-white md:dark:bg-dark-card md:border md:border-light-border md:dark:border-dark-border md:hover:border-blue-400 md:dark:hover:border-blue-500 transition-all cursor-pointer text-light-text-primary dark:text-dark-text-primary md:text-light-text-secondary md:dark:text-dark-text-secondary shadow-none md:shadow-sm" 
           title="Сменить тему"
         >
-          {isDarkMode ? <Sun size={18} className="md:w-5 md:h-5 text-amber-500" /> : <Moon size={18} className="md:w-5 md:h-5 text-slate-500 dark:text-slate-400" />}
+          {isDarkMode ? <Sun size={18} className="md:w-5 md:h-5 text-amber-500" /> : <Moon size={18} className="md:w-5 md:h-5 text-light-text-secondary dark:text-dark-text-secondary" />}
           <span className="md:hidden text-sm font-medium">Тема</span>
         </button>
 
@@ -191,7 +191,7 @@ export const Header = ({
               logout();
               setIsMobileMenuOpen(false);
             }}
-            className="md:hidden w-full h-10 flex items-center justify-start gap-3 px-3 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer text-red-600 dark:text-red-400"
+            className="md:hidden w-full h-10 flex items-center justify-start gap-3 px-3 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors cursor-pointer text-rose-600 dark:text-rose-400"
           >
             <LogOut size={18} />
             <span className="text-sm font-medium">Выйти из профиля</span>

@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
-import { DepositsDashboard } from './components/DepositsDashboard';
-import { OverviewDashboard } from './components/OverviewDashboard';
+import { UnifiedDashboard } from './components/dashboard/UnifiedDashboard';
 import { DepositList } from './components/deposits/DepositList';
 import { Settings } from './components/Settings';
 import { IncomeTracker } from './components/IncomeTracker';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from './db';
+import { db, initDB } from './db';
 
 export default function App() {
+  useEffect(() => {
+    initDB();
+  }, []);
+
   return (
     <ErrorBoundary>
       <AppContent />
@@ -18,11 +21,11 @@ export default function App() {
 }
 
 function AppContent() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'dashboard' | 'deposits' | 'ndfl' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings'>('dashboard');
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const theme = appSettings?.theme || 'light';
-  const [deposits, setDeposits] = useState<any[]>([]);
-  const [taxSettings, setTaxSettings] = useState<any[]>([]);
+  const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
+  const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
@@ -34,34 +37,23 @@ function AppContent() {
   }, [theme]);
 
   useEffect(() => {
-    const loadData = async () => {
-      const deps = await db.deposits.toArray();
-      setDeposits(deps);
-      const ts = await db.taxYearSettings.toArray();
-      setTaxSettings(ts);
+    const handleTabChange = (e: Event) => {
+      const customEvent = e as CustomEvent<'dashboard' | 'deposits' | 'ndfl' | 'settings'>;
+      setActiveTab(customEvent.detail);
     };
-    loadData();
-    
-    const handleSync = () => loadData();
-    window.addEventListener('app:sync', handleSync);
-    return () => window.removeEventListener('app:sync', handleSync);
+    window.addEventListener('app:change-tab', handleTabChange as EventListener);
+
+    return () => {
+      window.removeEventListener('app:change-tab', handleTabChange as EventListener);
+    };
   }, []);
 
   return (
     <Layout activeTab={activeTab} onTabChange={setActiveTab} theme={theme}>
-      {activeTab === 'overview' && (
-        <OverviewDashboard 
-          deposits={deposits} 
-          taxSettings={taxSettings} 
-          appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
-        />
-      )}
       {activeTab === 'dashboard' && (
-        <DepositsDashboard 
+        <UnifiedDashboard 
           deposits={deposits} 
           taxSettings={taxSettings} 
-          selectedYear={selectedYear} 
-          onYearChange={setSelectedYear} 
           appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
         />
       )}

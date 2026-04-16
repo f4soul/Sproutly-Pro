@@ -13,6 +13,13 @@ export type YearData = {
   year: number;
   additionalIncome: number;
   bonusBase: number;
+  baseSalary?: number; // Base salary for auto-filling
+  iisContribution?: number; // Contribution to IIS (Type A deduction)
+  deductions?: {
+    social?: number; // Medical, Education, etc.
+    property?: number; // Home purchase
+    standard?: number; // Children, etc.
+  };
   months: MonthData[];
   quarters: QuarterData[];
   annualBonusCoef: number;
@@ -30,6 +37,7 @@ export type AppState = {
   years: Record<number, YearData>;
   activeYear: number;
   taxBrackets: Record<number, TaxBracket[]>;
+  simulation?: SimulationState;
 };
 
 export type Toast = {
@@ -43,6 +51,13 @@ export type TaxBracketDetail = {
   amount: number;
   tax: number;
   label: string;
+};
+
+export type SimulationState = {
+  isActive: boolean;
+  salaryIncrease: number; // percentage, e.g. 10 for 10%
+  bonusMultiplier: number; // multiplier, e.g. 1.2 for 20% increase
+  extraIncome: number; // flat amount to add to total gross
 };
 
 export type YearlyTotals = {

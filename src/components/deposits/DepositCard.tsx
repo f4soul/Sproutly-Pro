@@ -30,7 +30,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
 
   return (
     <div className={cn(
-      "flex flex-col p-3 sm:p-4 bg-white dark:bg-dark-card hover:bg-slate-50 dark:hover:bg-white/5 transition-all border-b border-slate-200 dark:border-slate-700/50 last:border-b-0 relative overflow-hidden",
+      "flex flex-col p-3 sm:p-4 bg-white dark:bg-dark-card hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-all border-b border-light-border dark:border-dark-border last:border-b-0 relative overflow-hidden",
       isClosed && "opacity-70 grayscale-[0.3]"
     )}>
       {isClosed && (
@@ -62,7 +62,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/50">
+      <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-light-border dark:border-dark-border">
         <div className="flex flex-col">
           <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold">Доход</span>
           <span className="text-sm font-bold text-emerald-600">+{formatCurrency(income)}</span>
@@ -109,14 +109,14 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
               <div className="flex justify-end gap-2 mt-2">
                 <button 
                   onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-                  className="px-3 py-1.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg text-light-text-secondary hover:text-blue-600 transition-all font-medium flex items-center gap-1.5"
+                  className="apple-button bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-light-text-secondary hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   Изменить
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-                  className="px-3 py-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 rounded-lg text-rose-600 transition-all font-medium flex items-center gap-1.5"
+                  className="apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   В архив

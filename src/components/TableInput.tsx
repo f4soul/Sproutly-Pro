@@ -38,7 +38,7 @@ export const TableInput = ({
       onChange={(e) => onChange(isInteger ? Math.round(parseFloat(e.target.value) || 0) : (parseFloat(e.target.value) || 0))}
       step={isInteger ? "1" : step}
       className={cn(
-        "w-full bg-transparent border border-transparent hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/30 outline-none px-1 md:px-2 py-1.5 text-right transition-all font-mono tabular-nums rounded-md text-xs md:text-sm",
+        "apple-input w-full px-1 md:px-2 py-1.5 text-right font-mono tabular-nums text-xs md:text-sm",
         className
       )}
     />

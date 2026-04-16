@@ -6,12 +6,13 @@
       "type": "object",
       "properties": {
         "years": {
-          "type": "array",
-          "items": {
+          "type": "object",
+          "additionalProperties": {
             "type": "object",
             "properties": {
               "year": { "type": "integer" },
               "bonusBase": { "type": "number" },
+              "baseSalary": { "type": "number" },
               "annualBonusAmount": { "type": "number" },
               "extraBonusAmount": { "type": "number" },
               "months": {
@@ -30,7 +31,8 @@
                 "items": {
                   "type": "object",
                   "properties": {
-                    "bonusAmount": { "type": "number" }
+                    "bonusAmount": { "type": "number" },
+                    "bonusCoef": { "type": "number" }
                   }
                 }
               }
@@ -38,25 +40,82 @@
           }
         },
         "taxBrackets": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "limit": { "type": "number" },
-              "rate": { "type": "number" }
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "limit": { "type": "number" },
+                "rate": { "type": "number" },
+                "label": { "type": "string" }
+              }
             }
           }
         },
         "activeYear": { "type": "integer" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "number" }
       },
       "required": ["years", "taxBrackets", "activeYear"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "A bank deposit record.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "bank": { "type": "string" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "rate": { "type": "number" },
+        "formula": { "type": "string" },
+        "isClosed": { "type": "boolean" },
+        "isArchived": { "type": "boolean" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "UserSettings": {
+      "title": "User Settings",
+      "description": "Application settings for a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "theme": { "type": "string", "enum": ["light", "dark"] },
+        "defaultNdflRate": { "type": "number" },
+        "defaultLimit2025": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      }
+    },
+    "Bank": {
+      "title": "Bank",
+      "description": "A bank record, possibly custom.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "isCustom": { "type": "boolean" },
+        "updatedAt": { "type": "number" }
+      }
     }
   },
   "firestore": {
     "/users/{userId}/data/income": {
       "schema": "UserIncomeData",
       "description": "The primary income data document for a user."
+    },
+    "/deposits/{depositId}": {
+      "schema": "Deposit",
+      "description": "Individual deposit records."
+    },
+    "/userSettings/{userId}": {
+      "schema": "UserSettings",
+      "description": "User-specific application settings."
+    },
+    "/banks/{bankId}": {
+      "schema": "Bank",
+      "description": "Bank records."
     }
   }
 }

@@ -29,5 +29,12 @@ export const DEFAULT_TAX_BRACKETS: Record<number, TaxBracket[]> = {
     { limit: 20000000, rate: 0.18, label: '5 млн – 20 млн ₽' },
     { limit: 50000000, rate: 0.20, label: '20 млн – 50 млн ₽' },
     { limit: Infinity, rate: 0.22, label: 'Свыше 50 млн ₽' }
+  ],
+  2026: [
+    { limit: 2400000, rate: 0.13, label: 'До 2.4 млн ₽' },
+    { limit: 5000000, rate: 0.15, label: '2.4 млн – 5 млн ₽' },
+    { limit: 20000000, rate: 0.18, label: '5 млн – 20 млн ₽' },
+    { limit: 50000000, rate: 0.20, label: '20 млн – 50 млн ₽' },
+    { limit: Infinity, rate: 0.22, label: 'Свыше 50 млн ₽' }
   ]
 };

@@ -78,7 +78,7 @@ export const Archive: React.FC = () => {
       <div className="flex justify-end">
         <button
           onClick={() => setIsClearModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-rose-500/20 transition-all cursor-pointer border border-rose-500/20"
+          className="apple-button flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] uppercase tracking-widest border border-rose-500/20"
         >
           <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />
           Очистить архив
@@ -94,7 +94,7 @@ export const Archive: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
               <div className="flex items-center gap-4 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
