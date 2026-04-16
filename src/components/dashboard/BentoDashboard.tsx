@@ -29,9 +29,8 @@ import {
   CartesianGrid 
 } from 'recharts';
 import { Deposit, TaxYearSettings, AppSettings } from '../../types';
-import { calculateIncomeByYears } from '../../lib/depositCalculations';
 import { useAppState } from '../../hooks/useAppState';
-import { calculateProgressiveTaxDetailed } from '../../lib/taxCalculator';
+import { calculateUnifiedFinance } from '../../lib/unifiedFinance';
 import { formatCurrency, cn } from '../../lib/utils';
 import { exportToPDF } from '../../services/ExportService';
 
@@ -47,8 +46,7 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
   const [isPrivate, setIsPrivate] = useState(false);
 
   const data = useMemo(() => {
-    // 1. Deposits Data
-    let depositsIncome = 0;
+    // 1. Deposits + Events
     let totalDepositsAmount = 0;
     const upcomingEvents: { date: Date; type: 'deposit_end' | 'salary'; label: string; amount?: number }[] = [];
 
@@ -56,9 +54,6 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
       if (!d.isArchived) {
         totalDepositsAmount += d.amount;
       }
-      const yearIncomes = calculateIncomeByYears(d);
-      const yearIncome = yearIncomes.find(yi => yi.year === selectedYear)?.income || 0;
-      depositsIncome += yearIncome;
 
       if (d.endDate) {
         const endDate = new Date(d.endDate);
@@ -73,21 +68,24 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
       }
     });
 
-    const currentYearSettings = taxSettings.find(s => s.year === selectedYear) || { year: selectedYear, limit: 210000, ndflRate: 13 };
-    const taxableDepositIncome = Math.max(0, depositsIncome - currentYearSettings.limit);
-
-    // 2. Salary Data
-    let salaryGross = 0;
+    // 2. Unified finance calculation
     const yearData = state.years[selectedYear];
-    
-    const sim = state.simulation;
-    const isSimActive = sim?.isActive;
-    const salaryMult = isSimActive ? (1 + (sim.salaryIncrease || 0) / 100) : 1;
-    const bonusMult = isSimActive ? (sim.bonusMultiplier || 1) : 1;
-    const extraSimIncome = isSimActive ? (sim.extraIncome || 0) : 0;
+    const unified = calculateUnifiedFinance({
+      selectedYear,
+      yearData,
+      deposits,
+      taxSettings,
+      taxBrackets: state.taxBrackets,
+      simulation: state.simulation
+    });
 
     if (yearData) {
-      const calcMonths = yearData.months.map((m, index) => {
+      const sim = state.simulation;
+      const isSimActive = sim?.isActive;
+      const salaryMult = isSimActive ? (1 + (sim.salaryIncrease || 0) / 100) : 1;
+      const bonusMult = isSimActive ? (sim.bonusMultiplier || 1) : 1;
+
+      yearData.months.forEach((m, index) => {
         const baseSalary = m.salary * salaryMult;
         const base = m.factDays < m.normDays ? baseSalary * (m.factDays / m.normDays) : baseSalary;
         let bonus = 0;
@@ -95,7 +93,6 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
           const qIndex = Math.floor(index / 3);
           bonus += (yearData.quarters?.[qIndex]?.bonusAmount || 0) * bonusMult;
         }
-        
         // Add salary payment days to events
         const paymentDate = new Date(selectedYear, index, 10); // Assume 10th of each month
         upcomingEvents.push({
@@ -104,40 +101,15 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
           label: 'Зарплата',
           amount: base + bonus
         });
-
-        return base + bonus;
       });
-      salaryGross = calcMonths.reduce((sum, m) => sum + m, 0) + 
-        ((yearData.annualBonusAmount || 0) * bonusMult) + 
-        ((yearData.extraBonusAmount || 0) * bonusMult) + 
-        (yearData.additionalIncome || 0) + 
-        extraSimIncome;
     }
-
-    // 3. Combined Progressive Tax Calculation
-    const totalDeductions = (yearData?.iisContribution || 0) + 
-      (yearData?.deductions?.social || 0) + 
-      (yearData?.deductions?.property || 0) + 
-      (yearData?.deductions?.standard || 0);
-
-    const totalTaxableIncome = salaryGross + taxableDepositIncome;
-    const { tax: totalTax } = calculateProgressiveTaxDetailed(totalTaxableIncome, selectedYear, state.taxBrackets, totalDeductions);
-    
-    const { tax: salaryTax } = calculateProgressiveTaxDetailed(salaryGross, selectedYear, state.taxBrackets, totalDeductions);
-    const depositsTax = totalTax - salaryTax;
-
-    const salaryNet = salaryGross - salaryTax;
-    const depositsNet = depositsIncome - depositsTax;
-
-    const totalGross = salaryGross + depositsIncome;
-    const totalNet = salaryNet + depositsNet;
 
     // Insights
     const insights = [];
-    if (depositsIncome > currentYearSettings.limit) {
+    if (unified.depositsIncome > unified.depositLimit) {
       insights.push({
         title: "Лимит вкладов превышен",
-        text: `Вы заплатите ${formatCurrency(depositsTax)} налога с процентов.`,
+        text: `Вы заплатите ${formatCurrency(unified.depositsTax)} налога с процентов.`,
         type: 'warning'
       });
     }
@@ -150,10 +122,10 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
       });
     }
 
-    if (isSimActive) {
+    if (state.simulation?.isActive) {
       insights.unshift({
         title: "Режим симуляции",
-        text: "Вы видите прогнозные данные. Оклад +" + sim.salaryIncrease + "%, премии x" + sim.bonusMultiplier,
+        text: "Вы видите прогнозные данные. Оклад +" + state.simulation.salaryIncrease + "%, премии x" + state.simulation.bonusMultiplier,
         type: 'info'
       });
     }
@@ -166,16 +138,8 @@ export function BentoDashboard({ deposits, taxSettings, appSettings }: BentoDash
       .slice(0, 5);
 
     return {
-      depositsIncome,
-      depositsTax,
-      depositsNet,
-      salaryGross,
-      salaryTax,
-      salaryNet,
-      totalGross,
-      totalTax,
-      totalNet,
-      limit: currentYearSettings.limit,
+      ...unified,
+      limit: unified.depositLimit,
       totalDepositsAmount,
       upcomingEvents: sortedEvents,
       insights

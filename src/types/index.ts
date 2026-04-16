@@ -117,6 +117,7 @@ export interface AppSettings {
   theme: 'light' | 'dark';
   defaultNdflRate: number;
   defaultLimit2025: number;
+  incomeCalculationMode?: 'salary' | 'combined';
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
   showDevTools?: boolean;

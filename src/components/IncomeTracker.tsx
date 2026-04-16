@@ -3,27 +3,33 @@ import { Info, PanelRightOpen, PanelRightClose } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MonthData } from '../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../lib/constants';
-import { generateDefaultYear, getDefaultExpandedQuarters, calculateYearTotals } from '../lib/helpers';
-import { calculateProgressiveTaxDetailed } from '../lib/taxCalculator';
+import { generateDefaultYear, getDefaultExpandedQuarters } from '../lib/helpers';
 import { TaxReferenceModal } from './TaxReferenceModal';
 import { ClearDataModal } from './ClearDataModal';
 import { DeleteYearModal } from './DeleteYearModal';
 import { ToastContainer } from './ToastContainer';
 import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
-import { QuarterRow } from './QuarterRow';
 import { AnnualBonusSection } from './AnnualBonusSection';
 import { QuarterAccordion } from './QuarterAccordion';
-import { TableInput } from './TableInput';
-import { CoefInput } from './CoefInput';
 import { TaxAdvisorSection } from './TaxAdvisorSection';
 import { ScenarioSimulator } from './ScenarioSimulator';
 import { exportToPDF } from '../services/ExportService';
 import { useAppState } from '../hooks/useAppState';
 import { cn } from '../lib/utils';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../db';
+import { IncomeCalculationModeToggle } from './IncomeCalculationModeToggle';
+import { IncomeDesktopTable } from './IncomeDesktopTable';
+import { useIncomeCalculationMode } from '../hooks/useIncomeCalculationMode';
+import { useIncomeTotals } from '../hooks/useIncomeTotals';
+import { BonusConfigControls } from './BonusConfigControls';
 
 export function IncomeTracker() {
   const { state, setState, addToast, toasts, removeToast } = useAppState();
+  const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
+  const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
+  const { mode: calculationMode, setMode: setCalculationMode } = useIncomeCalculationMode('salary');
   
   const handleCopy = (value: number, type: 'net' | 'gross' | 'tax') => {
     navigator.clipboard.writeText(value.toString());
@@ -245,52 +251,17 @@ export function IncomeTracker() {
     });
   }, [activeYearData, state.simulation]);
 
-  const yearlyTotals = useMemo(() => {
-    const sim = state.simulation;
-    const isSimActive = sim?.isActive;
-    const bonusMult = isSimActive ? (sim.bonusMultiplier || 1) : 1;
-    const extraSimIncome = isSimActive ? (sim.extraIncome || 0) : 0;
-
-    const totalGrossMonths = calculatedMonths.reduce((sum, m) => sum + m.gross, 0);
-    const totalGross = totalGrossMonths + 
-      ((activeYearData.annualBonusAmount || 0) * bonusMult) + 
-      ((activeYearData.extraBonusAmount || 0) * bonusMult) + 
-      (activeYearData.additionalIncome || 0) + 
-      extraSimIncome;
-    
-    const totalDeductions = (activeYearData.iisContribution || 0) + 
-      (activeYearData.deductions?.social || 0) + 
-      (activeYearData.deductions?.property || 0) + 
-      (activeYearData.deductions?.standard || 0);
-
-    const { tax: progressiveTax, brackets } = calculateProgressiveTaxDetailed(totalGross, state.activeYear, state.taxBrackets, totalDeductions);
-    const flatTax = Math.max(0, totalGross - totalDeductions) * 0.13;
-    
-    const finalNet = totalGross - progressiveTax;
-    const flatNet = totalGross - flatTax;
-    
-    const effectiveRate = totalGross > 0 ? (progressiveTax / totalGross) * 100 : 0;
-    const taxDifference = progressiveTax - flatTax;
-
-    return {
-      totalGross,
-      progressiveTax,
-      flatTax,
-      finalNet,
-      flatNet,
-      effectiveRate,
-      taxDifference,
-      brackets
-    };
-  }, [calculatedMonths, activeYearData, state.activeYear, state.taxBrackets, state.simulation]);
-
   const prevYearData = state.years[state.activeYear - 1];
-  const prevYearTotals = useMemo(() => {
-    return prevYearData ? calculateYearTotals(prevYearData, state.taxBrackets) : null;
-  }, [prevYearData, state.taxBrackets]);
-
-  const grossDiff = prevYearTotals ? yearlyTotals.totalGross - prevYearTotals.totalGross : null;
-  const netDiff = prevYearTotals ? yearlyTotals.finalNet - prevYearTotals.finalNet : null;
+  const { yearlyTotals, grossDiff, netDiff } = useIncomeTotals({
+    activeYear: state.activeYear,
+    activeYearData,
+    prevYearData,
+    deposits,
+    taxSettings,
+    taxBrackets: state.taxBrackets,
+    simulation: state.simulation,
+    calculationMode
+  });
 
   if (!activeYearData) return null;
 
@@ -313,6 +284,7 @@ export function IncomeTracker() {
           <div className={cn("space-y-6 min-w-0 transition-all duration-300", isSidebarOpen ? "w-full xl:w-[72%]" : "w-full")}>
             {/* Tabs & Toolbar */}
             <div className="flex justify-between items-center">
+              <IncomeCalculationModeToggle value={calculationMode} onChange={setCalculationMode} />
               <YearTabs 
                 availableYears={availableYears}
                 activeYear={state.activeYear}
@@ -349,45 +321,13 @@ export function IncomeTracker() {
             <div className="block md:hidden space-y-4">
               {/* Header Settings Card */}
               <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 p-4 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">База:</span>
-                  <div className="relative w-32">
-                    <TableInput
-                      value={activeYearData.bonusBase ?? 0}
-                      onChange={(v) => handleAnnualBonusChange('bonusBase', v)}
-                      hideDecimals={true}
-                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 pr-6 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm transition-all shadow-sm"
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₽</span>
-                  </div>
-                </div>
-                <div className="border-t border-slate-100 dark:border-slate-800/50 pt-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-3">Премии (КФ):</span>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[0, 1, 2, 3].map(qIndex => (
-                      <div key={qIndex} className="flex flex-col items-center gap-1">
-                        <span className="text-[9px] text-slate-400 uppercase font-black tracking-tighter">{qIndex + 1} КВ</span>
-                        <div className="w-full flex items-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-1 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                          <CoefInput
-                            value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
-                            onChange={(v) => handleQuarterChange(qIndex, 'bonusCoef', v)}
-                            className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-xs p-0"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-[9px] text-indigo-500 uppercase font-black tracking-tighter">Год</span>
-                      <div className="w-full flex items-center bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-lg p-1 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                        <CoefInput
-                          value={activeYearData.annualBonusCoef ?? 0}
-                          onChange={(v) => handleAnnualBonusChange('annualBonusCoef', v)}
-                          className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-xs p-0"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <BonusConfigControls
+                  compact
+                  activeYearData={activeYearData}
+                  onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
+                  onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
+                  onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
+                />
               </div>
 
               {/* Quarters Accordion */}
@@ -416,97 +356,18 @@ export function IncomeTracker() {
             </div>
 
             {/* Desktop Layout (Table) */}
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={state.activeYear}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="hidden md:block bg-white dark:bg-slate-900/50 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-2"
-              >
-                <div className="overflow-x-auto custom-scrollbar relative rounded-2xl">
-                  <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
-                    <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
-                      <tr>
-                        <th colSpan={6} className="px-2 py-1.5 md:px-3 md:py-2 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b]">
-                          <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                              <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">База:</span>
-                              <div className="relative w-18 md:w-24">
-                                <TableInput
-                                  value={activeYearData.bonusBase ?? 0}
-                                  onChange={(v) => handleAnnualBonusChange('bonusBase', v)}
-                                  hideDecimals={true}
-                                  className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 pr-6 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-center text-xs transition-all shadow-sm"
-                                />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">₽</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 md:gap-4 overflow-x-auto custom-scrollbar pb-1">
-                              <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 hidden sm:inline">Премии (КФ):</span>
-                              <div className="flex gap-1 md:gap-2">
-                                {[0, 1, 2, 3].map(qIndex => (
-                                  <div key={qIndex} className="flex flex-col items-center gap-0.5">
-                                    <span className="text-[8px] text-slate-400 uppercase font-black tracking-tighter">{qIndex + 1} КВ</span>
-                                    <div className="flex items-center bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md px-1 py-0.5 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                                      <CoefInput
-                                        value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
-                                        onChange={(v) => handleQuarterChange(qIndex, 'bonusCoef', v)}
-                                        className="w-8 md:w-10 bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-[10px] p-0"
-                                      />
-                                    </div>
-                                  </div>
-                                ))}
-                                <div className="flex flex-col items-center gap-0.5 ml-1">
-                                  <span className="text-[8px] text-indigo-500 uppercase font-black tracking-tighter">Год</span>
-                                  <div className="flex items-center bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-md px-1 py-0.5 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                                    <CoefInput
-                                      value={activeYearData.annualBonusCoef ?? 0}
-                                      onChange={(v) => handleAnnualBonusChange('annualBonusCoef', v)}
-                                      className="w-8 md:w-10 bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-[10px] p-0"
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </th>
-                      </tr>
-                      <tr>
-                        <th className="px-1 md:px-2 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-left shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[80px] lg:min-w-[100px]">Месяц</th>
-                        <th className="px-1 md:px-2 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[90px] lg:min-w-[120px]" title="Фактически отработано / Норма">Дни (Факт/Норма)</th>
-                        <th className="px-1 md:px-1.5 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[80px] lg:min-w-[110px]">Оклад (₽)</th>
-                        <th className="px-1 md:px-1.5 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[80px] lg:min-w-[110px]">Премия (₽)</th>
-                        <th className="px-1 md:px-2 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-indigo-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[90px] lg:min-w-[120px]">Gross (₽)</th>
-                        <th className="px-1 md:px-2 py-1.5 md:py-2 text-[9px] md:text-[10px] lg:text-xs tracking-widest uppercase text-emerald-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-auto min-w-[90px] lg:min-w-[120px]">Net 13% (₽)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                      {QUARTERS.map((q, qIndex) => (
-                        <QuarterRow 
-                          key={qIndex}
-                          q={q}
-                          qIndex={qIndex}
-                          activeYearData={activeYearData}
-                          calculatedMonths={calculatedMonths}
-                          handleQuarterChange={handleQuarterChange}
-                          handleMonthChange={handleMonthChange}
-                        />
-                      ))}
-
-                      {/* Annual Bonus & Totals */}
-                      <AnnualBonusSection 
-                        activeYearData={activeYearData}
-                        handleAnnualBonusChange={handleAnnualBonusChange}
-                        calculatedMonths={calculatedMonths}
-                        yearlyTotals={yearlyTotals}
-                      />
-                    </tbody>
-                  </table>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+            <IncomeDesktopTable
+              yearKey={state.activeYear}
+              activeYearData={activeYearData}
+              calculatedMonths={calculatedMonths}
+              yearlyTotals={yearlyTotals}
+              onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
+              onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
+              onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
+              handleQuarterChange={handleQuarterChange}
+              handleMonthChange={handleMonthChange}
+              handleAnnualBonusChange={handleAnnualBonusChange}
+            />
           </div>
 
           {/* Right Column: Sidebar (Collapsible) */}
