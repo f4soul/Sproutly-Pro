@@ -262,7 +262,8 @@ export async function initDB() {
       id: 'main',
       theme: 'light',
       defaultNdflRate: 13,
-      defaultLimit2025: 210000
+      defaultLimit2025: 210000,
+      incomeCalculationMode: 'salary'
     });
   }
 
