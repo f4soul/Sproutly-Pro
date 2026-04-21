@@ -18,10 +18,14 @@ interface DashboardProps {
   selectedYear: number;
   onYearChange: (year: number) => void;
   appSettings: AppSettings;
+  isPrivate?: boolean;
 }
 
-export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings }: DashboardProps) {
+export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings, isPrivate = false }: DashboardProps) {
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
+  const [bankLogoErrors, setBankLogoErrors] = useState<Record<string, boolean>>({});
+
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   const currentYearSettings = useMemo(() => 
     taxSettings.find(s => s.year === selectedYear) || { year: selectedYear, limit: 210000, ndflRate: 13 },
@@ -117,125 +121,35 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="space-y-6 md:space-y-12 max-w-5xl mx-auto" 
+      className="space-y-6 md:space-y-8 max-w-5xl mx-auto" 
       id="dashboard-content"
     >
-      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 md:mb-8">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/5 text-blue-600 dark:text-blue-400 text-[11px] font-bold uppercase tracking-widest">
-              <TrendingUp className="w-3.5 h-3.5 stroke-[1.5px]" />
-              Аналитика
-            </div>
-            <div className="text-light-text-secondary dark:text-dark-text-secondary text-sm font-medium">
-              за {selectedYear} год
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Menu as="div" className="relative">
-            <Menu.Button className="apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary flex items-center gap-2 text-sm">
-              <Download className="w-4 h-4 stroke-[1.5px]" />
-              Экспорт
-            </Menu.Button>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-40 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 overflow-hidden focus:outline-none">
-                <Menu.Item>
-                  {({ active }) => (
-                    <button onClick={() => exportToPDF('dashboard-content', deposits)} className={cn("w-full flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer", active ? "bg-[#F5F5F7] dark:bg-white/5" : "")}>
-                      <FileText className="w-4 h-4 text-rose-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">PDF Document</span>
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button onClick={() => exportToImage('dashboard-content', deposits)} className={cn("w-full flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer", active ? "bg-[#F5F5F7] dark:bg-white/5" : "")}>
-                      <ImageIcon className="w-4 h-4 text-indigo-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">PNG Image</span>
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button onClick={() => exportToXLSX(deposits)} className={cn("w-full flex items-center gap-3 px-4 py-3 transition-colors cursor-pointer", active ? "bg-[#F5F5F7] dark:bg-white/5" : "")}>
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">Excel Sheet</span>
-                    </button>
-                  )}
-                </Menu.Item>
-              </Menu.Items>
-            </Transition>
-          </Menu>
-
-          <Listbox value={selectedYear} onChange={onYearChange}>
-            <div className="relative">
-              <Listbox.Button className="apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary flex items-center gap-2 text-sm min-w-[120px] justify-between">
-                <span>{selectedYear} год</span>
-                <ChevronDown className="h-4 w-4 text-light-text-secondary dark:text-dark-text-secondary stroke-[1.5px]" />
-              </Listbox.Button>
-              <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                <Listbox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-dark-card py-1 text-sm shadow-2xl z-[100] border border-light-border dark:border-dark-border focus:outline-none">
-                  {years.map((year) => (
-                    <Listbox.Option
-                      key={year}
-                      className={({ active }) => cn('relative cursor-pointer select-none py-2.5 pl-10 pr-4 font-medium', active ? 'bg-[#F5F5F7] dark:bg-white/5 text-blue-600' : 'text-light-text-primary dark:text-dark-text-primary')}
-                      value={year}
-                    >
-                      {({ selected }) => (
-                        <>
-                          <span className={cn('block truncate', selected ? 'font-bold' : 'font-medium')}>{year}</span>
-                          {selected ? (
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-blue-600">
-                              <Check className="h-4 w-4 stroke-[2px]" />
-                            </span>
-                          ) : null}
-                        </>
-                      )}
-                    </Listbox.Option>
-                  ))}
-                </Listbox.Options>
-              </Transition>
-            </div>
-          </Listbox>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 md:gap-4">
         <StatCard 
           index={0}
           title="Общий доход" 
-          value={formatCurrency(stats.totalIncome)} 
+          value={formatVal(stats.totalIncome)} 
           icon={<TrendingUp className="w-4 h-4 text-emerald-600" />}
           description="Все проценты"
         />
         <StatCard 
           index={1}
           title="Лимит" 
-          value={formatCurrency(currentYearSettings.limit)} 
+          value={formatVal(currentYearSettings.limit)} 
           icon={<ShieldAlert className="w-4 h-4 text-amber-600" />}
           description="Необлагаемая сумма"
         />
         <StatCard 
           index={2}
           title="Налоговая база" 
-          value={formatCurrency(stats.taxableBase)} 
+          value={formatVal(stats.taxableBase)} 
           icon={<Landmark className="w-4 h-4 text-teal-600" />}
           description="Сверх лимита"
         />
         <StatCard 
           index={3}
           title="Налог к уплате" 
-          value={formatCurrency(stats.tax)} 
+          value={formatVal(stats.tax)} 
           icon={<Receipt className="w-4 h-4 text-rose-600" />}
           description={`${currentYearSettings.ndflRate}% от базы`}
           highlight={stats.tax > 0}
@@ -243,7 +157,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-8 gap-4 md:gap-6">
-        <div className="md:col-span-1 xl:col-span-5 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="xl:col-span-5 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-8 shrink-0">
             <h3 className="font-bold text-lg text-light-text-primary dark:text-dark-text-primary">Использование лимита</h3>
             <span className={cn(
@@ -269,7 +183,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-light-text-secondary dark:text-dark-text-secondary shrink-0">
               <span>0 ₽</span>
-              <span>{formatCurrency(currentYearSettings.limit)}</span>
+              <span>{formatVal(currentYearSettings.limit)}</span>
             </div>
 
             <div className="pt-8 border-t border-light-border dark:border-dark-border flex-1 flex flex-col min-h-0">
@@ -285,7 +199,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
                   {sortOrder === 'desc' ? <ArrowDownWideNarrow className="w-4 h-4 stroke-[1.5px]" /> : <ArrowUpNarrowWide className="w-4 h-4 stroke-[1.5px]" />}
                 </button>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[240px] md:max-h-none min-h-0 content-start">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[240px] lg:max-h-none min-h-0 content-start">
                 <AnimatePresence mode="popLayout">
                   {sortedBankData.length > 0 ? sortedBankData.map((bank, idx) => {
                     const bankDetails = getBankDetails(bank.name);
@@ -299,17 +213,27 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
                         className="flex items-center justify-between gap-3 px-3 py-1 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border hover:border-blue-500/30 hover:bg-white dark:hover:bg-dark-card transition-all group cursor-pointer h-fit"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-5 h-5 rounded-md bg-white dark:bg-dark-card flex items-center justify-center overflow-hidden shrink-0 border border-light-border dark:border-dark-border p-0.5 shadow-sm">
-                            <img 
-                              src={bankDetails.logoUrl} 
-                              alt="" 
-                              className="w-full h-full object-contain" 
-                              referrerPolicy="no-referrer" 
-                            />
+                          <div 
+                            className="w-5 h-5 rounded-md bg-white dark:bg-dark-card flex items-center justify-center overflow-hidden shrink-0 border border-light-border dark:border-dark-border p-0.5 shadow-sm"
+                            style={{ backgroundColor: (bankLogoErrors[bank.name] || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
+                          >
+                            {bankDetails.logoUrl && !bankLogoErrors[bank.name] ? (
+                              <img 
+                                src={bankDetails.logoUrl} 
+                                alt="" 
+                                className="w-full h-full object-contain" 
+                                referrerPolicy="no-referrer"
+                                onError={() => setBankLogoErrors(prev => ({ ...prev, [bank.name]: true }))}
+                              />
+                            ) : (
+                              <span className="font-black text-[8px]" style={{ color: bankDetails.color }}>
+                                {bankDetails.logoText}
+                              </span>
+                            )}
                           </div>
                           <span className="font-bold text-[11px] text-light-text-primary dark:text-dark-text-primary truncate">{bank.name}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary shrink-0">{formatCurrency(bank.value)}</span>
+                        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary shrink-0">{formatVal(bank.value)}</span>
                       </motion.button>
                     );
                   }) : (
@@ -321,7 +245,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           </div>
         </div>
 
-        <div className="md:col-span-1 xl:col-span-3 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="xl:col-span-3 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <h3 className="font-bold text-lg text-light-text-primary dark:text-dark-text-primary mb-6 md:mb-8 shrink-0">Структура дохода</h3>
           
           {/* Desktop Pie Chart */}
@@ -356,7 +280,6 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
           </div>
 
-          {/* Mobile/Tablet Progress Bar (Same as Limit Usage) */}
           <div className="xl:hidden space-y-4 mb-6">
             <div className="relative h-2 bg-[#F5F5F7] dark:bg-white/5 rounded-full overflow-hidden">
               <div className="flex h-full rounded-full overflow-hidden">
@@ -374,7 +297,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-light-text-secondary dark:text-dark-text-secondary">
               <span>0 ₽</span>
-              <span>{formatCurrency(stats.totalIncome)}</span>
+              <span>{formatVal(stats.totalIncome)}</span>
             </div>
           </div>
 
@@ -385,7 +308,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
                   <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 self-center" style={{ backgroundColor: item.color }} />
                   <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-tight sm:tracking-wide truncate leading-none">{item.name}</span>
                 </div>
-                <span className="font-bold text-[10px] sm:text-[11px] lg:text-xs text-light-text-primary dark:text-dark-text-primary shrink-0 ml-1 sm:ml-2 leading-none">{formatCurrency(item.value)}</span>
+                <span className="font-bold text-[10px] sm:text-[11px] lg:text-xs text-light-text-primary dark:text-dark-text-primary shrink-0 ml-1 sm:ml-2 leading-none">{formatVal(item.value)}</span>
               </div>
             ))}
           </div>

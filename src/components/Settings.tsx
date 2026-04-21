@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../types';
 import { db } from '../db';
-import { Plus, Trash2, Download, Upload, ShieldCheck, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings as SettingsIcon } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ShieldCheck, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Archive } from './Archive';
+import { Archive, ArchiveHeaderActions } from './Archive';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppState } from '../hooks/useAppState';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
@@ -18,6 +18,8 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const { state, setState, addToast } = useAppState();
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
+  const [expandedYear, setExpandedYear] = useState<number | null>(null);
+  const [expandedBracketIndex, setExpandedBracketIndex] = useState<number | null>(null);
   
   // Tax Brackets State
   const [selectedBracketYear, setSelectedBracketYear] = useState<number>(2025);
@@ -140,48 +142,48 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const availableBracketYears = Array.from(new Set([...Object.keys(state.taxBrackets).map(Number), 2024, 2025, 2026, 2027])).sort((a, b) => a - b);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700 relative max-w-4xl mx-auto pb-12">
+    <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700 relative w-full max-w-7xl mx-auto pb-12">
       {/* Backup Section */}
-      <div className="grid grid-cols-1 gap-4">
-        <section className="apple-card p-4 flex flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-blue-600 stroke-[1.5px]" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-sm font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Резервная копия</h3>
-              <p className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary font-medium truncate">Управление данными</p>
-            </div>
+      <section className="apple-card p-5 xl:p-6 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-6 h-6 text-blue-600 stroke-[1.5px]" />
           </div>
-          
-          <div className="flex gap-2 shrink-0">
-            <button 
-              onClick={exportData}
-              className="apple-button p-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600"
-              title="Экспорт"
-            >
-              <Download className="w-4 h-4 stroke-[2px]" />
-            </button>
-            <label 
-              className="apple-button p-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600"
-              title="Импорт"
-            >
-              <Upload className="w-4 h-4 stroke-[2px]" />
-              <input type="file" className="sr-only" accept=".json" onChange={importData} />
-            </label>
+          <div className="min-w-0">
+            <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Резервная копия данных</h3>
+            <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Управление данными, экспорт и импорт</p>
           </div>
-        </section>
-      </div>
+        </div>
+        
+        <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+          <button 
+            onClick={exportData}
+            className="apple-button flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600 font-semibold text-xs"
+            title="Экспорт"
+          >
+            <Download className="w-4 h-4 stroke-[2px]" />
+            Экспорт
+          </button>
+          <label 
+            className="apple-button flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600 font-semibold text-xs cursor-pointer"
+            title="Импорт"
+          >
+            <Upload className="w-4 h-4 stroke-[2px]" />
+            Импорт
+            <input type="file" className="sr-only" accept=".json" onChange={importData} />
+          </label>
+        </div>
+      </section>
 
       {/* Income Tax Brackets Section */}
-      <section className="apple-card p-5 space-y-5">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
-            <SettingsIcon className="w-5 h-5 text-indigo-600 stroke-[1.5px]" />
+      <section className="apple-card p-5 lg:p-6 space-y-6">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+            <SettingsIcon className="w-6 h-6 text-indigo-600 stroke-[1.5px]" />
           </div>
           <div>
-            <h3 className="text-sm font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Прогрессивная шкала НДФЛ</h3>
-            <p className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary font-medium">Настройки ступеней налога на доходы</p>
+            <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Прогрессивная шкала НДФЛ</h3>
+            <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Настройки ступеней налога на доходы</p>
           </div>
         </div>
 
@@ -205,157 +207,247 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-12 gap-1 sm:gap-2 text-[9px] sm:text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest px-1 sm:px-2">
-            <div className="col-span-4">Название</div>
-            <div className="col-span-4">Лимит (₽)</div>
-            <div className="col-span-3">Ставка (%)</div>
-            <div className="col-span-1"></div>
-          </div>
-          
-          {currentBrackets.map((bracket, index) => (
-            <div key={index} className="grid grid-cols-12 gap-1 sm:gap-2 items-center bg-[#F5F5F7] dark:bg-white/5 p-1.5 sm:p-2 rounded-xl border border-light-border dark:border-dark-border">
-              <div className="col-span-4">
-                <input 
-                  type="text" 
-                  value={bracket.label ?? ''} 
-                  onChange={(e) => handleBracketChange(index, 'label', e.target.value)}
-                  className="apple-input w-full px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm"
-                />
-              </div>
-              <div className="col-span-4">
-                {bracket.limit === Infinity ? (
-                  <div className="w-full bg-gray-100 dark:bg-gray-800 border border-transparent rounded-lg sm:rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm text-gray-500 dark:text-gray-400 text-center">
-                    ∞
-                  </div>
-                ) : (
-                  <TableInput 
-                    value={bracket.limit ?? 0} 
-                    onChange={(val) => handleBracketChange(index, 'limit', val)}
-                    className="w-full bg-white dark:bg-gray-800 border border-light-border dark:border-dark-border rounded-lg sm:rounded-xl px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm focus:ring-1 focus:ring-indigo-500 outline-none font-mono text-left"
-                  />
+        <div className="space-y-3">
+          {currentBrackets.map((bracket, index) => {
+            const isExpanded = expandedBracketIndex === index;
+            return (
+              <div 
+                key={index} 
+                className={cn(
+                  "apple-card overflow-hidden transition-all border",
+                  isExpanded ? "border-indigo-500/30 shadow-md" : "border-slate-200 dark:border-slate-800 hover:border-indigo-500/20"
                 )}
-              </div>
-              <div className="col-span-3">
-                <div className="relative">
-                  <input 
-                    type="number" 
-                    value={bracket.rate != null ? Math.round(bracket.rate * 100) : ''} 
-                    onChange={(e) => handleBracketChange(index, 'rate', (parseFloat(e.target.value) || 0) / 100)}
-                    className="apple-input w-full px-1.5 py-1 sm:px-2 sm:py-1.5 text-xs sm:text-sm font-mono pr-4 sm:pr-6"
-                  />
-                  <span className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 text-gray-500 text-[10px] sm:text-xs">%</span>
-                </div>
-              </div>
-              <div className="col-span-1 flex justify-end">
-                <button 
-                  onClick={() => removeBracket(index)}
-                  disabled={currentBrackets.length <= 1}
-                  className="p-1 sm:p-1.5 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 rounded-lg sm:rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {/* Accordion Header */}
+                <div 
+                  className="p-3 sm:p-4 flex items-center justify-between cursor-pointer bg-[#F5F5F7]/50 dark:bg-white/5 hover:bg-[#F5F5F7] dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => setExpandedBracketIndex(isExpanded ? null : index)}
                 >
-                  <Trash2 size={14} className="sm:w-4 sm:h-4" />
-                </button>
+                  <div className="flex items-center gap-3">
+                    <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
+                      <ChevronDown size={18} className="text-light-text-secondary" />
+                    </motion.div>
+                    <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary">{bracket.label || `Ступень ${index + 1}`}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {!isExpanded && (
+                      <div className="text-right flex items-center gap-3">
+                        {bracket.limit !== Infinity && (
+                          <span className="hidden sm:inline-block text-[11px] font-mono text-slate-500">{bracket.limit?.toLocaleString('ru-RU')} ₽</span>
+                        )}
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 font-mono">
+                          {bracket.rate != null ? Math.round(bracket.rate * 100) : 0}%
+                        </span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); removeBracket(index); }}
+                      disabled={currentBrackets.length <= 1}
+                      className="p-1.5 text-light-text-secondary hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all disabled:opacity-50 disabled:hover:bg-transparent"
+                    >
+                      <Trash2 className="w-4 h-4 stroke-[2px]" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Accordion Content */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-white dark:bg-slate-900"
+                    >
+                      <div className="p-3 lg:p-4 grid gap-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex flex-col xl:flex-row gap-4">
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Название</label>
+                            <input 
+                              type="text" 
+                              value={bracket.label ?? ''} 
+                              onChange={(e) => handleBracketChange(index, 'label', e.target.value)}
+                              className="apple-input w-full px-3 py-2 text-sm font-medium"
+                            />
+                          </div>
+                          
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Лимит (₽)</label>
+                            {bracket.limit === Infinity ? (
+                              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2 text-sm font-bold text-slate-500 text-center border border-transparent">
+                                Максимум
+                              </div>
+                            ) : (
+                              <input 
+                                type="number"
+                                value={bracket.limit ?? 0} 
+                                onChange={(e) => handleBracketChange(index, 'limit', Number(e.target.value))}
+                                className="apple-input w-full px-3 py-2 text-sm font-mono font-semibold text-left"
+                              />
+                            )}
+                          </div>
+
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Ставка (%)</label>
+                            <div className="relative">
+                              <input 
+                                type="number" 
+                                value={bracket.rate != null ? Math.round(bracket.rate * 100) : ''} 
+                                onChange={(e) => handleBracketChange(index, 'rate', (parseFloat(e.target.value) || 0) / 100)}
+                                className="apple-input w-full px-3 py-2 text-sm font-mono font-semibold pr-8"
+                              />
+                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </div>
-          ))}
+            );
+          })}
           
           <button 
             onClick={addBracket}
-            className="flex items-center gap-2 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 px-2 py-1 cursor-pointer uppercase tracking-wider"
+            className="w-full mt-2 apple-button border-2 border-dashed border-indigo-200 dark:border-indigo-500/20 bg-transparent hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-2 py-3 transition-colors"
           >
-            <Plus size={14} /> Добавить ступень
+            <Plus size={16} className="stroke-[2px]" /> 
+            <span className="text-xs font-bold uppercase tracking-wider">Добавить ступень</span>
           </button>
         </div>
       </section>
 
       {/* Deposits Tax Periods Section */}
-      <section className="apple-card p-5 space-y-5">
+      <section className="apple-card p-5 lg:p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <Plus className="w-5 h-5 text-emerald-600 stroke-[1.5px]" />
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+              <Plus className="w-6 h-6 text-emerald-600 stroke-[1.5px]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Налог на вклады</h3>
-              <p className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary font-medium">Лимиты и ставки по годам</p>
+              <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Налог на вклады</h3>
+              <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Лимиты и ставки по годам</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {!taxSettings.find(s => s.year === 2024) && (
               <button 
                 onClick={restore2024}
-                className="px-3 py-1.5 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
+                className="px-3 md:px-4 py-2 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer hidden sm:block"
               >
                 Восстановить 2024
               </button>
             )}
             <button 
               onClick={addYear}
-              className="apple-button w-8 h-8 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
+              className="apple-button w-10 h-10 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
             >
-              <Plus className="w-4 h-4 stroke-[2.5px]" />
+              <Plus className="w-5 h-5 stroke-[2.5px]" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {taxSettings.sort((a, b) => b.year - a.year).map(setting => (
-            <motion.div 
-              layout
-              key={setting.year} 
-              className="p-3.5 bg-[#F5F5F7] dark:bg-white/5 rounded-[16px] space-y-3 relative group border border-light-border dark:border-dark-border transition-all hover:border-emerald-500/20"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-base font-black text-light-text-primary dark:text-dark-text-primary font-mono">{setting.year}</span>
-                <button 
-                  onClick={() => setYearToDelete(setting.year)}
-                  className="p-1.5 text-light-text-secondary hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all cursor-pointer hover:bg-rose-500/10 rounded-lg"
+        {!taxSettings.find(s => s.year === 2024) && (
+          <button 
+            onClick={restore2024}
+            className="w-full sm:hidden px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
+          >
+            Восстановить период 2024 года
+          </button>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 lg:gap-4">
+          {taxSettings.sort((a, b) => b.year - a.year).map(setting => {
+            const isExpanded = expandedYear === setting.year;
+            return (
+              <div 
+                key={setting.year} 
+                className="apple-card overflow-hidden border border-light-border dark:border-dark-border transition-all hover:border-emerald-500/20 shadow-sm"
+              >
+                <div 
+                  className="p-4 flex items-center justify-between cursor-pointer bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => setExpandedYear(isExpanded ? null : setting.year)}
                 >
-                  <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 gap-2">
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-[9px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest shrink-0">Лимит</label>
-                  <div className="relative w-full">
-                    <input 
-                      type="number" 
-                      value={setting.limit}
-                      onChange={(e) => updateYearSetting(setting.year, 'limit', Number(e.target.value))}
-                      className="apple-input w-full px-2 py-1 text-xs font-mono text-right pr-5"
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-light-text-secondary">₽</span>
+                  <div className="flex items-center gap-3">
+                    <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
+                      <ChevronDown size={20} className="text-light-text-secondary" />
+                    </motion.div>
+                    <span className="text-lg font-black text-light-text-primary dark:text-dark-text-primary font-mono">{setting.year}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    {!isExpanded && (
+                      <div className="text-right">
+                        <span className="block text-[10px] uppercase text-light-text-secondary font-bold tracking-wider">Лимит</span>
+                        <span className="text-sm font-mono font-semibold text-emerald-600 dark:text-emerald-400">{setting.limit.toLocaleString('ru-RU')} ₽</span>
+                      </div>
+                    )}
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setYearToDelete(setting.year); }}
+                      className="p-1.5 text-light-text-secondary hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-4 h-4 stroke-[2px]" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center justify-between gap-2">
-                  <label className="text-[9px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest shrink-0">Ставка</label>
-                  <div className="relative w-full">
-                    <input 
-                      type="number" 
-                      value={setting.ndflRate}
-                      onChange={(e) => updateYearSetting(setting.year, 'ndflRate', Number(e.target.value))}
-                      className="apple-input w-full px-2 py-1 text-xs font-mono text-right pr-5"
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-light-text-secondary">%</span>
-                  </div>
-                </div>
+
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden bg-white dark:bg-slate-900"
+                    >
+                      <div className="p-4 grid grid-cols-1 gap-4 border-t border-slate-100 dark:border-slate-800">
+                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
+                          <label className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest shrink-0">Лимит</label>
+                          <div className="relative w-full xl:w-[140px]">
+                            <input 
+                              type="number" 
+                              value={setting.limit}
+                              onChange={(e) => updateYearSetting(setting.year, 'limit', Number(e.target.value))}
+                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right pr-6 bg-[#F5F5F7] dark:bg-slate-800"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-light-text-secondary font-bold">₽</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
+                          <label className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest shrink-0">Ставка (%)</label>
+                          <div className="relative w-full xl:w-[140px]">
+                            <input 
+                              type="number" 
+                              value={setting.ndflRate}
+                              onChange={(e) => updateYearSetting(setting.year, 'ndflRate', Number(e.target.value))}
+                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right pr-6 bg-[#F5F5F7] dark:bg-slate-800"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-light-text-secondary font-bold">%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-            </motion.div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
       {/* Archive Section */}
-      <section className="apple-card p-5">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
-            <ArchiveIcon className="w-5 h-5 text-orange-600 stroke-[1.5px]" />
+      <section className="apple-card p-5 lg:p-6">
+        <div className="flex flex-col xl:flex-row xl:items-center gap-4 mb-6 justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
+              <ArchiveIcon className="w-6 h-6 text-orange-600 stroke-[1.5px]" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Архив вкладов</h3>
+              <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Все закрытые и завершенные вклады</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Архив вкладов</h3>
-            <p className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary font-medium">Закрытые вклады</p>
-          </div>
+          <ArchiveHeaderActions />
         </div>
         <Archive />
       </section>

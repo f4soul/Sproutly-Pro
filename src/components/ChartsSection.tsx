@@ -7,7 +7,14 @@ interface ChartsSectionProps {
   yearlyTotals: YearlyTotals;
 }
 
-export const ChartsSection = ({ yearlyTotals }: ChartsSectionProps) => {
+interface ChartsSectionProps {
+  yearlyTotals: YearlyTotals;
+  isPrivate?: boolean;
+}
+
+export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSectionProps) => {
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+
   return (
     <>
       {/* Tax Details */}
@@ -21,9 +28,9 @@ export const ChartsSection = ({ yearlyTotals }: ChartsSectionProps) => {
                   <span className="text-xs font-medium text-light-text-primary dark:text-dark-text-primary">{b.label}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 bg-[#F5F5F7] dark:bg-white/5 rounded-md text-light-text-secondary dark:text-dark-text-secondary">{b.rate}%</span>
                 </div>
-                <span className="font-mono opacity-50 text-[10px] text-light-text-secondary dark:text-dark-text-secondary">База: {formatCurrency(b.amount)}</span>
+                <span className="font-mono opacity-50 text-[10px] text-light-text-secondary dark:text-dark-text-secondary">База: {formatVal(b.amount)}</span>
               </div>
-              <span className="font-mono font-medium text-sm text-light-text-primary dark:text-dark-text-primary">{formatCurrency(b.tax)}</span>
+              <span className="font-mono font-medium text-sm text-light-text-primary dark:text-dark-text-primary">{formatVal(b.tax)}</span>
             </div>
           ))}
         </div>
@@ -77,14 +84,14 @@ export const ChartsSection = ({ yearlyTotals }: ChartsSectionProps) => {
                 <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
                 <span className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary">На руки</span>
               </div>
-              <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary font-mono">{formatCurrency(yearlyTotals.finalNet)}</span>
+              <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary font-mono">{formatVal(yearlyTotals.finalNet)}</span>
             </div>
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-rose-500"></div>
                 <span className="text-sm font-medium text-light-text-secondary dark:text-dark-text-secondary">Налог (НДФЛ)</span>
               </div>
-              <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary font-mono">{formatCurrency(yearlyTotals.progressiveTax)}</span>
+              <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary font-mono">{formatVal(yearlyTotals.progressiveTax)}</span>
             </div>
           </div>
         </div>

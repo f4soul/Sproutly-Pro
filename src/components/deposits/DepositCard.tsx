@@ -11,9 +11,10 @@ interface DepositCardProps {
   deposit: Deposit;
   onEdit: () => void;
   onDelete: () => void;
+  isPrivate?: boolean;
 }
 
-export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete }) => {
+export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete, isPrivate = false }) => {
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;
     const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
@@ -27,61 +28,134 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
   const total = deposit.amount + income;
   const [isExpanded, setIsExpanded] = useState(false);
   const bankDetails = getBankDetails(deposit.bank);
+  const [imgError, setImgError] = useState(false);
+
+  // Time progress calculation
+  const now = new Date().getTime();
+  const start = startDate ? startDate.getTime() : now;
+  const end = endDate ? endDate.getTime() : now;
+  const totalDuration = end - start;
+  const elapsed = now - start;
+  const progressPercent = totalDuration > 0 ? Math.min(Math.max((elapsed / totalDuration) * 100, 0), 100) : 100;
+
+  const getDaysRemaining = () => {
+    if (isClosed || progressPercent === 100) return 'Завершён';
+    const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    return `Осталось дней: ${days}`;
+  };
+
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   return (
-    <div className={cn(
-      "flex flex-col p-3 sm:p-4 bg-white dark:bg-dark-card hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-all border-b border-light-border dark:border-dark-border last:border-b-0 relative overflow-hidden",
-      isClosed && "opacity-70 grayscale-[0.3]"
-    )}>
+    <div 
+      className={cn(
+        "flex flex-col p-4 mb-4 apple-card overflow-hidden relative cursor-pointer group",
+        isClosed ? "opacity-70 grayscale-[0.3]" : "hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+      )}
+      onClick={() => setIsExpanded(!isExpanded)}
+    >
+      {/* Dynamic Background Tint */}
+      <div 
+        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.08] pointer-events-none transition-opacity group-hover:opacity-[0.06] dark:group-hover:opacity-[0.12]"
+        style={{ background: `linear-gradient(135deg, ${bankDetails.color}80 0%, transparent 100%)` }}
+      />
+      
       {isClosed && (
-        <div className="absolute top-0 left-0 bg-rose-500 text-white text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-br-xl shadow-sm z-10">
+        <div className="absolute top-0 right-0 bg-rose-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl shadow-sm z-10">
           Закрыт
         </div>
       )}
-      <div className="flex items-center justify-between mb-2 sm:mb-3 cursor-pointer" onClick={() => setIsExpanded(!isExpanded)}>
-        <div className="flex items-center gap-3 min-w-0 pr-2">
-          <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center overflow-hidden shrink-0 p-1.5">
-            <img src={bankDetails.logoUrl} alt={deposit.bank} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+
+      {/* Top Row: Logo & Rate */}
+      <div className="flex items-start justify-between mb-4 relative z-10">
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-lg bg-white dark:bg-dark-card border border-light-border dark:border-dark-border flex items-center justify-center p-1 shadow-sm"
+            style={{ backgroundColor: (imgError || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
+          >
+            {bankDetails.logoUrl && !imgError ? (
+              <img 
+                src={bankDetails.logoUrl} 
+                alt={deposit.bank} 
+                className="w-full h-full object-contain" 
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span className="font-black text-xs" style={{ color: bankDetails.color }}>
+                {bankDetails.logoText}
+              </span>
+            )}
           </div>
-          <div className="min-w-0">
-            <div className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary flex items-center gap-2 flex-wrap">
-              <span className="truncate">{deposit.bank}</span>
-            </div>
-            <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary mt-0.5 truncate">
-              {startDate ? format(startDate, 'dd.MM.yyyy') : ''} - {endDate ? format(endDate, 'dd.MM.yyyy') : ''}
-            </div>
+          <div>
+            <h3 className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary">
+              {deposit.bank}
+            </h3>
           </div>
         </div>
-        <div className="text-right shrink-0">
-          <div className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary">
-            {formatCurrency(deposit.amount)}
+        
+        {!isClosed && (
+          <div className="text-right">
+            <span className="text-xl sm:text-2xl font-black tracking-tighter" style={{ color: bankDetails.color }}>
+              {deposit.rate}%
+            </span>
           </div>
-          <div className="text-xs font-bold text-emerald-600 mt-0.5">
-            {deposit.rate}%
-          </div>
+        )}
+      </div>
+
+      {/* Center: Progress Bar */}
+      <div className="mb-4 relative z-10">
+        <div className="flex justify-between items-end mb-1.5">
+          <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
+            Срок вклада
+          </span>
+          <span className="text-[10px] font-bold" style={{ color: bankDetails.color }}>
+            {getDaysRemaining()}
+          </span>
+        </div>
+        <div className="h-1.5 w-full bg-[#E5E5EA] dark:bg-slate-700/50 rounded-full overflow-hidden flex">
+          <motion.div 
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            className="h-full rounded-full relative"
+            style={{ backgroundColor: bankDetails.color }}
+          >
+            <div className="absolute inset-0 bg-white/20" />
+          </motion.div>
+        </div>
+        <div className="flex justify-between mt-1 text-[9px] font-bold text-light-text-secondary dark:text-dark-text-secondary">
+          <span>{startDate ? format(startDate, 'dd.MM.yyyy') : ''}</span>
+          <span>{endDate ? format(endDate, 'dd.MM.yyyy') : ''}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-light-border dark:border-dark-border">
+      {/* Bottom Row: Amount & Income */}
+      <div className="flex items-end justify-between pt-3 border-t border-light-border/50 dark:border-dark-border/50 relative z-10">
         <div className="flex flex-col">
-          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold">Доход</span>
-          <span className="text-sm font-bold text-emerald-600">+{formatCurrency(income)}</span>
+          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold mb-0.5">Вложено</span>
+          <span className="text-base font-black text-light-text-primary dark:text-dark-text-primary tracking-tight">
+            {formatVal(deposit.amount)}
+          </span>
         </div>
         <div className="flex flex-col text-right">
-          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold">Итого</span>
-          <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary">{formatCurrency(total)}</span>
+          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold mb-0.5">Ожидаемый доход</span>
+          <span className="text-sm font-black text-emerald-600">
+            +{formatVal(income)}
+          </span>
         </div>
       </div>
 
+      {/* Expanded Details */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden"
+            className="overflow-hidden relative z-10"
           >
-            <div className="mt-3 pt-3 border-t border-light-border/50 dark:border-dark-border/50 flex flex-col gap-2 text-xs">
+            <div className="mt-4 pt-4 border-t border-light-border/50 dark:border-dark-border/50 flex flex-col gap-2.5 text-xs">
               <div className="flex justify-between">
                 <span className="text-light-text-secondary dark:text-dark-text-secondary">Формула:</span>
                 <span className="font-medium text-light-text-primary dark:text-dark-text-primary text-right">
@@ -93,16 +167,23 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
                    'Не указана'}
                 </span>
               </div>
+              
+              <div className="flex justify-between">
+                <span className="text-light-text-secondary dark:text-dark-text-secondary">Итоговая сумма:</span>
+                <span className="font-bold text-light-text-primary dark:text-dark-text-primary text-right">{formatVal(total)}</span>
+              </div>
+
               {deposit.sourceNote && (
                 <div className="flex justify-between">
-                  <span className="text-light-text-secondary dark:text-dark-text-secondary">Примечание:</span>
+                  <span className="text-light-text-secondary dark:text-dark-text-secondary">Счет вывода:</span>
                   <span className="font-medium text-light-text-primary dark:text-dark-text-primary text-right">{deposit.sourceNote}</span>
                 </div>
               )}
+              
               {deposit.comment && (
-                <div className="flex justify-between">
-                  <span className="text-light-text-secondary dark:text-dark-text-secondary">Дополнительно:</span>
-                  <span className="font-medium text-light-text-primary dark:text-dark-text-primary text-right">{deposit.comment}</span>
+                <div className="flex justify-between gap-4">
+                  <span className="text-light-text-secondary dark:text-dark-text-secondary shrink-0">Заметка:</span>
+                  <span className="font-medium text-light-text-primary dark:text-dark-text-primary text-right break-words">{deposit.comment}</span>
                 </div>
               )}
               

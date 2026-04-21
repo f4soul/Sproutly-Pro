@@ -20,44 +20,41 @@ export function BonusConfigControls({
 }: BonusConfigControlsProps) {
   if (compact) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">База:</span>
-          <div className="relative w-32">
+      <div className="flex items-center justify-between w-full h-full gap-3 md:gap-4 overflow-x-auto custom-scrollbar no-scrollbar min-w-0">
+        <div className="flex flex-col items-center gap-0.5 grow-0 shrink-0 min-w-0">
+          <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">База</span>
+          <div className="relative flex-1 w-20">
             <TableInput
               value={activeYearData.bonusBase ?? 0}
               onChange={onBonusBaseChange}
               hideDecimals={true}
-              className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 pr-6 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm transition-all shadow-sm"
+              className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-7 md:h-8 px-1 pr-4 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
             />
-            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-xs">₽</span>
+            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px] md:text-[10px] lg:text-[11px] pointer-events-none">₽</span>
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-slate-800/50 pt-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 block mb-3">Премии (КФ):</span>
-          <div className="grid grid-cols-5 gap-2">
-            {[0, 1, 2, 3].map(qIndex => (
-              <div key={qIndex} className="flex flex-col items-center gap-1">
-                <span className="text-[9px] text-slate-400 uppercase font-black tracking-tighter">{qIndex + 1} КВ</span>
-                <div className="w-full flex items-center bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg p-1 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                  <CoefInput
-                    value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
-                    onChange={(value) => onQuarterCoefChange(qIndex, value)}
-                    className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-xs p-0"
-                  />
-                </div>
-              </div>
-            ))}
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-[9px] text-indigo-500 uppercase font-black tracking-tighter">Год</span>
-              <div className="w-full flex items-center bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-lg p-1 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
-                <CoefInput
-                  value={activeYearData.annualBonusCoef ?? 0}
-                  onChange={onAnnualCoefChange}
-                  className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-xs p-0"
+        <div className="flex gap-1.5 md:gap-2 grow-0 shrink-0 justify-end ml-auto min-w-0 pr-0">
+          {[0, 1, 2, 3].map(qIndex => (
+            <div key={qIndex} className="flex flex-col items-center gap-0.5 shrink-0">
+              <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">{qIndex + 1} КВ</span>
+              <div className="w-9 md:w-10">
+                <TableInput
+                  value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
+                  onChange={(value) => onQuarterCoefChange(qIndex, value)}
+                  className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-7 md:h-8 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 p-0"
                 />
               </div>
+            </div>
+          ))}
+          <div className="flex flex-col items-center gap-0.5 ml-1 md:ml-2 shrink-0">
+            <span className="text-[8px] font-black uppercase tracking-tighter text-emerald-500 dark:text-emerald-500 whitespace-nowrap">Год</span>
+            <div className="w-9 md:w-10">
+              <TableInput
+                value={activeYearData.annualBonusCoef ?? 0}
+                onChange={onAnnualCoefChange}
+                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700/50 h-7 md:h-8 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500/50 p-0"
+              />
             </div>
           </div>
         </div>
@@ -67,16 +64,18 @@ export function BonusConfigControls({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-2">
-        <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">База:</span>
-        <div className="relative w-18 md:w-24">
-          <TableInput
-            value={activeYearData.bonusBase ?? 0}
-            onChange={onBonusBaseChange}
-            hideDecimals={true}
-            className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 pr-6 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-center text-xs transition-all shadow-sm"
-          />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">₽</span>
+      <div className="flex items-center gap-6">
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500">База</span>
+          <div className="relative w-24 md:w-32">
+            <TableInput
+              value={activeYearData.bonusBase ?? 0}
+              onChange={onBonusBaseChange}
+              hideDecimals={true}
+              className="w-full text-center text-xs pr-6"
+            />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">₽</span>
+          </div>
         </div>
       </div>
 
@@ -86,22 +85,22 @@ export function BonusConfigControls({
           {[0, 1, 2, 3].map(qIndex => (
             <div key={qIndex} className="flex flex-col items-center gap-0.5">
               <span className="text-[8px] text-slate-400 uppercase font-black tracking-tighter">{qIndex + 1} КВ</span>
-              <div className="flex items-center bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md px-1 py-0.5 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
+              <div className="flex items-center">
                 <CoefInput
                   value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
                   onChange={(value) => onQuarterCoefChange(qIndex, value)}
-                  className="w-8 md:w-10 bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-[10px] p-0"
+                  className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
                 />
               </div>
             </div>
           ))}
           <div className="flex flex-col items-center gap-0.5 ml-1">
             <span className="text-[8px] text-indigo-500 uppercase font-black tracking-tighter">Год</span>
-            <div className="flex items-center bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800/50 rounded-md px-1 py-0.5 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all shadow-sm">
+            <div className="flex items-center">
               <CoefInput
                 value={activeYearData.annualBonusCoef ?? 0}
                 onChange={onAnnualCoefChange}
-                className="w-8 md:w-10 bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-[10px] p-0"
+                className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
               />
             </div>
           </div>

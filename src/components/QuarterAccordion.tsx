@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import { TableInput } from './TableInput';
-import { YearData, MonthData } from '../types/index';
+import { YearData, MonthData, CalculatedMonth } from '../types/index';
 import { formatCurrency } from '../lib/taxCalculator';
 import { MONTH_NAMES } from '../lib/constants';
 
@@ -13,9 +13,10 @@ interface QuarterAccordionProps {
   isExpanded: boolean;
   onToggle: () => void;
   activeYearData: YearData;
-  calculatedMonths: any[];
-  handleQuarterChange: (qIndex: number, field: string, value: number) => void;
-  handleMonthChange: (mIndex: number, field: string, value: number) => void;
+  calculatedMonths: CalculatedMonth[];
+  handleQuarterChange: (qIndex: number, field: 'bonusCoef' | 'bonusAmount', value: number) => void;
+  handleMonthChange: (mIndex: number, field: keyof MonthData, value: number) => void;
+  isPrivate?: boolean;
 }
 
 export const QuarterAccordion = ({
@@ -26,26 +27,41 @@ export const QuarterAccordion = ({
   activeYearData,
   calculatedMonths,
   handleQuarterChange,
-  handleMonthChange
+  handleMonthChange,
+  isPrivate = false
 }: QuarterAccordionProps) => {
   const qMonths = q.months.map(mi => calculatedMonths[mi]);
   const qNet13 = qMonths.reduce((sum, m) => sum + m.net13, 0);
 
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+
   return (
     <div className="apple-card overflow-hidden">
       <div 
-        className="p-4 flex justify-between items-center cursor-pointer bg-[#F5F5F7]/50 dark:bg-white/5 hover:bg-[#F5F5F7] dark:hover:bg-white/10 transition-colors"
+        className="p-3 sm:p-4 flex justify-between items-center cursor-pointer bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
         onClick={onToggle}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
-            <ChevronDown size={18} className="text-light-text-secondary dark:text-dark-text-secondary" />
+            <ChevronDown size={20} className="text-slate-400" />
           </motion.div>
-          <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{q.name}</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
+            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
+          </div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium">Net за квартал</div>
-          <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(qNet13)}</div>
+        
+        <div className="flex flex-col items-end" onClick={(e) => e.stopPropagation()}>
+          <span className="text-[9px] text-indigo-400 uppercase font-bold tracking-widest mb-1">Премия (₽)</span>
+          {isPrivate ? (
+            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-indigo-700 dark:text-indigo-300 text-xs sm:text-sm">••••••</div>
+          ) : (
+            <TableInput 
+              value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
+              onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
+              className="w-20 sm:w-24 text-right text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 h-8 sm:h-9 px-2 rounded-lg" 
+            />
+          )}
         </div>
       </div>
 
@@ -57,67 +73,59 @@ export const QuarterAccordion = ({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="p-3 space-y-3 bg-[#F5F5F7]/30 dark:bg-transparent">
-              {/* Quarter Bonus */}
-              <div className="bg-white dark:bg-dark-card p-3 rounded-xl border border-light-border dark:border-dark-border flex justify-between items-center shadow-sm">
-                <span className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary">Премия за квартал</span>
-                <div className="w-32">
-                  <TableInput 
-                    value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
-                    onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-                    className="apple-input w-full px-2 py-1.5 font-mono text-right text-sm font-bold text-indigo-600 dark:text-indigo-400" 
-                  />
-                </div>
-              </div>
-
+            <div className="p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
               {/* Months */}
               {q.months.map((monthIndex) => {
                 const m = activeYearData.months[monthIndex];
                 const calcM = calculatedMonths[monthIndex];
                 return (
-                  <div key={monthIndex} className="bg-white dark:bg-dark-card p-4 rounded-xl border border-light-border dark:border-dark-border shadow-sm space-y-4">
-                    <div className="flex justify-between items-center border-b border-light-border dark:border-dark-border pb-2">
-                      <span className="font-bold text-light-text-primary dark:text-dark-text-primary">{MONTH_NAMES[monthIndex]}</span>
-                      <div className="text-right">
-                        <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider mr-2">Net</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(calcM.net13)}</span>
+                  <div key={monthIndex} className="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{MONTH_NAMES[monthIndex]}</span>
+                      <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
+                        <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 text-sm">{formatVal(calcM.net13)}</span>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Оклад</span>
-                        <TableInput 
-                          value={m.salary} 
-                          onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
-                          className="apple-input w-full px-2 py-1.5 font-mono text-right text-sm" 
-                        />
-                        <div className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary mt-1 flex justify-between">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Оклад</span>
+                        {isPrivate ? (
+                          <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm h-[34px]">••••••</div>
+                        ) : (
+                          <TableInput 
+                            value={m.salary} 
+                            onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
+                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm" 
+                          />
+                        )}
+                        <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
                           <span>Gross:</span>
-                          <span className="font-mono font-medium text-indigo-500">{formatCurrency(calcM.gross)}</span>
+                          <span className="font-mono font-medium text-indigo-500">{formatVal(calcM.gross)}</span>
                         </div>
                       </div>
                       <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Дни (Факт/Норма)</span>
-                        <div className="flex items-center gap-1 bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-lg p-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Дни (Факт/Норма)</span>
+                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
                           <TableInput 
                             value={m.factDays} 
                             onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} 
                             className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0" 
                             isInteger={true} 
                           />
-                          <span className="text-light-text-secondary dark:text-dark-text-secondary">/</span>
+                          <span className="text-slate-300 dark:text-slate-600">/</span>
                           <TableInput 
                             value={m.normDays} 
                             onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} 
-                            className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0 text-light-text-secondary" 
+                            className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0 text-slate-500" 
                             isInteger={true} 
                           />
                         </div>
                         {monthIndex % 3 === 2 && (
-                          <div className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary mt-2 flex justify-between">
+                          <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
                             <span>Премия:</span>
-                            <span className="font-mono font-medium text-indigo-500">{formatCurrency(calcM.bonus)}</span>
+                            <span className="font-mono font-medium text-indigo-500">{formatVal(calcM.bonus)}</span>
                           </div>
                         )}
                       </div>
@@ -129,6 +137,7 @@ export const QuarterAccordion = ({
           </motion.div>
         )}
       </AnimatePresence>
+
     </div>
   );
 };

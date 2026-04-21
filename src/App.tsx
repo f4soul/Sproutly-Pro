@@ -22,6 +22,7 @@ export default function App() {
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings'>('dashboard');
+  const [isPrivate, setIsPrivate] = useState(false);
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const theme = appSettings?.theme || 'light';
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
@@ -55,16 +56,19 @@ function AppContent() {
           deposits={deposits} 
           taxSettings={taxSettings} 
           appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
+          isPrivate={isPrivate}
+          setIsPrivate={setIsPrivate}
         />
       )}
       {activeTab === 'deposits' && (
         <DepositList 
           deposits={deposits} 
           selectedYear={selectedYear} 
+          isPrivate={isPrivate}
         />
       )}
       {activeTab === 'ndfl' && (
-        <IncomeTracker />
+        <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
       )}
       {activeTab === 'settings' && (
         <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />

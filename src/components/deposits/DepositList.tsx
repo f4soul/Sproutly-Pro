@@ -14,9 +14,10 @@ import { DeleteConfirmModal } from './DeleteConfirmModal';
 interface DepositListProps {
   deposits: Deposit[];
   selectedYear: number;
+  isPrivate?: boolean;
 }
 
-export function DepositList({ deposits }: DepositListProps) {
+export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeposit, setEditingDeposit] = useState<Deposit | undefined>();
   const [depositToDelete, setDepositToDelete] = useState<Deposit | null>(null);
@@ -120,7 +121,7 @@ export function DepositList({ deposits }: DepositListProps) {
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-5xl mx-auto px-1 sm:px-0 pb-24 lg:pb-0">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-7xl mx-auto pb-24 lg:pb-0">
       <SmartActionBar 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -133,23 +134,6 @@ export function DepositList({ deposits }: DepositListProps) {
         onAddClick={() => { setEditingDeposit(undefined); setIsFormOpen(true); }}
         isScrolled={isScrolled}
       />
-
-      <div className="flex justify-end px-1">
-        <button 
-          onClick={async () => {
-            const success = await exportToPDF('deposits-list-content', null, filteredDeposits);
-            if (success) {
-              window.dispatchEvent(new CustomEvent('app:toast', { 
-                detail: { message: 'Список вкладов экспортирован в PDF', type: 'success' } 
-              }));
-            }
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all whitespace-nowrap"
-        >
-          <Download className="w-4 h-4" />
-          Экспорт PDF
-        </button>
-      </div>
 
       {/* Floating Action Button for Mobile */}
       <div className="lg:hidden fixed bottom-15 right-6 z-50">
@@ -191,6 +175,7 @@ export function DepositList({ deposits }: DepositListProps) {
                   deposit={deposit} 
                   onEdit={() => handleEdit(deposit)}
                   onDelete={() => setDepositToDelete(deposit)}
+                  isPrivate={isPrivate}
                 />
               )) : (
                 <tr>
@@ -213,6 +198,7 @@ export function DepositList({ deposits }: DepositListProps) {
                 deposit={deposit} 
                 onEdit={() => handleEdit(deposit)} 
                 onDelete={() => setDepositToDelete(deposit)} 
+                isPrivate={isPrivate}
               />
             )) : (
               <div className="py-24 text-center">

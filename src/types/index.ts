@@ -4,6 +4,14 @@ export type MonthData = {
   salary: number;
 };
 
+export type CalculatedMonth = MonthData & {
+  base: number;
+  bonus: number;
+  gross: number;
+  tax13: number;
+  net13: number;
+};
+
 export type QuarterData = {
   bonusCoef: number;
   bonusAmount: number;

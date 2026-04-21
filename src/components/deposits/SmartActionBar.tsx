@@ -31,10 +31,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   isScrolled
 }) => {
   return (
-    <div className={cn(
-      "sticky top-0 z-40 -mx-4 px-4 py-3 transition-all duration-300",
-      isScrolled ? "bg-white/80 dark:bg-dark-bg/80 backdrop-blur-xl border-b border-light-border dark:border-dark-border shadow-sm" : "bg-transparent"
-    )}>
+    <div className="sticky top-0 z-40 py-3 mb-2 bg-[#F5F5F7]/95 dark:bg-[#1C1C1E]/95 backdrop-blur-xl border-b border-light-border/50 dark:border-dark-border/50 w-full overflow-hidden">
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         {/* Search & Integrated Controls */}
         <div className="relative w-full lg:flex-1 group">
@@ -46,7 +43,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             placeholder="Поиск..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="apple-input !pl-12 pr-32 py-3.5 text-sm w-full bg-[#F5F5F7] dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-dark-card focus:border-blue-500/50 shadow-sm"
+            className="apple-input !pl-12 pr-32 py-3.5 text-sm w-full bg-white dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-dark-card focus:border-blue-500/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
           />
           
           {/* Integrated Mobile Icons */}

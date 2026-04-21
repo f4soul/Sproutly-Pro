@@ -40,13 +40,46 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
   XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
 };
 
+export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => {
+  const data = months.map(m => ({
+    'Месяц': m.month,
+    'Дни (Норма)': m.normDays,
+    'Дни (Факт)': m.factDays,
+    'Оклад (Gross)': m.base,
+    'Премия (Gross)': m.bonus,
+    'Итого (Gross)': m.gross,
+    'Налог (13%)': m.tax13,
+    'На руки (Net)': m.net13
+  }));
+
+  // Add totals row
+  data.push({
+    'Месяц': 'ИТОГО',
+    'Дни (Норма)': '',
+    'Дни (Факт)': '',
+    'Оклад (Gross)': '',
+    'Премия (Gross)': '',
+    'Итого (Gross)': totals.totalGross,
+    'Налог (13%)': totals.progressiveTax,
+    'На руки (Net)': totals.finalNet
+  } as any);
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, `Доходы ${year}`);
+  XLSX.writeFile(workbook, `income_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+};
+
 export const exportToPDF = async (elementId: string, summary?: any, deposits?: Deposit[]) => {
   const element = document.getElementById(elementId);
-  if (!element) return;
+  if (!element) {
+    console.error(`Element with id ${elementId} not found`);
+    return false;
+  }
 
   try {
     // Small delay to ensure any transitions are finished
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const isDark = document.documentElement.classList.contains('dark');
     const backgroundColor = isDark ? '#020617' : '#ffffff';
@@ -57,11 +90,12 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
     const container = document.createElement('div');
     container.id = 'export-container';
     if (isDark) container.classList.add('dark');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
+    container.style.position = 'fixed'; // Use fixed to ensure it's in viewport but off-screen
+    container.style.left = '0';
     container.style.top = '0';
     container.style.width = '1200px';
-    container.style.zIndex = '-100';
+    container.style.transform = 'translateX(-200%)'; // Move far left
+    container.style.zIndex = '-9999';
     container.style.backgroundColor = backgroundColor;
     container.style.color = textColor;
     container.style.padding = '60px';
@@ -79,7 +113,7 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
 
     const titleContainer = document.createElement('div');
     const title = document.createElement('h1');
-    title.innerText = 'ФИНАНСОВЫЙ ОТЧЕТ (PDF)';
+    title.innerText = 'ФИНАНСОВЫЙ ОТЧЕТ';
     title.style.fontSize = '28px';
     title.style.fontWeight = '900';
     title.style.letterSpacing = '-1px';
@@ -95,7 +129,7 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
     header.appendChild(titleContainer);
 
     const logo = document.createElement('div');
-    logo.innerHTML = '<span style="font-weight: 900; font-size: 20px; color: #2563eb;">SPROUTLY</span>';
+    logo.innerHTML = '<span style="font-weight: 900; font-size: 20px; color: #6366f1;">SPROUTLY</span>';
     header.appendChild(logo);
     container.appendChild(header);
 
@@ -120,9 +154,9 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
         return div;
       };
 
-      summaryGrid.appendChild(createStat('Общий Gross', summary.totalGross?.toLocaleString('ru-RU') + ' ₽'));
-      summaryGrid.appendChild(createStat('Чистый Net', summary.totalNet?.toLocaleString('ru-RU') + ' ₽', '#10b981'));
-      summaryGrid.appendChild(createStat('Всего налогов', summary.totalTax?.toLocaleString('ru-RU') + ' ₽', '#ef4444'));
+      summaryGrid.appendChild(createStat('Общий Gross', (summary.totalGross || 0).toLocaleString('ru-RU') + ' ₽'));
+      summaryGrid.appendChild(createStat('Чистый Net', (summary.totalNet || 0).toLocaleString('ru-RU') + ' ₽', '#10b981'));
+      summaryGrid.appendChild(createStat('Всего налогов', (summary.totalTax || 0).toLocaleString('ru-RU') + ' ₽', '#ef4444'));
       summaryGrid.appendChild(createStat('Эфф. ставка', (summary.effectiveRate || 0).toFixed(1) + ' %', '#6366f1'));
       
       container.appendChild(summaryGrid);
@@ -130,9 +164,23 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
 
     // Clone and add the dashboard/element
     const clone = element.cloneNode(true) as HTMLElement;
-    // Remove export buttons from clone if they exist
-    const exportButtons = clone.querySelectorAll('button');
-    exportButtons.forEach(btn => btn.remove());
+    
+    // Ensure all inputs are replaced with their values in the clone
+    const inputs = clone.querySelectorAll('input');
+    inputs.forEach(input => {
+      const span = document.createElement('span');
+      span.innerText = input.value;
+      span.className = input.className;
+      input.parentNode?.replaceChild(span, input);
+    });
+
+    // Remove interactive elements
+    const buttons = clone.querySelectorAll('button');
+    buttons.forEach(btn => btn.remove());
+    
+    const tabs = clone.querySelectorAll('.YearTabs'); // Example class
+    tabs.forEach(tab => tab.remove());
+
     container.appendChild(clone);
 
     // Add Table if deposits provided
@@ -182,6 +230,7 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
       pixelRatio: 2,
+      skipAutoScale: true,
     });
     
     // Cleanup
@@ -197,6 +246,7 @@ export const exportToPDF = async (elementId: string, summary?: any, deposits?: D
       format: [img.width, img.height]
     });
     
+    pdf.addImage(dataUrl, 'PNG', 0, 0, img.width, img.height);
     pdf.save(`sproutly_report_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     return true;
   } catch (error) {

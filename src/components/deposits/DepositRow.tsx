@@ -11,11 +11,14 @@ interface DepositRowProps {
   deposit: Deposit;
   onEdit: () => void;
   onDelete: () => void;
+  isPrivate?: boolean;
 }
 
-export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelete }) => {
+export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelete, isPrivate = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const income = calculateIncome(deposit);
+
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
   
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;
@@ -26,6 +29,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
   const startDate = parseDate(deposit.startDate);
   const endDate = parseDate(deposit.endDate);
   const bankDetails = getBankDetails(deposit.bank);
+  const [imgError, setImgError] = useState(false);
 
   return (
     <>
@@ -43,13 +47,23 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
       >
         <td className="pl-4 xl:pl-6 pr-4 py-2.5 border-b border-light-border dark:border-dark-border">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white dark:bg-dark-card border border-light-border dark:border-dark-border flex items-center justify-center p-1 shrink-0 shadow-sm transition-all">
-              <img 
-                src={bankDetails.logoUrl} 
-                alt="" 
-                className="w-full h-full object-contain" 
-                referrerPolicy="no-referrer" 
-              />
+            <div 
+              className="w-7 h-7 rounded-lg overflow-hidden bg-white dark:bg-dark-card border border-light-border dark:border-dark-border flex items-center justify-center p-1 shrink-0 shadow-sm transition-all"
+              style={{ backgroundColor: (imgError || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
+            >
+              {bankDetails.logoUrl && !imgError ? (
+                <img 
+                  src={bankDetails.logoUrl} 
+                  alt="" 
+                  className="w-full h-full object-contain" 
+                  referrerPolicy="no-referrer" 
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <span className="font-black text-[10px]" style={{ color: bankDetails.color }}>
+                  {bankDetails.logoText}
+                </span>
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
@@ -82,20 +96,20 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
         </td>
 
         <td className="px-2 py-2.5 border-b border-light-border dark:border-dark-border">
-          <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatCurrency(deposit.amount)}</span>
+          <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatVal(deposit.amount)}</span>
         </td>
         
         <td className="hidden xl:table-cell px-2 py-2.5 border-b border-light-border dark:border-dark-border">
-          <span className="text-[13px] font-bold text-emerald-500 dark:text-emerald-400">+{formatCurrency(income)}</span>
+          <span className="text-[13px] font-bold text-emerald-500 dark:text-emerald-400">+{formatVal(income)}</span>
         </td>
         <td className="hidden xl:table-cell px-2 py-2.5 border-b border-light-border dark:border-dark-border">
-          <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatCurrency(deposit.amount + income)}</span>
+          <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatVal(deposit.amount + income)}</span>
         </td>
 
         <td className="table-cell xl:hidden px-2 py-2.5 border-b border-light-border dark:border-dark-border">
           <div className="flex flex-col">
-            <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatCurrency(deposit.amount + income)}</span>
-            <span className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400">+{formatCurrency(income)}</span>
+            <span className="text-[13px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatVal(deposit.amount + income)}</span>
+            <span className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400">+{formatVal(income)}</span>
           </div>
         </td>
 

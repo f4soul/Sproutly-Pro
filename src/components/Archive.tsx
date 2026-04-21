@@ -6,43 +6,17 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog, Transition } from '@headlessui/react';
 
-export const Archive: React.FC = () => {
+export const ArchiveHeaderActions = () => {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const archivedDeposits = useLiveQuery(async () => {
-    const deposits = await db.deposits.where('isArchived').equals(1).toArray();
-    return deposits.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    return await db.deposits.where('isArchived').equals(1).toArray();
   });
-
-  const handleRestore = async (id: string | number) => {
-    await db.deposits.update(id as any, { isArchived: 0, updatedAt: Date.now() });
-    syncWithFirebase();
-  };
-
-  const handlePermanentDelete = async (id: string | number) => {
-    await db.deposits.delete(id as any);
-    
-    // Also delete from Firebase if user is logged in
-    const { auth, db: firestoreDb } = await import('../firebase');
-    const user = auth.currentUser;
-    if (user) {
-      const { doc, deleteDoc } = await import('firebase/firestore');
-      const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id);
-      try {
-        await deleteDoc(doc(firestoreDb, 'deposits', firestoreDocId));
-      } catch (e) {
-        console.error('Failed to delete from Firebase', e);
-      }
-    }
-    
-    syncWithFirebase();
-  };
 
   const handleClearArchive = async () => {
     if (!archivedDeposits) return;
     const ids = archivedDeposits.map(d => d.id as any);
     await db.deposits.bulkDelete(ids);
     
-    // Also delete from Firebase if user is logged in
     const { auth, db: firestoreDb } = await import('../firebase');
     const user = auth.currentUser;
     if (user) {
@@ -63,87 +37,17 @@ export const Archive: React.FC = () => {
     setIsClearModalOpen(false);
   };
 
-  if (!archivedDeposits || archivedDeposits.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-light-text-secondary dark:text-dark-text-secondary">
-        <ArchiveIcon className="w-16 h-16 mb-6 opacity-10 stroke-[1px]" />
-        <p className="text-lg font-bold tracking-tight">Архив пуст</p>
-        <p className="text-sm font-medium mt-1">Здесь будут отображаться удаленные вклады</p>
-      </div>
-    );
-  }
+  if (!archivedDeposits || archivedDeposits.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          onClick={() => setIsClearModalOpen(true)}
-          className="apple-button flex items-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] uppercase tracking-widest border border-rose-500/20"
-        >
-          <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />
-          Очистить архив
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        <AnimatePresence mode="popLayout">
-          {archivedDeposits.map((deposit) => (
-            <motion.div
-              key={deposit.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-            >
-              <div className="flex items-center gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
-                  <ArchiveIcon className="w-5 h-5 text-slate-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary truncate">
-                      {deposit.bank}
-                    </h3>
-                    <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest bg-[#F5F5F7] dark:bg-white/5 px-2 py-0.5 rounded-md">
-                      {deposit.rate}%
-                    </span>
-                  </div>
-                  <p className="text-[10px] font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider mt-0.5">
-                    Удален: {format(deposit.updatedAt || Date.now(), 'dd.MM.yyyy')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-0.5">Сумма</p>
-                  <p className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary font-mono whitespace-nowrap">
-                    {deposit.amount.toLocaleString()} {deposit.currency}
-                  </p>
-                </div>
-                
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => handleRestore(deposit.id!)}
-                    className="p-2.5 text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-all cursor-pointer"
-                    title="Восстановить"
-                  >
-                    <RefreshCcw className="w-4 h-4 stroke-[2px]" />
-                  </button>
-                  <button
-                    onClick={() => handlePermanentDelete(deposit.id!)}
-                    className="p-2.5 text-rose-600 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
-                    title="Удалить навсегда"
-                  >
-                    <Trash2 className="w-4 h-4 stroke-[2px]" />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
+    <>
+      <button
+        onClick={() => setIsClearModalOpen(true)}
+        className="apple-button flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] uppercase tracking-widest border border-rose-500/20"
+      >
+        <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />
+        Очистить архив
+      </button>
 
       {/* Clear Archive Confirmation Modal */}
       <Transition show={isClearModalOpen} as={Fragment}>
@@ -208,6 +112,110 @@ export const Archive: React.FC = () => {
           </div>
         </Dialog>
       </Transition>
+    </>
+  );
+};
+
+export const Archive: React.FC = () => {
+  const archivedDeposits = useLiveQuery(async () => {
+    const deposits = await db.deposits.where('isArchived').equals(1).toArray();
+    return deposits.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  });
+
+  const handleRestore = async (id: string | number) => {
+    await db.deposits.update(id as any, { isArchived: 0, updatedAt: Date.now() });
+    syncWithFirebase();
+  };
+
+  const handlePermanentDelete = async (id: string | number) => {
+    await db.deposits.delete(id as any);
+    
+    // Also delete from Firebase if user is logged in
+    const { auth, db: firestoreDb } = await import('../firebase');
+    const user = auth.currentUser;
+    if (user) {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id);
+      try {
+        await deleteDoc(doc(firestoreDb, 'deposits', firestoreDocId));
+      } catch (e) {
+        console.error('Failed to delete from Firebase', e);
+      }
+    }
+    
+    syncWithFirebase();
+  };
+
+  if (!archivedDeposits || archivedDeposits.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-light-text-secondary dark:text-dark-text-secondary">
+        <ArchiveIcon className="w-12 h-12 mb-4 opacity-20 stroke-[1px]" />
+        <p className="text-base font-bold tracking-tight">Архив пуст</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <AnimatePresence mode="popLayout">
+          {archivedDeposits.map((deposit) => (
+            <motion.div
+              key={deposit.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
+                  <ArchiveIcon className="w-5 h-5 text-slate-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary truncate">
+                      {deposit.bank}
+                    </h3>
+                    <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest bg-[#F5F5F7] dark:bg-white/5 px-2 py-0.5 rounded-md">
+                      {deposit.rate}%
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-medium text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider mt-0.5">
+                    Удален: {format(deposit.updatedAt || Date.now(), 'dd.MM.yyyy')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
+                <div className="text-right">
+                  <p className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-0.5">Сумма</p>
+                  <p className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary font-mono whitespace-nowrap">
+                    {deposit.amount.toLocaleString()} {deposit.currency}
+                  </p>
+                </div>
+                
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleRestore(deposit.id!)}
+                    className="p-2.5 text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-all cursor-pointer"
+                    title="Восстановить"
+                  >
+                    <RefreshCcw className="w-4 h-4 stroke-[2px]" />
+                  </button>
+                  <button
+                    onClick={() => handlePermanentDelete(deposit.id!)}
+                    className="p-2.5 text-rose-600 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
+                    title="Удалить навсегда"
+                  >
+                    <Trash2 className="w-4 h-4 stroke-[2px]" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

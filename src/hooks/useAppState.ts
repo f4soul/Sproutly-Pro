@@ -41,12 +41,19 @@ export const useAppState = () => {
     }
   }, [dbState]);
 
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const setState = (newState: AppState | ((prevState: AppState) => AppState)) => {
     setLocalState((prev) => {
       const updated = typeof newState === 'function' ? newState(prev) : newState;
       db.incomeState.put({ ...updated, id: 'main', updatedAt: Date.now() }).then(() => {
         if (user) {
-          syncWithFirebase().catch(console.error);
+          if (syncTimeoutRef.current) {
+            clearTimeout(syncTimeoutRef.current);
+          }
+          syncTimeoutRef.current = setTimeout(() => {
+            syncWithFirebase().catch(console.error);
+          }, 2000);
         }
       });
       return updated;

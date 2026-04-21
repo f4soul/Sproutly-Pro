@@ -92,47 +92,17 @@ export const generateDefaultYear = (year: number): YearData => {
     };
   }
 
-  if (year === 2026) {
-    const salary2026 = [
-      185000.00, 185000.00, 185000.00, 195000.00, 195000.00, 195000.00,
-      195000.00, 195000.00, 195000.00, 210000.00, 210000.00, 210000.00
-    ];
-
-    return {
-      year,
-      additionalIncome: 0,
-      bonusBase: 195000,
-      baseSalary: 0,
-      iisContribution: 0,
-      deductions: { social: 0, property: 0, standard: 0 },
-      months: Array.from({ length: 12 }, (_, i) => ({
-        normDays: norms[i] || 21,
-        factDays: norms[i] || 21,
-        salary: salary2026[i],
-      })),
-      quarters: [
-        { bonusCoef: 0.85, bonusAmount: 165750 },
-        { bonusCoef: 0.85, bonusAmount: 165750 },
-        { bonusCoef: 1.1, bonusAmount: 214500 },
-        { bonusCoef: 1.3, bonusAmount: 253500 }
-      ],
-      annualBonusCoef: 2.8,
-      annualBonusAmount: 546000,
-      extraBonusAmount: 0,
-    };
-  }
-
   return {
     year,
     additionalIncome: 0,
-    bonusBase: 169500,
+    bonusBase: 0,
     baseSalary: 0,
     iisContribution: 0,
     deductions: { social: 0, property: 0, standard: 0 },
     months: Array.from({ length: 12 }, (_, i) => ({
       normDays: norms[i] || 21,
       factDays: norms[i] || 21,
-      salary: 145211.62,
+      salary: 0,
     })),
     quarters: defaultQuarters,
     annualBonusCoef: 0,
@@ -147,13 +117,13 @@ export const getDefaultExpandedQuarters = (year: number) => {
   const currentQuarter = Math.floor(now.getMonth() / 3);
 
   if (year < currentYear) {
-    return { 0: true, 1: true, 2: true, 3: true };
+    return { 0: false, 1: false, 2: false, 3: false };
   } else if (year === currentYear) {
     return {
-      0: currentQuarter >= 0,
-      1: currentQuarter >= 1,
-      2: currentQuarter >= 2,
-      3: currentQuarter >= 3,
+      0: currentQuarter === 0,
+      1: currentQuarter === 1,
+      2: currentQuarter === 2,
+      3: currentQuarter === 3,
     };
   } else {
     return { 0: true, 1: false, 2: false, 3: false };

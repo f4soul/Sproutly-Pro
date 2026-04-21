@@ -233,7 +233,7 @@ export const getBankDetails = (
     name: bankId || 'Банк',
     color: '#64748b', // slate-500
     logoText: (bankId || 'Б').charAt(0).toUpperCase(),
-    logoUrl: DEFAULT_BANK_ICON,
+    logoUrl: '',
     iconScale: 1,
     iconOffsetX: 0,
     iconOffsetY: 0,

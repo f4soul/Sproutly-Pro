@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Info, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { Info, TrendingUp, Shield, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MonthData } from '../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../lib/constants';
@@ -12,20 +12,24 @@ import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
 import { AnnualBonusSection } from './AnnualBonusSection';
 import { QuarterAccordion } from './QuarterAccordion';
-import { TaxAdvisorSection } from './TaxAdvisorSection';
 import { ScenarioSimulator } from './ScenarioSimulator';
-import { exportToPDF } from '../services/ExportService';
+import { exportToPDF, exportIncomeToXLSX } from '../services/ExportService';
 import { useAppState } from '../hooks/useAppState';
-import { cn } from '../lib/utils';
+import { cn, formatCurrency } from '../lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { IncomeCalculationModeToggle } from './IncomeCalculationModeToggle';
 import { IncomeDesktopTable } from './IncomeDesktopTable';
+import { IncomeMobileView } from './IncomeMobileView';
 import { useIncomeCalculationMode } from '../hooks/useIncomeCalculationMode';
 import { useIncomeTotals } from '../hooks/useIncomeTotals';
 import { BonusConfigControls } from './BonusConfigControls';
 
-export function IncomeTracker() {
+interface IncomeTrackerProps {
+  isPrivate: boolean;
+  setIsPrivate: (val: boolean) => void;
+}
+
+export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const { state, setState, addToast, toasts, removeToast } = useAppState();
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
@@ -40,7 +44,13 @@ export function IncomeTracker() {
   const [isTaxInfoModalOpen, setIsTaxInfoModalOpen] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSimulationOpen, setIsSimulationOpen] = useState(false);
+  const [simulation, setSimulation] = useState({
+    isActive: false,
+    salaryIncrease: 0,
+    bonusMultiplier: 1,
+    extraIncome: 0
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,7 +65,18 @@ export function IncomeTracker() {
     setState(prev => {
       const newYears = { ...prev.years };
       const newMonths = [...newYears[prev.activeYear].months];
+      const oldValue = newMonths[monthIndex][field];
       newMonths[monthIndex] = { ...newMonths[monthIndex], [field]: value };
+      
+      // Auto-fill logic for salary
+      if (field === 'salary') {
+        for (let i = monthIndex + 1; i < 12; i++) {
+          if (newMonths[i].salary === oldValue || newMonths[i].salary === 0) {
+             newMonths[i] = { ...newMonths[i], salary: value };
+          }
+        }
+      }
+      
       newYears[prev.activeYear] = { ...newYears[prev.activeYear], months: newMonths };
       return { ...prev, years: newYears };
     });
@@ -100,28 +121,23 @@ export function IncomeTracker() {
     });
   };
 
-  const handleAnnualBonusChange = (field: 'annualBonusCoef' | 'annualBonusAmount' | 'extraBonusAmount' | 'bonusBase' | 'baseSalary' | 'iisContribution' | 'deductions', value: any) => {
+  const handleAnnualBonusChange = (field: 'annualBonusCoef' | 'annualBonusAmount' | 'extraBonusAmount' | 'bonusBase' | 'iisContribution' | 'deductions', value: number | { social?: number, property?: number, standard?: number }) => {
     setState(prev => {
       const newYears = { ...prev.years };
       const currentYearData = newYears[prev.activeYear];
       
       if (field === 'extraBonusAmount') {
-        newYears[prev.activeYear] = { ...currentYearData, extraBonusAmount: value };
-        return { ...prev, years: newYears };
-      }
-
-      if (field === 'baseSalary') {
-        newYears[prev.activeYear] = { ...currentYearData, baseSalary: value };
+        newYears[prev.activeYear] = { ...currentYearData, extraBonusAmount: value as number };
         return { ...prev, years: newYears };
       }
 
       if (field === 'iisContribution') {
-        newYears[prev.activeYear] = { ...currentYearData, iisContribution: value };
+        newYears[prev.activeYear] = { ...currentYearData, iisContribution: value as number };
         return { ...prev, years: newYears };
       }
 
       if (field === 'deductions') {
-        newYears[prev.activeYear] = { ...currentYearData, deductions: value };
+        newYears[prev.activeYear] = { ...currentYearData, deductions: value as { social?: number, property?: number, standard?: number } };
         return { ...prev, years: newYears };
       }
 
@@ -131,17 +147,43 @@ export function IncomeTracker() {
       
       let newAnnualCoef = currentYearData.annualBonusCoef || 0;
       let newAnnualAmount = currentYearData.annualBonusAmount || 0;
-      let newBonusBase = currentYearData.bonusBase || 169500;
+      let newBonusBase = currentYearData.bonusBase || 0;
 
       if (field === 'bonusBase') {
-        newBonusBase = value;
+        newBonusBase = value as number;
+        
+        // Update all monthly salaries to match bonusBase
+        const newMonths = currentYearData.months.map(m => ({ ...m, salary: newBonusBase }));
+        
+        // Recalculate quarters
+        const newQuarters = (currentYearData.quarters || Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }))).map((q, qIndex) => {
+          const qMonths = QUARTERS[qIndex].months.map(mi => newMonths[mi]);
+          const qNorm = qMonths.reduce((sum, m) => sum + m.normDays, 0);
+          const qFact = qMonths.reduce((sum, m) => sum + m.factDays, 0);
+          const krd = qNorm > 0 ? qFact / qNorm : 0;
+          return {
+            ...q,
+            bonusAmount: q.bonusCoef ? Math.round((newBonusBase * q.bonusCoef * krd) * 100) / 100 : q.bonusAmount
+          };
+        });
+        
         newAnnualAmount = Math.round((newBonusBase * newAnnualCoef * krdg) * 100) / 100;
+        
+        newYears[prev.activeYear] = { 
+          ...currentYearData, 
+          annualBonusCoef: newAnnualCoef, 
+          annualBonusAmount: newAnnualAmount,
+          bonusBase: newBonusBase,
+          months: newMonths,
+          quarters: newQuarters
+        };
+        return { ...prev, years: newYears };
       } else if (field === 'annualBonusCoef') {
-        newAnnualCoef = value;
-        newAnnualAmount = Math.round((newBonusBase * value * krdg) * 100) / 100;
+        newAnnualCoef = value as number;
+        newAnnualAmount = Math.round((newBonusBase * (value as number) * krdg) * 100) / 100;
       } else if (field === 'annualBonusAmount') {
-        newAnnualAmount = value;
-        newAnnualCoef = (newBonusBase * krdg) > 0 ? value / (newBonusBase * krdg) : 0;
+        newAnnualAmount = value as number;
+        newAnnualCoef = (newBonusBase * krdg) > 0 ? (value as number) / (newBonusBase * krdg) : 0;
       }
 
       newYears[prev.activeYear] = { 
@@ -229,10 +271,9 @@ export function IncomeTracker() {
   // --- Calculations ---
 
   const calculatedMonths = useMemo(() => {
-    const sim = state.simulation;
-    const isSimActive = sim?.isActive;
-    const salaryMult = isSimActive ? (1 + (sim.salaryIncrease || 0) / 100) : 1;
-    const bonusMult = isSimActive ? (sim.bonusMultiplier || 1) : 1;
+    const isSimActive = simulation.isActive;
+    const salaryMult = isSimActive ? (1 + (simulation.salaryIncrease || 0) / 100) : 1;
+    const bonusMult = isSimActive ? (simulation.bonusMultiplier || 1) : 1;
 
     return activeYearData.months.map((m, index) => {
       const baseSalary = m.salary * salaryMult;
@@ -249,7 +290,7 @@ export function IncomeTracker() {
       const net13 = gross - tax13;
       return { ...m, base, bonus, gross, tax13, net13 };
     });
-  }, [activeYearData, state.simulation]);
+  }, [activeYearData, simulation]);
 
   const prevYearData = state.years[state.activeYear - 1];
   const { yearlyTotals, grossDiff, netDiff } = useIncomeTotals({
@@ -259,15 +300,27 @@ export function IncomeTracker() {
     deposits,
     taxSettings,
     taxBrackets: state.taxBrackets,
-    simulation: state.simulation,
+    simulation,
     calculationMode
   });
+
+  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   if (!activeYearData) return null;
 
   return (
     <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-indigo-500/30">
-      <div className="max-w-[1400px] mx-auto space-y-6">
+      <div className="max-w-full lg:max-w-[1024px] mx-auto space-y-6">
+
+        {/* Action Bar (Simulation Badge) */}
+        {simulation.isActive && (
+          <div className="flex justify-end mb-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl border border-emerald-500/20 w-fit mt-2">
+              <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest hidden lg:inline">Simulation</span>
+            </div>
+          </div>
+        )}
 
         {/* Top Summary Section */}
         <YearSummary 
@@ -276,131 +329,92 @@ export function IncomeTracker() {
           grossDiff={grossDiff}
           prevYear={prevYear}
           handleCopy={handleCopy}
+          isPrivate={isPrivate}
         />
 
-        <div className="flex gap-6 items-start relative">
-          
-          {/* Left Column: Tabs + Table (Expands to full width when sidebar is closed) */}
-          <div className={cn("space-y-6 min-w-0 transition-all duration-300", isSidebarOpen ? "w-full xl:w-[72%]" : "w-full")}>
-            {/* Tabs & Toolbar */}
-            <div className="flex justify-between items-center">
-              <IncomeCalculationModeToggle value={calculationMode} onChange={setCalculationMode} />
-              <YearTabs 
-                availableYears={availableYears}
-                activeYear={state.activeYear}
-                setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
-                addNewYear={addNewYear}
-                setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
-                setIsClearModalOpen={setIsClearModalOpen}
-                prevYear={prevYear}
-                copyFromPreviousYear={copyFromPreviousYear}
-                onExportPDF={async () => {
-                  const success = await exportToPDF('income-tracker-content', {
-                    totalGross: yearlyTotals.totalGross,
-                    totalNet: yearlyTotals.finalNet,
-                    totalTax: yearlyTotals.progressiveTax,
-                    effectiveRate: yearlyTotals.effectiveRate
-                  });
-                  if (success) {
-                    window.dispatchEvent(new CustomEvent('app:toast', { 
-                      detail: { message: 'Таблица доходов экспортирована в PDF', type: 'success' } 
-                    }));
-                  }
-                }}
-              />
-              <button 
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="p-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
-                title={isSidebarOpen ? "Скрыть инструменты" : "Показать инструменты"}
+        <div className="space-y-8">
+          {/* Tabs & Toolbar */}
+          <YearTabs 
+            availableYears={availableYears}
+            activeYear={state.activeYear}
+            setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
+            addNewYear={addNewYear}
+            setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
+            setIsClearModalOpen={setIsClearModalOpen}
+            prevYear={prevYear}
+            copyFromPreviousYear={copyFromPreviousYear}
+            onExportPDF={async () => {
+              const success = await exportToPDF('income-tracker-content', {
+                totalGross: yearlyTotals.totalGross,
+                totalNet: yearlyTotals.finalNet,
+                totalTax: yearlyTotals.progressiveTax,
+                effectiveRate: yearlyTotals.effectiveRate
+              });
+              if (success) {
+                addToast('Отчет экспортирован в PDF', 'success');
+              } else {
+                addToast('Ошибка при экспорте в PDF', 'error');
+              }
+            }}
+            onExportXLSX={() => {
+              exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
+              addToast('Данные экспортированы в Excel', 'success');
+            }}
+            isSimulationOpen={isSimulationOpen}
+            setIsSimulationOpen={setIsSimulationOpen}
+          />
+
+          {/* Scenario Simulator (Collapsible) */}
+          <AnimatePresence>
+            {isSimulationOpen && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {isSidebarOpen ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
-              </button>
-            </div>
+                <ScenarioSimulator 
+                  simulation={simulation}
+                  onUpdate={setSimulation}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
+          <div className="flex flex-col gap-8 md:gap-10">
             {/* Mobile Layout (Cards) */}
-            <div className="block md:hidden space-y-4">
-              {/* Header Settings Card */}
-              <div className="bg-white dark:bg-slate-900/50 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 p-4 space-y-4">
-                <BonusConfigControls
-                  compact
-                  activeYearData={activeYearData}
-                  onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
-                  onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
-                  onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
-                />
-              </div>
-
-              {/* Quarters Accordion */}
-              {QUARTERS.map((q, qIndex) => (
-                <QuarterAccordion 
-                  key={qIndex}
-                  q={q}
-                  qIndex={qIndex}
-                  isExpanded={expandedQuarters[qIndex]}
-                  onToggle={() => setExpandedQuarters(prev => ({ ...prev, [qIndex]: !prev[qIndex] }))}
-                  activeYearData={activeYearData}
-                  calculatedMonths={calculatedMonths}
-                  handleQuarterChange={handleQuarterChange}
-                  handleMonthChange={handleMonthChange}
-                />
-              ))}
-
-              {/* Annual/Extra Bonus Cards */}
-              <AnnualBonusSection 
+            <div className="block lg:hidden">
+              <IncomeMobileView
                 activeYearData={activeYearData}
-                handleAnnualBonusChange={handleAnnualBonusChange}
                 calculatedMonths={calculatedMonths}
                 yearlyTotals={yearlyTotals}
-                isMobile={true}
+                expandedQuarters={expandedQuarters}
+                onToggleQuarter={(qIndex) => setExpandedQuarters(prev => ({ ...prev, [qIndex]: !prev[qIndex] }))}
+                handleAnnualBonusChange={handleAnnualBonusChange}
+                handleQuarterChange={handleQuarterChange}
+                handleMonthChange={handleMonthChange}
+                isPrivate={isPrivate}
               />
             </div>
 
             {/* Desktop Layout (Table) */}
-            <IncomeDesktopTable
-              yearKey={state.activeYear}
-              activeYearData={activeYearData}
-              calculatedMonths={calculatedMonths}
-              yearlyTotals={yearlyTotals}
-              onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
-              onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
-              onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
-              handleQuarterChange={handleQuarterChange}
-              handleMonthChange={handleMonthChange}
-              handleAnnualBonusChange={handleAnnualBonusChange}
-            />
+            <div className="hidden lg:block">
+              <IncomeDesktopTable
+                yearKey={state.activeYear}
+                activeYearData={activeYearData}
+                calculatedMonths={calculatedMonths}
+                yearlyTotals={yearlyTotals}
+                onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
+                onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
+                onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
+                handleQuarterChange={handleQuarterChange}
+                handleMonthChange={handleMonthChange}
+                handleAnnualBonusChange={handleAnnualBonusChange}
+                onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
+                isPrivate={isPrivate}
+              />
+            </div>
           </div>
-
-          {/* Right Column: Sidebar (Collapsible) */}
-          <AnimatePresence>
-            {isSidebarOpen && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20, width: 0 }}
-                animate={{ opacity: 1, x: 0, width: '28%' }}
-                exit={{ opacity: 0, x: 20, width: 0 }}
-                className="hidden xl:block space-y-6 shrink-0"
-              >
-                {/* Scenario Simulator */}
-                <ScenarioSimulator 
-                  simulation={state.simulation || { isActive: false, salaryIncrease: 0, bonusMultiplier: 1, extraIncome: 0 }}
-                  onUpdate={(sim) => setState(prev => ({ ...prev, simulation: sim }))}
-                />
-
-                {/* Tax Advisor Section */}
-                <TaxAdvisorSection 
-                  activeYearData={activeYearData}
-                  onUpdate={handleAnnualBonusChange}
-                />
-                
-                {/* Progressive Scale Info Button */}
-                <button 
-                  onClick={() => setIsTaxInfoModalOpen(true)}
-                  className="w-full p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/50 text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2 font-bold text-sm hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-all cursor-pointer shadow-sm"
-                >
-                  <Info size={18} /> Справка по НДФЛ {state.activeYear}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
       </div>

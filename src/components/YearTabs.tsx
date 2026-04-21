@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
-import { Calendar, Plus, Trash2, Copy, ChevronDown, Settings, Download } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2, Copy, FileText, FileSpreadsheet, TrendingUp, X, ChevronDown, MoreVertical } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface YearTabsProps {
@@ -13,6 +12,9 @@ interface YearTabsProps {
   prevYear: number | null;
   copyFromPreviousYear: () => void;
   onExportPDF?: () => void;
+  onExportXLSX?: () => void;
+  isSimulationOpen: boolean;
+  setIsSimulationOpen: (open: boolean) => void;
 }
 
 export const YearTabs = ({
@@ -25,168 +27,199 @@ export const YearTabs = ({
   prevYear,
   copyFromPreviousYear,
   onExportPDF,
+  onExportXLSX,
+  isSimulationOpen,
+  setIsSimulationOpen
 }: YearTabsProps) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
   const [isYearDropdownOpen, setIsYearDropdownOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const desktopMenuRef = useRef<HTMLDivElement>(null);
+  const yearDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setIsMobileMenuOpen(false);
+      }
+      if (desktopMenuRef.current && !desktopMenuRef.current.contains(event.target as Node)) {
+        setIsDesktopMenuOpen(false);
+      }
+      if (yearDropdownRef.current && !yearDropdownRef.current.contains(event.target as Node)) {
+        setIsYearDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="apple-card p-4 sm:p-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 relative z-40">
+    <div className="bg-white dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-1 md:p-2 lg:p-2 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
       
-      {/* Left Side (Desktop) / Top Row (Mobile) */}
-      <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 w-full xl:w-auto">
-        {/* Icon & Title */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="p-1.5 sm:p-2 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl shrink-0">
-            <Calendar size={18} className="sm:w-5 sm:h-5" />
-          </div>
-          <h2 className="text-base sm:text-lg font-bold text-light-text-primary dark:text-dark-text-primary whitespace-nowrap">Расчетный год</h2>
-        </div>
-
-        {/* Desktop Tabs & Add/Delete */}
-        <div className="hidden xl:flex items-center gap-2">
-          <div className="flex bg-[#F5F5F7] dark:bg-white/5 p-1 rounded-xl">
+      {/* ================= UNIFIED HEADER VIEW ================= */}
+      <div className="flex justify-between items-center w-full relative">
+        {/* Left Elements: Tabs (Desktop) / Dropdown (Mobile) + Add/Del */}
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Desktop Tabs: visible only on XL and up */}
+          <div className="hidden xl:flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border-slate-100 dark:border-slate-800">
             {availableYears.map(year => (
               <button
                 key={year}
                 onClick={() => setActiveYear(year)}
                 className={cn(
-                  "apple-button px-4 py-2 text-sm font-bold transition-all whitespace-nowrap relative",
-                  activeYear === year 
-                    ? "text-indigo-600 dark:text-indigo-400" 
-                    : "text-light-text-secondary dark:text-dark-text-secondary hover:text-light-text-primary dark:hover:text-dark-text-primary hover:bg-white/50 dark:hover:bg-white/10"
+                  "px-3 py-2.5 text-xs lg:text-sm font-bold rounded-lg transition-all",
+                  year === activeYear 
+                    ? "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm ring-slate-200 dark:ring-slate-600" 
+                    : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                 )}
               >
-                {activeYear === year && (
-                  <motion.div 
-                    layoutId="activeYear"
-                    className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
                 {year}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 bg-[#F5F5F7] dark:bg-white/5 p-1 rounded-xl shrink-0">
-            <button 
-              onClick={addNewYear}
-              className="apple-button p-1.5 text-light-text-secondary hover:text-indigo-600 dark:text-dark-text-secondary dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-white/10 shadow-sm"
-              title="Добавить новый год"
-            >
-              <Plus size={18} />
-            </button>
-            <button 
-              onClick={() => setIsDeleteYearModalOpen(true)}
-              disabled={availableYears.length <= 1}
-              className="apple-button p-1.5 text-light-text-secondary hover:text-rose-600 dark:text-dark-text-secondary dark:hover:text-rose-400 hover:bg-white dark:hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent shadow-sm"
-              title="Удалить текущий год"
-            >
-              <Trash2 size={18} />
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Right Side (Desktop) / Bottom Row (Mobile) */}
-      <div className="flex items-center justify-between w-full xl:w-auto gap-2">
-        
-        {/* Mobile Dropdown & Add/Delete (Hidden on Desktop) */}
-        <div className="flex xl:hidden items-center gap-2 flex-1">
-          {/* Dropdown */}
-          <div className="relative flex-1">
+
+          {/* Mobile/Tablet Dropdown: visible below XL resolution */}
+          <div className="relative xl:hidden" ref={yearDropdownRef}>
             <button
-              onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
-              className="apple-button w-full flex items-center justify-between bg-white dark:bg-dark-card border border-light-border dark:border-dark-border text-light-text-primary dark:text-dark-text-primary text-sm font-bold pl-4 pr-3 py-2 shadow-sm hover:bg-[#F5F5F7] dark:hover:bg-white/5"
+               onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
+               className="flex items-center gap-1.5 bg-white dark:bg-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-700 px-2.5 py-1.5 rounded-xl border-slate-200 dark:border-slate-700 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 h-10"
             >
-              <span>{activeYear} год</span>
-              <ChevronDown size={16} className={cn("text-light-text-secondary transition-transform duration-200", isYearDropdownOpen && "rotate-180")} />
+              <span className="font-bold text-slate-800 dark:text-white text-sm md:text-base">{activeYear}</span>
+              <ChevronDown size={14} className={cn("text-slate-500 transition-transform", isYearDropdownOpen && "rotate-180")} />
             </button>
-            
-            <AnimatePresence>
-              {isYearDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-40"
-                    onClick={() => setIsYearDropdownOpen(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white/90 dark:bg-dark-card/90 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-xl shadow-xl z-50 overflow-hidden"
+            {isYearDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col py-1 max-h-60 overflow-y-auto">
+                {availableYears.map(year => (
+                  <button
+                    key={year}
+                    onClick={() => { setActiveYear(year); setIsYearDropdownOpen(false); }}
+                    className={cn(
+                      "px-4 py-2 text-left font-medium transition-colors hover:bg-slate-50 dark:hover:bg-slate-700",
+                      year === activeYear ? "text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10" : "text-slate-700 dark:text-slate-300"
+                    )}
                   >
-                    {availableYears.map(year => (
-                      <button
-                        key={year}
-                        onClick={() => {
-                          setActiveYear(year);
-                          setIsYearDropdownOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-4 py-3 text-sm font-bold transition-colors cursor-pointer",
-                          activeYear === year 
-                            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" 
-                            : "text-light-text-primary dark:text-dark-text-primary hover:bg-[#F5F5F7] dark:hover:bg-white/5"
-                        )}
-                      >
-                        {year} год
-                      </button>
-                    ))}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
+                    {year}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-
-          {/* Add/Delete Mobile */}
-          <div className="flex items-center gap-1 bg-[#F5F5F7] dark:bg-white/5 p-1 rounded-xl shrink-0">
+          
+          <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border-slate-100 dark:border-slate-800">
             <button 
               onClick={addNewYear}
-              className="apple-button p-1.5 text-light-text-secondary hover:text-indigo-600 dark:text-dark-text-secondary dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-white/10 shadow-sm"
+              className="flex items-center justify-center p-2.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               title="Добавить новый год"
             >
-              <Plus size={18} />
+              <Plus size={20} />
             </button>
             <button 
               onClick={() => setIsDeleteYearModalOpen(true)}
               disabled={availableYears.length <= 1}
-              className="apple-button p-1.5 text-light-text-secondary hover:text-rose-600 dark:text-dark-text-secondary dark:hover:text-rose-400 hover:bg-white dark:hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent shadow-sm"
+              className="flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:hover:bg-transparent focus:outline-none p-2.5 focus:ring-2 focus:ring-rose-500/50"
               title="Удалить текущий год"
             >
-              <Trash2 size={18} />
+              <Trash2 size={20} />
             </button>
           </div>
         </div>
 
-        {/* Actions: Clear & Copy (Both Mobile & Desktop) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <button 
-            onClick={() => setIsClearModalOpen(true)}
-            className="apple-button flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-2 sm:px-3 sm:py-2 text-sm font-medium text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800/50 whitespace-nowrap"
-            title="Очистить данные за год"
-          >
-            <Trash2 size={16} /> <span className="hidden sm:inline">Очистить</span>
-          </button>
+        {/* Right Elements: Quick Actions + 3 Dots Menu */}
+        <div className="flex items-center gap-1 sm:gap-1.5" ref={mobileMenuRef}>
           {prevYear !== null && (
             <button 
               onClick={copyFromPreviousYear}
-              className="apple-button flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-2 sm:px-3 sm:py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800/50 whitespace-nowrap"
+              className="flex items-center justify-center p-2.5 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-xl transition-colors hidden sm:block focus:outline-none focus:ring-2 focus:ring-blue-500/50"
               title={`Скопировать из ${prevYear}`}
             >
-              <Copy size={16} /> <span className="hidden sm:inline">Из {prevYear}</span>
+              <Copy size={20} />
             </button>
           )}
-          {onExportPDF && (
-            <button 
-              onClick={onExportPDF}
-              className="apple-button flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-2 sm:px-3 sm:py-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800/50 whitespace-nowrap"
-              title="Экспорт в PDF"
-            >
-              <Download size={16} /> <span className="hidden sm:inline">PDF</span>
-            </button>
+          <button 
+            onClick={() => setIsClearModalOpen(true)}
+            className="flex items-center justify-center p-2.5 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/20 hover:bg-rose-100 dark:hover:bg-rose-900/40 rounded-xl transition-colors hidden sm:block focus:outline-none focus:ring-2 focus:ring-rose-500/50"
+            title="Очистить данные за год"
+          >
+            <Trash2 size={20} />
+          </button>
+          
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className={cn(
+              "flex items-center justify-center p-2.5 rounded-xl transition-colors relative z-20 focus:outline-none focus:ring-2 focus:ring-slate-500/50 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
+              isMobileMenuOpen 
+                ? "bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white" 
+                : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+            )}
+            title="Дополнительно"
+          >
+            <MoreVertical size={20} />
+            {isSimulationOpen && !isMobileMenuOpen && (
+               <span className="absolute top-1 right-1 w-2 h-2 bg-indigo-500 rounded-full border border-white dark:border-slate-800"></span>
+            )}
+          </button>
+
+          {/* Absolute Menu Box */}
+          {isMobileMenuOpen && (
+             <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col py-1">
+                {/* WHAT-IF - shown on all screens since the explicit button is removed */}
+                <button 
+                  onClick={() => { setIsSimulationOpen(!isSimulationOpen); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                >
+                  <div className={cn(
+                    "p-1.5 rounded-md", 
+                    isSimulationOpen ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400"
+                  )}>
+                    {isSimulationOpen ? <X size={14} /> : <TrendingUp size={14} />}
+                  </div>
+                  <span className={cn(isSimulationOpen ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300")}>
+                    {isSimulationOpen ? 'Выключить What-If' : 'Включить What-If'}
+                  </span>
+                </button>
+                
+                <div className="h-px bg-slate-100 dark:bg-slate-700/50 mx-2 my-1"></div>
+
+                {/* Mobile only visible elements like Copy and Clean*/}
+                {prevYear !== null && (
+                  <button 
+                    onClick={() => { copyFromPreviousYear(); setIsMobileMenuOpen(false); }}
+                    className="flex sm:hidden items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                  >
+                    <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-500"><Copy size={14} /></div>
+                    Скопировать пред. год
+                  </button>
+                )}
+                
+                <button 
+                  onClick={() => { setIsClearModalOpen(true); setIsMobileMenuOpen(false); }}
+                  className="flex sm:hidden items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                >
+                  <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500"><Trash2 size={14} /></div>
+                  Очистить таблицу
+                </button>
+                
+                <div className="flex sm:hidden h-px bg-slate-100 dark:bg-slate-700/50 mx-2 my-1"></div>
+
+                <button 
+                  onClick={() => { onExportPDF?.(); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                >
+                  <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500"><FileText size={14} /></div>
+                  Экспорт в PDF
+                </button>
+                
+                <button 
+                  onClick={() => { onExportXLSX?.(); setIsMobileMenuOpen(false); }}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                >
+                   <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"><FileSpreadsheet size={14} /></div>
+                  Экспорт в Excel
+                </button>
+             </div>
           )}
         </div>
-
       </div>
     </div>
   );
