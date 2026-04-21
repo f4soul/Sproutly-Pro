@@ -126,7 +126,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                   isPrivate={isPrivate}
                 />
               </div>
-              <div className="xl:col-span-2">
+              <div className="flex flex-col xl:col-span-2 gap-6">
                 <ChartsSection yearlyTotals={yearlyTotals as any} isPrivate={isPrivate} />
               </div>
             </div>

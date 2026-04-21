@@ -291,7 +291,7 @@ export function BentoDashboard({
           whileHover={{ y: -4 }}
           className="col-span-1 lg:col-span-2 lg:row-span-2 apple-card p-6 flex flex-col justify-between min-h-[140px] lg:min-h-0"
         >
-          <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-4">Структура доходов</h3>
+          <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Структура доходов</h3>
           
           {/* Mobile/Tablet Linear Stacked Bar */}
           <div className="lg:hidden space-y-4 mb-2">

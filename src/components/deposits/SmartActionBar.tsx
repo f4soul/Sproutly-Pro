@@ -31,7 +31,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   isScrolled
 }) => {
   return (
-    <div className="sticky top-0 z-40 py-3 mb-2 bg-[#F5F5F7]/95 dark:bg-[#1C1C1E]/95 backdrop-blur-xl border-b border-light-border/50 dark:border-dark-border/50 w-full overflow-hidden">
+    <div className="relative z-40 py-3 mb-2 w-full">
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         {/* Search & Integrated Controls */}
         <div className="relative w-full lg:flex-1 group">

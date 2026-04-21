@@ -104,7 +104,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
       </div>
 
       {/* Center: Progress Bar */}
-      <div className="mb-4 relative z-10">
+      <div className="mb-3 relative z-10">
         <div className="flex justify-between items-end mb-1.5">
           <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider">
             Срок вклада
@@ -133,7 +133,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
       {/* Bottom Row: Amount & Income */}
       <div className="flex items-end justify-between pt-3 border-t border-light-border/50 dark:border-dark-border/50 relative z-10">
         <div className="flex flex-col">
-          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold mb-0.5">Вложено</span>
+          <span className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-wider font-bold mb-0.5">Сумма</span>
           <span className="text-base font-black text-light-text-primary dark:text-dark-text-primary tracking-tight">
             {formatVal(deposit.amount)}
           </span>

@@ -43,10 +43,10 @@ export const ArchiveHeaderActions = () => {
     <>
       <button
         onClick={() => setIsClearModalOpen(true)}
-        className="apple-button flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] uppercase tracking-widest border border-rose-500/20"
+        className="apple-button flex items-center justify-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] uppercase tracking-widest border border-rose-500/20"
       >
         <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />
-        Очистить архив
+        Очистить
       </button>
 
       {/* Clear Archive Confirmation Modal */}
@@ -166,18 +166,18 @@ export const Archive: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
-              <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center shrink-0">
                   <ArchiveIcon className="w-5 h-5 text-slate-400" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary truncate">
+                  <div className="flex items-center gap-2 max-w-full">
+                    <h3 className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary">
                       {deposit.bank}
                     </h3>
-                    <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest bg-[#F5F5F7] dark:bg-white/5 px-2 py-0.5 rounded-md">
+                    <span className="shrink-0 text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest bg-[#F5F5F7] dark:bg-white/5 px-2 py-0.5 rounded-md">
                       {deposit.rate}%
                     </span>
                   </div>
@@ -187,11 +187,11 @@ export const Archive: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-6 shrink-0">
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-0.5">Сумма</p>
                   <p className="font-bold text-sm text-light-text-primary dark:text-dark-text-primary font-mono whitespace-nowrap">
-                    {deposit.amount.toLocaleString()} {deposit.currency}
+                    {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
                   </p>
                 </div>
                 

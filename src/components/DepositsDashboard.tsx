@@ -124,7 +124,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
       className="space-y-6 md:space-y-8 max-w-5xl mx-auto" 
       id="dashboard-content"
     >
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
         <StatCard 
           index={0}
           title="Общий доход" 

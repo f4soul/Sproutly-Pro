@@ -151,7 +151,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         </motion.button>
       </div>
 
-      <div id="deposits-list-content" className="apple-card overflow-hidden">
+      <div id="deposits-list-content" className="lg:apple-card lg:overflow-hidden">
         {/* Desktop & Landscape Tablet Table */}
         <div className="hidden lg:block w-full overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
@@ -191,7 +191,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
         {/* Mobile & Portrait Tablet Cards */}
         <div className="block lg:hidden">
-          <div className="flex flex-col divide-y divide-light-border dark:divide-dark-border">
+          <div className="flex flex-col">
             {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
               <DepositCard 
                 key={deposit.id || `deposit-card-${index}`} 

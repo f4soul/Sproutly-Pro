@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../types';
 import { db } from '../db';
-import { Plus, Trash2, Download, Upload, ShieldCheck, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings as SettingsIcon, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ShieldCheck, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings as SettingsIcon, ChevronDown, TrendingUp, ReceiptRussianRuble } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,17 +26,21 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const currentBrackets = state.taxBrackets[selectedBracketYear] || state.taxBrackets[2025] || DEFAULT_TAX_BRACKETS[2025];
 
   const addYear = async () => {
-    if (taxSettings.find(s => s.year === newYear)) {
-      addToast('Этот год уже добавлен', 'info');
+    const maxYear = taxSettings.length > 0 ? Math.max(...taxSettings.map(s => s.year)) : new Date().getFullYear();
+    const nextYear = Math.max(newYear, maxYear + 1);
+    
+    if (taxSettings.find(s => s.year === nextYear)) {
+      addToast('Этот период уже добавлен', 'info');
       return;
     }
+    
     await db.taxYearSettings.add({
-      year: newYear,
+      year: nextYear,
       limit: 210000,
       ndflRate: 13
     });
-    setNewYear(newYear + 1);
-    addToast(`Период ${newYear} добавлен`);
+    setNewYear(nextYear + 1);
+    addToast(`Период ${nextYear} добавлен`);
   };
 
   const restore2024 = async () => {
@@ -144,32 +148,33 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700 relative w-full max-w-7xl mx-auto pb-12">
       {/* Backup Section */}
-      <section className="apple-card p-5 xl:p-6 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-6 h-6 text-blue-600 stroke-[1.5px]" />
+      <section className="apple-card p-4 sm:p-5 xl:p-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 md:gap-4 min-w-0">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 md:w-6 md:h-6 text-blue-600 stroke-[1.5px]" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Резервная копия данных</h3>
-            <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Управление данными, экспорт и импорт</p>
+            <h3 className="text-sm md:text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Резервная копия</h3>
+            <p className="hidden sm:block text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5 truncate">Управление данными, экспорт и импорт</p>
+            <p className="sm:hidden text-[10px] text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5 truncate">Экспорт и импорт</p>
           </div>
         </div>
         
-        <div className="flex gap-2 shrink-0 w-full sm:w-auto">
+        <div className="flex gap-2 shrink-0">
           <button 
             onClick={exportData}
-            className="apple-button flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600 font-semibold text-xs"
+            className="apple-button w-10 h-10 md:w-auto md:h-auto flex items-center justify-center gap-2 p-0 md:px-4 md:py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all text-blue-600 font-semibold text-xs rounded-xl"
             title="Экспорт"
           >
-            <Download className="w-4 h-4 stroke-[2px]" />
-            Экспорт
+            <Download className="w-4 h-4 md:w-4 md:h-4 stroke-[2px]" />
+            <span className="hidden md:inline">Экспорт</span>
           </button>
           <label 
-            className="apple-button flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600 font-semibold text-xs cursor-pointer"
+            className="apple-button w-10 h-10 md:w-auto md:h-auto flex items-center justify-center gap-2 p-0 md:px-4 md:py-2.5 bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all text-emerald-600 font-semibold text-xs rounded-xl cursor-pointer"
             title="Импорт"
           >
-            <Upload className="w-4 h-4 stroke-[2px]" />
-            Импорт
+            <Upload className="w-4 h-4 md:w-4 md:h-4 stroke-[2px]" />
+            <span className="hidden md:inline">Импорт</span>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>
         </div>
@@ -177,7 +182,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
 
       {/* Income Tax Brackets Section */}
       <section className="apple-card p-5 lg:p-6 space-y-6">
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center gap-4 mb-4">
           <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
             <SettingsIcon className="w-6 h-6 text-indigo-600 stroke-[1.5px]" />
           </div>
@@ -188,7 +193,6 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
         </div>
 
         <div className="mb-4">
-          <label className="block text-xs font-medium text-light-text-secondary dark:text-dark-text-secondary mb-2 uppercase tracking-wider">Выберите год:</label>
           <div className="flex flex-wrap gap-2">
             {availableBracketYears.map(year => (
               <button
@@ -223,19 +227,19 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                   className="p-3 sm:p-4 flex items-center justify-between cursor-pointer bg-[#F5F5F7]/50 dark:bg-white/5 hover:bg-[#F5F5F7] dark:hover:bg-slate-800 transition-colors"
                   onClick={() => setExpandedBracketIndex(isExpanded ? null : index)}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 pr-2">
                     <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
-                      <ChevronDown size={18} className="text-light-text-secondary" />
+                      <ChevronDown size={18} className="text-light-text-secondary shrink-0" />
                     </motion.div>
-                    <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary">{bracket.label || `Ступень ${index + 1}`}</span>
+                    <span className="text-sm font-bold text-light-text-primary dark:text-dark-text-primary truncate">{bracket.label || `Ступень ${index + 1}`}</span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 shrink-0">
                     {!isExpanded && (
                       <div className="text-right flex items-center gap-3">
                         {bracket.limit !== Infinity && (
-                          <span className="hidden sm:inline-block text-[11px] font-mono text-slate-500">{bracket.limit?.toLocaleString('ru-RU')} ₽</span>
+                          <span className="hidden sm:inline-block text-[11px] font-mono text-slate-500 whitespace-nowrap">{bracket.limit?.toLocaleString('ru-RU')} ₽</span>
                         )}
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 font-mono">
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 font-mono whitespace-nowrap">
                           {bracket.rate != null ? Math.round(bracket.rate * 100) : 0}%
                         </span>
                       </div>
@@ -257,9 +261,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white dark:bg-slate-900"
+                      className="overflow-hidden bg-transparent"
                     >
-                      <div className="p-3 lg:p-4 grid gap-4 border-t border-slate-100 dark:border-slate-800">
+                      <div className="p-3 lg:p-4 grid gap-4 border-t border-light-border/50 dark:border-dark-border/50">
                         <div className="flex flex-col xl:flex-row gap-4">
                           <div className="flex-1 space-y-1">
                             <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Название</label>
@@ -323,7 +327,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <Plus className="w-6 h-6 text-emerald-600 stroke-[1.5px]" />
+              <ReceiptRussianRuble className="w-6 h-6 text-emerald-600 stroke-[1.5px]" />
             </div>
             <div>
               <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Налог на вклады</h3>
@@ -334,28 +338,13 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
             {!taxSettings.find(s => s.year === 2024) && (
               <button 
                 onClick={restore2024}
-                className="px-3 md:px-4 py-2 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer hidden sm:block"
+                className="px-3 md:px-4 py-2 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
               >
                 Восстановить 2024
               </button>
             )}
-            <button 
-              onClick={addYear}
-              className="apple-button w-10 h-10 bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-500/20 flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5px]" />
-            </button>
           </div>
         </div>
-
-        {!taxSettings.find(s => s.year === 2024) && (
-          <button 
-            onClick={restore2024}
-            className="w-full sm:hidden px-4 py-2.5 bg-[#F5F5F7] dark:bg-white/5 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
-          >
-            Восстановить период 2024 года
-          </button>
-        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 lg:gap-4">
           {taxSettings.sort((a, b) => b.year - a.year).map(setting => {
@@ -363,7 +352,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
             return (
               <div 
                 key={setting.year} 
-                className="apple-card overflow-hidden border border-light-border dark:border-dark-border transition-all hover:border-emerald-500/20 shadow-sm"
+                className="apple-card overflow-hidden border border-light-border dark:border-dark-border transition-all hover:border-emerald-500/20 shadow-sm group"
               >
                 <div 
                   className="p-4 flex items-center justify-between cursor-pointer bg-[#F5F5F7] dark:bg-white/5 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors"
@@ -398,9 +387,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden bg-white dark:bg-slate-900"
+                      className="overflow-hidden bg-transparent"
                     >
-                      <div className="p-4 grid grid-cols-1 gap-4 border-t border-slate-100 dark:border-slate-800">
+                      <div className="p-4 grid grid-cols-1 gap-4 border-t border-light-border/50 dark:border-dark-border/50">
                         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
                           <label className="text-xs font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest shrink-0">Лимит</label>
                           <div className="relative w-full xl:w-[140px]">
@@ -432,22 +421,32 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               </div>
             );
           })}
+          
+          <button 
+            onClick={addYear}
+            className="w-full mt-2 apple-button border-2 border-dashed border-emerald-200 dark:border-emerald-500/20 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2 py-3 transition-colors"
+          >
+            <Plus size={16} className="stroke-[2px]" /> 
+            <span className="text-xs font-bold uppercase tracking-wider">Добавить период</span>
+          </button>
         </div>
       </section>
 
       {/* Archive Section */}
       <section className="apple-card p-5 lg:p-6">
-        <div className="flex flex-col xl:flex-row xl:items-center gap-4 mb-6 justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 mb-6 justify-between">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
               <ArchiveIcon className="w-6 h-6 text-orange-600 stroke-[1.5px]" />
             </div>
-            <div>
-              <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">Архив вкладов</h3>
-              <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5">Все закрытые и завершенные вклады</p>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate">Архив вкладов</h3>
+              <p className="text-[11px] lg:text-xs text-light-text-secondary dark:text-dark-text-secondary font-medium mt-0.5 truncate pr-2">Все закрытые и завершенные вклады</p>
             </div>
           </div>
-          <ArchiveHeaderActions />
+          <div className="shrink-0">
+             <ArchiveHeaderActions />
+          </div>
         </div>
         <Archive />
       </section>
