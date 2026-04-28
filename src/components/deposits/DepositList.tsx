@@ -136,7 +136,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       />
 
       {/* Floating Action Button for Mobile */}
-      <div className="lg:hidden fixed bottom-15 right-6 z-50">
+      <div className="lg:hidden fixed bottom-24 right-6 z-50">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -151,11 +151,10 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         </motion.button>
       </div>
 
-      <div id="deposits-list-content" className="lg:apple-card lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:dark:border-slate-800">
-        {/* Desktop & Landscape Tablet Table */}
-        <div className="hidden lg:block w-full overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
-            <thead>
+      {/* Desktop & Landscape Tablet Table */}
+      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto custom-scrollbar bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+        <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
+          <thead>
               <tr className="bg-slate-50/50 dark:bg-white/5">
                 <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] border-b border-slate-200 dark:border-slate-800 w-[28%] xl:w-[24%]">Банк</th>
                 <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[12%] xl:w-[10%]" onClick={() => requestSort('rate')}>СТАВКА</th>
@@ -181,7 +180,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
               )) : (
                 <tr>
                   <td colSpan={9} className="py-24 text-center">
-                    <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
+                    <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
                     <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
                   </td>
                 </tr>
@@ -203,13 +202,12 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
               />
             )) : (
               <div className="py-24 text-center">
-                <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
+                <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
                 <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
               </div>
             )}
           </div>
         </div>
-      </div>
 
       {isFormOpen && (
         <DepositForm 

@@ -17,9 +17,9 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
   const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   return (
-    <>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
       {/* Tax Details */}
-      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="apple-card p-6 flex flex-col h-full">
+      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="apple-card p-6 flex flex-col h-full min-h-[250px]">
         <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 text-center">Детализация НДФЛ</h3>
         <div className="flex flex-col overflow-y-auto flex-1 custom-scrollbar min-h-0 justify-center">
           {yearlyTotals.brackets.map((b, i) => (
@@ -38,7 +38,7 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
       </motion.div>
 
       {/* Chart */}
-      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="apple-card p-6 flex flex-col h-full">
+      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="apple-card p-6 flex flex-col h-full min-h-[250px]">
         <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 text-center">Структура дохода</h3>
         
         <div className="space-y-6 flex-1 flex flex-col justify-center">
@@ -77,6 +77,6 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
           </div>
         </div>
       </motion.div>
-    </>
+    </div>
   );
 };

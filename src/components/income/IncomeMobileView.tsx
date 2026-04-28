@@ -102,18 +102,18 @@ export function IncomeMobileView({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed bottom-[calc(80px+env(safe-area-inset-bottom,16px))] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 xl:hidden z-40 pointer-events-none drop-shadow-2xl max-w-xl mx-auto md:left-[calc(256px+1.5rem)] md:right-6"
+            className="fixed bottom-[calc(84px+env(safe-area-inset-bottom,16px))] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 xl:hidden z-40 pointer-events-none drop-shadow-2xl max-w-xl mx-auto md:left-[calc(256px+1.5rem)] md:right-6"
           >
-            <div className="bg-white/70 dark:bg-black/70 backdrop-blur-2xl rounded-2xl p-4 shadow-lg border border-slate-200/50 dark:border-slate-700/50 flex justify-between items-center pointer-events-auto">
+            <div className="bg-black text-white rounded-t-3xl rounded-b-xl p-5 pb-6 shadow-2xl border border-slate-800 flex justify-between items-center pointer-events-auto">
               <div className="flex flex-col">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest leading-tight mb-0.5">Финальный Net за год</span>
-                <span className="text-xl sm:text-2xl font-mono font-bold text-slate-900 dark:text-white tracking-tight">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-tight mb-1">Финальный Net за год</span>
+                <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight">
                   {formatVal(yearlyTotals.finalNet)}
                 </span>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest leading-tight mb-0.5">Total Gross</span>
-                <span className="text-sm font-mono font-medium text-slate-500 dark:text-slate-400">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest leading-tight mb-1">Total Gross</span>
+                <span className="text-sm font-mono font-medium text-slate-400">
                   {formatVal(yearlyTotals.totalGross)}
                 </span>
               </div>

@@ -199,7 +199,7 @@ export function BentoDashboard({
               initial={{ opacity: 0, scale: 0.8, x: 40 }}
               animate={{ opacity: 1, scale: 1, x: 0 }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              className="text-[160px] font-black leading-none tracking-tighter whitespace-nowrap text-slate-100 dark:text-slate-800/50"
+              className="text-[160px] font-black leading-none tracking-tighter whitespace-nowrap text-black/[0.06] dark:text-white/5"
             >
               {selectedYear}
             </motion.span>

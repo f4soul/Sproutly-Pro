@@ -73,7 +73,7 @@ export const YearSummary = ({
 
       {/* Gross */}
       <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="bg-white dark:bg-slate-900/50 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-colors min-h-[100px] sm:min-h-[110px] md:h-[100px]">
-        <div className="absolute -bottom-2 -right-2 text-slate-400 dark:text-slate-500 opacity-[0.08] transition-all duration-500 pointer-events-none group-hover:scale-110">
+        <div className="absolute -bottom-2 -right-2 text-black/5 dark:text-white/5 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <Coins className="w-20 h-20" />
         </div>
         <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 relative z-10 truncate">Gross (грязными)</p>
