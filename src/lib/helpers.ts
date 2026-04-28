@@ -28,7 +28,32 @@ export const calculateYearTotals = (yearData: YearData, taxBrackets: Record<numb
   return { totalGross, finalNet };
 };
 
-export const generateDefaultYear = (year: number): YearData => {
+export const generateEmptyYear = (year: number): YearData => {
+  const norms = DEFAULT_NORMS[year] || DEFAULT_NORMS[2026];
+  const defaultQuarters = Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }));
+
+  return {
+    year,
+    additionalIncome: 0,
+    bonusBase: 169500, // Default base
+    baseSalary: 0,
+    iisContribution: 0,
+    deductions: { social: 0, property: 0, standard: 0 },
+    months: Array.from({ length: 12 }, (_, i) => ({
+      normDays: norms[i] || 21,
+      factDays: norms[i] || 21,
+      salary: 0,
+    })),
+    quarters: defaultQuarters,
+    annualBonusCoef: 0,
+    annualBonusAmount: 0,
+    extraBonusAmount: 0,
+  };
+};
+
+export const generateDefaultYear = (year: number, forceEmpty: boolean = false): YearData => {
+  if (forceEmpty) return generateEmptyYear(year);
+  
   const norms = DEFAULT_NORMS[year] || DEFAULT_NORMS[2026];
   
   const defaultQuarters = Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }));
@@ -128,4 +153,14 @@ export const getDefaultExpandedQuarters = (year: number) => {
   } else {
     return { 0: true, 1: false, 2: false, 3: false };
   }
+};
+
+export const getPlural = (count: number, one: string, two: string, five: string) => {
+  let n = Math.abs(count);
+  n %= 100;
+  if (n >= 5 && n <= 20) return five;
+  n %= 10;
+  if (n === 1) return one;
+  if (n >= 2 && n <= 4) return two;
+  return five;
 };

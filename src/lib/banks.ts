@@ -1,5 +1,5 @@
 import { Bank } from '../types';
-import { db } from '../db';
+import { db } from '../config/db';
 
 export const DEFAULT_BANK_ICON = '/logos/bank-icon.png';
 

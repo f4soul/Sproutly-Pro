@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../db';
+import { db } from '../config/db';
 
 export type IncomeCalculationMode = 'salary' | 'combined';
 

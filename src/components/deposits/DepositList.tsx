@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Landmark, Plus, Download } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Deposit } from '../../types';
-import { db, syncWithFirebase } from '../../db';
+import { db, syncWithFirebase } from '../../config/db';
 import { exportToPDF } from '../../services/ExportService';
 import { DepositForm } from './DepositForm';
 import { calculateIncome } from '../../lib/depositCalculations';
@@ -121,7 +121,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-7xl mx-auto pb-24 lg:pb-0">
+    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
       <SmartActionBar 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -151,24 +151,24 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         </motion.button>
       </div>
 
-      <div id="deposits-list-content" className="lg:apple-card lg:overflow-hidden">
+      <div id="deposits-list-content" className="lg:apple-card lg:overflow-hidden lg:rounded-2xl lg:border lg:border-slate-200 lg:dark:border-slate-800">
         {/* Desktop & Landscape Tablet Table */}
         <div className="hidden lg:block w-full overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
             <thead>
-              <tr className="bg-[#F5F5F7]/50 dark:bg-white/5">
-                <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] border-b border-light-border dark:border-dark-border w-[28%] xl:w-[24%]">Банк</th>
-                <th className="px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-light-border dark:border-dark-border w-[12%] xl:w-[10%]" onClick={() => requestSort('rate')}>СТАВКА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-light-border dark:border-dark-border w-[10%]" onClick={() => requestSort('startDate')}>ОТКРЫТ</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-light-border dark:border-dark-border w-[10%]" onClick={() => requestSort('endDate')}>ЗАКРЫТ</th>
-                <th className="table-cell xl:hidden px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-light-border dark:border-dark-border w-[15%]" onClick={() => requestSort('startDate')}>ПЕРИОД</th>
-                <th className="px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-light-border dark:border-dark-border w-[20%] xl:w-[14%]" onClick={() => requestSort('amount')}>СУММА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-light-border dark:border-dark-border w-[12%]" onClick={() => requestSort('income')}>ДОХОД</th>
-                <th className="px-2 py-3 font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-light-border dark:border-dark-border w-[20%] xl:w-[12%]" onClick={() => requestSort('total')}>ИТОГО</th>
-                <th className="px-2 xl:px-4 py-3 border-b border-light-border dark:border-dark-border w-[60px] xl:w-[80px]"></th>
+              <tr className="bg-slate-50/50 dark:bg-white/5">
+                <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] border-b border-slate-200 dark:border-slate-800 w-[28%] xl:w-[24%]">Банк</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[12%] xl:w-[10%]" onClick={() => requestSort('rate')}>СТАВКА</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('startDate')}>ОТКРЫТ</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('endDate')}>ЗАКРЫТ</th>
+                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[15%]" onClick={() => requestSort('startDate')}>ПЕРИОД</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[14%]" onClick={() => requestSort('amount')}>СУММА</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[12%]" onClick={() => requestSort('income')}>ДОХОД</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[12%]" onClick={() => requestSort('total')}>ИТОГО</th>
+                <th className="px-2 xl:px-4 py-3 border-b border-slate-200 dark:border-slate-800 w-[60px] xl:w-[80px]"></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="[&>tr>td]:border-b [&>tr:last-child>td]:border-b-0 [&>tr>td]:border-slate-200 dark:[&>tr>td]:border-slate-800">
               {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
                 <DepositRow 
                   key={deposit.id || `deposit-${index}`} 
@@ -176,12 +176,13 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                   onEdit={() => handleEdit(deposit)}
                   onDelete={() => setDepositToDelete(deposit)}
                   isPrivate={isPrivate}
+                  isLast={index === filteredDeposits.length - 1}
                 />
               )) : (
                 <tr>
                   <td colSpan={9} className="py-24 text-center">
                     <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
-                    <p className="text-light-text-secondary dark:text-dark-text-secondary font-bold text-lg">Вклады не найдены</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
                   </td>
                 </tr>
               )}
@@ -203,7 +204,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
             )) : (
               <div className="py-24 text-center">
                 <Landmark className="w-16 h-16 text-light-border dark:text-dark-border mx-auto mb-4" />
-                <p className="text-light-text-secondary dark:text-dark-text-secondary font-bold text-lg">Вклады не найдены</p>
+                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
               </div>
             )}
           </div>

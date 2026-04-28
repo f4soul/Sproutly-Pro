@@ -44,14 +44,14 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
   };
 
   return (
-    <div className="space-y-4 p-5 bg-[#F5F5F7] dark:bg-white/5 rounded-2xl border border-light-border dark:border-dark-border">
+    <div className="space-y-4 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-800">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Редактор иконки</span>
+        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Редактор иконки</span>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setShowGrid(!showGrid)}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${showGrid ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 'text-light-text-secondary hover:bg-white dark:hover:bg-white/10'}`}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${showGrid ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 'text-slate-500 hover:bg-white dark:hover:bg-white/10'}`}
             title="Сетка"
           >
             <Grid size={16} />
@@ -59,7 +59,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
           <button
             type="button"
             onClick={reset}
-            className="p-1.5 text-light-text-secondary hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-500 hover:bg-white dark:hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
             title="Сбросить"
           >
             <RotateCcw size={16} />
@@ -69,7 +69,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
 
       <div className="flex flex-col md:flex-row gap-6 items-center">
         {/* Preview Area */}
-        <div className="relative w-32 h-32 shrink-0 bg-white dark:bg-dark-card rounded-2xl border border-light-border dark:border-dark-border overflow-hidden flex items-center justify-center group shadow-sm">
+        <div className="relative w-32 h-32 shrink-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center group shadow-sm">
           {showGrid && (
             <div className="absolute inset-0 pointer-events-none opacity-10 dark:opacity-20 text-black dark:text-white">
               <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
@@ -113,11 +113,11 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
         {/* Controls */}
         <div className="flex-1 flex flex-col gap-4 w-full">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-1">
+            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
               <Maximize size={10} /> Масштаб
             </label>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => updateScale(-0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-light-text-primary dark:text-dark-text-primary hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">-</button>
+              <button type="button" onClick={() => updateScale(-0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">-</button>
               <input 
                 type="range" 
                 min="0.1" 
@@ -127,24 +127,24 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
                 onChange={(e) => onChange({ iconScale: parseFloat(e.target.value) })}
                 className="flex-1 h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-blue-600"
               />
-              <button type="button" onClick={() => updateScale(0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg text-light-text-primary dark:text-dark-text-primary hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">+</button>
+              <button type="button" onClick={() => updateScale(0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">+</button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-1">
+            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1">
               <Move size={10} /> Позиция
             </label>
             <div className="flex justify-center">
               <div className="grid grid-cols-3 gap-1 w-24">
                 <div />
-                <button type="button" onClick={() => updateOffset(0, -2)} className="p-1 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">↑</button>
+                <button type="button" onClick={() => updateOffset(0, -2)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↑</button>
                 <div />
-                <button type="button" onClick={() => updateOffset(-2, 0)} className="p-1 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">←</button>
+                <button type="button" onClick={() => updateOffset(-2, 0)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">←</button>
                 <button type="button" onClick={() => onChange({ iconOffsetX: 0, iconOffsetY: 0 })} className="p-1 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-800 rounded text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors cursor-pointer">⊙</button>
-                <button type="button" onClick={() => updateOffset(2, 0)} className="p-1 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">→</button>
+                <button type="button" onClick={() => updateOffset(2, 0)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">→</button>
                 <div />
-                <button type="button" onClick={() => updateOffset(0, 2)} className="p-1 bg-white dark:bg-dark-card border border-light-border dark:border-dark-border rounded hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-colors cursor-pointer">↓</button>
+                <button type="button" onClick={() => updateOffset(0, 2)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↓</button>
                 <div />
               </div>
             </div>
@@ -152,7 +152,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
         </div>
       </div>
 
-      <div className="text-[10px] text-light-text-secondary dark:text-dark-text-secondary italic text-center opacity-60">
+      <div className="text-[10px] text-slate-500 dark:text-slate-400 italic text-center opacity-60">
         Рекомендуемый размер: 512x512px. Формат: PNG или SVG.
       </div>
     </div>

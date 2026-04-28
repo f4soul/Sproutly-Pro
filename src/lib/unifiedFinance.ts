@@ -41,12 +41,13 @@ export function calculateUnifiedFinance({
   let depositsIncome = 0;
   if (includeDeposits) {
     for (const deposit of deposits) {
-      const yearIncome = calculateIncomeByYears(deposit).find(yi => yi.year === selectedYear)?.income || 0;
+      if (deposit.isArchived) continue;
+      const yearIncome = calculateIncomeByYears(deposit).find(yi => Number(yi.year) === Number(selectedYear))?.income || 0;
       depositsIncome += yearIncome;
     }
   }
 
-  const currentYearSettings = taxSettings.find(s => s.year === selectedYear) || { year: selectedYear, limit: 210000, ndflRate: 13 };
+  const currentYearSettings = taxSettings.find(s => Number(s.year) === Number(selectedYear)) || { year: Number(selectedYear), limit: 210000, ndflRate: 13 };
   const taxableDepositIncome = Math.max(0, depositsIncome - currentYearSettings.limit);
 
   const sim = simulation;

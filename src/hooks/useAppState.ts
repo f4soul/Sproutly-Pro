@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { AppState, Toast } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
-import { auth, onAuthStateChanged, User } from '../firebase';
-import { db, syncWithFirebase } from '../db';
+import { auth, onAuthStateChanged, User } from '../config/firebase';
+import { db, syncWithFirebase } from '../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 const getInitialState = (): AppState => {
@@ -35,7 +35,7 @@ export const useAppState = () => {
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
 
   useEffect(() => {
-    if (dbState && !isInitialized.current) {
+    if (dbState) {
       setLocalState(dbState as AppState);
       isInitialized.current = true;
     }

@@ -50,7 +50,7 @@ export function BankDetailsModal({
               <Dialog.Panel className="apple-card w-full max-w-md transform overflow-hidden p-6 text-left align-middle transition-all">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border flex items-center justify-center overflow-hidden p-1.5 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-1.5 shadow-sm">
                       <img 
                         src={getBankDetails(selectedBank || '').logoUrl} 
                         alt="" 
@@ -60,15 +60,15 @@ export function BankDetailsModal({
                       />
                     </div>
                     <div>
-                      <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-light-text-primary dark:text-dark-text-primary">
+                      <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-900 dark:text-white">
                         {selectedBank}
                       </Dialog.Title>
-                      <p className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Детализация за {selectedYear} год</p>
+                      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Детализация за {selectedYear} год</p>
                     </div>
                   </div>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/10 text-light-text-secondary transition-colors cursor-pointer"
+                    className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 text-slate-500 transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -83,28 +83,28 @@ export function BankDetailsModal({
                   </div>
 
                   <div className="space-y-2">
-                    <h4 className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest px-1">Активные вклады</h4>
+                    <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest px-1">Активные вклады</h4>
                     <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                       {selectedBankDeposits.map((d, i) => {
                         const yearIncome = calculateIncomeByYears(d).find(yi => yi.year === selectedYear)?.income || 0;
                         return (
-                          <div key={i} className="p-3 rounded-xl bg-[#F5F5F7] dark:bg-white/5 border border-light-border dark:border-dark-border space-y-2">
+                          <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
                             <div className="flex justify-between items-start">
-                              <div className="text-xs font-bold text-light-text-primary dark:text-dark-text-primary truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
+                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
                               <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(yearIncome)}</div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="flex flex-col">
-                                <span className="text-[8px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-tighter">Сумма</span>
-                                <span className="text-[10px] font-bold text-light-text-primary dark:text-dark-text-primary">{formatCurrency(d.amount)}</span>
+                                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Сумма</span>
+                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">{formatCurrency(d.amount)}</span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[8px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-tighter">Ставка</span>
-                                <span className="text-[10px] font-bold text-light-text-primary dark:text-dark-text-primary">{d.rate}%</span>
+                                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ставка</span>
+                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">{d.rate}%</span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-[8px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-tighter">Срок до</span>
-                                <span className="text-[10px] font-bold text-light-text-primary dark:text-dark-text-primary">
+                                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Срок до</span>
+                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">
                                   {d.endDate && !isNaN(new Date(d.endDate).getTime()) ? new Date(d.endDate).toLocaleDateString() : '...'}
                                 </span>
                               </div>

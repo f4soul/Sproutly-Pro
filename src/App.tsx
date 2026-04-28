@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Layout } from './components/Layout';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { Layout } from './components/layout/Layout';
 import { UnifiedDashboard } from './components/dashboard/UnifiedDashboard';
 import { DepositList } from './components/deposits/DepositList';
-import { Settings } from './components/Settings';
-import { IncomeTracker } from './components/IncomeTracker';
+import { Settings } from './components/settings/Settings';
+import { IncomeTracker } from './components/income/IncomeTracker';
+import { DevTools } from './components/devtools/DevTools';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, initDB } from './db';
+import { db, initDB } from './config/db';
 
 export default function App() {
   useEffect(() => {
@@ -73,6 +74,7 @@ function AppContent() {
       {activeTab === 'settings' && (
         <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
       )}
+      <DevTools />
     </Layout>
   );
 }

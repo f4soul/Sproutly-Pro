@@ -8,10 +8,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Deposit, CalculationFormula, Bank } from '../../types';
 
 import { BankIconEditor } from './BankIconEditor';
-import { db } from '../../db';
+import { db } from '../../config/db';
 import { cn } from '../../lib/utils';
 import { addDays, differenceInDays } from 'date-fns';
-import { auth } from '../../firebase';
+import { auth } from '../../config/firebase';
 import { getAllBanks, DEFAULT_BANK_ICON } from '../../lib/banks';
 
 registerLocale('ru', ru);
@@ -181,22 +181,22 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white/95 dark:bg-dark-card/95 backdrop-blur-2xl w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-light-border dark:border-dark-border/50 flex flex-col max-h-[90vh]"
+          className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col max-h-[90vh]"
         >
-          <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-light-border dark:border-dark-border flex items-center justify-between">
+          <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
             <div>
-              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary">{deposit ? 'Редактировать вклад' : 'Новый вклад'}</h3>
-              <p className="text-light-text-secondary dark:text-dark-text-secondary text-[10px] sm:text-xs font-medium mt-1">Заполните данные для точного расчета налога</p>
+              <h3 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 dark:text-white">{deposit ? 'Редактировать вклад' : 'Новый вклад'}</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mt-1">Заполните данные для точного расчета налога</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-[#F5F5F7] dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer">
-              <X className="w-5 h-5 text-light-text-secondary" />
+            <button onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer">
+              <X className="w-5 h-5 text-slate-500" />
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6 sm:space-y-8 overflow-y-auto custom-scrollbar flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Landmark className="w-3.5 h-3.5 text-blue-500 stroke-[1.5px]" /> Банк
                 </label>
                 
@@ -209,15 +209,15 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   }
                 }}>
                   <div className="relative">
-                    <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-[#F5F5F7] dark:bg-white/5 text-left border border-transparent focus-within:border-blue-500/30 transition-all">
+                    <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-left border border-transparent focus-within:border-blue-500/30 transition-all">
                       <Combobox.Input
-                        className="w-full border-none py-3 pl-4 pr-10 text-sm font-medium bg-transparent outline-none text-light-text-primary dark:text-dark-text-primary"
+                        className="w-full border-none py-3 pl-4 pr-10 text-sm font-medium bg-transparent outline-none text-slate-900 dark:text-white"
                         displayValue={(val: any) => (typeof val === 'string' ? val : '')}
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder="Выберите банк"
                       />
                       <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <ChevronDown className="h-4 w-4 text-light-text-secondary" aria-hidden="true" />
+                        <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
                       </Combobox.Button>
                     </div>
                     <Transition
@@ -227,9 +227,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                       leaveTo="opacity-0"
                       afterLeave={() => setQuery('')}
                     >
-                      <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-dark-card py-2 text-sm shadow-2xl z-[110] border border-light-border dark:border-dark-border focus:outline-none">
+                      <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-slate-900 py-2 text-sm shadow-2xl z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none">
                         {filteredBanks.length === 0 && query !== '' ? (
-                          <div className="relative cursor-default select-none py-2 px-4 text-light-text-secondary">
+                          <div className="relative cursor-default select-none py-2 px-4 text-slate-500">
                             Ничего не найдено.
                           </div>
                         ) : (
@@ -239,7 +239,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                               className={({ active }) =>
                                 cn(
                                   'relative cursor-pointer select-none py-3 pl-10 pr-4 font-medium transition-colors',
-                                  active ? 'bg-[#F5F5F7] dark:bg-white/5 text-blue-600' : 'text-light-text-primary dark:text-dark-text-primary'
+                                  active ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600' : 'text-slate-900 dark:text-white'
                                 )
                               }
                               value={bank.name}
@@ -248,7 +248,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                 <>
                                   <div className="flex items-center justify-between w-full">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-6 h-6 rounded-lg bg-white dark:bg-dark-card border border-light-border dark:border-dark-border flex items-center justify-center overflow-hidden transition-all">
+                                      <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden transition-all">
                                         <img 
                                           src={bank.logoUrl} 
                                           alt="" 
@@ -264,7 +264,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                       <button 
                                         type="button"
                                         onClick={(e) => handleDeleteBank(e, String(bank.id))}
-                                        className="absolute inset-y-0 right-2 my-auto h-7 w-7 flex items-center justify-center text-light-text-secondary hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer z-10"
+                                        className="absolute inset-y-0 right-2 my-auto h-7 w-7 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer z-10"
                                       >
                                         <Trash2 size={14} />
                                       </button>
@@ -289,8 +289,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           value="__ADD_NEW__"
                           className={({ active }) =>
                             cn(
-                              'w-full flex items-center gap-2 px-4 py-3 text-blue-600 font-bold transition-colors border-t border-light-border dark:border-dark-border mt-2 cursor-pointer',
-                              active ? 'bg-[#F5F5F7] dark:bg-white/5' : ''
+                              'w-full flex items-center gap-2 px-4 py-3 text-blue-600 font-bold transition-colors border-t border-slate-200 dark:border-slate-800 mt-2 cursor-pointer',
+                              active ? 'bg-slate-50 dark:bg-slate-800/50' : ''
                             )
                           }
                         >
@@ -304,7 +304,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Wallet className="w-3.5 h-3.5 text-emerald-500 stroke-[1.5px]" /> Сумма (₽)
                 </label>
                 <input 
@@ -319,19 +319,19 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
 
               {showBankEditor && (
-                <div className="md:col-span-2 mt-2 p-6 bg-[#F5F5F7] dark:bg-white/5 rounded-3xl border border-light-border dark:border-dark-border animate-in slide-in-from-top-2 duration-300 shadow-inner">
+                <div className="md:col-span-2 mt-2 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2 duration-300 shadow-inner">
                   <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-xs font-bold text-light-text-secondary uppercase tracking-widest flex items-center gap-2">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                       <Plus className="w-4 h-4" /> Настройка банка
                     </h4>
-                    <button type="button" onClick={() => setShowBankEditor(false)} className="text-light-text-secondary hover:text-rose-500 transition-colors cursor-pointer p-2 hover:bg-rose-500/10 rounded-full">
+                    <button type="button" onClick={() => setShowBankEditor(false)} className="text-slate-500 hover:text-rose-500 transition-colors cursor-pointer p-2 hover:bg-rose-500/10 rounded-full">
                       <X size={16} />
                     </button>
                   </div>
                   <div className="flex flex-col xl:flex-row gap-6">
                     <div className="space-y-4 flex flex-col w-full xl:w-1/3">
                       <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Название банка</label>
+                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Название банка</label>
                         <input 
                           type="text"
                           value={newBank.name}
@@ -361,7 +361,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               )}
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5 text-blue-500 stroke-[1.5px]" /> Дата открытия
                 </label>
                 <div className="relative w-full group">
@@ -374,12 +374,12 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     placeholderText="Выберите дату"
                     wrapperClassName="w-full"
                   />
-                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-light-text-secondary pointer-events-none group-focus-within:text-blue-500 transition-colors stroke-[1.5px]" />
+                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-blue-500 transition-colors stroke-[1.5px]" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-violet-500 stroke-[1.5px]" /> Срок (дней)
                 </label>
                 <input 
@@ -393,7 +393,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Calendar className="w-3.5 h-3.5 text-blue-500 stroke-[1.5px]" /> Дата закрытия
                 </label>
                 <div className="relative w-full group">
@@ -418,12 +418,12 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     isClearable
                     wrapperClassName="w-full"
                   />
-                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-light-text-secondary pointer-events-none group-focus-within:text-blue-500 transition-colors stroke-[1.5px]" />
+                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-blue-500 transition-colors stroke-[1.5px]" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Percent className="w-3.5 h-3.5 text-amber-500 stroke-[1.5px]" /> Ставка (%)
                 </label>
                 <input 
@@ -440,7 +440,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Формула расчета</label>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Формула расчета</label>
                 <Listbox 
                   value={formData.formula} 
                   onChange={(val) => {
@@ -454,12 +454,12 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   }}
                 >
                   <div className="relative">
-                    <Listbox.Button className="relative w-full cursor-pointer rounded-2xl bg-[#F5F5F7] dark:bg-white/5 py-3 pl-4 pr-10 text-left border border-transparent focus:border-blue-500/30 transition-all font-medium text-sm text-light-text-primary dark:text-dark-text-primary">
+                    <Listbox.Button className="relative w-full cursor-pointer rounded-2xl bg-slate-50 dark:bg-slate-800/50 py-3 pl-4 pr-10 text-left border border-transparent focus:border-blue-500/30 transition-all font-medium text-sm text-slate-900 dark:text-white">
                       <span className="block truncate">
                         {formulas.find(f => f.id === formData.formula)?.name}
                       </span>
                       <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <ChevronDown className="h-4 w-4 text-light-text-secondary" aria-hidden="true" />
+                        <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
                       </span>
                     </Listbox.Button>
                     <Transition
@@ -468,14 +468,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                       leaveFrom="opacity-100"
                       leaveTo="opacity-0"
                     >
-                      <Listbox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-dark-card py-2 text-sm shadow-2xl z-[110] border border-light-border dark:border-dark-border focus:outline-none">
+                      <Listbox.Options className="absolute mt-2 max-h-60 w-full overflow-auto rounded-2xl bg-white dark:bg-slate-900 py-2 text-sm shadow-2xl z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none">
                         {formulas.map((formula) => (
                           <Listbox.Option
                             key={formula.id}
                             className={({ active }) =>
                               cn(
                                 'relative cursor-pointer select-none py-3 pl-10 pr-3 font-medium transition-colors',
-                                active ? 'bg-[#F5F5F7] dark:bg-white/5 text-blue-600' : 'text-light-text-primary dark:text-dark-text-primary'
+                                active ? 'bg-slate-50 dark:bg-slate-800/50 text-blue-600' : 'text-slate-900 dark:text-white'
                               )
                             }
                             value={formula.id}
@@ -501,7 +501,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Info className="w-3.5 h-3.5 text-blue-500 stroke-[1.5px]" /> Примечание
                 </label>
                 <input 
@@ -515,7 +515,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[11px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">Комментарий</label>
+              <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Комментарий</label>
               <textarea 
                 value={formData.comment}
                 onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
@@ -553,11 +553,11 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             </div>
           </form>
 
-          <div className="p-6 sm:p-8 bg-[#F5F5F7] dark:bg-white/5 flex gap-3 sm:gap-4 border-t border-light-border dark:border-dark-border">
+          <div className="p-6 sm:p-8 bg-slate-50 dark:bg-slate-800/50 flex gap-3 sm:gap-4 border-t border-slate-200 dark:border-slate-800">
             <button 
               type="button"
               onClick={onClose}
-              className="flex-1 apple-button bg-white dark:bg-dark-card text-light-text-primary dark:text-dark-text-primary border border-light-border dark:border-dark-border hover:bg-[#F5F5F7] dark:hover:bg-white/10 text-sm sm:text-base"
+              className="flex-1 apple-button bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-white/10 text-sm sm:text-base"
             >
               Отмена
             </button>
@@ -575,19 +575,19 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       {/* Delete Bank Confirmation Modal */}
       {bankToDelete && (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/40 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-dark-card rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-sm w-full p-6 sm:p-8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border border-light-border dark:border-dark-border">
+          <div className="bg-white dark:bg-slate-900 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-sm w-full p-6 sm:p-8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6">
               <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
             </div>
-            <h3 className="text-xl font-bold text-light-text-primary dark:text-dark-text-primary mb-2 tracking-tight">Удалить банк?</h3>
-            <p className="text-sm text-light-text-secondary dark:text-dark-text-secondary mb-8 leading-relaxed">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Удалить банк?</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
               Вы уверены, что хотите удалить этот банк? Это действие нельзя отменить.
             </p>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setBankToDelete(null)}
-                className="flex-1 apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary hover:bg-[#E5E5E7] dark:hover:bg-white/10"
+                className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10"
               >
                 Отмена
               </button>
@@ -615,7 +615,7 @@ function ToggleChip({ label, checked, onChange, icon }: { label: string; checked
         "flex items-center gap-2 px-4 py-2.5 rounded-2xl border transition-all duration-300 select-none cursor-pointer text-[11px] font-black uppercase tracking-wider",
         checked 
           ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-500/20 active:scale-95" 
-          : "border-light-border dark:border-dark-border bg-white dark:bg-white/5 text-light-text-secondary dark:text-dark-text-secondary hover:border-blue-500/50 hover:text-blue-500 active:scale-95"
+          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:border-blue-500/50 hover:text-blue-500 active:scale-95"
       )}
     >
       {icon && (

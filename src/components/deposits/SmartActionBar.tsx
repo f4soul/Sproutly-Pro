@@ -1,6 +1,6 @@
 import React, { Fragment } from 'react';
-import { Search, X, SlidersHorizontal, Download, ChevronDown, FileText, Image as ImageIcon, FileSpreadsheet, Plus } from 'lucide-react';
-import { Menu, Transition, Popover } from '@headlessui/react';
+import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet } from 'lucide-react';
+import { Transition, Popover } from '@headlessui/react';
 import { cn } from '../../lib/utils';
 import { Deposit } from '../../types';
 import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
@@ -35,7 +35,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         {/* Search & Integrated Controls */}
         <div className="relative w-full lg:flex-1 group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-light-text-secondary dark:text-dark-text-secondary transition-colors group-focus-within:text-blue-500">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 transition-colors group-focus-within:text-blue-500">
             <Search className="w-full h-full stroke-[2px]" />
           </div>
           <input 
@@ -43,7 +43,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             placeholder="Поиск..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="apple-input !pl-12 pr-32 py-3.5 text-sm w-full bg-white dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-dark-card focus:border-blue-500/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
+            className="apple-input !pl-12 pr-32 py-3.5 text-sm w-full bg-white dark:bg-white/5 border-transparent focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500/50 shadow-[0_2px_10px_rgba(0,0,0,0.02)]"
           />
           
           {/* Integrated Mobile Icons */}
@@ -51,7 +51,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')} 
-                className="p-2 text-light-text-secondary hover:text-rose-500 transition-colors cursor-pointer"
+                className="p-2 text-slate-500 hover:text-rose-500 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4 stroke-[2px]" />
               </button>
@@ -60,7 +60,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             <div className="w-px h-6 bg-light-border dark:bg-dark-border mx-1" />
             
             <Popover className="relative">
-              <Popover.Button className="p-2 text-light-text-secondary dark:text-dark-text-secondary hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all cursor-pointer">
+              <Popover.Button className="p-2 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-white/10 rounded-xl transition-all cursor-pointer">
                 <SlidersHorizontal className={cn("w-5 h-5 stroke-[1.5px]", filterStatus !== 'all' ? "text-blue-500" : "")} />
               </Popover.Button>
               <Transition
@@ -72,28 +72,28 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                 leaveFrom="opacity-100 translate-y-0"
                 leaveTo="opacity-0 translate-y-1"
               >
-                <Popover.Panel className="absolute right-0 mt-2 w-64 bg-white/95 dark:bg-dark-card/95 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-50 p-4">
+                <Popover.Panel className="absolute right-0 mt-2 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-4">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-3">Статус вклада</h4>
-                      <div className="flex bg-[#F5F5F7] dark:bg-white/5 rounded-xl p-1">
+                      <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Статус вклада</h4>
+                      <div className="flex bg-slate-50 dark:bg-slate-800/50 rounded-xl p-1">
                         <button 
                           onClick={() => setFilterStatus('all')}
-                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'all' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-light-text-secondary")}
+                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'all' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-slate-500")}
                         >Все</button>
                         <button 
                           onClick={() => setFilterStatus('active')}
-                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'active' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-light-text-secondary")}
+                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'active' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-slate-500")}
                         >Актив</button>
                         <button 
                           onClick={() => setFilterStatus('closed')}
-                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'closed' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-light-text-secondary")}
+                          className={cn("flex-1 py-1.5 text-xs font-bold rounded-lg transition-all", filterStatus === 'closed' ? "bg-white dark:bg-white/10 shadow-sm text-blue-600" : "text-slate-500")}
                         >Закрыт</button>
                       </div>
                     </div>
                     
                     <div>
-                      <h4 className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-3">Сортировка</h4>
+                      <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Сортировка</h4>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { key: 'startDate', label: 'Дата' },
@@ -108,7 +108,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               "py-2 px-3 text-[10px] font-bold rounded-xl border transition-all text-center",
                               sortConfig?.key === item.key 
                                 ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/20" 
-                                : "bg-transparent border-light-border dark:border-dark-border text-light-text-secondary"
+                                : "bg-transparent border-slate-200 dark:border-slate-800 text-slate-500"
                             )}
                           >
                             {item.label}
@@ -127,28 +127,28 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                       </button>
                     )}
 
-                    <div className="pt-4 border-t border-light-border dark:border-dark-border">
-                      <h4 className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest mb-3">Экспорт данных</h4>
+                    <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
+                      <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3">Экспорт табличных данных</h4>
                       <div className="grid grid-cols-3 gap-2">
                         <button 
-                          onClick={() => exportToPDF('deposits-list', filteredDeposits)}
-                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-all"
+                          onClick={() => exportToPDF('deposits-list-content', undefined, filteredDeposits)}
+                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/export"
                         >
-                          <FileText className="w-5 h-5 text-rose-500" />
+                          <FileText className="w-5 h-5 text-rose-500 group-hover/export:scale-110 transition-transform" />
                           <span className="text-[8px] font-bold uppercase">PDF</span>
                         </button>
                         <button 
-                          onClick={() => exportToImage('deposits-list', filteredDeposits)}
-                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-all"
+                          onClick={() => exportToImage('deposits-list-content', filteredDeposits)}
+                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/export"
                         >
-                          <ImageIcon className="w-5 h-5 text-indigo-500" />
+                          <ImageIcon className="w-5 h-5 text-indigo-500 group-hover/export:scale-110 transition-transform" />
                           <span className="text-[8px] font-bold uppercase">PNG</span>
                         </button>
                         <button 
                           onClick={() => exportToXLSX(filteredDeposits)}
-                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-[#F5F5F7] dark:hover:bg-white/5 transition-all"
+                          className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/export"
                         >
-                          <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                          <FileSpreadsheet className="w-5 h-5 text-emerald-500 group-hover/export:scale-110 transition-transform" />
                           <span className="text-[8px] font-bold uppercase">XLSX</span>
                         </button>
                       </div>
@@ -162,60 +162,6 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
 
         {/* Desktop Controls (hidden on mobile/tablet) */}
         <div className="hidden lg:flex items-center gap-3">
-          <Menu as="div" className="relative">
-            <Menu.Button className="apple-button bg-[#F5F5F7] dark:bg-white/5 text-light-text-primary dark:text-dark-text-primary flex items-center justify-center gap-2 text-sm px-5 py-3 border border-light-border dark:border-dark-border shadow-sm">
-              <Download className="w-4 h-4 stroke-[1.5px]" />
-              Экспорт
-              <ChevronDown className="w-4 h-4 opacity-40" />
-            </Menu.Button>
-            
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Menu.Items className="absolute right-0 mt-2 w-48 bg-white/90 dark:bg-dark-card/90 backdrop-blur-xl border border-light-border dark:border-dark-border rounded-2xl shadow-2xl z-[100] overflow-hidden focus:outline-none p-1">
-                <Menu.Item>
-                  {({ active }) => (
-                    <button 
-                      onClick={() => exportToPDF('deposits-list', filteredDeposits)} 
-                      className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer text-left", active ? "bg-[#F5F5F7] dark:bg-white/10" : "")}
-                    >
-                      <FileText className="w-4 h-4 text-rose-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">PDF Document</span>
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button 
-                      onClick={() => exportToImage('deposits-list', filteredDeposits)} 
-                      className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer text-left", active ? "bg-[#F5F5F7] dark:bg-white/10" : "")}
-                    >
-                      <ImageIcon className="w-4 h-4 text-indigo-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">PNG Image</span>
-                    </button>
-                  )}
-                </Menu.Item>
-                <Menu.Item>
-                  {({ active }) => (
-                    <button 
-                      onClick={() => exportToXLSX(filteredDeposits)} 
-                      className={cn("w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors cursor-pointer text-left", active ? "bg-[#F5F5F7] dark:bg-white/10" : "")}
-                    >
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-500 stroke-[1.5px]" />
-                      <span className="text-sm font-medium">Excel Sheet</span>
-                    </button>
-                  )}
-                </Menu.Item>
-              </Menu.Items>
-            </Transition>
-          </Menu>
-          
           <button 
             onClick={onAddClick}
             className="apple-button bg-[#007AFF] hover:bg-[#0062CC] text-white flex items-center justify-center gap-2 text-sm px-6 py-3 shadow-lg shadow-blue-500/25 active:scale-[0.98] transition-all"

@@ -23,14 +23,14 @@ export function StatCard({ title, value, icon, description, highlight, index }: 
       )}
     >
       <div className="flex items-center justify-between">
-        <div className="p-2.5 rounded-2xl bg-[#F5F5F7] dark:bg-white/5 transition-transform group-hover:scale-110 duration-500">
+        <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 transition-transform group-hover:scale-110 duration-500 shadow-sm border border-slate-100 dark:border-slate-700/50">
           {icon}
         </div>
-        <span className="text-[10px] font-bold text-light-text-secondary dark:text-dark-text-secondary uppercase tracking-widest">{title}</span>
+        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{title}</span>
       </div>
       <div className="space-y-1">
-        <div className={cn("text-[clamp(1.125rem,2vw,1.5rem)] font-bold tracking-tight text-light-text-primary dark:text-dark-text-primary truncate", highlight && "text-rose-600 dark:text-rose-400")}>{value}</div>
-        <p className="text-[11px] font-medium text-light-text-secondary dark:text-dark-text-secondary truncate">{description}</p>
+        <div className={cn("text-[clamp(1.125rem,2vw,1.5rem)] font-bold tracking-tight text-slate-900 dark:text-white truncate", highlight && "text-rose-600 dark:text-rose-400")}>{value}</div>
+        <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate">{description}</p>
       </div>
     </motion.div>
   );
