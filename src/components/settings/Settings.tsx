@@ -392,9 +392,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
 
                           <button 
                             onClick={() => addBracket(year)}
-                            className="w-full apple-button border border-dashed border-indigo-200 dark:border-indigo-500/20 bg-transparent hover:bg-indigo-50 dark:hover:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-2 py-2 transition-colors"
+                            className="w-full apple-button border border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-2 py-2.5 transition-all shadow-sm active:scale-[0.98]"
                           >
-                            <Plus size={14} className="stroke-[2px]" /> 
+                            <Plus size={14} className="stroke-[3px]" /> 
                             <span className="text-[10px] font-bold uppercase tracking-wider">Добавить ступень</span>
                           </button>
                         </div>
@@ -407,9 +407,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
 
             <button 
               onClick={addBracketYear}
-              className="w-full apple-button border-2 border-dashed border-indigo-200 dark:border-indigo-500/20 bg-transparent hover:bg-white dark:hover:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-2 py-3 transition-all hover:border-indigo-400 dark:hover:border-indigo-500/40 shadow-sm"
+              className="w-full apple-button border border-indigo-500/20 bg-white dark:bg-slate-900/50 hover:bg-indigo-50 dark:hover:bg-indigo-500/5 text-indigo-600 dark:text-indigo-400 flex items-center justify-center gap-2 py-3 transition-all shadow-sm active:scale-[0.99] group"
             >
-              <Plus size={16} className="stroke-[2px]" /> 
+              <Plus size={16} className="stroke-[3px] group-hover:scale-110 transition-transform" /> 
               <span className="text-xs font-bold uppercase tracking-wider">Добавить период</span>
             </button>
           </div>
@@ -517,9 +517,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
             
             <button 
               onClick={addYear}
-              className="w-full mt-2 apple-button border-2 border-dashed border-emerald-200 dark:border-emerald-500/20 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2 py-3 transition-colors"
+              className="w-full mt-2 apple-button border border-emerald-500/20 bg-white dark:bg-slate-900/50 hover:bg-emerald-50 dark:hover:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-2 py-3 transition-all shadow-sm active:scale-[0.99] group"
             >
-              <Plus size={16} className="stroke-[2px]" /> 
+              <Plus size={16} className="stroke-[3px] group-hover:scale-110 transition-transform" /> 
               <span className="text-xs font-bold uppercase tracking-wider">Добавить период</span>
             </button>
           </div>

@@ -5,6 +5,8 @@ import { TableInput } from '../ui/TableInput';
 import { YearData, MonthData, CalculatedMonth } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { MONTH_NAMES } from '../../lib/constants';
+import { Zap } from 'lucide-react';
+import { cn } from '../../lib/utils';
 
 interface QuarterAccordionProps {
   key?: React.Key;
@@ -32,21 +34,31 @@ export const QuarterAccordion = ({
 }: QuarterAccordionProps) => {
   const qMonths = q.months.map(mi => calculatedMonths[mi]);
   const qNet13 = qMonths.reduce((sum, m) => sum + m.net13, 0);
+  const anyProjected = qMonths.some(m => (m as any).isProjected);
 
   const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   return (
-    <div className="apple-card overflow-hidden">
+    <div className={cn(
+      "apple-card overflow-hidden transition-all duration-300",
+      anyProjected && "border-blue-500/30 dark:border-blue-400/20"
+    )}>
       <div 
-        className="p-3 sm:p-4 flex justify-between items-center cursor-pointer bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+        className={cn(
+          "p-3 sm:p-4 flex justify-between items-center cursor-pointer transition-colors shadow-sm",
+          anyProjected ? "bg-blue-50/50 dark:bg-blue-900/10" : "bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+        )}
         onClick={onToggle}
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
-            <ChevronDown size={20} className="text-slate-400" />
+            <ChevronDown size={20} className={anyProjected ? "text-blue-400" : "text-slate-400"} />
           </motion.div>
           <div className="flex flex-col">
-            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
+              {anyProjected && <Zap size={10} className="text-amber-500 fill-amber-500 animate-pulse" />}
+            </div>
             <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
           </div>
         </div>
@@ -59,7 +71,10 @@ export const QuarterAccordion = ({
             <TableInput 
               value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
               onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-              className="w-20 sm:w-24 text-right text-xs sm:text-sm font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-700 h-8 sm:h-9 px-2 rounded-lg" 
+              className={cn(
+                "w-20 sm:w-24 text-right text-xs sm:text-sm font-bold bg-indigo-50/50 dark:bg-indigo-900/20 border h-8 sm:h-9 px-2 rounded-lg",
+                anyProjected ? "text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700" : "text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700"
+              )} 
             />
           )}
         </div>
@@ -78,10 +93,23 @@ export const QuarterAccordion = ({
               {q.months.map((monthIndex) => {
                 const m = activeYearData.months[monthIndex];
                 const calcM = calculatedMonths[monthIndex];
+                const isProjected = (calcM as any).isProjected;
+
                 return (
-                  <div key={monthIndex} className="bg-white dark:bg-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+                  <div 
+                    key={monthIndex} 
+                    className={cn(
+                      "p-3 sm:p-4 rounded-2xl border shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all",
+                      isProjected 
+                        ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 italic" 
+                        : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                    )}
+                  >
                     <div className="flex justify-between items-center mb-3">
-                      <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{MONTH_NAMES[monthIndex]}</span>
+                      <div className="flex items-center gap-2">
+                        {isProjected && <Zap size={12} className="text-amber-500 fill-amber-500 animate-pulse" />}
+                        <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{MONTH_NAMES[monthIndex]}</span>
+                      </div>
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
                         <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 text-sm">{formatVal(calcM.net13)}</span>
@@ -95,9 +123,12 @@ export const QuarterAccordion = ({
                           <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm h-[34px]">••••••</div>
                         ) : (
                           <TableInput 
-                            value={m.salary} 
+                            value={calcM.salary} 
                             onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
-                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm" 
+                            className={cn(
+                              "w-full bg-slate-50 dark:bg-slate-900/50 border rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm",
+                              isProjected ? "border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200" : "border-slate-200 dark:border-slate-700"
+                            )} 
                           />
                         )}
                         <div className="text-[10px] text-slate-500 mt-1 flex justify-between">

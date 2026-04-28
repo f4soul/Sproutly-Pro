@@ -48,15 +48,6 @@ export function IncomeDesktopTable({
         transition={{ duration: 0.2 }}
         className="hidden lg:block relative isolate"
       >
-        {/* Help Badge - Positioned behind the table container */}
-        <button
-          onClick={onShowTaxInfo}
-          className="absolute -top-5.5 right-6 flex items-top gap-1.5 px-2 py-1.5 bg-slate-500/10 hover:bg-blue-500/20 dark:bg-slate-400/5 dark:hover:bg-blue-400/10 text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400 rounded-t-xl border-x border-t border-slate-200/50 dark:border-slate-700/50 transition-all font-bold text-[9px] uppercase tracking-widest z-0 outline-none backdrop-blur-sm group cursor-pointer h-10"
-        >
-          <Info size={10} className="group-hover:scale-110 transition-transform" />
-          <span>Инфо</span>
-        </button>
-
         <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10">
           <div className="overflow-x-auto custom-scrollbar relative rounded-2xl overflow-visible no-scrollbar">
           <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
@@ -80,8 +71,19 @@ export function IncomeDesktopTable({
                 <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap" title="Фактически отработано / Норма">Дни (ф/н)</th>
                 <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Оклад (₽)</th>
                 <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Премия (₽)</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-indigo-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Gross (₽)</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Net 13% (₽)</th>
+                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-indigo-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap min-w-[110px] lg:min-w-[130px]">Gross (₽)</th>
+                <th className="px-1 md:px-2 py-1.5 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px]">
+                  <button 
+                    onClick={onShowTaxInfo}
+                    className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-500 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
+                  >
+                    <span>{yearKey >= 2025 ? 'Net (₽)' : 'Net 13% (₽)'}</span>
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute inset-0 bg-emerald-500/20 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
+                      <Info size={10} className="text-emerald-500/40 group-hover/tax-header:text-emerald-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
+                    </div>
+                  </button>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">

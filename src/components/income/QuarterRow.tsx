@@ -50,8 +50,8 @@ export const QuarterRow = ({
             )}
           </div>
         </td>
-        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal(qGross)}</td>
-        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal(qNet13)}</td>
+        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qGross)}</td>
+        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qNet13)}</td>
       </tr>
       
       {/* Months */}

@@ -30,16 +30,28 @@ export const useAppState = () => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline' | 'idle'>('offline');
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const isInitialized = useRef(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const isLoadedRef = useRef(false);
 
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
 
   useEffect(() => {
     if (dbState) {
+      // Avoid redundant updates if local state is already matched or newer
+      if (isLoadedRef.current && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
+        return;
+      }
       setLocalState(dbState as AppState);
-      isInitialized.current = true;
+      setIsInitialized(true);
+      isLoadedRef.current = true;
+    } else if (dbState === undefined && !isLoadedRef.current) {
+      // Still loading
+    } else if (dbState === null && !isLoadedRef.current) {
+      // No data in DB, use initial
+      setIsInitialized(true);
+      isLoadedRef.current = true;
     }
-  }, [dbState]);
+  }, [dbState, localState]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -140,6 +152,7 @@ export const useAppState = () => {
     setState,
     user,
     isAuthReady,
+    isInitialized,
     syncStatus,
     toasts,
     addToast,

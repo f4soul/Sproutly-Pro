@@ -66,6 +66,11 @@ export type SimulationState = {
   salaryIncrease: number; // percentage, e.g. 10 for 10%
   bonusMultiplier: number; // multiplier, e.g. 1.2 for 20% increase
   extraIncome: number; // flat amount to add to total gross
+  projectedSalary?: number; // custom base salary for autonomous mode
+  projectedBonusCoef?: number; // custom bonus coef for autonomous mode
+  bonusFrequency?: 'none' | 'monthly' | 'quarterly' | 'annual';
+  bonusType?: 'fixed' | 'coef';
+  bonusValue?: number; // amount or coef value
 };
 
 export type YearlyTotals = {

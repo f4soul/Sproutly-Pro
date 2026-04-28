@@ -276,120 +276,15 @@ export async function initDB() {
     ]);
   }
 
-  const depositsCount = await db.deposits.count();
-  if (depositsCount === 0) {
-    await db.deposits.bulkAdd([
-      {
-        bank: "ВТБ",
-        isClosed: false,
-        updatedAt: 1775221673760,
-        sourceNote: "Папа 50/50",
-        endDate: new Date("2026-05-29T21:00:00.000Z"),
-        currency: "₽",
-        startDate: new Date("2026-02-27T21:00:00.000Z"),
-        splitIncome: false,
-        amount: 500000,
-        rate: 24.5,
-        formula: "simple_days"
-      },
-      {
-        sourceNote: "Мои",
-        updatedAt: 1776087843319,
-        isClosed: true,
-        bank: "Альфа-Банк",
-        currency: "₽",
-        endDate: new Date("2026-02-28T21:00:00.000Z"),
-        amount: 800000,
-        rate: 18,
-        formula: "simple_days",
-        startDate: new Date("2025-11-30T21:00:00.000Z"),
-        splitIncome: true,
-        isArchived: 0
-      },
-      {
-        bank: "БСПБ",
-        startDate: new Date("2026-01-14T21:00:00.000Z"),
-        endDate: new Date("2026-07-14T21:00:00.000Z"),
-        amount: 2500000,
-        currency: "₽",
-        rate: 21,
-        formula: "simple_days",
-        sourceNote: "Тестовый вклад 1",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155897196,
-        isTest: true
-      },
-      {
-        bank: "МКБ",
-        startDate: new Date("2026-01-31T21:00:00.000Z"),
-        endDate: new Date("2027-01-31T21:00:00.000Z"),
-        amount: 1500000,
-        currency: "₽",
-        rate: 19.5,
-        formula: "compound_monthly",
-        sourceNote: "Тестовый вклад 2",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155897196,
-        isTest: true
-      },
-      {
-        bank: "Ренессанс",
-        startDate: new Date("2026-01-14T21:00:00.000Z"),
-        endDate: new Date("2026-07-14T21:00:00.000Z"),
-        amount: 2500000,
-        currency: "₽",
-        rate: 21,
-        formula: "simple_days",
-        sourceNote: "Тестовый вклад 1",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155898155,
-        isTest: true
-      },
-      {
-        bank: "ПСБ",
-        startDate: new Date("2026-01-31T21:00:00.000Z"),
-        endDate: new Date("2027-01-31T21:00:00.000Z"),
-        amount: 1500000,
-        currency: "₽",
-        rate: 19.5,
-        formula: "compound_monthly",
-        sourceNote: "Тестовый вклад 2",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155898155,
-        isTest: true
-      },
-      {
-        bank: "Совкомбанк",
-        startDate: new Date("2026-01-14T21:00:00.000Z"),
-        endDate: new Date("2026-07-14T21:00:00.000Z"),
-        amount: 2500000,
-        currency: "₽",
-        rate: 21,
-        formula: "simple_days",
-        sourceNote: "Тестовый вклад 1",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155898688,
-        isTest: true
-      },
-      {
-        bank: "ОТП Банк",
-        startDate: new Date("2026-01-31T21:00:00.000Z"),
-        endDate: new Date("2027-01-31T21:00:00.000Z"),
-        amount: 1500000,
-        currency: "₽",
-        rate: 19.5,
-        formula: "compound_monthly",
-        sourceNote: "Тестовый вклад 2",
-        isClosed: false,
-        splitIncome: true,
-        updatedAt: 1776155898688,
-        isTest: true
-      }
-    ]);
+  // Cleanup: Remove any "ghost" test deposits that might have been added by previous versions
+  const allDeposits = await db.deposits.toArray();
+  const testIds = allDeposits
+    .filter(d => (d as any).isTest === true)
+    .map(d => d.id)
+    .filter((id): id is number => id !== undefined);
+
+  if (testIds.length > 0) {
+    await db.deposits.bulkDelete(testIds);
+    console.log(`Cleaned up ${testIds.length} test deposits`);
   }
 }

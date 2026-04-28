@@ -12,9 +12,10 @@ interface DepositCardProps {
   onEdit: () => void;
   onDelete: () => void;
   isPrivate?: boolean;
+  isLast?: boolean;
 }
 
-export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete, isPrivate = false }) => {
+export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete, isPrivate = false, isLast = false }) => {
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;
     const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
@@ -49,8 +50,9 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
   return (
     <div 
       className={cn(
-        "flex flex-col p-4 mb-4 apple-card overflow-hidden relative cursor-pointer group",
-        isClosed ? "opacity-70 grayscale-[0.3]" : "hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+        "flex flex-col p-4 relative cursor-pointer group transition-all duration-300",
+        isClosed ? "opacity-70 grayscale-[0.3]" : "hover:bg-slate-50/50 dark:hover:bg-white/5",
+        !isLast && "border-b border-slate-200 dark:border-slate-800"
       )}
       onClick={() => setIsExpanded(!isExpanded)}
     >

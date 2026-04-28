@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, Copy, FileText, FileSpreadsheet, TrendingUp, X, ChevronDown, MoreVertical } from 'lucide-react';
+import { Plus, Trash2, Copy, FileText, FileSpreadsheet, TrendingUp, X, ChevronDown, MoreVertical, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 
@@ -191,13 +191,18 @@ export const YearTabs = ({
                   className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
                 >
                   <div className={cn(
-                    "p-1.5 rounded-md", 
-                    isSimulationOpen ? "bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400" : "bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400"
+                    "p-1.5 rounded-md transition-all duration-300", 
+                    isSimulationOpen 
+                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30" 
+                      : "bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400"
                   )}>
-                    {isSimulationOpen ? <X size={14} /> : <TrendingUp size={14} />}
+                    <Zap size={14} fill={isSimulationOpen ? "currentColor" : "none"} className={isSimulationOpen ? "animate-pulse" : ""} />
                   </div>
-                  <span className={cn(isSimulationOpen ? "text-indigo-600 dark:text-indigo-400 font-bold" : "text-slate-700 dark:text-slate-300")}>
-                    {isSimulationOpen ? 'Выключить What-If' : 'Включить What-If'}
+                  <span className={cn(
+                    "transition-colors",
+                    isSimulationOpen ? "text-indigo-600 dark:text-indigo-400 font-black" : "text-slate-700 dark:text-slate-300"
+                  )}>
+                    {isSimulationOpen ? 'Остановить симуляцию' : 'Активировать What-If'}
                   </span>
                 </button>
                 

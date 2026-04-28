@@ -95,6 +95,21 @@ export const YearSummary = ({
 
       {/* Tax */}
       <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="bg-white dark:bg-slate-900/50 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-colors min-h-[100px] sm:min-h-[110px] md:h-[100px]">
+        {onShowTaxInfo && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onShowTaxInfo();
+            }}
+            className="absolute top-2 right-2 z-20 flex items-center justify-center p-1.5 rounded-lg transition-all duration-300 hover:bg-rose-500/10 group/info focus:outline-none"
+            title="Справочник налоговых ставок"
+          >
+            <Info 
+              size={12} 
+              className="text-rose-500/50 group-hover/info:text-rose-500 transition-colors" 
+            />
+          </button>
+        )}
         <div className="absolute -bottom-2 -right-2 text-rose-500 opacity-10 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <ReceiptRussianRuble className="w-20 h-20" />
         </div>
@@ -109,8 +124,10 @@ export const YearSummary = ({
               {formatVal(yearlyTotals.progressiveTax)}
             </h3>
           </div>
-          <div className="mt-0.5 text-[8px] sm:text-[9px] font-bold text-rose-600 dark:text-rose-400 opacity-80 truncate">
-            {yearlyTotals.effectiveRate.toFixed(1)}% ставка
+          <div className="mt-0.5 flex items-center gap-1.5 min-w-0">
+            <span className="text-[8px] sm:text-[9px] font-bold text-rose-600 dark:text-rose-400 opacity-80 truncate">
+              {yearlyTotals.effectiveRate.toFixed(1)}% ставка
+            </span>
           </div>
         </div>
       </motion.div>

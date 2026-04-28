@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Info, TrendingUp, Shield, Eye, EyeOff } from 'lucide-react';
+import { Info, TrendingUp, Shield, Eye, EyeOff, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MonthData } from '../../types';
+import { MonthData, SimulationState, CalculatedMonth } from '../../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../../lib/constants';
 import { generateDefaultYear, generateEmptyYear, getDefaultExpandedQuarters } from '../../lib/helpers';
 import { TaxReferenceModal } from './TaxReferenceModal';
@@ -30,7 +30,7 @@ interface IncomeTrackerProps {
 }
 
 export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
-  const { state, setState, addToast, toasts, removeToast } = useAppState();
+  const { state, setState, addToast, toasts, removeToast, isInitialized } = useAppState();
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
   const { mode: calculationMode, setMode: setCalculationMode } = useIncomeCalculationMode('salary');
@@ -45,19 +45,45 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
-  const [simulation, setSimulation] = useState({
+  
+  const simulation = useMemo(() => state.simulation || {
     isActive: false,
     salaryIncrease: 0,
     bonusMultiplier: 1,
     extraIncome: 0
-  });
+  }, [state.simulation]);
+
+  const setSimulation = (newSim: SimulationState | ((prev: SimulationState) => SimulationState)) => {
+    setState(prev => ({
+      ...prev,
+      simulation: typeof newSim === 'function' ? newSim(prev.simulation || { isActive: false, salaryIncrease: 0, bonusMultiplier: 1, extraIncome: 0 }) : newSim
+    }));
+  };
+
+  const activeYearData = state.years[state.activeYear];
+
+  useEffect(() => {
+    if (isSimulationOpen && !simulation.isActive) {
+      // Don't auto-activate, just sync initial values if needed
+      setSimulation(prev => ({
+        ...prev,
+        projectedSalary: activeYearData.bonusBase,
+        bonusFrequency: 'quarterly',
+        bonusType: 'coef',
+        bonusValue: activeYearData.quarters?.[0]?.bonusCoef || 0.3
+      }));
+    } else if (!isSimulationOpen && simulation.isActive) {
+      // Keep active if it was active, but user closed panel? 
+      // Actually, user likely wants it off if panel is closed.
+      setSimulation(prev => ({ ...prev, isActive: false }));
+    }
+  }, [isSimulationOpen, activeYearData.bonusBase]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setExpandedQuarters(getDefaultExpandedQuarters(state.activeYear));
   }, [state.activeYear]);
-
-  const activeYearData = state.years[state.activeYear];
 
   // --- Handlers ---
 
@@ -279,22 +305,91 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const calculatedMonths = useMemo(() => {
     const isSimActive = simulation.isActive;
     const salaryMult = isSimActive ? (1 + (simulation.salaryIncrease || 0) / 100) : 1;
-    const bonusMult = isSimActive ? (simulation.bonusMultiplier || 1) : 1;
+    
+    // STANDALONE SIMULATION LOGIC
+    if (isSimActive) {
+      const projectionBaseSalary = simulation.projectedSalary || activeYearData.bonusBase;
+      const displaySalary = projectionBaseSalary * salaryMult;
+      
+      let runningGross = 0;
+      return Array.from({ length: 12 }).map((_, index) => {
+        let bonus = 0;
+        const monthNum = index + 1;
+        
+        // Bonus Calculation based on new simulation parameters
+        if (simulation.bonusFrequency === 'monthly') {
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+        } else if (simulation.bonusFrequency === 'quarterly' && monthNum % 3 === 0) {
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+        } else if (simulation.bonusFrequency === 'annual' && monthNum === 12) {
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+        }
+        
+        // Apply Bonus Multiplier to everything (user requested flexibility)
+        bonus *= (simulation.bonusMultiplier || 1);
 
+        const gross = displaySalary + bonus;
+        runningGross += gross;
+        
+        // Simplified monthly tax calculation for simulation (doesn't account for complex deductions)
+        // This is still an approximation for the UI row
+        const estimatedTax = state.activeYear >= 2025 
+          ? (runningGross > 2400000 ? gross * 0.15 : gross * 0.13) 
+          : gross * 0.13;
+        
+        return {
+          normDays: 20, // default placeholder
+          factDays: 20, // default placeholder
+          salary: displaySalary,
+          base: displaySalary,
+          bonus: bonus,
+          gross: gross,
+          tax13: estimatedTax,
+          net13: gross - estimatedTax,
+          isProjected: true
+        } as CalculatedMonth;
+      });
+    }
+
+    let runningGross = 0;
     return activeYearData.months.map((m, index) => {
-      const baseSalary = m.salary * salaryMult;
-      const base = m.factDays < m.normDays ? baseSalary * (m.factDays / m.normDays) : baseSalary;
+      // Logic for Option A: Actuals + Projections
+      const isActual = m.salary > 0;
+      
+      let base: number;
+      let displaySalary = m.salary;
+
+      if (isActual) {
+        base = m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary;
+      } else {
+        base = 0;
+      }
       
       let bonus = 0;
       if (index % 3 === 2) {
         const qIndex = Math.floor(index / 3);
-        bonus += (activeYearData.quarters?.[qIndex]?.bonusAmount || 0) * bonusMult;
+        const qData = activeYearData.quarters?.[qIndex];
+        bonus = qData?.bonusAmount || 0;
       }
 
       const gross = base + bonus;
-      const tax13 = gross * 0.13;
-      const net13 = gross - tax13;
-      return { ...m, base, bonus, gross, tax13, net13 };
+      runningGross += gross;
+
+      // Better tax estimation for 2025+ (still a row-by-row approx)
+      const estimatedTax = state.activeYear >= 2025 
+        ? (runningGross > 2400000 ? gross * 0.15 : gross * 0.13) 
+        : gross * 0.13;
+
+      return { 
+        ...m, 
+        salary: displaySalary,
+        base, 
+        bonus, 
+        gross, 
+        tax13: estimatedTax, 
+        net13: gross - estimatedTax,
+        isProjected: false
+      };
     });
   }, [activeYearData, simulation]);
 
@@ -312,21 +407,36 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
-  if (!activeYearData) return null;
+  if (!isInitialized || !activeYearData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+          <span className="text-slate-400 text-sm font-medium">Загрузка данных...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-indigo-500/30 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="max-w-full lg:max-w-6xl mx-auto space-y-6">
-
-        {/* Action Bar (Simulation Badge) */}
-        {simulation.isActive && (
-          <div className="flex justify-end mb-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl border border-emerald-500/20 w-fit mt-2">
-              <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest hidden lg:inline">Simulation</span>
-            </div>
-          </div>
-        )}
+    <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-indigo-500/30">
+      <div className="max-w-full lg:max-w-6xl mx-auto space-y-6 relative pt-4">
+        {/* Action Bar (Simulation Badge) - Now absolute to prevent shifting */}
+        <AnimatePresence>
+          {simulation.isActive && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute -top-10 right-0 z-20"
+            >
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl border border-emerald-500/20 backdrop-blur-sm cursor-default select-none">
+                <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-none">Режим симуляции активен</span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Top Summary Section */}
         <YearSummary 
@@ -336,9 +446,10 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
           prevYear={prevYear}
           handleCopy={handleCopy}
           isPrivate={isPrivate}
+          onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
         />
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Tabs & Toolbar */}
           <YearTabs 
             availableYears={availableYears}
@@ -382,6 +493,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                 <ScenarioSimulator 
                   simulation={simulation}
                   onUpdate={setSimulation}
+                  bonusBase={activeYearData.bonusBase}
                 />
               </motion.div>
             )}

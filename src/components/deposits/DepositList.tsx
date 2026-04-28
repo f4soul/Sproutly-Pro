@@ -136,7 +136,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       />
 
       {/* Floating Action Button for Mobile */}
-      <div className="lg:hidden fixed bottom-24 right-6 z-50">
+      <div className="lg:hidden fixed bottom-20 right-6 z-50">
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -152,7 +152,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       </div>
 
       {/* Desktop & Landscape Tablet Table */}
-      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto custom-scrollbar bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-slate-50/50 dark:bg-white/5">
@@ -191,7 +191,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
         {/* Mobile & Portrait Tablet Cards */}
         <div className="block lg:hidden">
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
               <DepositCard 
                 key={deposit.id || `deposit-card-${index}`} 
@@ -199,6 +199,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                 onEdit={() => handleEdit(deposit)} 
                 onDelete={() => setDepositToDelete(deposit)} 
                 isPrivate={isPrivate}
+                isLast={index === filteredDeposits.length - 1}
               />
             )) : (
               <div className="py-24 text-center">

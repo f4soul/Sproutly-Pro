@@ -74,8 +74,8 @@ export const AnnualBonusSection = ({
             />
           )}
         </td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal(activeYearData.annualBonusAmount || 0)}</td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal((activeYearData.annualBonusAmount || 0) * 0.87)}</td>
+        <td className="px-1 md:px-2 py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(activeYearData.annualBonusAmount || 0)}</td>
+        <td className="px-1 md:px-2 py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.annualBonusAmount || 0) * 0.87)}</td>
        </tr>
 
        {/* Extra Bonus Row */}
@@ -92,8 +92,8 @@ export const AnnualBonusSection = ({
             />
           )}
         </td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal(activeYearData.extraBonusAmount || 0)}</td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">{formatVal((activeYearData.extraBonusAmount || 0) * 0.87)}</td>
+        <td className="px-1 md:px-2 py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(activeYearData.extraBonusAmount || 0)}</td>
+        <td className="px-1 md:px-2 py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.extraBonusAmount || 0) * 0.87)}</td>
        </tr>
 
        {/* Total Year Row */}
@@ -112,10 +112,10 @@ export const AnnualBonusSection = ({
             } />
           )}
         </td>
-        <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-indigo-600 dark:text-indigo-400 text-[11px] lg:text-xs xl:text-sm">
+        <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-indigo-600 dark:text-indigo-400 text-[11px] lg:text-xs xl:text-sm min-w-[110px] lg:min-w-[130px]">
           {isPrivate ? '••••••' : <AnimatedCurrency value={yearlyTotals.totalGross} />}
         </td>
-        <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs xl:text-sm">
+        <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs xl:text-sm min-w-[110px] lg:min-w-[130px]">
           {isPrivate ? '••••••' : <AnimatedCurrency value={yearlyTotals.finalNet} />}
         </td>
        </tr>
