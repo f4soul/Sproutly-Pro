@@ -24,7 +24,7 @@ export function BonusConfigControls({
 }: BonusConfigControlsProps) {
   if (compact) {
     return (
-      <div className="flex items-center justify-between w-full h-full gap-3 md:gap-4 overflow-x-auto custom-scrollbar no-scrollbar min-w-0">
+      <div className="flex items-center justify-between w-full h-full gap-3 md:gap-4 overflow-x-auto custom-scrollbar no-scrollbar min-w-0 py-1.5 px-0.5">
         <div className="flex flex-col items-center gap-0.5 grow-0 shrink-0 min-w-0">
           <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">База</span>
           <div className="flex items-center gap-1">
@@ -33,7 +33,7 @@ export function BonusConfigControls({
                 value={activeYearData.bonusBase ?? 0}
                 onChange={onBonusBaseChange}
                 hideDecimals={true}
-                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-7 md:h-8 px-1 pr-4 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 h-7 md:h-8 px-1 pr-4 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500"
               />
               <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px] md:text-[10px] lg:text-[11px] pointer-events-none">₽</span>
             </div>
@@ -41,7 +41,7 @@ export function BonusConfigControls({
               <button
                 onClick={onApplyBaseToAll}
                 title="Применить базу ко всем месяцам"
-                className="p-1 rounded-md hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-indigo-400 hover:text-indigo-600 transition-colors"
+                className="p-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-500/10 text-primary-400 hover:text-primary-600 transition-colors"
               >
                 <Wand2 size={12} />
               </button>
@@ -57,18 +57,18 @@ export function BonusConfigControls({
                 <TableInput
                   value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
                   onChange={(value) => onQuarterCoefChange(qIndex, value)}
-                  className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 h-7 md:h-8 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 p-0"
+                  className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
                 />
               </div>
             </div>
           ))}
           <div className="flex flex-col items-center gap-0.5 ml-1 md:ml-2 shrink-0">
-            <span className="text-[8px] font-black uppercase tracking-tighter text-emerald-500 dark:text-emerald-500 whitespace-nowrap">Год</span>
+            <span className="text-[8px] font-black uppercase tracking-tighter text-primary-500 dark:text-primary-500 whitespace-nowrap">Год</span>
             <div className="w-9 md:w-10">
               <TableInput
                 value={activeYearData.annualBonusCoef ?? 0}
                 onChange={onAnnualCoefChange}
-                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700/50 h-7 md:h-8 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500/50 p-0"
+                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-primary-300 dark:border-primary-700/50 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
               />
             </div>
           </div>
@@ -96,7 +96,7 @@ export function BonusConfigControls({
               <button
                 onClick={onApplyBaseToAll}
                 title="Применить базу ко всем месяцам"
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all text-[10px] font-bold uppercase tracking-wider"
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-all text-[10px] font-bold uppercase tracking-wider"
               >
                 <Wand2 size={12} />
                 <span className="hidden sm:inline">Применить к месяцам</span>
@@ -116,18 +116,18 @@ export function BonusConfigControls({
                 <CoefInput
                   value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
                   onChange={(value) => onQuarterCoefChange(qIndex, value)}
-                  className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
+                  className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
                 />
               </div>
             </div>
           ))}
           <div className="flex flex-col items-center gap-0.5 ml-1">
-            <span className="text-[8px] text-indigo-500 uppercase font-black tracking-tighter">Год</span>
+            <span className="text-[8px] text-primary-500 uppercase font-black tracking-tighter">Год</span>
             <div className="flex items-center">
               <CoefInput
                 value={activeYearData.annualBonusCoef ?? 0}
                 onChange={onAnnualCoefChange}
-                className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
+                className="w-8 md:w-10 bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded outline-none font-mono text-center text-[10px] p-0.5 transition-all"
               />
             </div>
           </div>

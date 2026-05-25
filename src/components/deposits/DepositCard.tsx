@@ -4,7 +4,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Deposit } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
-import { calculateIncome } from '../../lib/depositCalculations';
+import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
 import { getBankDetails } from '../../lib/banks';
 
 interface DepositCardProps {
@@ -15,6 +15,8 @@ interface DepositCardProps {
   isLast?: boolean;
 }
 
+import { BankLogo } from './BankLogo';
+
 export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete, isPrivate = false, isLast = false }) => {
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;
@@ -24,7 +26,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
 
   const startDate = parseDate(deposit.startDate);
   const endDate = parseDate(deposit.endDate);
-  const isClosed = deposit.isClosed || (endDate && endDate < new Date());
+  const isClosed = isDepositClosed(deposit);
   const income = calculateIncome(deposit);
   const total = deposit.amount + income;
   const [isExpanded, setIsExpanded] = useState(false);
@@ -72,16 +74,13 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
       <div className="flex items-start justify-between mb-4 relative z-10">
         <div className="flex items-center gap-3">
           <div 
-            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm"
-            style={{ backgroundColor: (imgError || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
+            className="w-8 h-8 rounded-lg bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm"
           >
             {bankDetails.logoUrl && !imgError ? (
-              <img 
-                src={bankDetails.logoUrl} 
+              <BankLogo
+                logoUrl={bankDetails.logoUrl} 
                 alt={deposit.bank} 
                 className="w-full h-full object-contain" 
-                referrerPolicy="no-referrer"
-                onError={() => setImgError(true)}
               />
             ) : (
               <span className="font-black text-xs" style={{ color: bankDetails.color }}>
@@ -90,7 +89,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
             )}
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+            <h3 className="font-bold text-sm text-slate-950 dark:text-white">
               {deposit.bank}
             </h3>
           </div>
@@ -136,79 +135,76 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
       <div className="flex items-end justify-between pt-3 border-t border-slate-200/50 dark:border-slate-800/50 relative z-10">
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold mb-0.5">Сумма</span>
-          <span className="text-base font-black text-slate-900 dark:text-white tracking-tight">
+          <span className="text-base font-black text-slate-950 dark:text-white tracking-tight">
             {formatVal(deposit.amount)}
           </span>
         </div>
         <div className="flex flex-col text-right">
           <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold mb-0.5">Ожидаемый доход</span>
-          <span className="text-sm font-black text-emerald-600">
+          <span className="text-sm font-black text-deposit-600">
             +{formatVal(income)}
           </span>
         </div>
       </div>
 
-      {/* Expanded Details */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden relative z-10"
-          >
-            <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-2.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Формула:</span>
-                <span className="font-medium text-slate-900 dark:text-white text-right">
-                  {deposit.formula === 'simple_days' ? 'В конце срока' : 
-                   deposit.formula === 'simple_months' ? 'Ежемесячно' : 
-                   deposit.formula === 'compound_monthly' ? 'Капитализация' :
-                   deposit.formula === 'daily_balance' ? 'На ежедн. остаток' :
-                   deposit.formula === 'min_balance' ? 'На мин. остаток' :
-                   'Не указана'}
-                </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Итоговая сумма:</span>
-                <span className="font-bold text-slate-900 dark:text-white text-right">{formatVal(total)}</span>
-              </div>
-
-              {deposit.sourceNote && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Счет вывода:</span>
-                  <span className="font-medium text-slate-900 dark:text-white text-right">{deposit.sourceNote}</span>
-                </div>
-              )}
-              
-              {deposit.comment && (
-                <div className="flex justify-between gap-4">
-                  <span className="text-slate-500 dark:text-slate-400 shrink-0">Заметка:</span>
-                  <span className="font-medium text-slate-900 dark:text-white text-right break-words">{deposit.comment}</span>
-                </div>
-              )}
-              
-              <div className="flex justify-end gap-2 mt-2">
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onEdit(); }} 
-                  className="apple-button bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-500 hover:text-blue-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  Изменить
-                </button>
-                <button 
-                  onClick={(e) => { e.stopPropagation(); onDelete(); }} 
-                  className="apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  В архив
-                </button>
-              </div>
-            </div>
-          </motion.div>
+      <div 
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-out relative z-10",
+          isExpanded ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
         )}
-      </AnimatePresence>
+      >
+        <div className="overflow-hidden">
+          <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-2.5 text-xs">
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Формула:</span>
+              <span className="font-medium text-slate-950 dark:text-white text-right">
+                {deposit.formula === 'simple_days' ? 'В конце срока' : 
+                 deposit.formula === 'simple_months' ? 'Ежемесячно' : 
+                 deposit.formula === 'compound_monthly' ? 'Капитализация' :
+                 deposit.formula === 'daily_balance' ? 'На ежедн. остаток' :
+                 deposit.formula === 'min_balance' ? 'На мин. остаток' :
+                 'Не указана'}
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">Итоговая сумма:</span>
+              <span className="font-bold text-slate-950 dark:text-white text-right">{formatVal(total)}</span>
+            </div>
+
+            {deposit.sourceNote && (
+              <div className="flex justify-between">
+                <span className="text-slate-500 dark:text-slate-400">Счет вывода:</span>
+                <span className="font-medium text-slate-950 dark:text-white text-right">{deposit.sourceNote}</span>
+              </div>
+            )}
+            
+            {deposit.comment && (
+              <div className="flex justify-between gap-4">
+                <span className="text-slate-500 dark:text-slate-400 shrink-0">Заметка:</span>
+                <span className="font-medium text-slate-950 dark:text-white text-right break-words">{deposit.comment}</span>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-2 mt-2">
+              <button 
+                onClick={(e) => { e.stopPropagation(); onEdit(); }} 
+                className="apple-button bg-slate-50 dark:bg-slate-800/50 hover:bg-primary-50 dark:hover:bg-deposit-500/10 text-slate-500 hover:text-primary-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                Изменить
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDelete(); }} 
+                className="apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                В архив
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { Landmark, Plus, Download } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Deposit } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
 import { exportToPDF } from '../../services/ExportService';
 import { DepositForm } from './DepositForm';
-import { calculateIncome } from '../../lib/depositCalculations';
+import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
 import { SmartActionBar } from './SmartActionBar';
 import { DepositRow } from './DepositRow';
 import { DepositCard } from './DepositCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
+import { cn } from '../../lib/utils';
 
 interface DepositListProps {
   deposits: Deposit[];
@@ -25,21 +26,25 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'closed'>('all');
   const [sortConfig, setSortConfigState] = useState<{ key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollTimer = React.useRef<NodeJS.Timeout | null>(null);
+  const [isInteracting, setIsInteracting] = useState(false);
+  const interactTimer = React.useRef<NodeJS.Timeout | null>(null);
 
-  // Track scroll for sticky header effect and interaction transparency
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 100);
-      setIsScrolling(true);
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
-      scrollTimer.current = setTimeout(() => setIsScrolling(false), 1500);
+      setIsInteracting(true);
+      if (interactTimer.current) clearTimeout(interactTimer.current);
+      interactTimer.current = setTimeout(() => setIsInteracting(false), 300);
     };
-    window.addEventListener('scroll', handleScroll);
+    
+    // Simple interaction tracker for touches and scrolls
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('touchstart', handleScroll, { passive: true });
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (scrollTimer.current) clearTimeout(scrollTimer.current);
+      window.removeEventListener('touchstart', handleScroll);
+      if (interactTimer.current) clearTimeout(interactTimer.current);
     };
   }, []);
 
@@ -51,9 +56,10 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                            (d.comment?.toLowerCase().includes(searchQuery.toLowerCase())) ||
                            (d.sourceNote?.toLowerCase().includes(searchQuery.toLowerCase()));
       
+      const depositClosed = isDepositClosed(d);
       const matchesStatus = filterStatus === 'all' || 
-                           (filterStatus === 'active' && !d.isClosed) || 
-                           (filterStatus === 'closed' && d.isClosed);
+                           (filterStatus === 'active' && !depositClosed) || 
+                           (filterStatus === 'closed' && depositClosed);
       
       return matchesSearch && matchesStatus;
     });
@@ -89,6 +95,12 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       });
     } else {
       sorted.sort((a, b) => {
+        // Group by status (active first)
+        const aClosed = isDepositClosed(a) ? 1 : 0;
+        const bClosed = isDepositClosed(b) ? 1 : 0;
+        if (aClosed !== bClosed) return aClosed - bClosed;
+        
+        // Then sort by start date descending
         const aVal = a.startDate ? new Date(a.startDate).getTime() : 0;
         const bVal = b.startDate ? new Date(b.startDate).getTime() : 0;
         return bVal - aVal;
@@ -121,7 +133,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   };
 
   return (
-    <div className="space-y-6 md:space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
+    <div id="deposits-list-content" className="space-y-6 md:space-y-10 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
       <SmartActionBar 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -136,41 +148,48 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       />
 
       {/* Floating Action Button for Mobile */}
-      <div className="lg:hidden fixed bottom-20 right-6 z-50">
+      <div className={cn("lg:hidden fixed bottom-24 right-6 z-[60] transition-all duration-300", isInteracting && "pointer-events-none")}>
         <motion.button
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ 
+            opacity: isInteracting ? 0.3 : 1,
+            scale: isInteracting ? 0.9 : 1,
+            y: 0
+          }}
+          transition={{ 
+            type: "tween",
+            ease: "easeInOut",
+            duration: 0.2
+          }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          animate={{ 
-            opacity: isScrolling ? 0.4 : 1,
-            scale: isScrolling ? 0.9 : 1
-          }}
           onClick={() => { setEditingDeposit(undefined); setIsFormOpen(true); }}
-          className="w-14 h-14 rounded-full bg-[#007AFF] text-white flex items-center justify-center shadow-2xl shadow-blue-500/40 transition-opacity duration-300"
+          className="w-14 h-14 rounded-full bg-deposit-500 hover:bg-deposit-600 dark:bg-deposit-600 dark:hover:bg-deposit-500 text-white flex items-center justify-center shadow-2xl shadow-deposit-500/40"
         >
           <Plus className="w-6 h-6 stroke-[3px]" />
         </motion.button>
       </div>
 
       {/* Desktop & Landscape Tablet Table */}
-      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
         <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-slate-50/50 dark:bg-white/5">
                 <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] border-b border-slate-200 dark:border-slate-800 w-[28%] xl:w-[24%]">Банк</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[12%] xl:w-[10%]" onClick={() => requestSort('rate')}>СТАВКА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('startDate')}>ОТКРЫТ</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('endDate')}>ЗАКРЫТ</th>
-                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[15%]" onClick={() => requestSort('startDate')}>ПЕРИОД</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[14%]" onClick={() => requestSort('amount')}>СУММА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[12%]" onClick={() => requestSort('income')}>ДОХОД</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-blue-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[12%]" onClick={() => requestSort('total')}>ИТОГО</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[12%] xl:w-[10%]" onClick={() => requestSort('rate')}>СТАВКА</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('startDate')}>ОТКРЫТ</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[10%]" onClick={() => requestSort('endDate')}>ЗАКРЫТ</th>
+                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800 w-[15%]" onClick={() => requestSort('startDate')}>ПЕРИОД</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[14%]" onClick={() => requestSort('amount')}>СУММА</th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[12%]" onClick={() => requestSort('income')}>ДОХОД</th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors border-b border-slate-200 dark:border-slate-800 w-[20%] xl:w-[12%]" onClick={() => requestSort('total')}>ИТОГО</th>
                 <th className="px-2 xl:px-4 py-3 border-b border-slate-200 dark:border-slate-800 w-[60px] xl:w-[80px]"></th>
               </tr>
             </thead>
             <tbody className="[&>tr>td]:border-b [&>tr:last-child>td]:border-b-0 [&>tr>td]:border-slate-200 dark:[&>tr>td]:border-slate-800">
               {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
                 <DepositRow 
-                  key={deposit.id || `deposit-${index}`} 
+                  key={`deposit-row-${deposit.id || index}-${index}`} 
                   deposit={deposit} 
                   onEdit={() => handleEdit(deposit)}
                   onDelete={() => setDepositToDelete(deposit)}
@@ -191,10 +210,10 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
         {/* Mobile & Portrait Tablet Cards */}
         <div className="block lg:hidden">
-          <div className="flex flex-col bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="flex flex-col bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
               <DepositCard 
-                key={deposit.id || `deposit-card-${index}`} 
+                key={`deposit-card-${deposit.id || index}-${index}`} 
                 deposit={deposit} 
                 onEdit={() => handleEdit(deposit)} 
                 onDelete={() => setDepositToDelete(deposit)} 
@@ -210,20 +229,24 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
           </div>
         </div>
 
-      {isFormOpen && (
-        <DepositForm 
-          deposit={editingDeposit} 
-          onClose={() => setIsFormOpen(false)} 
-        />
-      )}
+      <AnimatePresence>
+        {isFormOpen && (
+          <DepositForm 
+            deposit={editingDeposit} 
+            onClose={() => setIsFormOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
 
-      {depositToDelete && (
-        <DeleteConfirmModal 
-          deposit={depositToDelete}
-          onConfirm={confirmDelete}
-          onCancel={() => setDepositToDelete(null)}
-        />
-      )}
+      <AnimatePresence>
+        {depositToDelete && (
+          <DeleteConfirmModal 
+            deposit={depositToDelete}
+            onConfirm={confirmDelete}
+            onCancel={() => setDepositToDelete(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -48,7 +48,7 @@ export function IncomeDesktopTable({
         transition={{ duration: 0.2 }}
         className="hidden lg:block relative isolate"
       >
-        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10">
+        <div className="bg-white dark:bg-slate-950 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10">
           <div className="overflow-x-auto custom-scrollbar relative rounded-2xl overflow-visible no-scrollbar">
           <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
             <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
@@ -67,20 +67,20 @@ export function IncomeDesktopTable({
                 </th>
               </tr>
               <tr>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-left shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Месяц</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap" title="Фактически отработано / Норма">Дни (ф/н)</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Оклад (₽)</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap">Премия (₽)</th>
-                <th className="px-1 md:px-2 py-1.5 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-indigo-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap min-w-[110px] lg:min-w-[130px]">Gross (₽)</th>
-                <th className="px-1 md:px-2 py-1.5 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px]">
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-left shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Месяц</th>
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle" title="Фактически отработано / Норма">Дни (ф/н)</th>
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Оклад (₽)</th>
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Премия (₽)</th>
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-primary-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap min-w-[110px] lg:min-w-[130px] align-middle">Gross (₽)</th>
+                <th className="px-1 md:px-2 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px] align-middle">
                   <button 
                     onClick={onShowTaxInfo}
-                    className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-500 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
+                    className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-primary-500 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
                   >
                     <span>{yearKey >= 2025 ? 'Net (₽)' : 'Net 13% (₽)'}</span>
                     <div className="relative flex items-center justify-center">
-                      <div className="absolute inset-0 bg-emerald-500/20 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
-                      <Info size={10} className="text-emerald-500/40 group-hover/tax-header:text-emerald-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
+                      <div className="absolute inset-0 bg-primary-500/20 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
+                      <Info size={10} className="text-primary-500/40 group-hover/tax-header:text-primary-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
                     </div>
                   </button>
                 </th>

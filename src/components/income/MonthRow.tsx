@@ -28,7 +28,7 @@ export const MonthRow = ({
   return (
     <tr className={cn(
       "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group",
-      isProjected && "bg-blue-500/5 dark:bg-blue-400/5 italic"
+      isProjected && "bg-primary-500/5 dark:bg-primary-400/5 italic"
     )}>
       <td className="px-1.5 md:px-2 py-1.5 text-slate-600 dark:text-slate-300 text-left align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[60px] lg:min-w-[80px]">
         <div className="flex items-center gap-1.5">
@@ -41,7 +41,7 @@ export const MonthRow = ({
         </div>
       </td>
       <td className="px-1 md:px-2 py-1.5 align-middle min-w-[70px] lg:min-w-[100px]">
-        <div className="flex items-center justify-center gap-0.5 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-md py-1 mx-auto w-full lg:w-[80px]">
+        <div className="flex items-center justify-center gap-0.5 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-md py-1 mx-auto w-full lg:w-[80px]">
           <TableInput 
             value={m.factDays} 
             onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} 
@@ -71,10 +71,10 @@ export const MonthRow = ({
       <td className="px-1 md:px-2 py-1.5 text-right font-mono text-slate-400 dark:text-slate-500 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap">
         -
       </td>
-      <td className="px-1 md:px-2 py-1.5 text-right font-mono font-semibold text-blue-700 dark:text-blue-300 bg-blue-50/30 dark:bg-blue-900/10 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">
+      <td className="px-1 md:px-2 py-1.5 text-right font-mono font-semibold text-primary-700 dark:text-primary-300 bg-primary-50/30 dark:bg-primary-900/10 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">
         {formatVal(calcM.gross)}
       </td>
-      <td className="px-1 md:px-2 py-1.5 text-right font-mono text-green-700 dark:text-green-300 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">
+      <td className="px-1 md:px-2 py-1.5 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">
         {formatVal(calcM.net13)}
       </td>
     </tr>

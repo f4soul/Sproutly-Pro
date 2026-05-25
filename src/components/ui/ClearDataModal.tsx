@@ -22,8 +22,13 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
   return (
     <AnimatePresence>
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        <motion.div 
+          key="clear-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
           onClick={onClose}
         >
           <motion.div 
@@ -32,16 +37,16 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="apple-card p-6 max-w-md w-full"
+            className="apple-card p-6 max-w-md w-full relative z-10"
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
                 <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
                   <Trash2 size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Очистить данные?</h3>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white">Очистить данные?</h3>
               </div>
-              <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors">
+              <button onClick={onClose} className="text-slate-500 hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -51,7 +56,7 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
             <div className="flex justify-end gap-3">
               <button 
                 onClick={onClose}
-                className="apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+                className="apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
               >
                 Отмена
               </button>
@@ -66,7 +71,7 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
               </button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

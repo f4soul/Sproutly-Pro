@@ -57,11 +57,11 @@ export const YearTabs = ({
 
   return (
     <div id="year-tabs-island" className="relative z-30">
-      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-1 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-slate-800 w-full">
+      <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] border border-slate-200 dark:border-slate-800 w-full">
         {/* Left Elements: Tabs (Desktop) / Dropdown (Mobile) + Add/Del */}
         <div className="flex items-center gap-1">
           {/* Desktop Tabs: visible only on XL and up */}
-          <div className="hidden xl:flex items-center bg-slate-50 dark:bg-slate-900/50 p-0.5 rounded-xl gap-0.5">
+          <div className="hidden xl:flex items-center bg-slate-50 dark:bg-slate-950/50 p-0.5 rounded-xl gap-0.5">
             {availableYears.map(year => (
               <button
                 key={year}
@@ -69,15 +69,15 @@ export const YearTabs = ({
                 className={cn(
                   "px-4 py-2 text-[10px] xl:text-xs font-bold rounded-xl transition-all relative h-9 flex items-center justify-center min-w-[65px] z-10",
                   year === activeYear 
-                    ? "text-indigo-600 dark:text-indigo-400" 
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5"
+                    ? "text-primary-600 dark:text-primary-400" 
+                    : "text-slate-500 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5"
                 )}
               >
                 <span className="relative z-20">{year}</span>
                 {year === activeYear && (
                   <motion.div 
                     layoutId="activeYearPill"
-                    className="absolute inset-0 bg-white dark:bg-indigo-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-indigo-400/30"
+                    className="absolute inset-0 bg-white dark:bg-primary-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-primary-400/30"
                     transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                   />
                 )}
@@ -112,7 +112,7 @@ export const YearTabs = ({
                       className={cn(
                         "w-full px-4 py-2.5 text-left text-xs font-bold transition-colors",
                         year === activeYear 
-                          ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" 
+                          ? "bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400" 
                           : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5"
                       )}
                     >
@@ -127,7 +127,7 @@ export const YearTabs = ({
           <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/50 p-0.5 gap-0.5">
             <button 
               onClick={addNewYear}
-              className="flex items-center justify-center w-[30px] h-[30px] text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-100 transition-colors rounded-xl hover:bg-white dark:hover:bg-slate-700 focus:outline-none"
+              className="flex items-center justify-center w-[30px] h-[30px] text-slate-400 hover:text-primary-600 dark:hover:text-primary-100 transition-colors rounded-xl hover:bg-white dark:hover:bg-slate-700 focus:outline-none"
               title="Добавить новый год"
             >
               <Plus size={16} />
@@ -149,7 +149,7 @@ export const YearTabs = ({
             {prevYear !== null && (
               <button 
                 onClick={copyFromPreviousYear}
-                className="flex items-center justify-center w-[30px] h-[30px] text-blue-600 dark:text-blue-400 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-colors focus:outline-none"
+                className="flex items-center justify-center w-[30px] h-[30px] text-primary-600 dark:text-primary-400 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-colors focus:outline-none"
                 title={`Скопировать из ${prevYear}`}
               >
                 <Copy size={15} />
@@ -172,66 +172,66 @@ export const YearTabs = ({
               "flex items-center justify-center w-[30px] h-[30px] rounded-xl transition-all relative z-20 focus:outline-none",
               isMobileMenuOpen 
                 ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white" 
-                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-slate-100"
+                : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-950 dark:hover:text-slate-100"
             )}
             title="Дополнительно"
           >
             <MoreVertical size={16} />
             {isSimulationOpen && !isMobileMenuOpen && (
-               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border border-white dark:border-slate-900"></span>
+               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-500 rounded-full border border-white dark:border-slate-950"></span>
             )}
           </button>
 
           {/* Absolute Menu Box */}
           {isMobileMenuOpen && (
-             <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-50 overflow-hidden flex flex-col py-1">
+             <div className="absolute top-full right-0 mt-2 w-56 h-max bg-white dark:bg-slate-950 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800 z-50 flex flex-col p-1.5 focus:outline-none">
                 {/* WHAT-IF - shown on all screens since the explicit button is removed */}
                 <button 
                   onClick={() => { setIsSimulationOpen(!isSimulationOpen); setIsMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors w-full text-left"
                 >
                   <div className={cn(
                     "p-1.5 rounded-md transition-all duration-300", 
                     isSimulationOpen 
-                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30" 
-                      : "bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400"
+                      ? "bg-primary-500 text-white shadow-lg shadow-primary-500/30" 
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"
                   )}>
                     <Zap size={14} fill={isSimulationOpen ? "currentColor" : "none"} className={isSimulationOpen ? "animate-pulse" : ""} />
                   </div>
                   <span className={cn(
                     "transition-colors",
-                    isSimulationOpen ? "text-indigo-600 dark:text-indigo-400 font-black" : "text-slate-700 dark:text-slate-300"
+                    isSimulationOpen ? "text-primary-600 dark:text-primary-400 font-black" : "text-slate-700 dark:text-slate-300"
                   )}>
-                    {isSimulationOpen ? 'Остановить симуляцию' : 'Активировать What-If'}
+                    {isSimulationOpen ? 'Остановить симуляцию' : 'What-If'}
                   </span>
                 </button>
                 
-                <div className="h-px bg-slate-100 dark:bg-slate-700/50 mx-2 my-1"></div>
+                <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-1"></div>
 
                 {/* Mobile only visible elements like Copy and Clean*/}
                 {prevYear !== null && (
                   <button 
                     onClick={() => { copyFromPreviousYear(); setIsMobileMenuOpen(false); }}
-                    className="flex sm:hidden items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                    className="flex sm:hidden items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors w-full text-left"
                   >
-                    <div className="p-1.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-500"><Copy size={14} /></div>
+                    <div className="p-1.5 rounded-md bg-primary-50 dark:bg-primary-900/20 text-primary-500"><Copy size={14} /></div>
                     Скопировать пред. год
                   </button>
                 )}
                 
                 <button 
                   onClick={() => { setIsClearModalOpen(true); setIsMobileMenuOpen(false); }}
-                  className="flex sm:hidden items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                  className="flex sm:hidden items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors w-full text-left"
                 >
                   <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500"><Trash2 size={14} /></div>
                   Очистить таблицу
                 </button>
                 
-                <div className="flex sm:hidden h-px bg-slate-100 dark:bg-slate-700/50 mx-2 my-1"></div>
+                <div className="flex sm:hidden h-px bg-slate-100 dark:bg-slate-800 mx-2 my-1"></div>
 
                 <button 
                   onClick={() => { onExportPDF?.(); setIsMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors w-full text-left"
                 >
                   <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500"><FileText size={14} /></div>
                   Экспорт в PDF
@@ -239,9 +239,9 @@ export const YearTabs = ({
                 
                 <button 
                   onClick={() => { onExportXLSX?.(); setIsMobileMenuOpen(false); }}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors w-full text-left"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors w-full text-left"
                 >
-                   <div className="p-1.5 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500"><FileSpreadsheet size={14} /></div>
+                   <div className="p-1.5 rounded-md bg-primary-50 dark:bg-primary-900/20 text-primary-500"><FileSpreadsheet size={14} /></div>
                   Экспорт в Excel
                 </button>
              </div>

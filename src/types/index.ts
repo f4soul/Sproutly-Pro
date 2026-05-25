@@ -51,7 +51,7 @@ export type AppState = {
 export type Toast = {
   id: string;
   message: string;
-  type: 'success' | 'info' | 'error';
+  type: 'success' | 'info' | 'error' | 'loading';
 };
 
 export type TaxBracketDetail = {
@@ -96,6 +96,7 @@ export interface Bank {
   iconOffsetX?: number;
   iconOffsetY?: number;
   isCustom?: boolean;
+  isTest?: boolean;
   userId?: string;
   updatedAt?: number;
 }
@@ -112,6 +113,7 @@ export interface Deposit {
   rate: number;
   formula: CalculationFormula;
   comment?: string;
+  factIncome?: number; // Factual exact income defined by user
   isClosed: boolean;
   isArchived?: boolean | number; // New field for Archive
   splitIncome?: boolean;
@@ -119,10 +121,35 @@ export interface Deposit {
   isTest?: boolean;
 }
 
+export interface DeletedRecord {
+  id?: number;
+  collection: string;
+  docId: string;
+  timestamp: number;
+}
+
+export interface DayDensity {
+  date: string; // ISO string or YYYY-MM-DD
+  amount: number;
+  count: number;
+  maturingCount: number;
+  openingCount: number;
+  maturingNames: string[];
+  openingNames: string[];
+}
+
+export interface HeatmapData {
+  days: Record<string, DayDensity>;
+  maxAmount: number;
+  minAmount: number;
+}
+
 export interface TaxYearSettings {
   year: number;
   limit: number;
   ndflRate: number; // 13 or 15
+  updatedAt?: number;
+  userId?: string;
 }
 
 export interface AppSettings {

@@ -22,8 +22,13 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
   return (
     <AnimatePresence>
       {isOpen && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        <motion.div 
+          key="delete-year-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
           onClick={onClose}
         >
           <motion.div 
@@ -32,16 +37,16 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="apple-card p-6 max-w-md w-full"
+            className="apple-card p-6 max-w-md w-full relative z-10"
           >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
                 <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
                   <Trash2 size={24} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Удалить год?</h3>
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white">Удалить год?</h3>
               </div>
-              <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors">
+              <button onClick={onClose} className="text-slate-500 hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -51,7 +56,7 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
             <div className="flex justify-end gap-3">
               <button 
                 onClick={onClose}
-                className="apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 Отмена
               </button>
@@ -66,7 +71,7 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
               </button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Info, X } from 'lucide-react';
 import { TaxBracket } from '../../types';
 import { formatCurrency } from '../../lib/taxCalculator';
@@ -24,28 +24,34 @@ export const TaxReferenceModal = ({
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        onClick={(e) => e.stopPropagation()}
-        className="apple-card max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden"
-      >
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          key="tax-reference-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60"
+          onClick={onClose}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            onClick={(e) => e.stopPropagation()}
+            className="apple-card max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden relative z-10"
+          >
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
-          <div className="flex items-center gap-3 text-slate-900 dark:text-white">
-            <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full text-indigo-600 dark:text-indigo-400">
+          <div className="flex items-center gap-3 text-slate-950 dark:text-white">
+            <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-full text-primary-600 dark:text-primary-400">
               <Info size={20} className="sm:w-6 sm:h-6" />
             </div>
             <h3 className="text-lg sm:text-xl font-bold">Справка: НДФЛ {year}</h3>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer p-1 transition-colors">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-950 dark:hover:text-white cursor-pointer p-1 transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -65,8 +71,8 @@ export const TaxReferenceModal = ({
                 {brackets.map((bracket, index) => {
                   const prevLimit = index === 0 ? 0 : brackets[index - 1].limit;
                   return (
-                    <div key={index} className="grid grid-cols-12 gap-2 p-3 items-center text-sm">
-                      <div className="col-span-8 text-slate-900 dark:text-white">
+                    <div key={`bracket-${bracket.rate}-${bracket.limit}`} className="grid grid-cols-12 gap-2 p-3 items-center text-sm">
+                      <div className="col-span-8 text-slate-950 dark:text-white">
                         {bracket.limit === Infinity 
                           ? `Свыше ${formatCurrency(prevLimit)}`
                           : index === 0 
@@ -74,7 +80,7 @@ export const TaxReferenceModal = ({
                             : `От ${formatCurrency(prevLimit)} до ${formatCurrency(bracket.limit)}`
                         }
                       </div>
-                      <div className="col-span-4 text-right font-bold text-indigo-600 dark:text-indigo-400">
+                      <div className="col-span-4 text-right font-bold text-primary-600 dark:text-primary-400">
                         {Math.round(bracket.rate * 100)}%
                       </div>
                     </div>
@@ -83,9 +89,9 @@ export const TaxReferenceModal = ({
               </div>
             </div>
 
-            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-xl border border-indigo-100 dark:border-indigo-800/50 mt-6">
-              <h4 className="text-sm font-bold text-indigo-800 dark:text-indigo-300 mb-2">Пример расчета</h4>
-              <p className="text-xs text-indigo-600 dark:text-indigo-400 leading-relaxed">
+            <div className="bg-primary-50 dark:bg-primary-900/20 p-4 rounded-xl border border-primary-100 dark:border-primary-800/50 mt-6">
+              <h4 className="text-sm font-bold text-primary-800 dark:text-primary-300 mb-2">Пример расчета</h4>
+              <p className="text-xs text-primary-600 dark:text-primary-400 leading-relaxed">
                 Если ваш доход за год составил 3 000 000 ₽ (по шкале 2025 года):<br/>
                 • С первых 2 400 000 ₽ вы заплатите 13% = 312 000 ₽<br/>
                 • С оставшихся 600 000 ₽ вы заплатите 15% = 90 000 ₽<br/>
@@ -98,12 +104,14 @@ export const TaxReferenceModal = ({
         <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-800/50">
           <button 
             onClick={onClose}
-            className="apple-button w-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/20"
+            className="apple-button w-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-950 dark:text-white hover:bg-slate-50 dark:hover:bg-white/20"
           >
             Понятно
           </button>
         </div>
       </motion.div>
-    </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

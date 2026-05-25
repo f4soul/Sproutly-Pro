@@ -7,13 +7,22 @@ import { db, syncWithFirebase } from '../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 const getInitialState = (): AppState => {
+  const currentYear = new Date().getFullYear();
+  
+  const years: Record<number, any> = {
+    2024: generateDefaultYear(2024),
+    2025: generateDefaultYear(2025),
+    2026: generateDefaultYear(2026),
+  };
+
+  // Ensure current year is always generated if not 24, 25, 26
+  if (!years[currentYear]) {
+    years[currentYear] = generateDefaultYear(currentYear);
+  }
+
   return {
-    years: {
-      2024: generateDefaultYear(2024),
-      2025: generateDefaultYear(2025),
-      2026: generateDefaultYear(2026),
-    },
-    activeYear: 2025,
+    years,
+    activeYear: currentYear,
     taxBrackets: DEFAULT_TAX_BRACKETS,
     simulation: {
       isActive: false,
@@ -24,6 +33,11 @@ const getInitialState = (): AppState => {
   };
 };
 
+let globalAuthInitialized = false;
+let globalLastUserUid: string | null = null;
+
+let globalIsLoaded = false;
+
 export const useAppState = () => {
   const [localState, setLocalState] = useState<AppState>(getInitialState());
   const [user, setUser] = useState<User | null>(null);
@@ -31,34 +45,43 @@ export const useAppState = () => {
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline' | 'idle'>('offline');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
-  const isLoadedRef = useRef(false);
 
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
 
   useEffect(() => {
     if (dbState) {
       // Avoid redundant updates if local state is already matched or newer
-      if (isLoadedRef.current && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
+      if (globalIsLoaded && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
         return;
       }
-      setLocalState(dbState as AppState);
+      const dataToSet = { ...dbState as AppState };
+      if (!globalIsLoaded) {
+        // Force the app to start with current calendar year only on very first load
+        dataToSet.activeYear = new Date().getFullYear();
+        if (!dataToSet.years[dataToSet.activeYear]) {
+           dataToSet.years[dataToSet.activeYear] = generateDefaultYear(dataToSet.activeYear);
+        }
+      }
+      setLocalState(dataToSet);
       setIsInitialized(true);
-      isLoadedRef.current = true;
-    } else if (dbState === undefined && !isLoadedRef.current) {
+      globalIsLoaded = true;
+    } else if (dbState === undefined && !globalIsLoaded) {
       // Still loading
-    } else if (dbState === null && !isLoadedRef.current) {
+    } else if (dbState === null && !globalIsLoaded) {
       // No data in DB, use initial
       setIsInitialized(true);
-      isLoadedRef.current = true;
+      globalIsLoaded = true;
     }
-  }, [dbState, localState]);
+  }, [dbState]);
+
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const setState = (newState: AppState | ((prevState: AppState) => AppState)) => {
     setLocalState((prev) => {
-      const updated = typeof newState === 'function' ? newState(prev) : newState;
-      db.incomeState.put({ ...updated, id: 'main', updatedAt: Date.now() }).then(() => {
+      const updatedState = typeof newState === 'function' ? newState(prev) : newState;
+      const updated = { ...updatedState, updatedAt: Date.now() };
+      db.incomeState.put({ ...updated, id: 'main' }).then(() => {
         if (user) {
           if (syncTimeoutRef.current) {
             clearTimeout(syncTimeoutRef.current);
@@ -87,10 +110,18 @@ export const useAppState = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
+      const uid = currentUser?.uid || null;
+
       if (currentUser) {
-        setSyncStatus('syncing');
+        if (!globalAuthInitialized || globalLastUserUid !== uid) {
+          globalAuthInitialized = true;
+          globalLastUserUid = uid;
+          setSyncStatus('syncing');
+          syncWithFirebase().catch(console.error);
+        }
       } else {
         setSyncStatus('offline');
+        globalLastUserUid = null;
       }
     });
     return () => unsubscribe();
@@ -140,7 +171,7 @@ export const useAppState = () => {
       } else {
         const count = await db.incomeState.count();
         if (count === 0) {
-          await db.incomeState.put({ ...getInitialState(), id: 'main', updatedAt: Date.now() });
+          await db.incomeState.put({ ...getInitialState(), id: 'main', updatedAt: 0 });
         }
       }
     };

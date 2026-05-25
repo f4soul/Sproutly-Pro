@@ -5,12 +5,14 @@ import { calculateIncomeByYears, calculateTax } from '../../lib/depositCalculati
 import { getBankDetails } from '../../lib/banks';
 import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
+import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 import { TrendingUp, ShieldAlert, Receipt, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
 import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, syncWithFirebase } from '../../config/db';
 import { StatCard } from './StatCard';
 import { BankDetailsModal } from './BankDetailsModal';
+import { BankLogo } from '../deposits/BankLogo';
 
 interface DashboardProps {
   deposits: Deposit[];
@@ -21,26 +23,14 @@ interface DashboardProps {
   isPrivate?: boolean;
 }
 
-const DASHBOARD_CONTAINER_VARIANTS = {
-  hidden: { opacity: 1 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
 
-const DASHBOARD_ITEM_VARIANTS = {
-  hidden: { opacity: 1, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
-} as const;
 
 export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings, isPrivate = false }: DashboardProps) {
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [bankLogoErrors, setBankLogoErrors] = useState<Record<string, boolean>>({});
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => isPrivate ? '••••••' : <AnimatedCurrency value={val} />;
+  const formatValPlain = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
 
   const currentYearSettings = useMemo(() => 
     taxSettings.find(s => Number(s.year) === Number(selectedYear)) || { year: Number(selectedYear), limit: 210000, ndflRate: 13 },
@@ -81,7 +71,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
     const tax = calculateTax(totalIncome, currentYearSettings.limit, currentYearSettings.ndflRate);
 
     const chartData = [
-      { name: 'Льготный доход', value: Math.min(totalIncome, currentYearSettings.limit), color: '#10b981' },
+      { name: 'Льготный доход', value: Math.min(totalIncome, currentYearSettings.limit), color: '#14b8a6' },
       { name: 'Облагаемый доход', value: taxableBase, color: '#f43f5e' },
     ];
 
@@ -160,75 +150,73 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
   const limitUsagePercent = Math.min(100, (stats.totalIncome / currentYearSettings.limit) * 100);
 
   return (
-    <motion.div 
-      variants={DASHBOARD_CONTAINER_VARIANTS}
+    <div 
       className="space-y-6 md:space-y-8 max-w-6xl mx-auto" 
       id="dashboard-content"
     >
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 md:gap-4">
-        <motion.div variants={DASHBOARD_ITEM_VARIANTS}>
+        <div>
           <StatCard 
             index={0}
             title="Общий доход" 
-            value={formatVal(stats.totalIncome)} 
-            icon={<TrendingUp className="w-4 h-4 text-emerald-600" />}
+            value={isPrivate ? '••••••' : stats.totalIncome} 
+            icon={<TrendingUp className="w-4 h-4 text-deposit-600" />}
             description="Все проценты"
           />
-        </motion.div>
-        <motion.div variants={DASHBOARD_ITEM_VARIANTS}>
+        </div>
+        <div>
           <StatCard 
             index={1}
             title="Лимит" 
-            value={formatVal(currentYearSettings.limit)} 
+            value={isPrivate ? '••••••' : currentYearSettings.limit} 
             icon={<ShieldAlert className="w-4 h-4 text-amber-600" />}
             description="Необлагаемая сумма"
           />
-        </motion.div>
-        <motion.div variants={DASHBOARD_ITEM_VARIANTS}>
+        </div>
+        <div>
           <StatCard 
             index={2}
             title="Налоговая база" 
-            value={formatVal(stats.taxableBase)} 
-            icon={<Landmark className="w-4 h-4 text-teal-600" />}
+            value={isPrivate ? '••••••' : stats.taxableBase} 
+            icon={<Landmark className="w-4 h-4 text-deposit-600" />}
             description="Сверх лимита"
           />
-        </motion.div>
-        <motion.div variants={DASHBOARD_ITEM_VARIANTS}>
+        </div>
+        <div>
           <StatCard 
             index={3}
             title="Налог к уплате" 
-            value={formatVal(stats.tax)} 
+            value={isPrivate ? '••••••' : stats.tax} 
             icon={<Receipt className="w-4 h-4 text-rose-600" />}
             description={`${currentYearSettings.ndflRate}% от базы`}
             highlight={stats.tax > 0}
           />
-        </motion.div>
+        </div>
       </div>
 
-      <motion.div 
-        variants={DASHBOARD_ITEM_VARIANTS}
+      <div 
         className="grid grid-cols-1 xl:grid-cols-8 gap-4 md:gap-6"
       >
-        <div className="xl:col-span-5 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="xl:col-span-5 apple-card p-4 sm:p-6 md:p-8 flex flex-col h-[500px] md:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-8 shrink-0">
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white">Использование лимита</h3>
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Использование лимита</h3>
             <span className={cn(
               "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shrink-0",
-              limitUsagePercent >= 100 ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" : "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+              limitUsagePercent >= 100 ? "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400" : "bg-deposit-50 text-deposit-600 dark:bg-deposit-500/10 dark:text-deposit-400"
             )}>
               {limitUsagePercent.toFixed(1)}%
             </span>
           </div>
           
           <div className="space-y-6 flex-1 flex flex-col min-h-0">
-            <div className="relative h-2 bg-slate-50 dark:bg-slate-800/50 rounded-full overflow-hidden shrink-0">
+            <div className="relative h-2 bg-slate-50 dark:bg-slate-800/50 rounded-full shrink-0">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${limitUsagePercent}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 className={cn(
                   "h-full rounded-full transition-all duration-1000 ease-out",
-                  limitUsagePercent >= 100 ? "bg-rose-500" : "bg-blue-600"
+                  limitUsagePercent >= 100 ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" : "bg-deposit-600 shadow-[0_0_8px_rgba(37,99,235,0.6)]"
                 )}
               />
             </div>
@@ -241,11 +229,11 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4 shrink-0">
                 <h4 className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <div className="w-1 h-3 bg-emerald-500 rounded-full" />
+                  <div className="w-1 h-3 bg-deposit-500 rounded-full" />
                   Вклады, учитываемые в году
                 </h4>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[240px] lg:max-h-none min-h-0 content-start">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 overflow-y-auto pr-2 custom-scrollbar flex-1 max-h-[240px] md:max-h-none min-h-0 content-start">
                 <AnimatePresence mode="popLayout">
                   {deposits.filter(d => {
                     if (d.isArchived) return false;
@@ -260,36 +248,34 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
                     const yearIncome = calculateIncomeByYears(deposit).find(y => Number(y.year) === Number(selectedYear))?.income || 0;
                     return (
                       <div 
-                        key={deposit.id || idx}
-                        className="flex flex-col px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800"
+                        key={`dashboard-dep-${deposit.id || idx}-${idx}`}
+                        className="flex items-center px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 gap-3"
                       >
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div 
-                              className="w-5 h-5 rounded-md bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 p-0.5 shadow-sm"
-                              style={{ backgroundColor: (bankLogoErrors[deposit.bank] || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
-                            >
-                              {bankDetails.logoUrl && !bankLogoErrors[deposit.bank] ? (
-                                <img 
-                                  src={bankDetails.logoUrl} 
-                                  alt="" 
-                                  className="w-full h-full object-contain" 
-                                  referrerPolicy="no-referrer"
-                                  onError={() => setBankLogoErrors(prev => ({ ...prev, [deposit.bank]: true }))}
-                                />
-                              ) : (
-                                <span className="font-black text-[8px]" style={{ color: bankDetails.color }}>
-                                  {bankDetails.logoText}
-                                </span>
-                              )}
-                            </div>
-                            <span className="font-bold text-[11px] text-slate-900 dark:text-white truncate">{deposit.bank}</span>
-                          </div>
-                          <span className="text-[11px] font-bold text-emerald-500 dark:text-emerald-400 shrink-0">+{formatVal(yearIncome)}</span>
+                        <div 
+                          className="w-8 h-8 rounded-lg bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden shrink-0 border border-slate-200 dark:border-slate-800 p-1 shadow-sm"
+                          style={{ backgroundColor: (bankLogoErrors[deposit.bank] || !bankDetails.logoUrl) ? `${bankDetails.color}15` : undefined }}
+                        >
+                          {bankDetails.logoUrl && !bankLogoErrors[deposit.bank] ? (
+                            <BankLogo
+                              logoUrl={bankDetails.logoUrl}
+                              alt=""
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <span className="font-black text-[10px]" style={{ color: bankDetails.color }}>
+                              {bankDetails.logoText}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex justify-between items-center pl-7 text-[9px] text-slate-500 dark:text-slate-400">
-                          <span>{deposit.amount ? formatVal(deposit.amount) : '0 ₽'} • {deposit.rate}%</span>
-                          {deposit.endDate && <span>до {new Date(deposit.endDate).toLocaleDateString('ru-RU')}</span>}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-3 mb-0.5">
+                            <span className="font-bold text-xs text-slate-950 dark:text-white truncate">{deposit.bank}</span>
+                            <span className="text-[11px] font-bold text-deposit-500 dark:text-deposit-400 shrink-0">+{formatVal(yearIncome)}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400">
+                            <span>{deposit.amount ? formatVal(deposit.amount) : formatVal(0)} • {deposit.rate}%</span>
+                            {deposit.endDate && <span>до {new Date(deposit.endDate).toLocaleDateString('ru-RU')}</span>}
+                          </div>
                         </div>
                       </div>
                     );
@@ -302,52 +288,86 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           </div>
         </div>
 
-        <div className="xl:col-span-3 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-6 md:mb-8 shrink-0">Структура дохода</h3>
+        <div className="xl:col-span-3 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] min-h-[250px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between mb-6 md:mb-8 shrink-0">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Структура дохода</h3>
+          </div>
           
-          {/* Desktop Pie Chart */}
-          <div className="hidden xl:block h-56 w-full relative mb-8 shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={stats.chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={105}
-                  paddingAngle={4}
-                  dataKey="value"
-                  stroke="none"
-                  animationBegin={0}
-                  animationDuration={1500}
-                >
-                  {stats.chartData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color} 
-                      className="hover:opacity-80 transition-opacity cursor-pointer"
-                    />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full px-4">
-              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-1">Всего</div>
-              <div className="text-[clamp(1rem,1.45vw,1.25rem)] font-bold text-slate-900 dark:text-white leading-tight break-words">{formatCurrency(stats.totalIncome)}</div>
+          {/* Desktop Neon Rings Chart */}
+          <div className="hidden xl:flex items-center justify-center h-56 w-full relative mb-8 shrink-0">
+            {(() => {
+              const total = stats.chartData.reduce((sum, item) => sum + item.value, 0);
+              if (total === 0) return (
+                <div className="flex w-full h-full items-center justify-center opacity-50 text-slate-400 text-xs font-bold uppercase tracking-widest text-center">
+                  Нет данных
+                </div>
+              );
+              
+              // We'll show up to 6 rings to prevent overcrowding.
+              const maxRings = 6;
+              const displayData = stats.chartData.slice(0, maxRings);
+              
+              return (
+                <svg className="w-full h-full max-w-[220px] max-h-[220px] -rotate-90 overflow-visible" viewBox="0 0 200 200">
+                  {displayData.map((item, idx) => {
+                    const radius = 95 - (idx * 20);
+                    const circumference = 2 * Math.PI * radius;
+                    const percent = total > 0 ? item.value / total : 0;
+                    const strokeDashoffset = Math.max(0, circumference - percent * circumference);
+                    
+                    return (
+                      <g key={`income-ring-${item.name}-${idx}`}>
+                        <circle
+                          cx="100"
+                          cy="100"
+                          r={radius}
+                          fill="none"
+                          stroke={item.color}
+                          strokeWidth="15"
+                          className="opacity-[0.08] dark:opacity-[0.15]"
+                        />
+                        {percent > 0 && (
+                          <motion.circle
+                            cx="100"
+                            cy="100"
+                            r={radius}
+                            fill="none"
+                            stroke={item.color}
+                            strokeWidth="15"
+                            strokeLinecap="round"
+                            strokeDasharray={circumference}
+                            initial={{ strokeDashoffset: circumference }}
+                            animate={{ strokeDashoffset }}
+                            transition={{ duration: 1.5, ease: "easeOut", delay: idx * 0.15 }}
+                            style={{ filter: `drop-shadow(0 0 8px ${item.color}90)` }}
+                          />
+                        )}
+                      </g>
+                    );
+                  })}
+                </svg>
+              );
+            })()}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none flex flex-col justify-center items-center">
+              <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-1 z-10">Всего</div>
+              <div className="text-[clamp(0.9rem,1vw,1.1rem)] font-bold text-slate-950 dark:text-white leading-tight break-words z-10">{formatCurrency(stats.totalIncome)}</div>
             </div>
           </div>
 
           <div className="xl:hidden space-y-4 mb-6">
-            <div className="relative h-2 bg-slate-50 dark:bg-slate-800/50 rounded-full overflow-hidden">
-              <div className="flex h-full rounded-full overflow-hidden">
+            <div className="relative h-2 bg-slate-50 dark:bg-slate-800/50 rounded-full">
+              <div className="flex w-full h-full rounded-full">
                 {stats.chartData.map((item, idx) => (
                   <motion.div
                     key={item.name}
                     initial={{ width: 0 }}
                     animate={{ width: `${(item.value / stats.totalIncome) * 100}%` }}
                     transition={{ duration: 1, delay: idx * 0.2 }}
-                    style={{ backgroundColor: item.color }}
-                    className="h-full first:rounded-l-full last:rounded-r-full"
+                    style={{ 
+                      backgroundColor: item.color,
+                      boxShadow: `0 0 8px ${item.color}90`
+                    }}
+                    className="h-full first:rounded-l-full last:rounded-r-full relative z-10"
                   />
                 ))}
               </div>
@@ -358,19 +378,19 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
           </div>
 
-          <div className="space-y-3 mt-auto">
+          <div className="space-y-3 mt-auto overflow-y-auto pr-1 pb-1 custom-scrollbar min-h-0 flex-1 xl:flex-none">
             {stats.chartData.map(item => (
               <div key={item.name} className="flex items-center justify-between p-2 sm:p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0 self-center" style={{ backgroundColor: item.color }} />
                   <span className="text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight sm:tracking-wide truncate leading-none">{item.name}</span>
                 </div>
-                <span className="font-bold text-[10px] sm:text-[11px] lg:text-xs text-slate-900 dark:text-white shrink-0 ml-1 sm:ml-2 leading-none">{formatVal(item.value)}</span>
+                <span className="font-bold text-[10px] sm:text-[11px] lg:text-xs text-slate-950 dark:text-white shrink-0 ml-1 sm:ml-2 leading-none">{formatVal(item.value)}</span>
               </div>
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <BankDetailsModal 
         selectedBank={selectedBank}
@@ -379,7 +399,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
         bankData={stats.bankData}
         selectedBankDeposits={selectedBankDeposits}
       />
-    </motion.div>
+    </div>
   );
 }
 

@@ -26,39 +26,26 @@ const DASHBOARD_CONTAINER_VARIANTS = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.08
+      duration: 0.3
     }
   }
 };
 
 const DASHBOARD_ITEM_VARIANTS = {
-  hidden: { opacity: 1, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
+  hidden: { opacity: 0, y: 0 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
 } as const;
 
 export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
   const { state, setState } = useAppState();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
   
-  // Initialize to current year if available in state, otherwise fallback to activeYear
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<number>(() => {
-    return state.years[currentYear] ? currentYear : state.activeYear;
-  });
-
-  // Sync state.activeYear if it's different from our calculated initial year 
-  // and keep local selectedYear in sync with state.activeYear
-  React.useEffect(() => {
-    const initialYear = state.years[currentYear] ? currentYear : state.activeYear;
-    if (state.activeYear !== initialYear && !state.years[state.activeYear]) {
-        setState(prev => ({ ...prev, activeYear: initialYear }));
-    }
-    setSelectedYear(state.activeYear);
-  }, [state.activeYear]);
+  const selectedYear = state.activeYear;
   
   const [showYearDropdown, setShowYearDropdown] = useState(false);
 
-  const activeYearData = state.years[selectedYear] || state.years[state.activeYear];
+  const activeYearData = state.years[selectedYear] || state.years[currentYear];
 
   const calculatedMonths = useMemo(() => {
     if (!activeYearData) return [];
@@ -96,7 +83,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
       <div className="flex flex-col items-center gap-4 mb-2 w-full z-20">
         {/* Navigation Panel */}
         <div className="flex items-center justify-center w-full md:w-auto relative gap-1 z-30">
-          <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl gap-1 w-full md:w-auto">
+          <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -104,8 +91,8 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                 className={cn(
                   "flex-1 md:flex-none md:px-5 lg:px-7 relative flex items-center justify-center gap-2 py-2 text-[10px] xl:text-xs font-bold rounded-xl transition-all h-9 z-10",
                   activeSubTab === tab.id
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5"
+                    ? "text-primary-600 dark:text-primary-400"
+                    : "text-slate-500 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5"
                 )}
               >
                 <span className="relative z-20 flex items-center gap-2">
@@ -115,7 +102,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                 {activeSubTab === tab.id && (
                   <motion.div 
                     layoutId="activeTabPill"
-                    className="absolute inset-0 bg-white dark:bg-indigo-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-indigo-400/30"
+                    className="absolute inset-0 bg-white dark:bg-primary-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-primary-400/30"
                     transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                   />
                 )}
@@ -130,8 +117,8 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                 setShowYearDropdown(!showYearDropdown);
               }}
               className={cn(
-                "px-2 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition-all w-[30px] h-[30px] focus:outline-none",
-                showYearDropdown && "bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                "px-2 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl transition-all w-[30px] h-[30px] focus:outline-none",
+                showYearDropdown && "bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm"
               )}
               title={`Выбрать год (текущий: ${selectedYear})`}
             >
@@ -152,21 +139,20 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                       initial={{ opacity: 0, scale: 0.95, y: 5 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, y: 5 }}
-                      className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1"
+                      className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1"
                     >
                       {Object.keys(state.years).sort().reverse().map(y => (
                         <button
                           key={y}
                           onClick={() => {
                             const newYear = Number(y);
-                            setSelectedYear(newYear);
                             setState(prev => ({ ...prev, activeYear: newYear }));
                             setShowYearDropdown(false);
                           }}
                           className={cn(
                             "w-full px-4 py-2.5 text-left text-xs font-bold rounded-xl transition-colors",
                             selectedYear === Number(y)
-                              ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400"
+                              ? "bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400"
                               : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                           )}
                         >
@@ -179,23 +165,17 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
               </AnimatePresence>
             </div>
           </div>
-
-        {/* Status Indicators (Simulation) */}
-        {state.simulation?.isActive && (
-          <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl border border-emerald-500/20 w-fit">
-            <Shield className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Simulation Mode Active</span>
-          </div>
-        )}
       </div>
 
-      <div key={activeSubTab} className="pt-2">
+      <div className="pt-2 relative">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSubTab}
-            initial="hidden"
-            animate="show"
-            variants={DASHBOARD_CONTAINER_VARIANTS}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="w-full"
           >
             {activeSubTab === 'dashboard' && (
               <BentoDashboard 
@@ -226,7 +206,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
                 deposits={deposits} 
                 taxSettings={taxSettings} 
                 selectedYear={selectedYear} 
-                onYearChange={setSelectedYear} 
+                onYearChange={(year) => setState(prev => ({ ...prev, activeYear: year }))} 
                 appSettings={appSettings} 
                 isPrivate={isPrivate}
               />

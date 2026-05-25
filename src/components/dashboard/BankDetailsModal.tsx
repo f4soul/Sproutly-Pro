@@ -33,21 +33,21 @@ export function BankDetailsModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-slate-950/80" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
             <Transition.Child
               as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
+              enter="ease-out duration-300 transform"
+              enterFrom="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200 transform"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
             >
-              <Dialog.Panel className="apple-card w-full max-w-md transform overflow-hidden p-6 text-left align-middle transition-all">
+              <Dialog.Panel className="apple-card w-full max-w-md transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] p-6 text-left align-middle transition-all shadow-2xl">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-1.5 shadow-sm">
@@ -60,7 +60,7 @@ export function BankDetailsModal({
                       />
                     </div>
                     <div>
-                      <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-900 dark:text-white">
+                      <Dialog.Title as="h3" className="text-lg font-bold leading-6 text-slate-950 dark:text-white">
                         {selectedBank}
                       </Dialog.Title>
                       <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Детализация за {selectedYear} год</p>
@@ -75,9 +75,9 @@ export function BankDetailsModal({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
-                    <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">Итоговый доход в банке</div>
-                    <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+                  <div className="p-4 rounded-2xl bg-deposit-50 dark:bg-deposit-500/10 border border-deposit-100 dark:border-deposit-500/20">
+                    <div className="text-[10px] font-bold text-deposit-600 dark:text-deposit-400 uppercase tracking-widest mb-1">Итоговый доход в банке</div>
+                    <div className="text-2xl font-bold text-deposit-700 dark:text-deposit-300">
                       {formatCurrency(bankData.find(b => b.name === selectedBank)?.value || 0)}
                     </div>
                   </div>
@@ -88,23 +88,23 @@ export function BankDetailsModal({
                       {selectedBankDeposits.map((d, i) => {
                         const yearIncome = calculateIncomeByYears(d).find(yi => yi.year === selectedYear)?.income || 0;
                         return (
-                          <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                          <div key={`bank-deposit-${d.id || i}-${i}`} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
                             <div className="flex justify-between items-start">
-                              <div className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
-                              <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(yearIncome)}</div>
+                              <div className="text-xs font-bold text-slate-950 dark:text-white truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
+                              <div className="text-xs font-bold text-deposit-600 dark:text-deposit-400">{formatCurrency(yearIncome)}</div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Сумма</span>
-                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">{formatCurrency(d.amount)}</span>
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{formatCurrency(d.amount)}</span>
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ставка</span>
-                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">{d.rate}%</span>
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{d.rate}%</span>
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Срок до</span>
-                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">
                                   {d.endDate && !isNaN(new Date(d.endDate).getTime()) ? new Date(d.endDate).toLocaleDateString() : '...'}
                                 </span>
                               </div>
@@ -119,7 +119,7 @@ export function BankDetailsModal({
                 <div className="mt-8">
                   <button
                     type="button"
-                    className="apple-button w-full bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                    className="apple-button w-full bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500 text-white shadow-lg shadow-primary-500/20"
                     onClick={onClose}
                   >
                     Закрыть

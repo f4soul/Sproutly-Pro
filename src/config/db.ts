@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { Deposit, TaxYearSettings, AppSettings, Bank } from '../types';
+import { Deposit, TaxYearSettings, AppSettings, Bank, DeletedRecord } from '../types';
 
 export class MyDepositsDB extends Dexie {
   deposits!: Table<Deposit>;
@@ -7,9 +7,18 @@ export class MyDepositsDB extends Dexie {
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
   incomeState!: Table<any>;
+  deletedQueue!: Table<DeletedRecord>;
 
   constructor() {
     super('MyDepositsDB');
+    this.version(5).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      deletedQueue: '++id, collection, docId'
+    });
     this.version(4).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       taxYearSettings: 'year',
@@ -21,7 +30,7 @@ export class MyDepositsDB extends Dexie {
 }
 
 import { auth, db as firestore } from './firebase';
-import { collection, doc, setDoc, getDocs, query, where, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField } from 'firebase/firestore';
 
 enum OperationType {
   CREATE = 'create',
@@ -80,16 +89,40 @@ export const emitSyncEvent = (status: 'syncing' | 'success' | 'error') => {
   window.dispatchEvent(new CustomEvent('app:sync', { detail: { status } }));
 };
 
+let syncPromise: Promise<void> | null = null;
+let pendingSync = false;
+
 export async function syncWithFirebase() {
   const user = auth.currentUser;
   if (!user) return;
 
-  emitSyncEvent('syncing');
+  if (syncPromise) {
+    pendingSync = true;
+    return syncPromise;
+  }
 
-  try {
-    // 1. Upload local changes to Firebase
-  const localDeposits = await db.deposits.toArray();
+  const runSync = async () => {
+    emitSyncEvent('syncing');
+
+    try {
+      // 0. Process deleted queue first
+      const pendingDeletes = await db.deletedQueue.toArray();
+      for (const delRecord of pendingDeletes) {
+        try {
+          await setDoc(doc(firestore, delRecord.collection, delRecord.docId), { 
+            isDeleted: true, 
+            updatedAt: delRecord.timestamp 
+          }, { merge: true });
+          if (delRecord.id) await db.deletedQueue.delete(delRecord.id);
+        } catch (error) {
+          handleFirestoreError(error, OperationType.DELETE, delRecord.collection);
+        }
+      }
+
+      // 1. Upload local changes to Firebase
+      const localDeposits = await db.deposits.toArray();
   for (const deposit of localDeposits) {
+    if (deposit.isTest) continue; // Skip test records
     if (!deposit.userId || deposit.userId === user.uid) {
       const { id, ...data } = deposit;
       const path = 'deposits';
@@ -103,6 +136,7 @@ export async function syncWithFirebase() {
           amount: data.amount || 0,
           bank: data.bank || 'Unknown',
           userId: user.uid,
+          isDeleted: deleteField(),
           updatedAt: deposit.updatedAt || Date.now()
         }, { merge: true });
       } catch (error) {
@@ -111,24 +145,12 @@ export async function syncWithFirebase() {
     }
   }
 
-  // Upload appSettings
-  const localSettings = await db.appSettings.get('main');
-  if (localSettings) {
-    const path = 'userSettings';
-    try {
-      await setDoc(doc(firestore, path, user.uid), {
-        ...localSettings,
-        userId: user.uid,
-        updatedAt: localSettings.updatedAt || Date.now()
-      }, { merge: true });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
-    }
-  }
-
+  // Download remote changes first
+  
   // Upload custom banks
   const localBanks = await db.banks.toArray();
   for (const bank of localBanks) {
+    if (bank.isTest) continue; // Skip test records
     if (bank.isCustom) {
       const { id, ...data } = bank;
       const path = 'banks';
@@ -137,6 +159,7 @@ export async function syncWithFirebase() {
         await setDoc(doc(firestore, path, firestoreDocId), {
           ...data,
           userId: user.uid,
+          isDeleted: deleteField(),
           updatedAt: bank.updatedAt || Date.now()
         }, { merge: true });
       } catch (error) {
@@ -145,22 +168,52 @@ export async function syncWithFirebase() {
     }
   }
 
-  // Upload Income State
-  const localIncomeState = await db.incomeState.get('main');
-  if (localIncomeState) {
-    const path = `users/${user.uid}/data`;
-    try {
-      await setDoc(doc(firestore, path, 'income'), {
-        ...localIncomeState,
+  // Settings
+  const settingsPath = 'userSettings';
+  try {
+    const settingsSnap = await getDoc(doc(firestore, settingsPath, user.uid));
+    const localSettings = await db.appSettings.get('main');
+    const remoteSettings = settingsSnap.exists() ? settingsSnap.data() as AppSettings : null;
+    
+    const localUpdated = localSettings?.updatedAt || 0;
+    const remoteUpdated = remoteSettings?.updatedAt || 1;
+
+    if (remoteSettings && (!localSettings || localUpdated === 0 || remoteUpdated > localUpdated)) {
+      await db.appSettings.put({ ...remoteSettings, id: 'main' });
+    } else if (localSettings && (!remoteSettings || localUpdated > remoteUpdated)) {
+      await setDoc(doc(firestore, settingsPath, user.uid), {
+        ...localSettings,
         userId: user.uid,
-        updatedAt: localIncomeState.updatedAt || Date.now()
-      }, { merge: true });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
+        updatedAt: localUpdated === 0 ? Date.now() : localUpdated
+      });
     }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, settingsPath);
   }
 
-  // 2. Download remote changes from Firebase
+  // Income State
+  const incomePath = `users/${user.uid}/data`;
+  try {
+    const incomeSnap = await getDoc(doc(firestore, incomePath, 'income'));
+    const localIncomeState = await db.incomeState.get('main');
+    const remoteIncome = incomeSnap.exists() ? incomeSnap.data() : null;
+
+    const localUpdated = localIncomeState?.updatedAt || 0;
+    const remoteUpdated = remoteIncome?.updatedAt || 1;
+
+    if (remoteIncome && (!localIncomeState || localUpdated === 0 || remoteUpdated > localUpdated)) {
+      await db.incomeState.put({ ...remoteIncome, id: 'main' });
+    } else if (localIncomeState && (!remoteIncome || localUpdated > remoteUpdated)) {
+      await setDoc(doc(firestore, incomePath, 'income'), {
+        ...localIncomeState,
+        userId: user.uid,
+        updatedAt: localUpdated === 0 ? Date.now() : localUpdated
+      });
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, incomePath);
+  }
+
   // Deposits
   const depositsPath = 'deposits';
   try {
@@ -178,6 +231,13 @@ export async function syncWithFirebase() {
       }
       
       const localData = await db.deposits.get(localId);
+      if (remoteData.isDeleted) {
+        if (localData) {
+          await db.deposits.delete(localId as any);
+        }
+        continue;
+      }
+      
       if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
         // Convert Timestamps to Dates
         if (remoteData.startDate && typeof remoteData.startDate.toDate === 'function') {
@@ -193,19 +253,57 @@ export async function syncWithFirebase() {
     handleFirestoreError(error, OperationType.GET, depositsPath);
   }
 
-  // Settings
-  const settingsPath = 'userSettings';
+  // TaxYearSettings
+  const taxSettingsPath = 'taxYearSettings';
   try {
-    const settingsSnap = await getDoc(doc(firestore, settingsPath, user.uid));
-    if (settingsSnap.exists()) {
-      const remoteSettings = settingsSnap.data() as AppSettings;
-      const localSettings = await db.appSettings.get('main');
-      if (!localSettings || (remoteSettings.updatedAt && remoteSettings.updatedAt > (localSettings.updatedAt || 0))) {
-        await db.appSettings.put({ ...remoteSettings, id: 'main' });
+    // Get all remote settings for this user
+    const qSettings = query(collection(firestore, taxSettingsPath), where('userId', '==', user.uid));
+    const settingsSnapshot = await getDocs(qSettings);
+    const remoteSettingsList = settingsSnapshot.docs.map(doc => doc.data() as TaxYearSettings & { isDeleted?: boolean });
+    
+    // Get all local settings
+    const localSettingsList = await db.taxYearSettings.toArray();
+
+    // Map by year for easy lookup
+    const remoteByYear = new Map(remoteSettingsList.map(s => [s.year, s]));
+    const localByYear = new Map(localSettingsList.map(s => [s.year, s]));
+
+    // Sync remote to local and local to remote
+    for (const remoteData of remoteSettingsList) {
+      const localData = localByYear.get(remoteData.year);
+      
+      if (remoteData.isDeleted) {
+        if (localData) {
+          await db.taxYearSettings.delete(remoteData.year);
+        }
+        continue;
+      }
+      
+      const remoteUpdated = remoteData.updatedAt || 1;
+      const localUpdated = localData?.updatedAt || 0;
+
+      if (!localData || remoteUpdated > localUpdated) {
+        await db.taxYearSettings.put(remoteData);
+      }
+    }
+
+    // Now upload local changes that are newer or don't exist remotely
+    for (const localData of localSettingsList) {
+      const remoteData = remoteByYear.get(localData.year);
+      const localUpdated = localData.updatedAt || 0;
+      const remoteUpdated = remoteData?.updatedAt || 1;
+
+      if (!remoteData || localUpdated > remoteUpdated) {
+        const firestoreDocId = `${user.uid}_${localData.year}`;
+        await setDoc(doc(firestore, taxSettingsPath, firestoreDocId), {
+          ...localData,
+          userId: user.uid,
+          updatedAt: localUpdated === 0 ? Date.now() : localUpdated
+        });
       }
     }
   } catch (error) {
-    handleFirestoreError(error, OperationType.GET, settingsPath);
+    handleFirestoreError(error, OperationType.GET, taxSettingsPath);
   }
 
   // Banks
@@ -225,6 +323,13 @@ export async function syncWithFirebase() {
       }
       
       const localData = await db.banks.get(localId);
+      if (remoteData.isDeleted) {
+        if (localData) {
+          await db.banks.delete(localId as any);
+        }
+        continue;
+      }
+      
       if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
         await db.banks.put({ ...remoteData, id: localId } as Bank);
       }
@@ -233,50 +338,48 @@ export async function syncWithFirebase() {
     handleFirestoreError(error, OperationType.GET, banksPath);
   }
 
-  // Income State
-  const incomePath = `users/${user.uid}/data/income`;
-  try {
-    const incomeSnap = await getDoc(doc(firestore, 'users', user.uid, 'data', 'income'));
-    if (incomeSnap.exists()) {
-      const remoteIncome = incomeSnap.data();
-      const localIncome = await db.incomeState.get('main');
-      if (!localIncome || (remoteIncome.updatedAt && remoteIncome.updatedAt > (localIncome.updatedAt || 0))) {
-        await db.incomeState.put({ ...remoteIncome, id: 'main' });
-      }
-    }
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, incomePath);
-  }
-
   emitSyncEvent('success');
-} catch (error) {
-  emitSyncEvent('error');
-  throw error;
-}
+    } catch (error) {
+      emitSyncEvent('error');
+      throw error;
+    }
+  };
+
+  syncPromise = runSync();
+  try {
+    await syncPromise;
+  } finally {
+    syncPromise = null;
+    if (pendingSync) {
+      pendingSync = false;
+      syncWithFirebase();
+    }
+  }
 }
 
 export async function initDB() {
   const settingsCount = await db.appSettings.count();
   if (settingsCount === 0) {
-    await db.appSettings.add({
+    await db.appSettings.put({
       id: 'main',
       theme: 'light',
       defaultNdflRate: 13,
       defaultLimit2025: 210000,
-      incomeCalculationMode: 'salary'
+      incomeCalculationMode: 'salary',
+      updatedAt: 0
     });
   }
 
   const taxSettingsCount = await db.taxYearSettings.count();
   if (taxSettingsCount === 0) {
-    await db.taxYearSettings.bulkAdd([
+    await db.taxYearSettings.bulkPut([
       { year: 2024, limit: 150000, ndflRate: 13 },
       { year: 2025, limit: 210000, ndflRate: 13 },
       { year: 2026, limit: 250000, ndflRate: 13 }
     ]);
   }
 
-  // Cleanup: Remove any "ghost" test deposits that might have been added by previous versions
+  // Cleanup: Remove any "ghost" test deposits. Test data should stay in session only.
   const allDeposits = await db.deposits.toArray();
   const testIds = allDeposits
     .filter(d => (d as any).isTest === true)
@@ -285,6 +388,26 @@ export async function initDB() {
 
   if (testIds.length > 0) {
     await db.deposits.bulkDelete(testIds);
-    console.log(`Cleaned up ${testIds.length} test deposits`);
+  }
+
+  // Clear test banks
+  const allBanks = await db.banks.toArray();
+  const testBankIds = allBanks
+    .filter(b => b.isTest === true || b.name.toLowerCase().includes('бабуин'))
+    .map(b => b.id)
+    .filter((id): id is number | string => id !== undefined);
+
+  if (testBankIds.length > 0) {
+    await db.banks.bulkDelete(testBankIds);
+  }
+
+  // Double check all deposits for "Baboon" references to be safe
+  const testDepositIds = allDeposits
+    .filter(d => (d as any).isTest === true || d.bank.toLowerCase().includes('бабуин') || (d.sourceNote?.toLowerCase().includes('бабуин')))
+    .map(d => d.id)
+    .filter((id): id is number | string => id !== undefined);
+
+  if (testDepositIds.length > 0) {
+    await db.deposits.bulkDelete(testDepositIds);
   }
 }

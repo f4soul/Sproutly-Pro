@@ -17,18 +17,13 @@ export const ArchiveHeaderActions = () => {
     const ids = archivedDeposits.map(d => d.id as any);
     await db.deposits.bulkDelete(ids);
     
-    const { auth, db: firestoreDb } = await import('../../config/firebase');
+    const { auth } = await import('../../config/firebase');
     const user = auth.currentUser;
     if (user) {
-      const { doc, deleteDoc } = await import('firebase/firestore');
       for (const deposit of archivedDeposits) {
         if (deposit.id) {
           const firestoreDocId = typeof deposit.id === 'number' ? `${user.uid}_${deposit.id}` : String(deposit.id);
-          try {
-            await deleteDoc(doc(firestoreDb, 'deposits', firestoreDocId));
-          } catch (e) {
-            console.error('Failed to delete from Firebase', e);
-          }
+          await db.deletedQueue.put({ collection: 'deposits', docId: firestoreDocId, timestamp: Date.now() });
         }
       }
     }
@@ -61,7 +56,7 @@ export const ArchiveHeaderActions = () => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
+            <div className="fixed inset-0 bg-black/60" />
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">
@@ -75,14 +70,14 @@ export const ArchiveHeaderActions = () => {
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
               >
-                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-900 p-6 sm:p-8 text-center align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
+                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 p-6 sm:p-8 text-center align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
                   <div className="flex justify-center mb-6">
                     <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                       <AlertTriangle className="w-8 h-8 stroke-[1.5px]" />
                     </div>
                   </div>
                   
-                  <Dialog.Title as="h3" className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+                  <Dialog.Title as="h3" className="text-xl font-bold tracking-tight text-slate-950 dark:text-white mb-2">
                     Очистить архив?
                   </Dialog.Title>
                   
@@ -100,7 +95,7 @@ export const ArchiveHeaderActions = () => {
                     </button>
                     <button
                       type="button"
-                      className="apple-button w-full bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 text-sm sm:text-base"
+                      className="apple-button w-full bg-white dark:bg-slate-950 text-slate-950 dark:text-white border border-slate-200 dark:border-slate-800 text-sm sm:text-base"
                       onClick={() => setIsClearModalOpen(false)}
                     >
                       Отмена
@@ -130,17 +125,12 @@ export const Archive: React.FC = () => {
   const handlePermanentDelete = async (id: string | number) => {
     await db.deposits.delete(id as any);
     
-    // Also delete from Firebase if user is logged in
-    const { auth, db: firestoreDb } = await import('../../config/firebase');
+    // Also mark as deleted in Firebase if user is logged in
+    const { auth } = await import('../../config/firebase');
     const user = auth.currentUser;
     if (user) {
-      const { doc, deleteDoc } = await import('firebase/firestore');
       const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id);
-      try {
-        await deleteDoc(doc(firestoreDb, 'deposits', firestoreDocId));
-      } catch (e) {
-        console.error('Failed to delete from Firebase', e);
-      }
+      await db.deletedQueue.put({ collection: 'deposits', docId: firestoreDocId, timestamp: Date.now() });
     }
     
     syncWithFirebase();
@@ -174,7 +164,7 @@ export const Archive: React.FC = () => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 max-w-full">
-                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                    <h3 className="font-bold text-sm text-slate-950 dark:text-white">
                       {deposit.bank}
                     </h3>
                     <span className="shrink-0 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">
@@ -190,7 +180,7 @@ export const Archive: React.FC = () => {
               <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">Сумма</p>
-                  <p className="font-bold text-sm text-slate-900 dark:text-white font-mono whitespace-nowrap">
+                  <p className="font-bold text-sm text-slate-950 dark:text-white font-mono whitespace-nowrap">
                     {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
                   </p>
                 </div>
@@ -198,7 +188,7 @@ export const Archive: React.FC = () => {
                 <div className="flex gap-1">
                   <button
                     onClick={() => handleRestore(deposit.id!)}
-                    className="p-2.5 text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-all cursor-pointer"
+                    className="p-2.5 text-primary-600 hover:bg-primary-500/10 rounded-xl transition-all cursor-pointer"
                     title="Восстановить"
                   >
                     <RefreshCcw className="w-4 h-4 stroke-[2px]" />

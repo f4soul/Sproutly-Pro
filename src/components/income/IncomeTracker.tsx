@@ -46,25 +46,17 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
   
-  const simulation = useMemo(() => state.simulation || {
+  const [simulation, setSimulation] = useState<SimulationState>({
     isActive: false,
     salaryIncrease: 0,
     bonusMultiplier: 1,
     extraIncome: 0
-  }, [state.simulation]);
-
-  const setSimulation = (newSim: SimulationState | ((prev: SimulationState) => SimulationState)) => {
-    setState(prev => ({
-      ...prev,
-      simulation: typeof newSim === 'function' ? newSim(prev.simulation || { isActive: false, salaryIncrease: 0, bonusMultiplier: 1, extraIncome: 0 }) : newSim
-    }));
-  };
+  });
 
   const activeYearData = state.years[state.activeYear];
 
   useEffect(() => {
     if (isSimulationOpen && !simulation.isActive) {
-      // Don't auto-activate, just sync initial values if needed
       setSimulation(prev => ({
         ...prev,
         projectedSalary: activeYearData.bonusBase,
@@ -73,8 +65,6 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         bonusValue: activeYearData.quarters?.[0]?.bonusCoef || 0.3
       }));
     } else if (!isSimulationOpen && simulation.isActive) {
-      // Keep active if it was active, but user closed panel? 
-      // Actually, user likely wants it off if panel is closed.
       setSimulation(prev => ({ ...prev, isActive: false }));
     }
   }, [isSimulationOpen, activeYearData.bonusBase]);
@@ -308,7 +298,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     
     // STANDALONE SIMULATION LOGIC
     if (isSimActive) {
-      const projectionBaseSalary = simulation.projectedSalary || activeYearData.bonusBase;
+      const projectionBaseSalary = simulation.projectedSalary ?? activeYearData.bonusBase;
       const displaySalary = projectionBaseSalary * salaryMult;
       
       let runningGross = 0;
@@ -318,11 +308,11 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         
         // Bonus Calculation based on new simulation parameters
         if (simulation.bonusFrequency === 'monthly') {
-          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue ?? 0) : (projectionBaseSalary * (simulation.bonusValue ?? 0));
         } else if (simulation.bonusFrequency === 'quarterly' && monthNum % 3 === 0) {
-          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue ?? 0) : (projectionBaseSalary * (simulation.bonusValue ?? 0));
         } else if (simulation.bonusFrequency === 'annual' && monthNum === 12) {
-          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue || 0) : (projectionBaseSalary * (simulation.bonusValue || 0));
+          bonus = simulation.bonusType === 'fixed' ? (simulation.bonusValue ?? 0) : (projectionBaseSalary * (simulation.bonusValue ?? 0));
         }
         
         // Apply Bonus Multiplier to everything (user requested flexibility)
@@ -411,7 +401,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
           <span className="text-slate-400 text-sm font-medium">Загрузка данных...</span>
         </div>
       </div>
@@ -419,85 +409,71 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   }
 
   return (
-    <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-indigo-500/30">
-      <div className="max-w-full lg:max-w-6xl mx-auto space-y-6 relative pt-4">
-        {/* Action Bar (Simulation Badge) - Now absolute to prevent shifting */}
-        <AnimatePresence>
-          {simulation.isActive && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute -top-10 right-0 z-20"
-            >
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 rounded-xl border border-emerald-500/20 backdrop-blur-sm cursor-default select-none">
-                <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest leading-none">Режим симуляции активен</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Top Summary Section */}
-        <YearSummary 
-          yearlyTotals={yearlyTotals}
-          netDiff={netDiff}
-          grossDiff={grossDiff}
-          prevYear={prevYear}
-          handleCopy={handleCopy}
-          isPrivate={isPrivate}
-          onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
-        />
-
-        <div className="space-y-6">
-          {/* Tabs & Toolbar */}
-          <YearTabs 
-            availableYears={availableYears}
-            activeYear={state.activeYear}
-            setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
-            addNewYear={addNewYear}
-            setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
-            setIsClearModalOpen={setIsClearModalOpen}
+    <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-primary-500/30">
+      <div className="max-w-full lg:max-w-6xl mx-auto space-y-6">
+        
+        {/* Top Summary Section Wrapper */}
+        <div className="flex flex-col gap-3">
+          <YearSummary 
+            yearlyTotals={yearlyTotals}
+            netDiff={netDiff}
+            grossDiff={grossDiff}
             prevYear={prevYear}
-            copyFromPreviousYear={copyFromPreviousYear}
-            onExportPDF={async () => {
-              const success = await exportToPDF('income-tracker-content', {
-                totalGross: yearlyTotals.totalGross,
-                totalNet: yearlyTotals.finalNet,
-                totalTax: yearlyTotals.progressiveTax,
-                effectiveRate: yearlyTotals.effectiveRate
-              });
-              if (success) {
-                addToast('Отчет экспортирован в PDF', 'success');
-              } else {
-                addToast('Ошибка при экспорте в PDF', 'error');
-              }
-            }}
-            onExportXLSX={() => {
-              exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
-              addToast('Данные экспортированы в Excel', 'success');
-            }}
-            isSimulationOpen={isSimulationOpen}
-            setIsSimulationOpen={setIsSimulationOpen}
+            handleCopy={handleCopy}
+            isPrivate={isPrivate}
+            onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
+            isSimulated={simulation.isActive}
           />
+        </div>
 
-          {/* Scenario Simulator (Collapsible) */}
-          <AnimatePresence>
-            {isSimulationOpen && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <ScenarioSimulator 
-                  simulation={simulation}
-                  onUpdate={setSimulation}
-                  bonusBase={activeYearData.bonusBase}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="flex flex-col gap-3 md:gap-4">
+          <div className="flex flex-col">
+            {/* Tabs & Toolbar */}
+            <YearTabs 
+              availableYears={availableYears}
+              activeYear={state.activeYear}
+              setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
+              addNewYear={addNewYear}
+              setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
+              setIsClearModalOpen={setIsClearModalOpen}
+              prevYear={prevYear}
+              copyFromPreviousYear={copyFromPreviousYear}
+              onExportPDF={async () => {
+                const success = await exportToPDF(null, {
+                  totalGross: yearlyTotals.totalGross,
+                  totalNet: yearlyTotals.finalNet,
+                  totalTax: yearlyTotals.progressiveTax,
+                  effectiveRate: yearlyTotals.effectiveRate
+                }, undefined, {
+                  months: calculatedMonths,
+                  totals: yearlyTotals
+                });
+              }}
+              onExportXLSX={() => {
+                exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
+              }}
+              isSimulationOpen={isSimulationOpen}
+              setIsSimulationOpen={setIsSimulationOpen}
+            />
+
+            {/* Scenario Simulator (Collapsible) */}
+            <div 
+              className={cn(
+                "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                isSimulationOpen ? "grid-rows-[1fr] opacity-100 pointer-events-auto mt-6" : "grid-rows-[0fr] opacity-0 pointer-events-none mt-0"
+              )}
+            >
+              <div className="overflow-hidden min-h-0">
+                <div className="pb-2">
+                  <ScenarioSimulator 
+                    simulation={simulation}
+                    onUpdate={setSimulation}
+                    bonusBase={activeYearData.bonusBase}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="flex flex-col gap-8 md:gap-10">
             {/* Mobile Layout (Cards) */}
@@ -556,16 +532,12 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       />
 
       {/* Tax Info Modal */}
-      <AnimatePresence>
-        {isTaxInfoModalOpen && (
-          <TaxReferenceModal 
-            isOpen={isTaxInfoModalOpen}
-            onClose={() => setIsTaxInfoModalOpen(false)}
-            year={state.activeYear}
-            brackets={state.taxBrackets[state.activeYear] || DEFAULT_TAX_BRACKETS[2025] || []}
-          />
-        )}
-      </AnimatePresence>
+      <TaxReferenceModal 
+        isOpen={isTaxInfoModalOpen}
+        onClose={() => setIsTaxInfoModalOpen(false)}
+        year={state.activeYear}
+        brackets={state.taxBrackets[state.activeYear] || DEFAULT_TAX_BRACKETS[2025] || []}
+      />
 
       {/* Toasts */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />

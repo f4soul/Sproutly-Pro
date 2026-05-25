@@ -32,13 +32,15 @@ export const TableInput = ({
   return (
     <input
       type={focused ? "number" : "text"}
+      inputMode={focused ? "decimal" : undefined}
+      pattern={focused ? "[0-9]*" : undefined}
       value={displayValue}
       onFocus={(e) => { setFocused(true); e.target.select(); }}
       onBlur={() => setFocused(false)}
       onChange={(e) => onChange(isInteger ? Math.round(parseFloat(e.target.value) || 0) : (parseFloat(e.target.value) || 0))}
       step={isInteger ? "1" : step}
       className={cn(
-        "w-full min-w-0 px-1.5 py-1 text-right font-mono tabular-nums text-xs md:text-sm bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded transition-all outline-none",
+        "w-full min-w-0 px-1.5 py-1 text-right font-mono tabular-nums text-xs md:text-sm bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded transition-all outline-none",
         className
       )}
     />

@@ -40,18 +40,18 @@ export const QuarterRow = ({
         <td className="px-1 md:px-2 py-1.5 lg:py-2 align-middle min-w-[70px] lg:min-w-[90px]">
           <div className="flex items-center justify-end">
             {isPrivate ? (
-              <span className="font-bold text-right text-blue-700 dark:text-blue-400 text-[11px] lg:text-xs xl:text-sm">••••••</span>
+              <span className="font-bold text-right text-primary-700 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm">••••••</span>
             ) : (
               <TableInput 
                 value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
                 onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-                className="w-full font-bold text-right text-blue-700 dark:text-blue-400 text-[11px] lg:text-xs xl:text-sm bg-transparent border-none p-0 outline-none focus:ring-0 shrink" 
+                className="w-full font-bold text-right text-primary-700 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm bg-transparent border-none p-0 outline-none focus:ring-0 shrink" 
               />
             )}
           </div>
         </td>
-        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-blue-700 dark:text-blue-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qGross)}</td>
-        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-green-700 dark:text-green-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qNet13)}</td>
+        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qGross)}</td>
+        <td className="px-1 md:px-2 py-1.5 lg:py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(qNet13)}</td>
       </tr>
       
       {/* Months */}

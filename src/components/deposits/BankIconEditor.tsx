@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Bank } from '../../types';
 import { DEFAULT_BANK_ICON } from '../../lib/banks';
 import { Move, Maximize, RotateCcw, Upload, Grid } from 'lucide-react';
+import { BankLogo } from './BankLogo';
 
 interface BankIconEditorProps {
   bank: Partial<Bank>;
@@ -51,7 +52,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
           <button
             type="button"
             onClick={() => setShowGrid(!showGrid)}
-            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${showGrid ? 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400' : 'text-slate-500 hover:bg-white dark:hover:bg-white/10'}`}
+            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${showGrid ? 'bg-primary-100 text-primary-600 dark:bg-deposit-500/20 dark:text-primary-400' : 'text-slate-500 hover:bg-white dark:hover:bg-white/10'}`}
             title="Сетка"
           >
             <Grid size={16} />
@@ -69,7 +70,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
 
       <div className="flex flex-col md:flex-row gap-6 items-center">
         {/* Preview Area */}
-        <div className="relative w-32 h-32 shrink-0 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center group shadow-sm">
+        <div className="relative w-32 h-32 shrink-0 bg-white dark:bg-slate-950 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center group shadow-sm">
           {showGrid && (
             <div className="absolute inset-0 pointer-events-none opacity-10 dark:opacity-20 text-black dark:text-white">
               <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)', backgroundSize: '16px 16px' }} />
@@ -86,18 +87,17 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
               transform: `scale(${bank.iconScale || 1}) translate(${(bank.iconOffsetX || 0)}px, ${(bank.iconOffsetY || 0)}px)`
             }}
           >
-            <img 
-              src={bank.logoUrl || DEFAULT_BANK_ICON} 
+            <BankLogo 
+              logoUrl={bank.logoUrl || DEFAULT_BANK_ICON} 
               alt="Preview" 
               className="max-w-full max-h-full object-contain"
-              referrerPolicy="no-referrer"
             />
           </div>
 
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/40 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity flex items-center justify-center text-white cursor-pointer backdrop-blur-[2px]"
           >
             <Upload size={24} />
           </button>
@@ -117,7 +117,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
               <Maximize size={10} /> Масштаб
             </label>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => updateScale(-0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">-</button>
+              <button type="button" onClick={() => updateScale(-0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-950 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">-</button>
               <input 
                 type="range" 
                 min="0.1" 
@@ -125,9 +125,9 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
                 step="0.1" 
                 value={bank.iconScale || 1} 
                 onChange={(e) => onChange({ iconScale: parseFloat(e.target.value) })}
-                className="flex-1 h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-blue-600"
+                className="flex-1 h-1 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-primary-600"
               />
-              <button type="button" onClick={() => updateScale(0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">+</button>
+              <button type="button" onClick={() => updateScale(0.1)} className="w-8 h-8 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-950 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">+</button>
             </div>
           </div>
 
@@ -138,13 +138,13 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
             <div className="flex justify-center">
               <div className="grid grid-cols-3 gap-1 w-24">
                 <div />
-                <button type="button" onClick={() => updateOffset(0, -2)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↑</button>
+                <button type="button" onClick={() => updateOffset(0, -2)} className="p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↑</button>
                 <div />
-                <button type="button" onClick={() => updateOffset(-2, 0)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">←</button>
-                <button type="button" onClick={() => onChange({ iconOffsetX: 0, iconOffsetY: 0 })} className="p-1 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-800 rounded text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition-colors cursor-pointer">⊙</button>
-                <button type="button" onClick={() => updateOffset(2, 0)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">→</button>
+                <button type="button" onClick={() => updateOffset(-2, 0)} className="p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">←</button>
+                <button type="button" onClick={() => onChange({ iconOffsetX: 0, iconOffsetY: 0 })} className="p-1 bg-primary-50 dark:bg-deposit-500/10 border border-primary-200 dark:border-primary-800 rounded text-primary-600 dark:text-primary-400 hover:bg-primary-100 transition-colors cursor-pointer">⊙</button>
+                <button type="button" onClick={() => updateOffset(2, 0)} className="p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">→</button>
                 <div />
-                <button type="button" onClick={() => updateOffset(0, 2)} className="p-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↓</button>
+                <button type="button" onClick={() => updateOffset(0, 2)} className="p-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer">↓</button>
                 <div />
               </div>
             </div>

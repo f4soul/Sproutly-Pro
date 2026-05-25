@@ -3,7 +3,7 @@ import { motion, useSpring, useTransform } from 'motion/react';
 import { formatCurrency } from '../../lib/taxCalculator';
 
 export const AnimatedCurrency = ({ value, className }: { value: number, className?: string }) => {
-  const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
+  const spring = useSpring(0, { mass: 0.8, stiffness: 75, damping: 15 });
   const display = useTransform(spring, (current) => formatCurrency(current));
 
   useEffect(() => {

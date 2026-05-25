@@ -14,22 +14,10 @@ interface YearSummaryProps {
   handleCopy: (value: number, type: 'net' | 'gross' | 'tax') => void;
   onShowTaxInfo?: () => void;
   isPrivate?: boolean;
+  isSimulated?: boolean;
 }
 
-const DASHBOARD_CONTAINER_VARIANTS = {
-  hidden: { opacity: 1 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
 
-const DASHBOARD_ITEM_VARIANTS = {
-  hidden: { opacity: 1, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
-} as const;
 
 export const YearSummary = ({
   yearlyTotals,
@@ -38,22 +26,35 @@ export const YearSummary = ({
   prevYear,
   handleCopy,
   onShowTaxInfo,
-  isPrivate = false
+  isPrivate = false,
+  isSimulated = false
 }: YearSummaryProps) => {
   const formatVal = (val: number) => isPrivate ? '••••••' : <AnimatedCurrency value={val} />;
 
   return (
-    <motion.div 
-      variants={DASHBOARD_CONTAINER_VARIANTS}
-      className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full overflow-hidden"
+    <div 
+      className={cn(
+        "grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full transition-colors duration-500",
+        isSimulated ? "p-1.5 sm:p-2 bg-primary-500/5 border border-primary-500/20 shadow-[0_0_40px_rgba(var(--rgb-primary),0.1)] rounded-[1.25rem] sm:rounded-[1.5rem]" : ""
+      )}
     >
       {/* Net (Hero) */}
-      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="bg-gradient-to-br from-indigo-500 to-indigo-700 p-3 sm:p-4 rounded-2xl shadow-[0_8px_30px_rgb(99,102,241,0.12)] text-white flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px]">
+      <div className={cn(
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px] transition-all duration-500",
+        isSimulated 
+          ? "bg-gradient-to-br from-primary-600 to-primary-800 shadow-[0_8px_30px_rgb(var(--rgb-primary),0.25)] text-white" 
+          : "bg-gradient-to-br from-primary-500 to-primary-700 shadow-[0_8px_30px_rgb(var(--rgb-primary),0.12)] text-white"
+      )}>
         <div className="absolute -bottom-2 -right-2 text-white opacity-10 transition-all duration-500 ease-out group-hover:scale-110 pointer-events-none">
           <Calculator className="w-20 h-20" />
         </div>
-        <div className="relative z-10">
-          <p className="text-[9px] font-bold text-indigo-100 uppercase tracking-widest mb-0.5 truncate">Финальный Net</p>
+        <div className="relative z-10 flex items-center justify-between gap-2">
+          <p className="text-[9px] font-bold text-primary-100 uppercase tracking-widest mb-0.5 truncate flex-shrink-0">Финальный Net</p>
+          {isSimulated && (
+            <span className="px-1.5 py-0.5 bg-white/20 rounded backdrop-blur-sm text-[8px] font-black tracking-widest text-white uppercase animate-pulse flex-shrink-0">
+              Simulation
+            </span>
+          )}
         </div>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.finalNet, 'net')}
@@ -64,37 +65,47 @@ export const YearSummary = ({
             {formatVal(yearlyTotals.finalNet)}
           </h3>
           {netDiff !== null && !isPrivate && (
-            <div className="mt-0.5 text-[8px] sm:text-[9px] font-medium text-indigo-100/80 truncate">
+            <div className="mt-0.5 text-[8px] sm:text-[9px] font-medium text-primary-100/80 truncate">
               {netDiff >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(netDiff))} к {prevYear}
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Gross */}
-      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="bg-white dark:bg-slate-900/50 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-colors min-h-[100px] sm:min-h-[110px] md:h-[100px]">
+      <div className={cn(
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px]",
+        isSimulated 
+          ? "bg-white dark:bg-slate-950 border border-primary-500/30 shadow-[0_4px_20px_rgba(var(--rgb-primary),0.08)]" 
+          : "bg-white dark:bg-slate-950/50 shadow-sm border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700"
+      )}>
         <div className="absolute -bottom-2 -right-2 text-black/5 dark:text-white/5 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <Coins className="w-20 h-20" />
         </div>
-        <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 relative z-10 truncate">Gross (грязными)</p>
+        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500" : "text-slate-400 dark:text-slate-500")}>Gross (грязными)</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.totalGross, 'gross')}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
-          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-slate-900 dark:text-white font-mono tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
+          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-slate-950 dark:text-white font-mono tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
             {formatVal(yearlyTotals.totalGross)}
           </h3>
-          {grossDiff !== null && !isPrivate && (
-             <div className={cn("mt-0.5 text-[8px] sm:text-[9px] font-medium truncate", grossDiff >= 0 ? "text-emerald-500" : "text-rose-500")}>
+          {grossDiff !== null && !isPrivate && !isSimulated && (
+             <div className={cn("mt-0.5 text-[8px] sm:text-[9px] font-medium truncate", grossDiff >= 0 ? "text-primary-500" : "text-rose-500")}>
                {grossDiff >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(grossDiff))}
              </div>
           )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Tax */}
-      <motion.div variants={DASHBOARD_ITEM_VARIANTS} className="bg-white dark:bg-slate-900/50 p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800/60 flex flex-col justify-between relative overflow-hidden group hover:border-slate-300 dark:hover:border-slate-700 transition-colors min-h-[100px] sm:min-h-[110px] md:h-[100px]">
+      <div className={cn(
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px]",
+        isSimulated 
+          ? "bg-white dark:bg-slate-950 border border-primary-500/30 shadow-[0_4px_20px_rgba(var(--rgb-primary),0.08)]" 
+          : "bg-white dark:bg-slate-950/50 shadow-sm border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700"
+      )}>
         {onShowTaxInfo && (
           <button
             onClick={(e) => {
@@ -113,7 +124,7 @@ export const YearSummary = ({
         <div className="absolute -bottom-2 -right-2 text-rose-500 opacity-10 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <ReceiptRussianRuble className="w-20 h-20" />
         </div>
-        <p className="text-[8px] sm:text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5 relative z-10 truncate">НДФЛ</p>
+        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500" : "text-slate-400 dark:text-slate-500")}>НДФЛ</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.progressiveTax, 'tax')}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
@@ -130,7 +141,7 @@ export const YearSummary = ({
             </span>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };

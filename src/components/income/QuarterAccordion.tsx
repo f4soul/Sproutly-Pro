@@ -41,54 +41,55 @@ export const QuarterAccordion = ({
   return (
     <div className={cn(
       "apple-card overflow-hidden transition-all duration-300",
-      anyProjected && "border-blue-500/30 dark:border-blue-400/20"
+      anyProjected && "border-primary-500/30 dark:border-primary-400/20"
     )}>
       <div 
         className={cn(
           "p-3 sm:p-4 flex justify-between items-center cursor-pointer transition-colors shadow-sm",
-          anyProjected ? "bg-blue-50/50 dark:bg-blue-900/10" : "bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800"
+          anyProjected ? "bg-primary-50/50 dark:bg-primary-900/10" : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-800"
         )}
         onClick={onToggle}
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
-            <ChevronDown size={20} className={anyProjected ? "text-blue-400" : "text-slate-400"} />
+            <ChevronDown size={20} className={anyProjected ? "text-primary-400" : "text-slate-400"} />
           </motion.div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
               {anyProjected && <Zap size={10} className="text-amber-500 fill-amber-500 animate-pulse" />}
             </div>
-            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
+            <span className="text-[10px] text-primary-500 dark:text-primary-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
           </div>
         </div>
         
         <div className="flex flex-col items-end" onClick={(e) => e.stopPropagation()}>
-          <span className="text-[9px] text-indigo-400 uppercase font-bold tracking-widest mb-1">Премия (₽)</span>
+          <span className="text-[9px] text-primary-400 uppercase font-bold tracking-widest mb-1">Премия (₽)</span>
           {isPrivate ? (
-            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-indigo-700 dark:text-indigo-300 text-xs sm:text-sm">••••••</div>
+            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm">••••••</div>
           ) : (
             <TableInput 
               value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
               onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
               className={cn(
-                "w-20 sm:w-24 text-right text-xs sm:text-sm font-bold bg-indigo-50/50 dark:bg-indigo-900/20 border h-8 sm:h-9 px-2 rounded-lg",
-                anyProjected ? "text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700" : "text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700"
+                "w-20 sm:w-24 text-right text-xs sm:text-sm font-bold bg-primary-50/50 dark:bg-primary-900/20 border h-8 sm:h-9 px-2 rounded-lg",
+                anyProjected ? "text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-700" : "text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-700"
               )} 
             />
           )}
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className="p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+            <div className="p-3 sm:p-4 space-y-3 bg-slate-50 dark:bg-slate-950/50">
               {/* Months */}
               {q.months.map((monthIndex) => {
                 const m = activeYearData.months[monthIndex];
@@ -101,7 +102,7 @@ export const QuarterAccordion = ({
                     className={cn(
                       "p-3 sm:p-4 rounded-2xl border shadow-[0_2px_10px_rgb(0,0,0,0.02)] transition-all",
                       isProjected 
-                        ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 italic" 
+                        ? "bg-primary-50/50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800 italic" 
                         : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                     )}
                   >
@@ -110,53 +111,57 @@ export const QuarterAccordion = ({
                         {isProjected && <Zap size={12} className="text-amber-500 fill-amber-500 animate-pulse" />}
                         <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{MONTH_NAMES[monthIndex]}</span>
                       </div>
-                      <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
-                        <span className="font-mono font-bold text-emerald-700 dark:text-emerald-300 text-sm">{formatVal(calcM.net13)}</span>
+                      <div className="bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md">
+                        <span className="text-[10px] text-primary-600 dark:text-primary-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
+                        <span className="font-mono font-bold text-primary-700 dark:text-primary-300 text-sm">{formatVal(calcM.net13)}</span>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Оклад</span>
-                        {isPrivate ? (
-                          <div className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm h-[34px]">••••••</div>
-                        ) : (
-                          <TableInput 
-                            value={calcM.salary} 
-                            onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
-                            className={cn(
-                              "w-full bg-slate-50 dark:bg-slate-900/50 border rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-mono text-right text-sm",
-                              isProjected ? "border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200" : "border-slate-200 dark:border-slate-700"
-                            )} 
-                          />
-                        )}
-                        <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
+                      <div className="space-y-1 flex flex-col h-full justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Оклад</span>
+                          {isPrivate ? (
+                            <div className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm flex items-center justify-end h-[34px]">••••••</div>
+                          ) : (
+                            <TableInput 
+                              value={calcM.salary} 
+                              onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
+                              className={cn(
+                                "w-full bg-slate-50 dark:bg-slate-950/50 border rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none font-mono text-right text-sm h-[34px]",
+                                isProjected ? "border-primary-300 dark:border-primary-700 text-primary-800 dark:text-primary-200" : "border-slate-200 dark:border-slate-700"
+                              )} 
+                            />
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-1 flex justify-between relative mt-auto">
                           <span>Gross:</span>
-                          <span className="font-mono font-medium text-indigo-500">{formatVal(calcM.gross)}</span>
+                          <span className="font-mono font-medium text-primary-500">{formatVal(calcM.gross)}</span>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Дни (Факт/Норма)</span>
-                        <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
-                          <TableInput 
-                            value={m.factDays} 
-                            onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} 
-                            className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0" 
-                            isInteger={true} 
-                          />
-                          <span className="text-slate-300 dark:text-slate-600">/</span>
-                          <TableInput 
-                            value={m.normDays} 
-                            onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} 
-                            className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0 text-slate-500" 
-                            isInteger={true} 
-                          />
+                      <div className="space-y-1 flex flex-col h-full justify-between">
+                        <div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Дни (Факт/Норма)</span>
+                          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 h-[34px]">
+                            <TableInput 
+                              value={m.factDays} 
+                              onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} 
+                              className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0" 
+                              isInteger={true} 
+                            />
+                            <span className="text-slate-300 dark:text-slate-600">/</span>
+                            <TableInput 
+                              value={m.normDays} 
+                              onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} 
+                              className="w-full bg-transparent border-none focus:ring-0 outline-none font-mono text-center text-sm p-0 text-slate-500" 
+                              isInteger={true} 
+                            />
+                          </div>
                         </div>
                         {monthIndex % 3 === 2 && (
-                          <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
+                          <div className="text-[10px] text-slate-500 mt-1 flex justify-between relative mt-auto">
                             <span>Премия:</span>
-                            <span className="font-mono font-medium text-indigo-500">{formatVal(calcM.bonus)}</span>
+                            <span className="font-mono font-medium text-primary-500">{formatVal(calcM.bonus)}</span>
                           </div>
                         )}
                       </div>
