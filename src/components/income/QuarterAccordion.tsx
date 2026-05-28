@@ -7,6 +7,7 @@ import { formatCurrency } from '../../lib/taxCalculator';
 import { MONTH_NAMES } from '../../lib/constants';
 import { Zap } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface QuarterAccordionProps {
   key?: React.Key;
@@ -36,7 +37,7 @@ export const QuarterAccordion = ({
   const qNet13 = qMonths.reduce((sum, m) => sum + m.net13, 0);
   const anyProjected = qMonths.some(m => (m as any).isProjected);
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   return (
     <div className={cn(
@@ -55,24 +56,21 @@ export const QuarterAccordion = ({
             <ChevronDown size={20} className={anyProjected ? "text-primary-400" : "text-slate-400"} />
           </motion.div>
           <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
-              {anyProjected && <Zap size={10} className="text-amber-500 fill-amber-500 animate-pulse" />}
-            </div>
-            <span className="text-[10px] text-primary-500 dark:text-primary-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{q.name}</span>
+            <span className="text-[10px] text-emerald-500 dark:text-emerald-400 font-mono font-bold">{formatVal(qNet13)} Net</span>
           </div>
         </div>
         
         <div className="flex flex-col items-end" onClick={(e) => e.stopPropagation()}>
           <span className="text-[9px] text-primary-400 uppercase font-bold tracking-widest mb-1">Премия (₽)</span>
           {isPrivate ? (
-            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm">••••••</div>
+            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
           ) : (
             <TableInput 
               value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
               onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
               className={cn(
-                "w-20 sm:w-24 text-right text-xs sm:text-sm font-bold bg-primary-50/50 dark:bg-primary-900/20 border h-8 sm:h-9 px-2 rounded-lg",
+                "w-24 sm:w-28 text-right text-xs sm:text-sm font-bold bg-primary-50/50 dark:bg-primary-900/20 border h-8 sm:h-9 px-2 rounded-lg",
                 anyProjected ? "text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-700" : "text-primary-700 dark:text-primary-300 border-primary-200 dark:border-primary-700"
               )} 
             />
@@ -108,21 +106,20 @@ export const QuarterAccordion = ({
                   >
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
-                        {isProjected && <Zap size={12} className="text-amber-500 fill-amber-500 animate-pulse" />}
                         <span className="font-bold text-slate-800 dark:text-slate-200 text-sm sm:text-base">{MONTH_NAMES[monthIndex]}</span>
                       </div>
-                      <div className="bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md">
-                        <span className="text-[10px] text-primary-600 dark:text-primary-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
-                        <span className="font-mono font-bold text-primary-700 dark:text-primary-300 text-sm">{formatVal(calcM.net13)}</span>
+                      <div className="bg-emerald-500/10 px-2 py-1 rounded-md">
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
+                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">{formatVal(calcM.net13)}</span>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-[1.25fr_1fr] md:grid-cols-2 gap-3 sm:gap-4">
                       <div className="space-y-1 flex flex-col h-full justify-between">
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Оклад</span>
                           {isPrivate ? (
-                            <div className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm flex items-center justify-end h-[34px]">••••••</div>
+                            <div className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm flex items-center justify-end h-[34px]"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
                           ) : (
                             <TableInput 
                               value={calcM.salary} 

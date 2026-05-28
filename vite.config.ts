@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       createSvgIconsPlugin({
-        iconDirs: [path.resolve(process.cwd(), 'logos')],
+        iconDirs: [path.resolve(__dirname, 'public/logos')],
         symbolId: 'icon-[name]',
       }),
       VitePWA({

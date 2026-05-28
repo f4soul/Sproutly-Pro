@@ -6,13 +6,14 @@ import { getBankDetails } from '../../lib/banks';
 import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
-import { TrendingUp, ShieldAlert, Receipt, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
+import { TrendingUp, ShieldAlert, ReceiptRussianRuble, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
 import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
 import { motion, AnimatePresence } from 'motion/react';
 import { db, syncWithFirebase } from '../../config/db';
 import { StatCard } from './StatCard';
 import { BankDetailsModal } from './BankDetailsModal';
 import { BankLogo } from '../deposits/BankLogo';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface DashboardProps {
   deposits: Deposit[];
@@ -29,8 +30,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [bankLogoErrors, setBankLogoErrors] = useState<Record<string, boolean>>({});
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : <AnimatedCurrency value={val} />;
-  const formatValPlain = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   const currentYearSettings = useMemo(() => 
     taxSettings.find(s => Number(s.year) === Number(selectedYear)) || { year: Number(selectedYear), limit: 210000, ndflRate: 13 },
@@ -159,7 +159,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={0}
             title="Общий доход" 
-            value={isPrivate ? '••••••' : stats.totalIncome} 
+            value={<PrivacyBlur isPrivate={isPrivate}>{stats.totalIncome}</PrivacyBlur>} 
             icon={<TrendingUp className="w-4 h-4 text-deposit-600" />}
             description="Все проценты"
           />
@@ -168,7 +168,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={1}
             title="Лимит" 
-            value={isPrivate ? '••••••' : currentYearSettings.limit} 
+            value={<PrivacyBlur isPrivate={isPrivate}>{currentYearSettings.limit}</PrivacyBlur>} 
             icon={<ShieldAlert className="w-4 h-4 text-amber-600" />}
             description="Необлагаемая сумма"
           />
@@ -177,7 +177,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={2}
             title="Налоговая база" 
-            value={isPrivate ? '••••••' : stats.taxableBase} 
+            value={<PrivacyBlur isPrivate={isPrivate}>{stats.taxableBase}</PrivacyBlur>} 
             icon={<Landmark className="w-4 h-4 text-deposit-600" />}
             description="Сверх лимита"
           />
@@ -186,8 +186,8 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={3}
             title="Налог к уплате" 
-            value={isPrivate ? '••••••' : stats.tax} 
-            icon={<Receipt className="w-4 h-4 text-rose-600" />}
+            value={<PrivacyBlur isPrivate={isPrivate}>{stats.tax}</PrivacyBlur>} 
+            icon={<ReceiptRussianRuble className="w-4 h-4 text-rose-600" />}
             description={`${currentYearSettings.ndflRate}% от базы`}
             highlight={stats.tax > 0}
           />
@@ -197,7 +197,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
       <div 
         className="grid grid-cols-1 xl:grid-cols-8 gap-4 md:gap-6"
       >
-        <div className="xl:col-span-5 apple-card p-4 sm:p-6 md:p-8 flex flex-col h-[500px] md:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div className="xl:col-span-5 apple-card p-4 sm:p-6 md:p-8 flex flex-col md:h-[480px] overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-8 shrink-0">
             <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Использование лимита</h3>
             <span className={cn(
@@ -288,13 +288,13 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           </div>
         </div>
 
-        <div className="xl:col-span-3 apple-card p-6 md:p-8 flex flex-col h-auto xl:h-[480px] min-h-[250px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-          <div className="flex items-center justify-between mb-6 md:mb-8 shrink-0">
+        <div className="xl:col-span-3 apple-card p-6 gap-6 md:p-8 flex flex-col h-auto xl:h-[480px] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <div className="flex items-center justify-between shrink-0">
             <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">Структура дохода</h3>
           </div>
           
           {/* Desktop Neon Rings Chart */}
-          <div className="hidden xl:flex items-center justify-center h-56 w-full relative mb-8 shrink-0">
+          <div className="hidden xl:flex mt-auto items-center justify-center h-56 w-full relative shrink-0">
             {(() => {
               const total = stats.chartData.reduce((sum, item) => sum + item.value, 0);
               if (total === 0) return (
@@ -354,7 +354,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
           </div>
 
-          <div className="xl:hidden space-y-4 mb-6">
+          <div className="xl:hidden space-y-4">
             <div className="relative h-2 bg-slate-50 dark:bg-slate-800/50 rounded-full">
               <div className="flex w-full h-full rounded-full">
                 {stats.chartData.map((item, idx) => (
@@ -378,7 +378,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
           </div>
 
-          <div className="space-y-3 mt-auto overflow-y-auto pr-1 pb-1 custom-scrollbar min-h-0 flex-1 xl:flex-none">
+          <div className="space-y-3 xl:mt-auto overflow-y-auto custom-scrollbar min-h-0 shrink-0">
             {stats.chartData.map(item => (
               <div key={item.name} className="flex items-center justify-between p-2 sm:p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all">
                 <div className="flex items-center gap-2 sm:gap-3 min-w-0">

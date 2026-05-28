@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { YearlyTotals } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface ChartsSectionProps {
   yearlyTotals: YearlyTotals;
@@ -11,7 +12,7 @@ interface ChartsSectionProps {
 
 
 export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSectionProps) => {
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">

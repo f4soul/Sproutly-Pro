@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment, useMemo } from 'react';
-import { X, Save, Calendar, CalendarX, Landmark, Percent, Wallet, Info, Clock, ChevronDown, Check, Plus, Trash2, Calculator } from 'lucide-react';
+import { X, Save, Calendar, CalendarX, Landmark, Percent, Wallet, Info, Clock, ChevronDown, Check, Plus, Trash2, Calculator, Settings, Edit2 } from 'lucide-react';
 import { Listbox, Transition, Combobox, Dialog } from '@headlessui/react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { ru } from 'date-fns/locale';
@@ -12,7 +12,7 @@ import { db } from '../../config/db';
 import { cn } from '../../lib/utils';
 import { addDays, differenceInDays } from 'date-fns';
 import { auth } from '../../config/firebase';
-import { getAllBanks, DEFAULT_BANK_ICON } from '../../lib/banks';
+import { getAllBanks, DEFAULT_BANK_ICON, syncCustomBanksCache } from '../../lib/banks';
 import { BankLogo } from './BankLogo';
 
 registerLocale('ru', ru);
@@ -40,7 +40,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
   const [showBankEditor, setShowBankEditor] = useState(false);
   const [newBank, setNewBank] = useState<Partial<Bank>>({
     name: '',
-    color: '#6366f1',
+    color: '#0d9488',
     logoText: '',
     logoUrl: DEFAULT_BANK_ICON,
     iconScale: 1,
@@ -156,13 +156,28 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       updatedAt: Date.now()
     } as Bank;
     
-    // Dexie will auto-generate id since banks table uses ++id
+    // Dexie will auto-generate id since banks table uses ++id or preserve existing
     const id = await db.banks.put(bankToSave);
     const savedBank = { ...bankToSave, id };
     
-    setBanks(prev => [...prev, savedBank]);
+    // Sync synchronous RAM cache immediately
+    await syncCustomBanksCache();
+
+    if (newBank.id) {
+      setBanks(prev => prev.map(b => b.id === newBank.id ? savedBank : b));
+    } else {
+      setBanks(prev => [...prev, savedBank]);
+    }
+    
     setFormData(prev => ({ ...prev, bank: savedBank.name }));
     setShowBankEditor(false);
+  };
+
+  const handleEditBank = (e: React.MouseEvent, bank: Bank) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setNewBank(bank);
+    setShowBankEditor(true);
   };
 
   const [bankToDelete, setBankToDelete] = useState<string | number | null>(null);
@@ -272,7 +287,16 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 
                 <Combobox value={formData.bank} onChange={(val) => {
                   if (val === '__ADD_NEW__') {
-                    setNewBank({ ...newBank, name: query });
+                    setNewBank({
+                      name: query || '',
+                      color: '#0d9488',
+                      logoText: '',
+                      logoUrl: DEFAULT_BANK_ICON,
+                      iconScale: 1,
+                      iconOffsetX: 0,
+                      iconOffsetY: 0,
+                      isCustom: true
+                    });
                     setShowBankEditor(true);
                   } else {
                     setFormData({ ...formData, bank: val });
@@ -297,7 +321,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                       leaveTo="opacity-0"
                       afterLeave={() => setQuery('')}
                     >
-                      <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-950 py-2 text-sm shadow-2xl z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none">
+                      <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
                         {filteredBanks.length === 0 && query !== '' ? (
                           <div className="relative cursor-default select-none py-2 px-4 text-slate-500">
                             Ничего не найдено.
@@ -308,8 +332,10 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                               key={`bank-option-${bank.id || bank.name || 'custom'}-${bankIdx}`}
                               className={({ active }) =>
                                 cn(
-                                  'relative cursor-pointer select-none py-3 pl-10 pr-4 font-medium transition-colors',
-                                  active ? 'bg-slate-50 dark:bg-slate-800/50 text-primary-600' : 'text-slate-950 dark:text-white'
+                                  'relative cursor-pointer select-none py-2.5 px-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-between gap-2 border border-transparent',
+                                  active 
+                                    ? 'bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-white border-slate-200/40 dark:border-white/[0.04] shadow-sm' 
+                                    : 'text-slate-950 dark:text-white'
                                 )
                               }
                               value={bank.name}
@@ -318,36 +344,44 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                 <>
                                   <div className="flex items-center justify-between w-full">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-6 h-6 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden transition-all">
+                                      <div className="w-7 h-7 rounded-lg bg-white/50 dark:bg-transparent border border-slate-200/60 dark:border-white/[0.08] flex items-center justify-center overflow-hidden transition-all shrink-0">
                                         <BankLogo 
                                           logoUrl={bank.logoUrl} 
                                           alt="" 
-                                          className="w-4 h-4 object-contain"
+                                          className="w-4.5 h-4.5 object-contain"
                                         />
                                       </div>
-                                      <span className={cn('block truncate', selected ? 'font-bold' : 'font-medium')}>
+                                      <span className={cn('block truncate text-sm font-medium transition-all text-slate-800 dark:text-slate-200', selected && 'font-bold text-slate-950 dark:text-white')}>
                                         {bank.name}
                                       </span>
                                     </div>
-                                    {bank.isCustom && (
-                                      <button 
-                                        type="button"
-                                        onClick={(e) => handleDeleteBank(e, String(bank.id))}
-                                        className="absolute inset-y-0 right-2 my-auto h-7 w-7 flex items-center justify-center text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer z-10"
-                                      >
-                                        <Trash2 size={14} />
-                                      </button>
-                                    )}
-                                    {selected && !bank.isCustom && (
-                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary-600">
-                                        <Check className="h-4 w-4 stroke-[2px]" />
-                                      </span>
-                                    )}
-                                    {selected && bank.isCustom && (
-                                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary-600">
-                                        <Check className="h-4 w-4 stroke-[2px]" />
-                                      </span>
-                                    )}
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      {selected && (
+                                        <span className="text-emerald-500 flex items-center justify-center">
+                                          <Check className="h-4 w-4 stroke-[2.5px]" />
+                                        </span>
+                                      )}
+                                      {bank.isCustom && (
+                                        <>
+                                          <button 
+                                            type="button"
+                                            onClick={(e) => handleEditBank(e, bank)}
+                                            className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
+                                            title="Редактировать банк"
+                                          >
+                                            <Edit2 size={13} className="stroke-[2px]" />
+                                          </button>
+                                          <button 
+                                            type="button"
+                                            onClick={(e) => handleDeleteBank(e, bank.id as string | number)}
+                                            className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
+                                            title="Удалить банк"
+                                          >
+                                            <Trash2 size={13} className="stroke-[2px]" />
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
                                 </>
                               )}
@@ -358,13 +392,15 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           value="__ADD_NEW__"
                           className={({ active }) =>
                             cn(
-                              'w-full flex items-center gap-2 px-4 py-3 text-primary-600 font-bold transition-colors border-t border-slate-200 dark:border-slate-800 mt-2 cursor-pointer',
-                              active ? 'bg-slate-50 dark:bg-slate-800/50' : ''
+                              'flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer mt-1 border border-dashed border-emerald-500/20 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                              active 
+                                ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-solid border-emerald-500/30' 
+                                : 'bg-transparent'
                             )
                           }
                         >
-                          <Plus size={18} className="stroke-[2px]" />
-                          Добавить новый банк
+                          <Plus size={16} className="stroke-[2.5px] text-emerald-500 shrink-0" />
+                          <span className="text-xs tracking-wide uppercase">Добавить новый банк</span>
                         </Combobox.Option>
                       </Combobox.Options>
                     </Transition>
@@ -390,38 +426,42 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
 
               {showBankEditor && (
-                <div className="md:col-span-2 mt-2 p-6 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2 duration-300 shadow-inner">
-                  <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                      <Plus className="w-4 h-4" /> Настройка банка
+                <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative overflow-hidden">
+                  <div className="relative flex items-center justify-between mb-6">
+                    <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                        <Settings className="w-3.5 h-3.5 stroke-[2.5px]" />
+                      </div>
+                      Настройка банка
                     </h4>
-                    <button type="button" onClick={() => setShowBankEditor(false)} className="text-slate-500 hover:text-rose-500 transition-colors cursor-pointer p-2 hover:bg-rose-500/10 rounded-full">
-                      <X size={16} />
+                    <button type="button" onClick={() => setShowBankEditor(false)} className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full">
+                      <X size={18} strokeWidth={2.5} />
                     </button>
                   </div>
-                  <div className="flex flex-col xl:flex-row gap-6">
-                    <div className="space-y-4 flex flex-col w-full xl:w-1/3">
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Название банка</label>
+                  <div className="relative flex flex-col gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="space-y-2 sm:col-span-2">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Название банка</label>
                         <input 
                           type="text"
                           value={newBank.name}
                           onChange={(e) => setNewBank({ ...newBank, name: e.target.value })}
                           placeholder="Напр. Тинькофф, Сбербанк..."
-                          className="apple-input w-full"
+                          className="apple-input w-full shadow-inner bg-white/50 dark:bg-slate-950/50"
                         />
                       </div>
-                      <div className="flex-1" />
-                      <button
-                        type="button"
-                        onClick={handleSaveNewBank}
-                        disabled={!newBank.name}
-                        className="apple-button w-full bg-deposit-500 hover:bg-deposit-600 dark:bg-deposit-600 dark:hover:bg-deposit-500 text-white shadow-lg shadow-deposit-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Сохранить банк
-                      </button>
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={handleSaveNewBank}
+                          disabled={!newBank.name}
+                          className="apple-button w-full h-[46px] flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-400/50 dark:border-emerald-500/30 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold active:scale-95 transition-all"
+                        >
+                          Сохранить
+                        </button>
+                      </div>
                     </div>
-                    <div className="w-full xl:w-2/3">
+                    <div className="w-full">
                       <BankIconEditor 
                         bank={newBank} 
                         onChange={(updates) => setNewBank(prev => ({ ...prev, ...updates }))} 
@@ -549,26 +589,28 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                       leaveFrom="opacity-100"
                       leaveTo="opacity-0"
                     >
-                      <Listbox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-950 py-2 text-sm shadow-2xl z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none">
+                      <Listbox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
                         {formulas.map((formula) => (
                           <Listbox.Option
                             key={formula.id}
                             className={({ active }) =>
                               cn(
-                                'relative cursor-pointer select-none py-3 pl-10 pr-3 font-medium transition-colors',
-                                active ? 'bg-slate-50 dark:bg-slate-800/50 text-primary-600' : 'text-slate-950 dark:text-white'
+                                'relative cursor-pointer select-none py-2.5 px-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-between gap-2 border border-transparent',
+                                active 
+                                  ? 'bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-white border-slate-200/40 dark:border-white/[0.04] shadow-sm' 
+                                  : 'text-slate-850 dark:text-slate-200'
                               )
                             }
                             value={formula.id}
                           >
                             {({ selected }) => (
                               <>
-                                <span className={cn('block truncate', selected ? 'font-bold' : 'font-medium')}>
+                                <span className={cn('block truncate text-sm font-medium transition-all text-slate-800 dark:text-slate-200', selected && 'font-bold text-slate-950 dark:text-white')}>
                                   {formula.name}
                                 </span>
                                 {selected ? (
-                                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-primary-600">
-                                    <Check className="h-4 w-4 stroke-[2px]" />
+                                  <span className="text-emerald-500 flex items-center justify-center shrink-0">
+                                    <Check className="h-4 w-4 stroke-[2.5px]" />
                                   </span>
                                 ) : null}
                               </>

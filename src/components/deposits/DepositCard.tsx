@@ -16,6 +16,7 @@ interface DepositCardProps {
 }
 
 import { BankLogo } from './BankLogo';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDelete, isPrivate = false, isLast = false }) => {
   const parseDate = (dateVal: string | Date | undefined | null) => {
@@ -47,7 +48,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
     return `Осталось дней: ${days}`;
   };
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   return (
     <div 

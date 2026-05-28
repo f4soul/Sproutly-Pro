@@ -5,7 +5,7 @@ import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: string | number | React.ReactNode;
   icon: React.ReactNode;
   description: string;
   highlight?: boolean;

@@ -41,6 +41,7 @@ import { HeatmapIcon } from '../ui/HeatmapIcon';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 import { AnimatedPercentage } from '../ui/AnimatedPercentage';
 import { AutoFitText } from '../ui/AutoFitText';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface BentoDashboardProps {
   deposits: Deposit[];
@@ -171,8 +172,8 @@ export function BentoDashboard({
     { name: 'Вклады', value: data.depositsIncome, color: 'var(--color-deposit-500)' },
   ];
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : <AnimatedCurrency value={val} />;
-  const formatValPlain = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={val} /></PrivacyBlur>;
+  const formatValPlain = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
   const limitProgress = Math.min(100, (data.depositsIncome / data.limit) * 100);
 
   return (
@@ -279,7 +280,7 @@ export function BentoDashboard({
             
             <div className="flex flex-col gap-2 mt-auto overflow-hidden">
                <AutoFitText className="flex items-baseline gap-1.5 leading-none mb-0.5 pointer-events-none">
-                 <span className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">{formatVal(data.totalNet / 12)}</span>
+                 <span className="text-3xl sm:text-3xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">{formatVal(data.totalNet / 12)}</span>
                  <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase shrink-0">/ мес</span>
                </AutoFitText>
                
@@ -401,7 +402,7 @@ export function BentoDashboard({
                   <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: item.color }} />
                   <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">{item.name}</span>
                 </div>
-                <span className="text-xs font-black text-slate-950 dark:text-white" title={formatValPlain(item.value)}>{formatVal(item.value)}</span>
+                <span className="text-xs font-black text-slate-950 dark:text-white" title={isPrivate ? undefined : formatCurrency(item.value)}>{formatVal(item.value)}</span>
               </div>
             ))}
           </div>
@@ -423,7 +424,7 @@ export function BentoDashboard({
           </div>
 
           <div className="flex-1 flex flex-col justify-end w-full space-y-4">
-            <p className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white truncate">
+            <p className="text-lg sm:text-[1.35rem] md:text-xl lg:text-[1.15rem] xl:text-[1.45rem] font-black text-slate-950 dark:text-white truncate tracking-tight">
               {formatVal(data.depositsIncome)}
             </p>
             
@@ -484,7 +485,7 @@ export function BentoDashboard({
           
           <div className="min-w-0 w-full mt-2">
             <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1 truncate">Во вкладах</h3>
-            <p className="text-[1.35rem] sm:text-2xl font-black text-slate-950 dark:text-white truncate tracking-tight">{formatVal(data.totalDepositsAmount)}</p>
+            <p className="text-lg sm:text-[1.35rem] md:text-xl lg:text-[1.15rem] xl:text-[1.45rem] font-black text-slate-950 dark:text-white truncate tracking-tight">{formatVal(data.totalDepositsAmount)}</p>
           </div>
         </motion.div>
 

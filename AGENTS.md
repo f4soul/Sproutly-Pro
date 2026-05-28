@@ -1,17 +1,19 @@
-# Cashflow Tracker Pro - UI/UX Design System & Developer Guidelines
+# Sproutly.Pro - UI/UX Design System & Developer Guidelines
 
 This file contains the core UI/UX guidelines for this project. **All future modifications, refactoring, and new components MUST adhere to these styles.**
 
 ## 1. Visual Style & Theme
-- **Glassmorphism**: Extensive use of frosted glass effects for depth and modern look.
-  - Standard glass panel: `bg-white/60 dark:bg-slate-900/60 backdrop-blur-md`
+- **Glassmorphism**: Extensive use of frosted glass effects for depth and pure elegance.
+  - Soft panels: `bg-white/40 dark:bg-slate-950/40 backdrop-blur-md`
+  - Standard glass panel: `bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl`
   - Deep glass panel (modals/main cards): `bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl`
-- **Borders**: Subtle, barely visible borders for separation.
-  - Light mode: `border-slate-200` or `border-slate-200/50`
-  - Dark mode: `border-white/10` or `border-white/[0.08]`
+  - **Decorative Glows**: Use blurred background ellipses (`blur-3xl rounded-full opacity-10/20`) to create soft, modern ambient lighting behind cards.
+- **Borders**: Subtle, barely visible borders offering high-end finish.
+  - Light mode: `border-slate-200/50` or `border-slate-200/60`
+  - Dark mode: `border-white/[0.05]` or `border-white/[0.08]` (Never use distinct thick borders in dark mode)
 - **Shadows**: 
-  - General: `shadow-sm` for small UI elements, `shadow-xl` or `shadow-2xl` for floating cards and modals.
-  - Colored Glow: Buttons or active elements often cast a soft colored glow, e.g., `shadow-[0_4px_12px_rgba(16,185,129,0.15)]`.
+  - General: `shadow-sm` for inner elements, `shadow-xl`, `shadow-2xl` for floatings. Apply `shadow-inner` for nested card sections.
+  - Colored Glow: Primary action buttons or focused elements cast a colored glow, e.g. `shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)]`.
 
 ## 2. Color Palette
 - **Brand / Primary**: Emerald (`emerald-500`). Used for "income", active states, positive trends, and primary buttons.

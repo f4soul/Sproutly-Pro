@@ -14,11 +14,6 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onConfirm,
   onCancel
 }) => {
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, []);
-
   return (
     <>
       <motion.div 
@@ -26,10 +21,10 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-slate-950/60 z-[100] backdrop-blur-sm"
+        className="fixed top-0 left-0 w-full h-[100dvh] bg-slate-950/60 z-[9999] backdrop-blur-sm"
         onClick={onCancel}
       />
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+      <div className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

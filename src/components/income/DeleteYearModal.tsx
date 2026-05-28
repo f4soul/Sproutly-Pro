@@ -10,15 +10,6 @@ interface DeleteYearModalProps {
 }
 
 export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYearModalProps) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -28,7 +19,7 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60"
+          className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center p-4 bg-black/60"
           onClick={onClose}
         >
           <motion.div 

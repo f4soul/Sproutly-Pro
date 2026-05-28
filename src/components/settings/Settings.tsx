@@ -4,6 +4,7 @@ import { db, syncWithFirebase } from '../../config/db';
 import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
+import { SecuritySettings } from './SecuritySettings';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppState } from '../../hooks/useAppState';
 import { DEFAULT_TAX_BRACKETS } from '../../lib/constants';
@@ -561,6 +562,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           </div>
         </section>
       </div>
+
+      {/* Security Section */}
+      <SecuritySettings appSettings={appSettings} />
 
       {/* Archive Section */}
       <section className="apple-card p-5 lg:p-6">

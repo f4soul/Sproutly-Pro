@@ -94,7 +94,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       theme === 'dark' ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-950"
     )}>
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-5 lg:p-8 fixed h-full z-40 transition-all duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]">
+      <aside className="hidden md:flex flex-col w-68 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-5 lg:p-8 fixed h-full z-40 transition-all duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]">
         <div className="flex flex-col gap-6 mb-8 lg:mb-12">
           <div className="flex items-center gap-2.5 group cursor-pointer px-0" onClick={() => onTabChange('dashboard')}>
             <div className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/50 dark:border-white/10 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary-500/10 transition-all group-hover:scale-105 active:scale-95 mx-0 shrink-0">
@@ -120,16 +120,16 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             label="Вклады"
           />
           <NavItem 
-            active={activeTab === 'ndfl'} 
-            onClick={() => onTabChange('ndfl')}
-            icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />}
-            label="Доходы"
-          />
-          <NavItem 
             active={activeTab === 'calendar'} 
             onClick={() => onTabChange('calendar')}
             icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />}
             label="График"
+          />
+          <NavItem 
+            active={activeTab === 'ndfl'} 
+            onClick={() => onTabChange('ndfl')}
+            icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />}
+            label="Доходы"
           />
           <NavItem 
             active={activeTab === 'settings'} 
@@ -144,7 +144,6 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           <AnimatePresence>
             {syncStatus !== 'idle' && (
               <motion.div
-                layout
                 initial={{ opacity: 0, height: 0, y: 10 }}
                 animate={{ opacity: 1, height: 'auto', y: 0 }}
                 exit={{ opacity: 0, height: 0, y: 10 }}
@@ -156,27 +155,29 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                   syncStatus === 'success' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
                   "bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20"
                 )}>
-                  <AnimatePresence mode="wait">
-                    {syncStatus === 'syncing' && (
-                      <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <AnimatedCloudSync className="w-3.5 h-3.5 md:w-4 md:h-4 md:mx-auto" />
-                      </motion.div>
-                    )}
-                    {syncStatus === 'success' && (
-                      <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4 md:mx-auto" />
-                      </motion.div>
-                    )}
-                    {syncStatus === 'error' && (
-                      <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <AlertTriangle className="w-3.5 h-3.5 md:w-4 md:h-4 md:mx-auto" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                  <motion.span layout="position" className="md:hidden">
+                  <div className="relative w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center shrink-0">
+                    <AnimatePresence mode="popLayout">
+                      {syncStatus === 'syncing' && (
+                        <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                          <AnimatedCloudSync className="w-full h-full" />
+                        </motion.div>
+                      )}
+                      {syncStatus === 'success' && (
+                        <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                          <CheckCircle2 className="w-full h-full" />
+                        </motion.div>
+                      )}
+                      {syncStatus === 'error' && (
+                        <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                          <AlertTriangle className="w-full h-full" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <span className="md:hidden">
                     {syncStatus === 'syncing' ? 'Синхронизация...' : 
                      syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка синхронизации'}
-                  </motion.span>
+                  </span>
                 </div>
               </motion.div>
             )}
@@ -190,11 +191,11 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                       <img src={user.photoURL || undefined} alt="" className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
                     </div>
                     <div className="flex flex-col min-w-0 flex-1 ml-3 text-left justify-center">
-                      <div className="truncate text-[11px] font-black leading-tight text-slate-950 dark:text-white">
+                      <div className="truncate text-[12px] font-black leading-tight text-slate-950 dark:text-white">
                         {user.displayName ? (user.displayName.split(' ').length > 1 ? `${user.displayName.split(' ')[0][0].toUpperCase()}. ${user.displayName.split(' ').slice(1).join(' ')}` : user.displayName) : user.email?.split('@')[0]}
                       </div>
                       {user.displayName && (
-                        <div className="text-[7px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                        <div className="text-[8px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                           {user.email}
                         </div>
                       )}
@@ -283,7 +284,6 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         <AnimatePresence>
           {syncStatus !== 'idle' && (
             <motion.div
-              layout
               initial={{ y: -20, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: -20, opacity: 0, scale: 0.95 }}
@@ -295,27 +295,29 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                 syncStatus === 'success' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
                 "bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20"
               )}>
-                <AnimatePresence mode="wait">
-                  {syncStatus === 'syncing' && (
-                    <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <AnimatedCloudSync className="w-3 h-3" />
-                    </motion.div>
-                  )}
-                  {syncStatus === 'success' && (
-                    <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <CheckCircle2 className="w-3 h-3" />
-                    </motion.div>
-                  )}
-                  {syncStatus === 'error' && (
-                    <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.2 }}>
-                      <AlertTriangle className="w-3 h-3" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-                <motion.span layout="position">
+                <div className="relative w-3 h-3 flex items-center justify-center shrink-0">
+                  <AnimatePresence mode="popLayout">
+                    {syncStatus === 'syncing' && (
+                      <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                        <AnimatedCloudSync className="w-full h-full" />
+                      </motion.div>
+                    )}
+                    {syncStatus === 'success' && (
+                      <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                        <CheckCircle2 className="w-full h-full" />
+                      </motion.div>
+                    )}
+                    {syncStatus === 'error' && (
+                      <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                        <AlertTriangle className="w-full h-full" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                <span>
                   {syncStatus === 'syncing' ? 'Синхронизация...' : 
                    syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка'}
-                </motion.span>
+                </span>
               </div>
             </motion.div>
           )}
@@ -456,13 +458,13 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
-        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
+        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
       <main className={cn(
-        "flex-1 md:ml-72 flex flex-col transition-all duration-300 min-w-0",
+        "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
         "px-2 sm:px-4 md:px-6 lg:px-8",
         activeTab === 'calendar' 
           ? "pt-24 md:pt-6 lg:pt-8 pb-[88px] md:pb-6 lg:pb-8 min-h-[100dvh]" 

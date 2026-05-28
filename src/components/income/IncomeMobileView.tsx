@@ -5,6 +5,7 @@ import { BonusConfigControls } from './BonusConfigControls';
 import { QuarterAccordion } from './QuarterAccordion';
 import { AnnualBonusSection } from './AnnualBonusSection';
 import { motion, AnimatePresence } from 'motion/react';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface IncomeMobileViewProps {
   activeYearData: YearData;
@@ -32,7 +33,7 @@ export function IncomeMobileView({
   isPrivate = false
 }: IncomeMobileViewProps) {
   const [showStickyFooter, setShowStickyFooter] = useState(false);
-  const formatVal = (val: number) => isPrivate ? '••••••' : `${new Intl.NumberFormat('ru-RU').format(Math.round(val))} ₽`;
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{`${new Intl.NumberFormat('ru-RU').format(Math.round(val))} ₽`}</PrivacyBlur>;
 
   useEffect(() => {
     const handleScroll = () => {

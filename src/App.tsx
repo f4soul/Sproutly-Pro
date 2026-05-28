@@ -11,6 +11,7 @@ import { DepositList } from './components/deposits/DepositList';
 import { DepositHeatmap } from './components/deposits/DepositHeatmap';
 import { Settings } from './components/settings/Settings';
 import { IncomeTracker } from './components/income/IncomeTracker';
+import { SecurityLock } from './components/auth/SecurityLock';
 import { useAppState } from './hooks/useAppState';
 
 const Fallback = () => (
@@ -35,6 +36,7 @@ export default function App() {
 }
 
 function AppContent() {
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>('dashboard');
   const [isPrivate, setIsPrivate] = useState(false);
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
@@ -52,7 +54,11 @@ function AppContent() {
       localStorage.setItem('theme', _appSettings.theme);
       setLocalTheme(_appSettings.theme);
     }
-  }, [_appSettings?.theme]);
+    // Auto-unlock if not enabled
+    if (_appSettings && !_appSettings.privacyLock?.enabled) {
+      setIsUnlocked(true);
+    }
+  }, [_appSettings]);
 
   // Sync theme to document element
   useEffect(() => {
@@ -93,41 +99,51 @@ function AppContent() {
   }, []);
 
   return (
-    <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
-      {isLoading ? (
-        <Fallback />
-      ) : (
-        <>
-          {activeTab === 'dashboard' && (
-            <UnifiedDashboard 
-              deposits={deposits} 
-              taxSettings={taxSettings} 
-              appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
-              isPrivate={isPrivate}
-              setIsPrivate={setIsPrivate}
-            />
-          )}
-          {activeTab === 'deposits' && (
-            <DepositList 
-              deposits={deposits} 
-              selectedYear={selectedYear} 
-              isPrivate={isPrivate}
-            />
-          )}
-          {activeTab === 'calendar' && (
-            <DepositHeatmap deposits={deposits} year={selectedYear} />
-          )}
-          {activeTab === 'ndfl' && (
-            <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
-          )}
-          {activeTab === 'settings' && (
-            <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
-          )}
-        </>
+    <>
+      {appSettings?.privacyLock?.enabled && !isUnlocked && (
+        <SecurityLock
+          pin={appSettings.privacyLock.pin || ''}
+          useBiometrics={appSettings.privacyLock.useBiometrics}
+          credentialId={appSettings.privacyLock.credentialId}
+          onUnlock={() => setIsUnlocked(true)}
+        />
       )}
-      <DevTools />
-      <GlobalToasts />
-    </Layout>
+      <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
+        {isLoading ? (
+          <Fallback />
+        ) : (
+          <>
+            {activeTab === 'dashboard' && (
+              <UnifiedDashboard 
+                deposits={deposits} 
+                taxSettings={taxSettings} 
+                appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
+                isPrivate={isPrivate}
+                setIsPrivate={setIsPrivate}
+              />
+            )}
+            {activeTab === 'deposits' && (
+              <DepositList 
+                deposits={deposits} 
+                selectedYear={selectedYear} 
+                isPrivate={isPrivate}
+              />
+            )}
+            {activeTab === 'calendar' && (
+              <DepositHeatmap deposits={deposits} year={selectedYear} />
+            )}
+            {activeTab === 'ndfl' && (
+              <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+            )}
+            {activeTab === 'settings' && (
+              <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
+            )}
+          </>
+        )}
+        <DevTools />
+        <GlobalToasts />
+      </Layout>
+    </>
   );
 }
 

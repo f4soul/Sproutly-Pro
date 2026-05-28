@@ -3,7 +3,7 @@ import { cn } from '../../lib/utils';
 
 export const CoefInput = ({ value, onChange, className }: { value: number, onChange: (v: number) => void, className?: string }) => {
   const [focused, setFocused] = useState(false);
-  const displayValue = focused ? value : (value ? parseFloat(value.toFixed(3)) : '');
+  const displayValue = focused ? (value === 0 ? '' : value) : (value ? parseFloat(value.toFixed(3)) : '');
   
   return (
     <input

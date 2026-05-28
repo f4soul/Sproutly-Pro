@@ -7,6 +7,7 @@ import { formatCurrency, formatPercent, cn } from '../../lib/utils';
 import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
 import { getBankDetails } from '../../lib/banks';
 import { BankLogo } from './BankLogo';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface DepositRowProps {
   deposit: Deposit;
@@ -20,7 +21,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
   const [isExpanded, setIsExpanded] = useState(false);
   const income = calculateIncome(deposit);
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
   
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;
@@ -38,14 +39,18 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
     <>
       <tr 
         className={cn(
-          "group hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all cursor-pointer",
-          isClosed ? "opacity-60 bg-slate-50/80 dark:bg-slate-950/50 grayscale-[0.5]" : "",
-          isExpanded && "bg-slate-50 dark:bg-white/10"
+          "group transition-all cursor-pointer",
+          isExpanded && "bg-slate-50 dark:bg-[#151b2a]",
+          !isExpanded && (
+            isClosed
+              ? "bg-[#f8fafc] dark:bg-[#0d121f] hover:bg-slate-100 dark:hover:bg-[#151b2a]"
+              : "hover:bg-slate-100 dark:hover:bg-[#151b2a]"
+          )
         )} 
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <td className={cn("pl-4 xl:pl-6 pr-4 py-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <div className="flex items-center gap-3">
+        <td className={cn("p-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
+          <div className={cn("flex items-center gap-3", isClosed && "opacity-60")}>
             <div 
               className="w-7 h-7 rounded-lg overflow-hidden bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-all"
             >
@@ -72,45 +77,52 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
           </div>
         </td>
         <td className={cn("px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="font-bold text-deposit-500 dark:text-deposit-400 text-[13px]">
+          <span className={cn("font-bold text-deposit-500 dark:text-deposit-400 text-[13px]", isClosed && "opacity-60")}>
             {formatPercent(deposit.rate)}
           </span>
         </td>
         
         <td className={cn("hidden xl:table-cell px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="text-[13px] font-medium text-slate-950 dark:text-white">{startDate ? format(startDate, 'dd.MM.yy') : '-'}</span>
+          <span className={cn("text-[13px] font-medium text-slate-950 dark:text-white", isClosed && "opacity-60")}>{startDate ? format(startDate, 'dd.MM.yy') : '-'}</span>
         </td>
         <td className={cn("hidden xl:table-cell px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="text-[13px] font-medium text-slate-950 dark:text-white">{endDate ? format(endDate, 'dd.MM.yy') : '∞'}</span>
+          <span className={cn("text-[13px] font-medium text-slate-950 dark:text-white", isClosed && "opacity-60")}>{endDate ? format(endDate, 'dd.MM.yy') : '∞'}</span>
         </td>
         
         <td className={cn("table-cell xl:hidden px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <div className="flex flex-col items-center justify-center">
+          <div className={cn("flex flex-col items-center justify-center", isClosed && "opacity-60")}>
             <span className="text-[12px] font-medium text-slate-950 dark:text-white">{startDate ? format(startDate, 'dd.MM.yy') : '-'}</span>
             <span className="text-[10px] text-slate-500 dark:text-slate-400">{endDate ? format(endDate, 'dd.MM.yy') : '∞'}</span>
           </div>
         </td>
-
-        <td className={cn("px-2 py-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="text-[13px] font-bold text-slate-950 dark:text-white">{formatVal(deposit.amount)}</span>
+ 
+        <td className={cn("px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
+          <span className={cn("text-[13px] font-bold text-slate-950 dark:text-white", isClosed && "opacity-60")}>{formatVal(deposit.amount)}</span>
         </td>
         
-        <td className={cn("hidden xl:table-cell px-2 py-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="text-[13px] font-bold text-deposit-500 dark:text-deposit-400">+{formatVal(income)}</span>
+        <td className={cn("hidden xl:table-cell px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
+          <span className={cn("text-[13px] font-bold text-deposit-500 dark:text-deposit-400", isClosed && "opacity-60")}>+{formatVal(income)}</span>
         </td>
-        <td className={cn("hidden xl:table-cell px-2 py-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className="text-[13px] font-bold text-slate-950 dark:text-white">{formatVal(deposit.amount + income)}</span>
+        <td className={cn("hidden xl:table-cell px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
+          <span className={cn("text-[13px] font-bold text-slate-950 dark:text-white", isClosed && "opacity-60")}>{formatVal(deposit.amount + income)}</span>
         </td>
-
-        <td className={cn("table-cell xl:hidden px-2 py-2.5 border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <div className="flex flex-col">
-            <span className="text-[13px] font-bold text-slate-950 dark:text-white">{formatVal(deposit.amount + income)}</span>
-            <span className="text-[10px] font-bold text-deposit-500 dark:text-deposit-400">+{formatVal(income)}</span>
+ 
+        <td className={cn("table-cell xl:hidden px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
+          <div className="flex flex-col items-center justify-center">
+            <span className={cn("text-[13px] font-bold text-slate-950 dark:text-white", isClosed && "opacity-60")}>{formatVal(deposit.amount + income)}</span>
+            <span className={cn("text-[11px] font-bold text-deposit-500 dark:text-deposit-400", isClosed && "opacity-60")}>+{formatVal(income)}</span>
           </div>
         </td>
-
-        <td className={cn("px-2 xl:px-4 py-2.5 text-right border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <div className="flex items-center justify-end gap-1 transition-opacity">
+ 
+        <td className={cn(
+          "p-2.5 text-right border-slate-200 dark:border-slate-800 sticky right-0 transition-colors z-10",
+          isExpanded ? "bg-slate-50 dark:bg-[#151b2a]" :
+          isClosed 
+            ? "bg-[#f8fafc] dark:bg-[#0d121f] group-hover:bg-slate-100 dark:group-hover:bg-[#151b2a]" 
+            : "bg-white dark:bg-slate-950 group-hover:bg-slate-100 dark:group-hover:bg-[#151b2a]",
+          !(isLast && !isExpanded) && "border-b"
+        )}>
+          <div className="flex flex-nowrap items-center justify-center gap-2.5 transition-opacity">
             <button 
               onClick={(e) => { e.stopPropagation(); onEdit(); }} 
               className="p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100"

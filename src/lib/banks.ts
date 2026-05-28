@@ -218,12 +218,28 @@ export const BANKS: Bank[] = [
 
 export const getAllBanks = async (): Promise<Bank[]> => {
   const customBanks = await db.banks.toArray();
+  // Also update our RAM cache
+  cachedCustomBanks = customBanks;
   return [...BANKS, ...customBanks];
 };
 
+let cachedCustomBanks: Bank[] = [];
+
+export const syncCustomBanksCache = async () => {
+  try {
+    const custom = await db.banks.toArray();
+    cachedCustomBanks = custom;
+  } catch (e) {
+    console.error('Error syncing custom banks cache:', e);
+  }
+};
+
+// Initial trigger
+syncCustomBanksCache();
+
 export const getBankDetails = (
   bankId: string,
-  allBanks: Bank[] = BANKS,
+  allBanks: Bank[] = [...BANKS, ...cachedCustomBanks],
 ): Bank => {
   const bank = allBanks.find((b) => b.id === bankId || b.name === bankId);
   if (bank) return bank;

@@ -161,6 +161,12 @@ export interface AppSettings {
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
   showDevTools?: boolean;
+  privacyLock?: {
+    enabled: boolean;
+    pin: string | null;
+    useBiometrics: boolean;
+    credentialId?: string | null;
+  };
   updatedAt?: number;
   userId?: string;
 }

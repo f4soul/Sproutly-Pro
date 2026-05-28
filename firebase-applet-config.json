@@ -1,9 +1,9 @@
 {
-  "apiKey": "",
-  "authDomain": "",
-  "projectId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
-  "appId": "",
+  "apiKey": "AIzaSyBuIuc2OidwYlJuG0Rxhv28p-hebkuMqSk",
+  "authDomain": "sproutly-pro-app.firebaseapp.com",
+  "projectId": "sproutly-pro-app",
+  "storageBucket": "sproutly-pro-app.firebasestorage.app",
+  "messagingSenderId": "948934787674",
+  "appId": "1:948934787674:web:40de75409823b1be218e63",
   "firestoreDatabaseId": "(default)"
 }

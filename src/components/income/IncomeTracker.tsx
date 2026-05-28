@@ -23,6 +23,7 @@ import { IncomeMobileView } from './IncomeMobileView';
 import { useIncomeCalculationMode } from '../../hooks/useIncomeCalculationMode';
 import { useIncomeTotals } from '../../hooks/useIncomeTotals';
 import { BonusConfigControls } from './BonusConfigControls';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface IncomeTrackerProps {
   isPrivate: boolean;
@@ -292,6 +293,49 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   // --- Calculations ---
 
+  const actualCalculatedMonths = useMemo(() => {
+    let runningGross = 0;
+    return activeYearData.months.map((m, index) => {
+      // Logic for Option A: Actuals + Projections
+      const isActual = m.salary > 0;
+      
+      let base: number;
+      let displaySalary = m.salary;
+
+      if (isActual) {
+        base = m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary;
+      } else {
+        base = 0;
+      }
+      
+      let bonus = 0;
+      if (index % 3 === 2) {
+        const qIndex = Math.floor(index / 3);
+        const qData = activeYearData.quarters?.[qIndex];
+        bonus = qData?.bonusAmount || 0;
+      }
+
+      const gross = base + bonus;
+      runningGross += gross;
+
+      // Better tax estimation for 2025+ (still a row-by-row approx)
+      const estimatedTax = state.activeYear >= 2025 
+        ? (runningGross > 2400000 ? gross * 0.15 : gross * 0.13) 
+        : gross * 0.13;
+
+      return { 
+        ...m, 
+        salary: displaySalary,
+        base, 
+        bonus, 
+        gross, 
+        tax13: estimatedTax, 
+        net13: gross - estimatedTax,
+        isProjected: false
+      };
+    });
+  }, [activeYearData, state.activeYear]);
+
   const calculatedMonths = useMemo(() => {
     const isSimActive = simulation.isActive;
     const salaryMult = isSimActive ? (1 + (simulation.salaryIncrease || 0) / 100) : 1;
@@ -341,47 +385,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       });
     }
 
-    let runningGross = 0;
-    return activeYearData.months.map((m, index) => {
-      // Logic for Option A: Actuals + Projections
-      const isActual = m.salary > 0;
-      
-      let base: number;
-      let displaySalary = m.salary;
-
-      if (isActual) {
-        base = m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary;
-      } else {
-        base = 0;
-      }
-      
-      let bonus = 0;
-      if (index % 3 === 2) {
-        const qIndex = Math.floor(index / 3);
-        const qData = activeYearData.quarters?.[qIndex];
-        bonus = qData?.bonusAmount || 0;
-      }
-
-      const gross = base + bonus;
-      runningGross += gross;
-
-      // Better tax estimation for 2025+ (still a row-by-row approx)
-      const estimatedTax = state.activeYear >= 2025 
-        ? (runningGross > 2400000 ? gross * 0.15 : gross * 0.13) 
-        : gross * 0.13;
-
-      return { 
-        ...m, 
-        salary: displaySalary,
-        base, 
-        bonus, 
-        gross, 
-        tax13: estimatedTax, 
-        net13: gross - estimatedTax,
-        isProjected: false
-      };
-    });
-  }, [activeYearData, simulation]);
+    return actualCalculatedMonths;
+  }, [activeYearData, simulation, actualCalculatedMonths, state.activeYear]);
 
   const prevYearData = state.years[state.activeYear - 1];
   const { yearlyTotals, grossDiff, netDiff } = useIncomeTotals({
@@ -395,7 +400,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     calculationMode
   });
 
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   if (!isInitialized || !activeYearData) {
     return (
@@ -463,12 +468,13 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                 isSimulationOpen ? "grid-rows-[1fr] opacity-100 pointer-events-auto mt-6" : "grid-rows-[0fr] opacity-0 pointer-events-none mt-0"
               )}
             >
-              <div className="overflow-hidden min-h-0">
+              <div className={cn("min-h-0", isSimulationOpen ? "overflow-visible" : "overflow-hidden")}>
                 <div className="pb-2">
                   <ScenarioSimulator 
                     simulation={simulation}
                     onUpdate={setSimulation}
                     bonusBase={activeYearData.bonusBase}
+                    averageMonthlyNet={yearlyTotals.finalNet / 12}
                   />
                 </div>
               </div>
@@ -480,7 +486,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
             <div className="block lg:hidden">
               <IncomeMobileView
                 activeYearData={activeYearData}
-                calculatedMonths={calculatedMonths}
+                calculatedMonths={actualCalculatedMonths}
                 yearlyTotals={yearlyTotals}
                 expandedQuarters={expandedQuarters}
                 onToggleQuarter={(qIndex) => setExpandedQuarters(prev => ({ ...prev, [qIndex]: !prev[qIndex] }))}
@@ -497,7 +503,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
               <IncomeDesktopTable
                 yearKey={state.activeYear}
                 activeYearData={activeYearData}
-                calculatedMonths={calculatedMonths}
+                calculatedMonths={actualCalculatedMonths}
                 yearlyTotals={yearlyTotals}
                 onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
                 onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}

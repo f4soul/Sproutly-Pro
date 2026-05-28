@@ -5,6 +5,7 @@ import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 import { YearlyTotals } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { cn } from '../../lib/utils';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface YearSummaryProps {
   yearlyTotals: YearlyTotals;
@@ -29,21 +30,18 @@ export const YearSummary = ({
   isPrivate = false,
   isSimulated = false
 }: YearSummaryProps) => {
-  const formatVal = (val: number) => isPrivate ? '••••••' : <AnimatedCurrency value={val} />;
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={val} /></PrivacyBlur>;
 
   return (
     <div 
-      className={cn(
-        "grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full transition-colors duration-500",
-        isSimulated ? "p-1.5 sm:p-2 bg-primary-500/5 border border-primary-500/20 shadow-[0_0_40px_rgba(var(--rgb-primary),0.1)] rounded-[1.25rem] sm:rounded-[1.5rem]" : ""
-      )}
+      className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full"
     >
       {/* Net (Hero) */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px] transition-all duration-500",
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px] transition-all duration-500 border border-transparent",
         isSimulated 
-          ? "bg-gradient-to-br from-primary-600 to-primary-800 shadow-[0_8px_30px_rgb(var(--rgb-primary),0.25)] text-white" 
-          : "bg-gradient-to-br from-primary-500 to-primary-700 shadow-[0_8px_30px_rgb(var(--rgb-primary),0.12)] text-white"
+          ? "bg-gradient-to-br from-primary-600 to-primary-800 shadow-[0_20px_50px_rgba(59,130,246,0.3)] text-white" 
+          : "bg-gradient-to-br from-primary-500 to-primary-700 shadow-[0_8px_30px_rgba(59,130,246,0.12)] text-white"
       )}>
         <div className="absolute -bottom-2 -right-2 text-white opacity-10 transition-all duration-500 ease-out group-hover:scale-110 pointer-events-none">
           <Calculator className="w-20 h-20" />
@@ -74,15 +72,15 @@ export const YearSummary = ({
 
       {/* Gross */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px]",
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
         isSimulated 
-          ? "bg-white dark:bg-slate-950 border border-primary-500/30 shadow-[0_4px_20px_rgba(var(--rgb-primary),0.08)]" 
-          : "bg-white dark:bg-slate-950/50 shadow-sm border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700"
+          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-[0_20px_50px_rgba(59,130,246,0.15)]" 
+          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700"
       )}>
         <div className="absolute -bottom-2 -right-2 text-black/5 dark:text-white/5 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <Coins className="w-20 h-20" />
         </div>
-        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500" : "text-slate-400 dark:text-slate-500")}>Gross (грязными)</p>
+        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500 dark:text-primary-400 font-extrabold" : "text-slate-400 dark:text-slate-500")}>Gross (грязными)</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.totalGross, 'gross')}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
@@ -101,10 +99,10 @@ export const YearSummary = ({
 
       {/* Tax */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px]",
+        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
         isSimulated 
-          ? "bg-white dark:bg-slate-950 border border-primary-500/30 shadow-[0_4px_20px_rgba(var(--rgb-primary),0.08)]" 
-          : "bg-white dark:bg-slate-950/50 shadow-sm border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700"
+          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-[0_20px_50px_rgba(59,130,246,0.15)]" 
+          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700"
       )}>
         {onShowTaxInfo && (
           <button
@@ -124,7 +122,7 @@ export const YearSummary = ({
         <div className="absolute -bottom-2 -right-2 text-rose-500 opacity-10 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <ReceiptRussianRuble className="w-20 h-20" />
         </div>
-        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500" : "text-slate-400 dark:text-slate-500")}>НДФЛ</p>
+        <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500 dark:text-primary-400 font-extrabold" : "text-slate-400 dark:text-slate-500")}>НДФЛ</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.progressiveTax, 'tax')}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}

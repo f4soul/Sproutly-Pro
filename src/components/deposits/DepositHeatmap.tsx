@@ -65,7 +65,7 @@ export function DepositHeatmap({ deposits, year: initialYear }: DepositHeatmapPr
 
         <div 
           className={cn(
-            "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-8 py-2 sm:py-4 transition-all duration-300 ease-out w-full max-w-full xl:max-w-screen-2xl mx-auto items-start",
+            "grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3 lg:gap-4 xl:gap-8 py-2 sm:py-4 transition-all duration-300 ease-out w-full max-w-full xl:max-w-screen-2xl mx-auto items-start mt-auto",
             expandedMonth && "opacity-30 blur-md scale-[0.96] pointer-events-none grayscale-[50%]"
           )}
         >
@@ -79,7 +79,7 @@ export function DepositHeatmap({ deposits, year: initialYear }: DepositHeatmapPr
           ))}
         </div>
         
-        <HeatmapLegend />
+        <HeatmapLegend className="mt-auto" />
 
       </div>
 

@@ -110,6 +110,7 @@ export async function syncWithFirebase() {
       for (const delRecord of pendingDeletes) {
         try {
           await setDoc(doc(firestore, delRecord.collection, delRecord.docId), { 
+            userId: user.uid,
             isDeleted: true, 
             updatedAt: delRecord.timestamp 
           }, { merge: true });
@@ -121,52 +122,67 @@ export async function syncWithFirebase() {
 
       // 1. Upload local changes to Firebase
       const localDeposits = await db.deposits.toArray();
-  for (const deposit of localDeposits) {
-    if (deposit.isTest) continue; // Skip test records
-    if (!deposit.userId || deposit.userId === user.uid) {
-      const { id, ...data } = deposit;
-      const path = 'deposits';
-      const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
-      try {
-        await setDoc(doc(firestore, path, firestoreDocId), {
-          ...data,
-          formula: data.formula || 'simple_days',
-          currency: data.currency || '₽',
-          rate: data.rate || 0,
-          amount: data.amount || 0,
-          bank: data.bank || 'Unknown',
-          userId: user.uid,
-          isDeleted: deleteField(),
-          updatedAt: deposit.updatedAt || Date.now()
-        }, { merge: true });
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, path);
-      }
-    }
-  }
+      for (const deposit of localDeposits) {
+        if (deposit.isTest) continue; // Skip test records
+        
+        // If the deposit belongs to a different userId, or has no userId, 
+        // migrate it to the current logged-in user so we don't lose the local data
+        if (deposit.userId !== user.uid) {
+          deposit.userId = user.uid;
+          deposit.updatedAt = Date.now(); // Mark as updated to trigger upload
+          await db.deposits.put(deposit);
+        }
 
-  // Download remote changes first
-  
-  // Upload custom banks
-  const localBanks = await db.banks.toArray();
-  for (const bank of localBanks) {
-    if (bank.isTest) continue; // Skip test records
-    if (bank.isCustom) {
-      const { id, ...data } = bank;
-      const path = 'banks';
-      const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + bank.name);
-      try {
-        await setDoc(doc(firestore, path, firestoreDocId), {
-          ...data,
-          userId: user.uid,
-          isDeleted: deleteField(),
-          updatedAt: bank.updatedAt || Date.now()
-        }, { merge: true });
-      } catch (error) {
-        handleFirestoreError(error, OperationType.WRITE, path);
+        const { id, ...data } = deposit;
+        const path = 'deposits';
+        const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
+        try {
+          await setDoc(doc(firestore, path, firestoreDocId), {
+            ...data,
+            formula: data.formula || 'simple_days',
+            currency: data.currency || '₽',
+            rate: data.rate || 0,
+            amount: data.amount || 0,
+            bank: data.bank || 'Unknown',
+            userId: user.uid,
+            isDeleted: deleteField(),
+            updatedAt: deposit.updatedAt || Date.now()
+          }, { merge: true });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
       }
-    }
-  }
+
+      // Download remote changes first
+      
+      // Upload custom banks
+      const localBanks = await db.banks.toArray();
+      for (const bank of localBanks) {
+        if (bank.isTest) continue; // Skip test records
+        if (bank.isCustom) {
+          // If the custom bank belongs to a different userId, or has no userId, 
+          // migrate it to the current logged-in user so we don't lose the local data
+          if (bank.userId !== user.uid) {
+            bank.userId = user.uid;
+            bank.updatedAt = Date.now();
+            await db.banks.put(bank);
+          }
+
+          const { id, ...data } = bank;
+          const path = 'banks';
+          const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + bank.name);
+          try {
+            await setDoc(doc(firestore, path, firestoreDocId), {
+              ...data,
+              userId: user.uid,
+              isDeleted: deleteField(),
+              updatedAt: bank.updatedAt || Date.now()
+            }, { merge: true });
+          } catch (error) {
+            handleFirestoreError(error, OperationType.WRITE, path);
+          }
+        }
+      }
 
   // Settings
   const settingsPath = 'userSettings';
@@ -220,6 +236,12 @@ export async function syncWithFirebase() {
     const qDeposits = query(collection(firestore, depositsPath), where('userId', '==', user.uid));
     const depositsSnapshot = await getDocs(qDeposits);
     for (const docSnap of depositsSnapshot.docs) {
+      // Avoid race conditions: if this document is pending deletion locally, do not recreate it
+      const isPendingDelete = pendingDeletes.some(d => d.collection === 'deposits' && d.docId === docSnap.id);
+      if (isPendingDelete) {
+        continue;
+      }
+
       const remoteData = docSnap.data();
       
       let localId: string | number = docSnap.id;
@@ -312,6 +334,12 @@ export async function syncWithFirebase() {
     const qBanks = query(collection(firestore, banksPath), where('userId', '==', user.uid));
     const banksSnapshot = await getDocs(qBanks);
     for (const docSnap of banksSnapshot.docs) {
+      // Avoid race conditions: if this document is pending deletion locally, do not recreate it
+      const isPendingDelete = pendingDeletes.some(d => d.collection === 'banks' && d.docId === docSnap.id);
+      if (isPendingDelete) {
+        continue;
+      }
+
       const remoteData = docSnap.data();
       
       let localId: string | number = docSnap.id;

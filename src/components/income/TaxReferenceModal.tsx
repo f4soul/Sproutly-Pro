@@ -15,15 +15,6 @@ export const TaxReferenceModal = ({
   year: number;
   brackets: TaxBracket[];
 }) => {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -33,7 +24,7 @@ export const TaxReferenceModal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60"
+          className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/60"
           onClick={onClose}
         >
           <motion.div 
@@ -42,7 +33,7 @@ export const TaxReferenceModal = ({
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="apple-card max-w-lg w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden relative z-10"
+            className="apple-card max-w-lg w-full max-h-[90dvh] flex flex-col overflow-hidden relative z-10"
           >
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3 text-slate-950 dark:text-white">

@@ -3,6 +3,7 @@ import { TableInput } from '../ui/TableInput';
 import { YearData, YearlyTotals, CalculatedMonth } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
+import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface AnnualBonusSectionProps {
   activeYearData: YearData;
@@ -21,7 +22,7 @@ export const AnnualBonusSection = ({
   isMobile = false,
   isPrivate = false
 }: AnnualBonusSectionProps) => {
-  const formatVal = (val: number) => isPrivate ? '••••••' : formatCurrency(val);
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
   if (isMobile) {
     return (
@@ -30,7 +31,7 @@ export const AnnualBonusSection = ({
           <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Годовая премия</span>
           <div className="w-32">
             {isPrivate ? (
-              <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2">••••••</div>
+              <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
             ) : (
               <TableInput 
                 value={activeYearData.annualBonusAmount || 0} 
@@ -44,7 +45,7 @@ export const AnnualBonusSection = ({
           <span className="text-sm font-bold text-slate-700 dark:text-slate-300">Доп. премия</span>
           <div className="w-32">
             {isPrivate ? (
-              <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2">••••••</div>
+              <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
             ) : (
               <TableInput 
                 value={activeYearData.extraBonusAmount || 0} 
@@ -65,7 +66,7 @@ export const AnnualBonusSection = ({
         <td colSpan={3} className="px-1.5 md:px-2 py-2 text-gray-700 dark:text-gray-300 text-left align-middle text-[11px] lg:text-xs xl:text-sm uppercase tracking-tight">Годовая премия</td>
         <td className="px-1 md:px-2 py-2 align-middle min-w-[70px] lg:min-w-[90px]">
           {isPrivate ? (
-            <div className="text-right text-[11px] lg:text-xs xl:text-sm font-bold text-primary-700 dark:text-primary-400 py-1 pr-1.5">••••••</div>
+            <div className="text-right text-[11px] lg:text-xs xl:text-sm font-bold text-primary-700 dark:text-primary-400 py-1 pr-1.5"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
           ) : (
             <TableInput 
               value={activeYearData.annualBonusAmount || 0} 
@@ -75,7 +76,7 @@ export const AnnualBonusSection = ({
           )}
         </td>
         <td className="px-1 md:px-2 py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(activeYearData.annualBonusAmount || 0)}</td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.annualBonusAmount || 0) * 0.87)}</td>
+        <td className="pl-1 md:pl-2 pr-4 md:pr-5 lg:pr-6 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.annualBonusAmount || 0) * 0.87)}</td>
        </tr>
 
        {/* Extra Bonus Row */}
@@ -83,7 +84,7 @@ export const AnnualBonusSection = ({
         <td colSpan={3} className="px-1.5 md:px-2 py-2 text-gray-700 dark:text-gray-300 text-left align-middle text-[11px] lg:text-xs xl:text-sm uppercase tracking-tight">Доп. премия</td>
         <td className="px-1 md:px-2 py-2 align-middle min-w-[70px] lg:min-w-[90px]">
           {isPrivate ? (
-            <div className="text-right text-[11px] lg:text-xs xl:text-sm font-bold text-primary-700 dark:text-primary-400 py-1 pr-1.5">••••••</div>
+            <div className="text-right text-[11px] lg:text-xs xl:text-sm font-bold text-primary-700 dark:text-primary-400 py-1 pr-1.5"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
           ) : (
             <TableInput 
               value={activeYearData.extraBonusAmount || 0} 
@@ -93,7 +94,7 @@ export const AnnualBonusSection = ({
           )}
         </td>
         <td className="px-1 md:px-2 py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal(activeYearData.extraBonusAmount || 0)}</td>
-        <td className="px-1 md:px-2 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.extraBonusAmount || 0) * 0.87)}</td>
+        <td className="pl-1 md:pl-2 pr-4 md:pr-5 lg:pr-6 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[110px] lg:min-w-[130px]">{formatVal((activeYearData.extraBonusAmount || 0) * 0.87)}</td>
        </tr>
 
        {/* Total Year Row */}
@@ -104,19 +105,19 @@ export const AnnualBonusSection = ({
         </td>
         <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-[11px] lg:text-xs xl:text-sm">{formatVal(calculatedMonths.reduce((sum, m) => sum + m.salary, 0))}</td>
         <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-primary-600 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm">
-          {isPrivate ? '••••••' : (
+          <PrivacyBlur isPrivate={isPrivate}>
             <AnimatedCurrency value={
               calculatedMonths.reduce((sum, m) => sum + m.bonus, 0) + 
               (activeYearData.annualBonusAmount || 0) + 
               (activeYearData.extraBonusAmount || 0)
             } />
-          )}
+          </PrivacyBlur>
         </td>
         <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-primary-600 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm min-w-[110px] lg:min-w-[130px]">
-          {isPrivate ? '••••••' : <AnimatedCurrency value={yearlyTotals.totalGross} />}
+          {<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={yearlyTotals.totalGross} /></PrivacyBlur>}
         </td>
-        <td className="px-1 md:px-2 py-2 lg:py-3 text-right font-mono text-primary-600 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm min-w-[110px] lg:min-w-[130px]">
-          {isPrivate ? '••••••' : <AnimatedCurrency value={yearlyTotals.finalNet} />}
+        <td className="pl-1 md:pl-2 pr-4 md:pr-5 lg:pr-6 py-2 lg:py-3 text-right font-mono text-emerald-600 dark:text-emerald-400 text-[11px] lg:text-xs xl:text-sm min-w-[110px] lg:min-w-[130px]">
+          {<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={yearlyTotals.finalNet} /></PrivacyBlur>}
         </td>
        </tr>
     </React.Fragment>

@@ -49,11 +49,11 @@ export function IncomeDesktopTable({
         className="hidden lg:block relative isolate"
       >
         <div className="bg-white dark:bg-slate-950 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10">
-          <div className="overflow-x-auto custom-scrollbar relative rounded-2xl overflow-visible no-scrollbar">
+          <div className="overflow-x-auto custom-scrollbar relative rounded-2xl overflow-hidden no-scrollbar">
           <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
             <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
               <tr>
-                <th colSpan={6} className="px-2 py-2 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] relative">
+                <th colSpan={6} className="pl-3 md:pl-4 lg:pl-5 pr-4 md:pr-5 lg:pr-6 py-2.5 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] relative">
                   <div className="w-full">
                     <BonusConfigControls
                       compact
@@ -72,15 +72,15 @@ export function IncomeDesktopTable({
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Оклад (₽)</th>
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Премия (₽)</th>
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-primary-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap min-w-[110px] lg:min-w-[130px] align-middle">Gross (₽)</th>
-                <th className="px-1 md:px-2 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px] align-middle">
+                <th className="pl-1 md:pl-2 pr-4 md:pr-5 lg:pr-6 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px] align-middle">
                   <button 
                     onClick={onShowTaxInfo}
-                    className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-primary-500 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
+                    className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-600 dark:text-emerald-400 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
                   >
                     <span>{yearKey >= 2025 ? 'Net (₽)' : 'Net 13% (₽)'}</span>
                     <div className="relative flex items-center justify-center">
-                      <div className="absolute inset-0 bg-primary-500/20 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
-                      <Info size={10} className="text-primary-500/40 group-hover/tax-header:text-primary-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
+                      <div className="absolute inset-0 bg-emerald-500/15 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
+                      <Info size={10} className="text-emerald-500/50 group-hover/tax-header:text-emerald-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
                     </div>
                   </button>
                 </th>

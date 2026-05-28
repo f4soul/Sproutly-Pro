@@ -27,6 +27,20 @@ export function HeatmapExpandedMonth({
   const startDay = (getDay(expandedMonth) + 6) % 7; 
   const emptyDays = Array.from({ length: startDay });
 
+  React.useEffect(() => {
+    if (!selectedDay) return;
+
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.day-touch-zone') && !target.closest('.tooltip-touch-zone')) {
+        setSelectedDay(null);
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick);
+    return () => document.removeEventListener('click', handleGlobalClick);
+  }, [selectedDay, setSelectedDay]);
+
   return (
     <motion.div 
       key="expanded-month-overlay"
@@ -34,7 +48,7 @@ export function HeatmapExpandedMonth({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
-      className="fixed inset-y-0 right-0 left-0 md:left-64 z-[110] flex items-center justify-center p-4 sm:p-6 lg:p-8 pointer-events-none"
+      className="fixed inset-y-0 right-0 left-0 md:left-68 z-[110] flex items-center justify-center p-4 sm:p-6 lg:p-8 pointer-events-none"
     >
       <div 
         className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/70 cursor-pointer pointer-events-auto"
@@ -47,7 +61,10 @@ export function HeatmapExpandedMonth({
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={{ type: "spring", bounce: 0, duration: 0.3 }}
         className="relative z-10 w-full max-w-[420px] bg-white dark:bg-[#111315] rounded-[1.75rem] shadow-[0_32px_80px_rgba(0,0,0,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.7)] border border-white/60 dark:border-white/10 flex flex-col p-5 sm:p-5 lg:p-6 overflow-visible mx-auto pointer-events-auto"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedDay(null);
+        }}
       >
         {/* Detailed Header */}
         <div className="flex items-center justify-between mb-4 shrink-0 relative z-20">
@@ -133,7 +150,7 @@ export function HeatmapExpandedMonth({
                      hasInfo ? setSelectedDay(day) : setSelectedDay(null); 
                    }}
                    className={cn(
-                     "w-full h-full rounded-[10px] sm:rounded-xl flex flex-col items-center justify-center transition-colors duration-150 group/day cursor-default select-none relative",
+                     "w-full h-full rounded-[10px] sm:rounded-xl flex flex-col items-center justify-center transition-colors duration-150 group/day cursor-default select-none relative day-touch-zone",
                      hasInfo && "cursor-pointer hover:z-50 hover:shadow-xl",
                      getColorClass(intensity),
                      isSelected ? "ring-[2px] ring-deposit-500 ring-offset-2 ring-offset-white dark:ring-offset-[#0B0F19] shadow-[0_0_20px_rgba(var(--rgb-deposit),0.5)] z-40 scale-105" : "",
@@ -151,8 +168,8 @@ export function HeatmapExpandedMonth({
 
                    {/* Opening Marker */}
                    {isOpening && (
-                      <div className="absolute -top-1 -right-1 z-10 drop-shadow-[0_0_2px_rgba(var(--rgb-deposit),0.8)]">
-                        <SproutlyLogo className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-deposit-400" />
+                      <div className="absolute -top-1.5 -right-1.5 sm:-top-[3px] sm:-right-[3px] z-20 flex items-center justify-center">
+                        <SproutlyLogo className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 text-deposit-500 dark:text-deposit-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
                       </div>
                    )}
 
@@ -177,7 +194,7 @@ export function HeatmapExpandedMonth({
                        exit={{ opacity: 0, y: isTopHalf ? -5 : 5, scale: 0.95 }}
                        transition={{ duration: 0.15 }}
                        className={cn(
-                         "absolute z-[100] min-w-[200px] w-max max-w-[280px] bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-white/10 rounded-[1.25rem] shadow-[0_24px_48px_rgba(0,0,0,0.2)] dark:shadow-[0_24px_48px_rgba(0,0,0,0.8)] p-3 lg:p-4 flex flex-col gap-2 cursor-default pointer-events-auto",
+                         "absolute z-[100] min-w-[200px] w-max max-w-[280px] bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-white/10 rounded-[1.25rem] shadow-[0_24px_48px_rgba(0,0,0,0.2)] dark:shadow-[0_24px_48px_rgba(0,0,0,0.8)] p-3 lg:p-4 flex flex-col gap-2 cursor-default pointer-events-auto tooltip-touch-zone",
                          yAlignClass,
                          xAlignClass
                        )}
@@ -198,7 +215,7 @@ export function HeatmapExpandedMonth({
                                 <SproutlyLogo className="w-3 h-3 text-deposit-500 drop-shadow-[0_0_4px_rgba(var(--rgb-deposit),0.5)]" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Вклад</span>
+                                <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Открытие</span>
                                 <span className="text-[9px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight truncate">{name}</span>
                               </div>
                             </div>

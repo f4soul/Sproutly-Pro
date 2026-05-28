@@ -24,11 +24,11 @@ export function BonusConfigControls({
 }: BonusConfigControlsProps) {
   if (compact) {
     return (
-      <div className="flex items-center justify-between w-full h-full gap-3 md:gap-4 overflow-x-auto custom-scrollbar no-scrollbar min-w-0 py-1.5 px-0.5">
-        <div className="flex flex-col items-center gap-0.5 grow-0 shrink-0 min-w-0">
-          <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">База</span>
-          <div className="flex items-center gap-1">
-            <div className="relative flex-1 w-20">
+      <div className="flex items-center justify-between w-full h-full gap-3 md:gap-4 overflow-x-auto custom-scrollbar no-scrollbar min-w-0">
+        <div className="flex items-end gap-1 grow-0 shrink-0 min-w-0">
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">База</span>
+            <div className="relative w-20">
               <TableInput
                 value={activeYearData.bonusBase ?? 0}
                 onChange={onBonusBaseChange}
@@ -37,16 +37,16 @@ export function BonusConfigControls({
               />
               <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px] md:text-[10px] lg:text-[11px] pointer-events-none">₽</span>
             </div>
-            {onApplyBaseToAll && (
-              <button
-                onClick={onApplyBaseToAll}
-                title="Применить базу ко всем месяцам"
-                className="p-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-500/10 text-primary-400 hover:text-primary-600 transition-colors"
-              >
-                <Wand2 size={12} />
-              </button>
-            )}
           </div>
+          {onApplyBaseToAll && (
+            <button
+              onClick={onApplyBaseToAll}
+              title="Применить базу ко всем месяцам"
+              className="p-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-500/10 text-primary-400 hover:text-primary-600 transition-colors h-7 md:h-8 flex items-center justify-center shrink-0"
+            >
+              <Wand2 size={12} />
+            </button>
+          )}
         </div>
 
         <div className="flex gap-1.5 md:gap-2 grow-0 shrink-0 justify-end ml-auto min-w-0 pr-0">
@@ -62,7 +62,7 @@ export function BonusConfigControls({
               </div>
             </div>
           ))}
-          <div className="flex flex-col items-center gap-0.5 ml-1 md:ml-2 shrink-0">
+          <div className="flex flex-col items-center gap-0.5 shrink-0">
             <span className="text-[8px] font-black uppercase tracking-tighter text-primary-500 dark:text-primary-500 whitespace-nowrap">Год</span>
             <div className="w-9 md:w-10">
               <TableInput
@@ -80,9 +80,9 @@ export function BonusConfigControls({
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-6">
-        <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500">База</span>
-          <div className="flex items-center gap-2">
+        <div className="flex items-end gap-2">
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500">База</span>
             <div className="relative w-24 md:w-32">
               <TableInput
                 value={activeYearData.bonusBase ?? 0}
@@ -92,17 +92,17 @@ export function BonusConfigControls({
               />
               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[10px]">₽</span>
             </div>
-            {onApplyBaseToAll && (
-              <button
-                onClick={onApplyBaseToAll}
-                title="Применить базу ко всем месяцам"
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-all text-[10px] font-bold uppercase tracking-wider"
-              >
-                <Wand2 size={12} />
-                <span className="hidden sm:inline">Применить к месяцам</span>
-              </button>
-            )}
           </div>
+          {onApplyBaseToAll && (
+            <button
+              onClick={onApplyBaseToAll}
+              title="Применить базу ко всем месяцам"
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-all text-[10px] font-bold uppercase tracking-wider h-[30px] shrink-0"
+            >
+              <Wand2 size={12} />
+              <span className="hidden sm:inline">Применить к месяцам</span>
+            </button>
+          )}
         </div>
       </div>
 
