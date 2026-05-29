@@ -49,26 +49,26 @@ export function BonusConfigControls({
           )}
         </div>
 
-        <div className="flex gap-1.5 md:gap-2 grow-0 shrink-0 justify-end ml-auto min-w-0 pr-0">
+        <div className="flex gap-1 sm:gap-1.5 grow-0 shrink-0 justify-end ml-auto min-w-0">
           {[0, 1, 2, 3].map(qIndex => (
             <div key={qIndex} className="flex flex-col items-center gap-0.5 shrink-0">
               <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 dark:text-slate-500 whitespace-nowrap">{qIndex + 1} КВ</span>
-              <div className="w-9 md:w-10">
+              <div className="w-8 sm:w-9 lg:w-10">
                 <TableInput
                   value={activeYearData.quarters?.[qIndex]?.bonusCoef ?? 0}
                   onChange={(value) => onQuarterCoefChange(qIndex, value)}
-                  className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
+                  className="w-full text-center text-[10px] sm:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
                 />
               </div>
             </div>
           ))}
           <div className="flex flex-col items-center gap-0.5 shrink-0">
             <span className="text-[8px] font-black uppercase tracking-tighter text-primary-500 dark:text-primary-500 whitespace-nowrap">Год</span>
-            <div className="w-9 md:w-10">
+            <div className="w-8 sm:w-9 lg:w-10">
               <TableInput
                 value={activeYearData.annualBonusCoef ?? 0}
                 onChange={onAnnualCoefChange}
-                className="w-full text-center text-[11px] md:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-primary-300 dark:border-primary-700/50 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
+                className="w-full text-center text-[10px] sm:text-[11px] lg:text-xs font-bold text-primary-700 dark:text-primary-400 bg-white dark:bg-slate-950 border border-primary-300 dark:border-primary-700/50 h-7 md:h-8 rounded-lg focus:ring-2 focus:ring-primary-500/50 p-0"
               />
             </div>
           </div>

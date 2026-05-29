@@ -64,7 +64,7 @@ export const QuarterAccordion = ({
         <div className="flex flex-col items-end" onClick={(e) => e.stopPropagation()}>
           <span className="text-[9px] text-primary-400 uppercase font-bold tracking-widest mb-1">Премия (₽)</span>
           {isPrivate ? (
-            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
+            <div className="h-8 sm:h-9 flex items-center pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm"><PrivacyBlur isPrivate={true}>{formatCurrency(activeYearData.quarters?.[qIndex]?.bonusAmount || 0)}</PrivacyBlur></div>
           ) : (
             <TableInput 
               value={activeYearData.quarters?.[qIndex]?.bonusAmount || 0} 
@@ -119,7 +119,7 @@ export const QuarterAccordion = ({
                         <div>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Оклад</span>
                           {isPrivate ? (
-                            <div className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm flex items-center justify-end h-[34px]"><PrivacyBlur isPrivate={true}>•••</PrivacyBlur></div>
+                            <div className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 font-mono text-right text-sm flex items-center justify-end h-[34px]"><PrivacyBlur isPrivate={true}>{formatCurrency(calcM.salary)}</PrivacyBlur></div>
                           ) : (
                             <TableInput 
                               value={calcM.salary} 

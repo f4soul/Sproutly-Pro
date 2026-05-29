@@ -13,9 +13,10 @@ import { HeatmapLegend } from './heatmap/HeatmapLegend';
 interface DepositHeatmapProps {
   deposits: Deposit[];
   year: number;
+  isPrivate?: boolean;
 }
 
-export function DepositHeatmap({ deposits, year: initialYear }: DepositHeatmapProps) {
+export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false }: DepositHeatmapProps) {
   const [displayYear, setDisplayYear] = useState(initialYear);
   const [expandedMonth, setExpandedMonth] = useState<Date | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -93,6 +94,7 @@ export function DepositHeatmap({ deposits, year: initialYear }: DepositHeatmapPr
               selectedDay={selectedDay}
               setSelectedDay={setSelectedDay}
               heatmapData={heatmapData}
+              isPrivate={isPrivate}
             />
           )}
         </AnimatePresence>,

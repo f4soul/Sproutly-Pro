@@ -159,20 +159,19 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 169500, av
                 ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-emerald-500/30 dark:border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:border-emerald-500/40" 
                 : "bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200 dark:border-white/5"
             )}>
-              <div className="flex items-center justify-between gap-1.5 flex-nowrap w-full">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <TrendingUp size={14} className={simulation.isActive ? "text-emerald-550 dark:text-emerald-400" : "text-slate-400"} />
+              <div className="flex items-start justify-between gap-1.5 flex-nowrap w-full">
+                <div className="flex items-center gap-1.5 min-w-0 pr-1">
+                  <TrendingUp size={14} className={cn("shrink-0", simulation.isActive ? "text-emerald-550 dark:text-emerald-400" : "text-slate-400")} />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
                     {simulation.isActive ? "Новый оклад" : "Оклад"}
                   </span>
                 </div>
+                {simulation.isActive && (simulation.salaryIncrease ?? 0) > 0 && (
+                  <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 shrink-0 select-none">
+                    +{simulation.salaryIncrease}%
+                  </span>
+                )}
               </div>
-
-              {simulation.isActive && (simulation.salaryIncrease ?? 0) > 0 && (
-                <span className="absolute top-4 lg:top-5 right-4 lg:right-5 text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 shrink-0 select-none">
-                  +{simulation.salaryIncrease}%
-                </span>
-              )}
 
               {simulation.isActive ? (
                 <div className="mt-auto flex flex-col gap-0.5">

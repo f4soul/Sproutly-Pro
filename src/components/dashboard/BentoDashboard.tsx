@@ -248,7 +248,7 @@ export function BentoDashboard({
           
           <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 relative z-10">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Грязный доход</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Доход (до вычета)</p>
               <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{formatVal(data.totalGross)}</p>
             </div>
             <div>
@@ -272,13 +272,13 @@ export function BentoDashboard({
           </div>
 
           <div className="relative z-10 h-full flex flex-col justify-between min-w-0">
-            <div className="flex items-center justify-between mb-3 w-full">
+            <div className="flex items-center justify-between mb-1.5 w-full">
                <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
                  Средний доход <span className="opacity-70 ml-0.5 text-[8px]">(NET)</span>
                </h3>
             </div>
             
-            <div className="flex flex-col gap-2 mt-auto overflow-hidden">
+            <div className="flex flex-col gap-1.5 mt-auto overflow-hidden">
                <AutoFitText className="flex items-baseline gap-1.5 leading-none mb-0.5 pointer-events-none">
                  <span className="text-3xl sm:text-3xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">{formatVal(data.totalNet / 12)}</span>
                  <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase shrink-0">/ мес</span>

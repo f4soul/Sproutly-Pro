@@ -134,8 +134,8 @@ export interface DayDensity {
   count: number;
   maturingCount: number;
   openingCount: number;
-  maturingNames: string[];
-  openingNames: string[];
+  maturingNames: { bank: string; amount: number }[];
+  openingNames: { bank: string; amount: number }[];
 }
 
 export interface HeatmapData {
@@ -166,6 +166,7 @@ export interface AppSettings {
     pin: string | null;
     useBiometrics: boolean;
     credentialId?: string | null;
+    timeoutMinutes?: number;
   };
   updatedAt?: number;
   userId?: string;

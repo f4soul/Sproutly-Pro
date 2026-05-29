@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fingerprint, Lock, Shield, X, Delete } from 'lucide-react';
+import { Fingerprint, Lock, Shield, X, Delete, AlertTriangle } from 'lucide-react';
 import { verifyBiometricCredential } from '../../lib/biometrics';
 import { cn } from '../../lib/utils';
 import { showToast } from '../../lib/toast';
 import { db } from '../../config/db';
+import { logout } from '../../config/firebase';
 
 interface SecurityLockProps {
   pin: string;
@@ -17,6 +18,23 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
   const [enteredPin, setEnteredPin] = useState('');
   const [error, setError] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showForgotPinTheme, setShowForgotPinTheme] = useState(false);
+
+  const vibrate = (pattern: number | number[] = 50) => {
+    if (typeof window !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  };
+
+  useEffect(() => {
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
 
   useEffect(() => {
     if (useBiometrics && credentialId && !enteredPin) {
@@ -27,8 +45,10 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
   useEffect(() => {
     if (enteredPin.length === 4) {
       if (enteredPin === pin) {
+        vibrate(50);
         onUnlock();
       } else {
+        vibrate([50, 50, 50]);
         setError(true);
         setTimeout(() => {
           setEnteredPin('');
@@ -43,9 +63,11 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
     try {
       setIsAuthenticating(true);
       await verifyBiometricCredential(credentialId);
+      vibrate(50);
       onUnlock();
     } catch (err) {
       console.error(err);
+      vibrate([50, 50, 50]);
       showToast('Биометрия не распознана', 'error');
     } finally {
       setIsAuthenticating(false);
@@ -54,6 +76,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
 
   const handleNumberClick = (num: number) => {
     if (enteredPin.length < 4 && !error) {
+      vibrate(30);
       setEnteredPin(prev => prev + num);
       setError(false);
     }
@@ -61,20 +84,24 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
 
   const handleDelete = () => {
     if (!error) {
+      vibrate(30);
       setEnteredPin(prev => prev.slice(0, -1));
     }
   };
 
-  const handleForgotPin = async () => {
-    if (window.confirm('Сброс PIN-кода приведет к полному удалению всех локальных данных приложения.\n\nЕсли вы пользовались синхронизацией, ваши данные остались в облаке, и вы сможете восстановить их при повторном входе в аккаунт.\n\nВы уверены, что хотите сбросить приложение?')) {
-      try {
-        await db.delete();
-      } catch (e) {
-        console.error('Error deleting db', e);
-      }
-      localStorage.clear();
-      window.location.reload();
+  const handleForgotPinConfirm = async () => {
+    try {
+      await logout();
+    } catch (e) {
+      console.error('Error logging out', e);
     }
+    try {
+      await db.delete();
+    } catch (e) {
+      console.error('Error deleting db', e);
+    }
+    localStorage.clear();
+    window.location.reload();
   };
 
   return (
@@ -165,12 +192,65 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
         </div>
 
         <button 
-          onClick={handleForgotPin}
+          onClick={() => setShowForgotPinTheme(true)}
           className="absolute bottom-8 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest"
         >
           Забыли PIN?
         </button>
       </motion.div>
+
+      <AnimatePresence>
+        {showForgotPinTheme && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+              onClick={() => setShowForgotPinTheme(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              className="relative w-full max-w-sm bg-white dark:bg-[#111315] rounded-[24px] shadow-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10 p-6 sm:p-8"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20">
+                  <AlertTriangle className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black uppercase tracking-tight text-slate-950 dark:text-white leading-none">
+                    Сброс PIN-кода
+                  </h3>
+                </div>
+              </div>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
+                Сброс PIN-кода приведет к <span className="font-bold text-rose-500">полному удалению</span> всех локальных данных приложения.
+              </p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+                Если вы пользовались облачной синхронизацией, ваши данные остались в облаке, и вы сможете восстановить их при повторном входе в аккаунт. Разрешить сброс?
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowForgotPinTheme(false)}
+                  className="flex-1 apple-button bg-slate-100 dark:bg-white/5 text-slate-950 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleForgotPinConfirm}
+                  className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 active:scale-95"
+                >
+                  Сбросить
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

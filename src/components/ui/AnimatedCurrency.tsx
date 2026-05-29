@@ -12,10 +12,10 @@ export const AnimatedCurrency = ({ value, className }: { value: number, classNam
 
   return (
     <span className={`inline-grid tabular-nums ${className || ''}`}>
-      <span className="invisible col-start-1 row-start-1 text-inherit pr-1" aria-hidden="true">
+      <span className="invisible col-start-1 row-start-1 text-inherit pr-2" aria-hidden="true">
         {formatCurrency(value)}
       </span>
-      <motion.span className="col-start-1 row-start-1 text-inherit pr-1">
+      <motion.span className="col-start-1 row-start-1 text-inherit pr-2">
         {display}
       </motion.span>
     </span>

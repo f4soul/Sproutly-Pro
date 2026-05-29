@@ -26,8 +26,8 @@ export function calculateDepositDensity(deposits: Deposit[], year: number): Heat
     let activeCount = 0;
     let maturingCount = 0;
     let openingCount = 0;
-    const maturingNames: string[] = [];
-    const openingNames: string[] = [];
+    const maturingNames: { bank: string; amount: number }[] = [];
+    const openingNames: { bank: string; amount: number }[] = [];
 
     relevantDeposits.forEach(d => {
       const dStart = new Date(d.startDate);
@@ -36,13 +36,13 @@ export function calculateDepositDensity(deposits: Deposit[], year: number): Heat
       // Opening today
       if (isSameDay(day, dStart)) {
         openingCount++;
-        openingNames.push(`${d.bank} (${new Intl.NumberFormat('ru-RU').format(d.amount)} ₽)`);
+        openingNames.push({ bank: d.bank, amount: d.amount });
       }
 
       // Maturing today
       if (dEnd && isSameDay(day, dEnd)) {
         maturingCount++;
-        maturingNames.push(`${d.bank} (${new Intl.NumberFormat('ru-RU').format(d.amount)} ₽)`);
+        maturingNames.push({ bank: d.bank, amount: d.amount });
       }
 
       // Is deposit active today?

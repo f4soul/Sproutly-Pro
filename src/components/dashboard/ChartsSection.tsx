@@ -17,9 +17,9 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
       {/* Tax Details */}
-      <div className="apple-card p-6 flex flex-col h-full min-h-[240px]">
+      <div className="apple-card p-6 flex flex-col h-full">
         <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 text-center">Детализация НДФЛ</h3>
-        <div className="flex flex-col overflow-y-auto flex-1 custom-scrollbar min-h-0 justify-center">
+        <div className="flex flex-col overflow-y-auto flex-1 custom-scrollbar min-h-0 justify-end">
           {yearlyTotals.brackets.map((b, i) => (
             <div key={i} className="flex items-center justify-between py-4 border-b border-slate-200 dark:border-slate-800 first:pt-0 last:pb-0 last:border-0">
               <div className="flex flex-col">
@@ -36,12 +36,12 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
       </div>
 
       {/* Chart */}
-      <div className="apple-card p-6 flex flex-col h-full min-h-[240px]">
+      <div className="apple-card p-6 flex flex-col h-full">
         <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 text-center">Структура дохода</h3>
         
         <div className="space-y-6 flex-1 flex flex-col justify-center">
           {/* Stacked Bar */}
-          <div className="h-4 w-full bg-slate-50 dark:bg-slate-800/50 rounded-full flex shadow-inner overflow-hidden">
+          <div className="h-2 w-full bg-slate-50 dark:bg-slate-800/50 rounded-full flex shadow-inner overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${yearlyTotals.totalGross > 0 ? (yearlyTotals.finalNet / yearlyTotals.totalGross) * 100 : 0}%` }}
@@ -57,7 +57,7 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
           </div>
 
           {/* Legend List */}
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4 mt-auto">
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-primary-500"></div>

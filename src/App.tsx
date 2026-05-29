@@ -54,11 +54,56 @@ function AppContent() {
       localStorage.setItem('theme', _appSettings.theme);
       setLocalTheme(_appSettings.theme);
     }
-    // Auto-unlock if not enabled
-    if (_appSettings && !_appSettings.privacyLock?.enabled) {
-      setIsUnlocked(true);
+    
+    // Auto-unlock if not enabled, or if within timeout
+    if (_appSettings) {
+      if (!_appSettings.privacyLock?.enabled) {
+        setIsUnlocked(true);
+      } else if (!isUnlocked) {
+        // Evaluate timeout if lock is enabled AND we are currently locked
+        const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
+        if (timeoutMinutes > 0) {
+           const lastActiveStr = localStorage.getItem('lockLastActive');
+           if (lastActiveStr) {
+             const elapsed = Date.now() - parseInt(lastActiveStr, 10);
+             if (elapsed < timeoutMinutes * 60 * 1000) {
+               setIsUnlocked(true);
+             }
+           }
+        }
+      }
     }
   }, [_appSettings]);
+
+  // Track user activity to update last active timestamp
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    const trackActivity = () => {
+      // Throttle write to localStorage
+      if (!timeout) {
+        timeout = setTimeout(() => {
+          localStorage.setItem('lockLastActive', Date.now().toString());
+          timeout = undefined as any;
+        }, 2000);
+      }
+    };
+
+    // Initial timestamp
+    localStorage.setItem('lockLastActive', Date.now().toString());
+
+    window.addEventListener('mousemove', trackActivity);
+    window.addEventListener('touchstart', trackActivity);
+    window.addEventListener('keydown', trackActivity);
+    window.addEventListener('click', trackActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', trackActivity);
+      window.removeEventListener('touchstart', trackActivity);
+      window.removeEventListener('keydown', trackActivity);
+      window.removeEventListener('click', trackActivity);
+      if (timeout) clearTimeout(timeout);
+    };
+  }, []);
 
   // Sync theme to document element
   useEffect(() => {
@@ -130,7 +175,7 @@ function AppContent() {
               />
             )}
             {activeTab === 'calendar' && (
-              <DepositHeatmap deposits={deposits} year={selectedYear} />
+              <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
             )}
             {activeTab === 'ndfl' && (
               <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />

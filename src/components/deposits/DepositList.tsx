@@ -49,12 +49,21 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   }, []);
 
   const filteredDeposits = useMemo(() => {
+    const queryLower = searchQuery.toLowerCase().trim();
+    const matchesAnyBankName = queryLower
+      ? deposits.some(d => !d.isArchived && d.bank.toLowerCase().includes(queryLower))
+      : false;
+
     const sorted = deposits.filter(d => {
       if (d.isArchived) return false;
 
-      const matchesSearch = d.bank.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           (d.comment?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                           (d.sourceNote?.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesSearch = !queryLower ? true : (
+        matchesAnyBankName
+          ? d.bank.toLowerCase().includes(queryLower)
+          : (d.bank.toLowerCase().includes(queryLower) || 
+             d.comment?.toLowerCase().includes(queryLower) ||
+             d.sourceNote?.toLowerCase().includes(queryLower))
+      );
       
       const depositClosed = isDepositClosed(d);
       const matchesStatus = filterStatus === 'all' || 

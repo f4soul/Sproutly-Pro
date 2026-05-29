@@ -79,6 +79,7 @@ export function IncomeMobileView({
             calculatedMonths={calculatedMonths}
             handleQuarterChange={handleQuarterChange}
             handleMonthChange={handleMonthChange}
+            isPrivate={isPrivate}
           />
         ))}
       </div>

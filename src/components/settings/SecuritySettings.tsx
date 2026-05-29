@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../config/db';
 import { AppSettings } from '../../types';
-import { Shield, Fingerprint, Lock, ShieldCheck } from 'lucide-react';
+import { Shield, Fingerprint, Lock, ShieldCheck, ChevronDown } from 'lucide-react';
 import { registerBiometricCredential, isBiometricsSupported } from '../../lib/biometrics';
 import { useAppState } from '../../hooks/useAppState';
 import { cn } from '../../lib/utils';
@@ -21,6 +21,31 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   const [pinInput, setPinInput] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [step, setStep] = useState<1 | 2>(1);
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const timeoutOptions = [
+    { value: 0, label: 'Сразу' },
+    { value: 1, label: 'Через 1 минуту' },
+    { value: 5, label: 'Через 5 минут' },
+    { value: 15, label: 'Через 15 минут' },
+    { value: 60, label: 'Через 1 час' }
+  ];
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     isBiometricsSupported().then(setIsBiometricsAvail).catch(() => {});
@@ -79,7 +104,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   };
 
   return (
-    <section className="apple-card p-5 lg:p-6 mb-6 lg:mb-8">
+    <section className="apple-card !overflow-visible p-5 lg:p-6 mb-6 lg:mb-8">
       <div className="flex items-center gap-4 mb-6">
         <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0">
           <ShieldCheck className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
@@ -114,6 +139,63 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
             )} />
           </button>
         </div>
+
+        {/* Timeout Setup */}
+        {isEnabled && (
+          <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5 relative">
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Запрашивать PIN-код</span>
+              <span className="text-[10px] text-slate-500 font-medium">Время неактивности до блокировки</span>
+            </div>
+            
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center justify-between gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-white/[0.08] hover:border-primary-500/30 dark:hover:border-primary-500/30 rounded-2xl text-slate-800 dark:text-slate-200 text-xs sm:text-sm font-bold shadow-sm transition-all focus:outline-none active:scale-95 cursor-pointer min-w-[130px]"
+              >
+                <span>{timeoutOptions.find(o => o.value === (lockSettings?.timeoutMinutes || 0))?.label || 'Сразу'}</span>
+                <motion.div animate={{ rotate: isDropdownOpen ? 180 : 0 }} transition={{ duration: 0.15 }}>
+                  <ChevronDown size={16} className="text-slate-400 stroke-[2px]" />
+                </motion.div>
+              </button>
+
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] rounded-2xl shadow-xl z-[90] p-1.5 space-y-0.5 overflow-hidden"
+                  >
+                    {timeoutOptions.map((opt) => {
+                      const isSelected = (lockSettings?.timeoutMinutes || 0) === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            updateLockSettings({ timeoutMinutes: opt.value });
+                            setIsDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer block focus:outline-none",
+                            isSelected
+                              ? "bg-primary-500/10 text-primary-600 dark:text-primary-400 font-bold"
+                              : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         {/* Biometrics Toggle (Only if app lock is enabled and biometrics supported) */}
         {isEnabled && isBiometricsAvail && (

@@ -34,7 +34,7 @@ export const YearSummary = ({
 
   return (
     <div 
-      className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-full"
+      className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2 w-full max-w-full"
     >
       {/* Net (Hero) */}
       <div className={cn(
@@ -46,10 +46,10 @@ export const YearSummary = ({
         <div className="absolute -bottom-2 -right-2 text-white opacity-10 transition-all duration-500 ease-out group-hover:scale-110 pointer-events-none">
           <Calculator className="w-20 h-20" />
         </div>
-        <div className="relative z-10 flex items-center justify-between gap-2">
-          <p className="text-[9px] font-bold text-primary-100 uppercase tracking-widest mb-0.5 truncate flex-shrink-0">Финальный Net</p>
+        <div className="relative z-10 flex items-start justify-between gap-1 w-full flex-nowrap">
+          <p className="text-[9px] font-bold text-primary-100 uppercase tracking-widest mb-0.5 truncate flex-1 min-w-0 mt-0.5 mr-1">Финальный Net</p>
           {isSimulated && (
-            <span className="px-1.5 py-0.5 bg-white/20 rounded backdrop-blur-sm text-[8px] font-black tracking-widest text-white uppercase animate-pulse flex-shrink-0">
+            <span className="px-1.5 py-0.5 bg-white/20 rounded backdrop-blur-sm text-[8px] font-black tracking-widest text-white uppercase animate-pulse shrink-0">
               Simulation
             </span>
           )}

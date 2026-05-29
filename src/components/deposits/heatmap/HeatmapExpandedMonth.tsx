@@ -7,6 +7,7 @@ import { HeatmapData } from '../../../types';
 import { getIntensity, getColorClass } from './utils';
 import { TrendingUp, Sparkle, X } from 'lucide-react';
 import { SproutlyLogo } from '../../ui/SproutlyLogo';
+import { PrivacyBlur } from '../../ui/PrivacyBlur';
 
 interface HeatmapExpandedMonthProps {
   expandedMonth: Date;
@@ -14,6 +15,7 @@ interface HeatmapExpandedMonthProps {
   selectedDay: Date | null;
   setSelectedDay: (date: Date | null) => void;
   heatmapData: HeatmapData;
+  isPrivate?: boolean;
 }
 
 export function HeatmapExpandedMonth({
@@ -21,7 +23,8 @@ export function HeatmapExpandedMonth({
   setExpandedMonth,
   selectedDay,
   setSelectedDay,
-  heatmapData
+  heatmapData,
+  isPrivate = false
 }: HeatmapExpandedMonthProps) {
   const days = eachDayOfInterval({ start: expandedMonth, end: new Date(expandedMonth.getFullYear(), expandedMonth.getMonth() + 1, 0) });
   const startDay = (getDay(expandedMonth) + 6) % 7; 
@@ -209,23 +212,27 @@ export function HeatmapExpandedMonth({
                           {format(selectedDay, 'd MMMM yyyy', { locale: ru })}
                         </h4>
                         <div className="flex flex-col gap-1.5 relative z-10 mt-1 max-h-[140px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                          {heatmapData.days[format(selectedDay, 'yyyy-MM-dd')].openingNames.map((name, i) => (
+                          {heatmapData.days[format(selectedDay, 'yyyy-MM-dd')].openingNames.map((item, i) => (
                             <div key={`op-${i}`} className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-white/[0.05] rounded-xl shrink-0">
                               <div className="flex items-center justify-center p-0.5 shrink-0">
                                 <SproutlyLogo className="w-3 h-3 text-deposit-500 drop-shadow-[0_0_4px_rgba(var(--rgb-deposit),0.5)]" />
                               </div>
                               <div className="flex flex-col min-w-0">
                                 <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-0.5">Открытие</span>
-                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight truncate">{name}</span>
+                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight truncate">
+                                  {item.bank} (<PrivacyBlur isPrivate={isPrivate}>{new Intl.NumberFormat('ru-RU').format(item.amount)}</PrivacyBlur> ₽)
+                                </span>
                               </div>
                             </div>
                           ))}
-                          {heatmapData.days[format(selectedDay, 'yyyy-MM-dd')].maturingNames.map((name, i) => (
+                          {heatmapData.days[format(selectedDay, 'yyyy-MM-dd')].maturingNames.map((item, i) => (
                             <div key={`m-${i}`} className="flex items-center gap-2 p-2 bg-amber-50/50 dark:bg-amber-500/10 rounded-xl border border-amber-200/50 dark:border-amber-500/20 shrink-0">
                               <Sparkle className="w-3 h-3 text-amber-500 shrink-0" />
                               <div className="flex flex-col min-w-0">
                                 <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 leading-none mb-0.5">Выплата</span>
-                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight truncate">{name}</span>
+                                <span className="text-[9px] sm:text-[10px] font-bold text-slate-800 dark:text-slate-200 leading-tight truncate">
+                                  {item.bank} (<PrivacyBlur isPrivate={isPrivate}>{new Intl.NumberFormat('ru-RU').format(item.amount)}</PrivacyBlur> ₽)
+                                </span>
                               </div>
                             </div>
                           ))}

@@ -141,18 +141,21 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
         <div className="mt-auto flex flex-col gap-2">
           {/* New Sync Indicator Desktop */}
-          <AnimatePresence>
-            {syncStatus !== 'idle' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0, y: 10 }}
-                animate={{ opacity: 1, height: 'auto', y: 0 }}
-                exit={{ opacity: 0, height: 0, y: 10 }}
-                className="overflow-hidden"
-              >
-                <div className={cn(
-                  "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-colors duration-500",
-                  syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
-                  syncStatus === 'success' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
+          <motion.div
+            initial={false}
+            animate={{ 
+              opacity: syncStatus !== 'idle' ? 1 : 0, 
+              height: syncStatus !== 'idle' ? 'auto' : 0, 
+              y: syncStatus !== 'idle' ? 0 : 10,
+              pointerEvents: syncStatus !== 'idle' ? 'auto' : 'none'
+            }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <div className={cn(
+              "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-colors duration-500",
+              syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
+              syncStatus === 'success' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
                   "bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20"
                 )}>
                   <div className="relative w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center shrink-0">
@@ -179,9 +182,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                      syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка синхронизации'}
                   </span>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </motion.div>
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 p-1.5 gap-1 shadow-sm">
             {user ? (
@@ -281,18 +282,21 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       {/* Header for Mobile */}
       <div className="md:hidden">
         {/* Mobile Sync Indicator */}
-        <AnimatePresence>
-          {syncStatus !== 'idle' && (
-            <motion.div
-              initial={{ y: -20, opacity: 0, scale: 0.95 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: -20, opacity: 0, scale: 0.95 }}
-              className="fixed top-[calc(5rem+12px)] left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
-            >
-              <div className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-colors duration-500",
-                syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
-                syncStatus === 'success' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
+        <motion.div
+          initial={false}
+          animate={{ 
+            y: syncStatus !== 'idle' ? 0 : -20, 
+            opacity: syncStatus !== 'idle' ? 1 : 0, 
+            scale: syncStatus !== 'idle' ? 1 : 0.95,
+            pointerEvents: syncStatus !== 'idle' ? 'auto' : 'none'
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="fixed top-[calc(5rem+12px)] left-1/2 -translate-x-1/2 z-[60]"
+        >
+          <div className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-colors duration-500",
+            syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
+            syncStatus === 'success' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
                 "bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20"
               )}>
                 <div className="relative w-3 h-3 flex items-center justify-center shrink-0">
@@ -319,9 +323,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                    syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка'}
                 </span>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </motion.div>
 
         <motion.header 
           initial={false}
@@ -471,19 +473,12 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
       )}>
         <div className={cn("w-full flex-1 min-w-0 flex flex-col mx-auto", activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl")}>
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              onAnimationStart={(def) => {
-                if (typeof def === 'object' && ('opacity' in def || 'y' in def)) {
-                  window.scrollTo({ top: 0, behavior: 'instant' });
-                } else if (def === 'animate') {
-                  window.scrollTo({ top: 0, behavior: 'instant' });
-                }
-              }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
               className={cn(
                 "flex-1 w-full min-w-0 flex flex-col h-full",

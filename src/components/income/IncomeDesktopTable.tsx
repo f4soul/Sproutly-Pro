@@ -49,11 +49,11 @@ export function IncomeDesktopTable({
         className="hidden lg:block relative isolate"
       >
         <div className="bg-white dark:bg-slate-950 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10">
-          <div className="overflow-x-auto custom-scrollbar relative rounded-2xl overflow-hidden no-scrollbar">
+          <div className="overflow-x-auto custom-scrollbar relative rounded-2xl no-scrollbar">
           <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
             <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
               <tr>
-                <th colSpan={6} className="pl-3 md:pl-4 lg:pl-5 pr-4 md:pr-5 lg:pr-6 py-2.5 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] relative">
+                <th colSpan={6} className="p-2.5 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] relative">
                   <div className="w-full">
                     <BonusConfigControls
                       compact
@@ -71,8 +71,8 @@ export function IncomeDesktopTable({
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle" title="Фактически отработано / Норма">Дни (ф/н)</th>
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Оклад (₽)</th>
                 <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Премия (₽)</th>
-                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-primary-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap min-w-[110px] lg:min-w-[130px] align-middle">Gross (₽)</th>
-                <th className="pl-1 md:pl-2 pr-4 md:pr-5 lg:pr-6 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative min-w-[110px] lg:min-w-[130px] align-middle">
+                <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-[100px] md:w-[115px] lg:w-[130px] align-middle">Gross (₽)</th>
+                <th className="pl-1 pr-2 md:pr-3 lg:pr-4 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative w-[100px] md:w-[115px] lg:w-[130px] align-middle">
                   <button 
                     onClick={onShowTaxInfo}
                     className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-600 dark:text-emerald-400 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
@@ -96,6 +96,7 @@ export function IncomeDesktopTable({
                   calculatedMonths={calculatedMonths}
                   handleQuarterChange={handleQuarterChange}
                   handleMonthChange={handleMonthChange}
+                  isPrivate={isPrivate}
                 />
               ))}
 
@@ -104,6 +105,7 @@ export function IncomeDesktopTable({
                 handleAnnualBonusChange={handleAnnualBonusChange}
                 calculatedMonths={calculatedMonths}
                 yearlyTotals={yearlyTotals}
+                isPrivate={isPrivate}
               />
             </tbody>
           </table>

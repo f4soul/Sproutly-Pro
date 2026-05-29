@@ -159,7 +159,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={0}
             title="Общий доход" 
-            value={<PrivacyBlur isPrivate={isPrivate}>{stats.totalIncome}</PrivacyBlur>} 
+            value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={stats.totalIncome} /></PrivacyBlur>} 
             icon={<TrendingUp className="w-4 h-4 text-deposit-600" />}
             description="Все проценты"
           />
@@ -168,7 +168,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={1}
             title="Лимит" 
-            value={<PrivacyBlur isPrivate={isPrivate}>{currentYearSettings.limit}</PrivacyBlur>} 
+            value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={currentYearSettings.limit} /></PrivacyBlur>} 
             icon={<ShieldAlert className="w-4 h-4 text-amber-600" />}
             description="Необлагаемая сумма"
           />
@@ -177,7 +177,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={2}
             title="Налоговая база" 
-            value={<PrivacyBlur isPrivate={isPrivate}>{stats.taxableBase}</PrivacyBlur>} 
+            value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={stats.taxableBase} /></PrivacyBlur>} 
             icon={<Landmark className="w-4 h-4 text-deposit-600" />}
             description="Сверх лимита"
           />
@@ -186,7 +186,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
           <StatCard 
             index={3}
             title="Налог к уплате" 
-            value={<PrivacyBlur isPrivate={isPrivate}>{stats.tax}</PrivacyBlur>} 
+            value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={stats.tax} /></PrivacyBlur>} 
             icon={<ReceiptRussianRuble className="w-4 h-4 text-rose-600" />}
             description={`${currentYearSettings.ndflRate}% от базы`}
             highlight={stats.tax > 0}
