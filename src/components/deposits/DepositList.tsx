@@ -28,8 +28,6 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [isAnalyticsExpanded, setIsAnalyticsExpanded] = useState(false);
   const [sortConfig, setSortConfigState] = useState<{ key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isInteracting, setIsInteracting] = useState(false);
-  const interactTimer = React.useRef<NodeJS.Timeout | null>(null);
 
   const uniqueBanks = useMemo(() => {
     const names = deposits
@@ -41,17 +39,12 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 100);
-      setIsInteracting(true);
-      if (interactTimer.current) clearTimeout(interactTimer.current);
-      interactTimer.current = setTimeout(() => setIsInteracting(false), 300);
     };
     
-    // Simple interaction tracker for scrolls
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (interactTimer.current) clearTimeout(interactTimer.current);
     };
   }, []);
 
@@ -195,14 +188,14 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         <motion.button
           initial={{ opacity: 0, scale: 0.5, y: 20 }}
           animate={{ 
-            opacity: isInteracting ? 0.3 : 1,
-            scale: isInteracting ? 0.9 : 1,
+            opacity: 1,
+            scale: 1,
             y: 0
           }}
           transition={{ 
-            type: "tween",
-            ease: "easeInOut",
-            duration: 0.2
+            type: "spring",
+            stiffness: 260,
+            damping: 20
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

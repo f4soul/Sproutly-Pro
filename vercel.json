@@ -1,6 +1,6 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|logos/|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|webmanifest|txt)).*)", "destination": "/index.html" }
   ]
 }
