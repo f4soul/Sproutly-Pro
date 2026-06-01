@@ -16,7 +16,7 @@ This file contains the core UI/UX guidelines for this project. **All future modi
   - Colored Glow: Primary action buttons or focused elements cast a colored glow, e.g. `shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)]`.
 
 ## 2. Color Palette
-- **Brand / Primary**: Emerald (`emerald-500`). Used for "income", active states, positive trends, and primary buttons.
+- **Brand / Primary**: CSS variables `--primary` (primary accent blue/indigo) and `--deposit` (the custom deposit teal, mapped to `teal-500` / `teal-400`). Use `--deposit` for deposit-related operations, accents, select elements, active states, and positive trends.
 - **Secondary / Actions**: 
   - Amber (`amber-400`, `amber-500`) for "cash-out", maturity, pending states.
   - Red (`red-500`) for destructive actions (delete, close) or expenses.
@@ -34,7 +34,7 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 
 ## 4. Shapes & Rounding (Border Radius)
 - **Large containers (modals, main dashboard cards)**: Soft oversized corners like `rounded-[2rem]` or `rounded-[2.5rem]`.
-- **Inner elements (buttons, inputs, filters, chips)**: Standardized to `rounded-xl` or `rounded-2xl` to match the outer softness.
+- **Inner elements (buttons, inputs, filters, chips)**: Standardized to `rounded-xl` or `rounded-2xl` to match the outer softness. Very small or compact UI elements (like compact bank chips) can use `rounded-[10px]`.
 
 ## 5. Interaction & Animation
 - **Hover States**: 
@@ -48,4 +48,4 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 - **Action Blocks**: Group related actions (like close buttons, navigation) consistently in top-right or logical corners with a unified background block.
 
 ## Rule of Thumb for AI Agents:
-When asked to build or modify a new component, **DO NOT** use standard default Tailwind (like basic square buttons or generic flat grey backgrounds). Blend it with the glassmorphism, rounded corners, and emerald-accented design rules defined above so it feels like a native part of the Cashflow Tracker Pro platform.
+When asked to build or modify a new component, **DO NOT** use standard default Tailwind (like basic square buttons or generic flat grey backgrounds). Blend it with the glassmorphism, rounded corners, and deposit-accented design rules defined above so it feels like a native part of the Sproutly.Pro platform.

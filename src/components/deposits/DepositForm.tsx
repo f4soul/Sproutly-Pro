@@ -357,7 +357,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                     </div>
                                     <div className="flex items-center gap-1 shrink-0">
                                       {selected && (
-                                        <span className="text-emerald-500 flex items-center justify-center">
+                                        <span className="text-deposit-500 flex items-center justify-center">
                                           <Check className="h-4 w-4 stroke-[2.5px]" />
                                         </span>
                                       )}
@@ -366,7 +366,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                           <button 
                                             type="button"
                                             onClick={(e) => handleEditBank(e, bank)}
-                                            className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
+                                            className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-deposit-500 hover:bg-deposit-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
                                             title="Редактировать банк"
                                           >
                                             <Edit2 size={13} className="stroke-[2px]" />
@@ -392,14 +392,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           value="__ADD_NEW__"
                           className={({ active }) =>
                             cn(
-                              'flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer mt-1 border border-dashed border-emerald-500/20 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+                              'flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer mt-1 border border-dashed border-deposit-500/20 dark:border-deposit-500/10 text-deposit-600 dark:text-deposit-400',
                               active 
-                                ? 'bg-emerald-50/50 dark:bg-emerald-500/10 border-solid border-emerald-500/30' 
+                                ? 'bg-deposit-50/50 dark:bg-deposit-500/10 border-solid border-deposit-500/30' 
                                 : 'bg-transparent'
                             )
                           }
                         >
-                          <Plus size={16} className="stroke-[2.5px] text-emerald-500 shrink-0" />
+                          <Plus size={16} className="stroke-[2.5px] text-deposit-500 shrink-0" />
                           <span className="text-xs tracking-wide uppercase">Добавить новый банк</span>
                         </Combobox.Option>
                       </Combobox.Options>
@@ -429,7 +429,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative overflow-hidden">
                   <div className="relative flex items-center justify-between mb-6">
                     <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      <div className="w-6 h-6 rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400">
                         <Settings className="w-3.5 h-3.5 stroke-[2.5px]" />
                       </div>
                       Настройка банка
@@ -455,7 +455,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           type="button"
                           onClick={handleSaveNewBank}
                           disabled={!newBank.name}
-                          className="apple-button w-full h-[46px] flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 border border-emerald-400/50 dark:border-emerald-500/30 text-white shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold active:scale-95 transition-all"
+                          className="apple-button w-full h-[46px] flex items-center justify-center bg-deposit-500 hover:bg-deposit-600 border border-deposit-400/50 dark:border-deposit-500/30 text-white shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold active:scale-95 transition-all"
                         >
                           Сохранить
                         </button>
@@ -609,7 +609,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                   {formula.name}
                                 </span>
                                 {selected ? (
-                                  <span className="text-emerald-500 flex items-center justify-center shrink-0">
+                                  <span className="text-deposit-500 flex items-center justify-center shrink-0">
                                     <Check className="h-4 w-4 stroke-[2.5px]" />
                                   </span>
                                 ) : null}

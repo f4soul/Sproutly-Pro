@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Deposit } from '../../types';
@@ -33,7 +32,6 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
   const endDate = parseDate(deposit.endDate);
   const isClosed = isDepositClosed(deposit);
   const bankDetails = getBankDetails(deposit.bank);
-  const [imgError, setImgError] = useState(false);
 
   return (
     <>
@@ -54,7 +52,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
             <div 
               className="w-7 h-7 rounded-lg overflow-hidden bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-all"
             >
-              {bankDetails.logoUrl && !imgError ? (
+              {bankDetails.logoUrl ? (
                 <BankLogo
                   logoUrl={bankDetails.logoUrl} 
                   alt="" 

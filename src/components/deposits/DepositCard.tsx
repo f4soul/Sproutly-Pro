@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Edit2, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Deposit } from '../../types';
@@ -32,7 +32,6 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
   const total = deposit.amount + income;
   const [isExpanded, setIsExpanded] = useState(false);
   const bankDetails = getBankDetails(deposit.bank);
-  const [imgError, setImgError] = useState(false);
 
   // Time progress calculation
   const now = new Date().getTime();
@@ -77,7 +76,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
           <div 
             className="w-8 h-8 rounded-lg bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm"
           >
-            {bankDetails.logoUrl && !imgError ? (
+            {bankDetails.logoUrl ? (
               <BankLogo
                 logoUrl={bankDetails.logoUrl} 
                 alt={deposit.bank} 
