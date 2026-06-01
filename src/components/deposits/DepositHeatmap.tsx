@@ -22,6 +22,12 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | 'all'>('all');
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Sync expandedMonth year with displayYear dynamically
   useEffect(() => {
     if (expandedMonth && expandedMonth.getFullYear() !== displayYear) {
@@ -85,7 +91,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
       </div>
 
       {/* 4. The Focal Popup Calendar (Magic Move) */}
-      {createPortal(
+      {isMounted && typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {expandedMonth && (
             <HeatmapExpandedMonth

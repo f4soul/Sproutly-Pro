@@ -40,6 +40,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   uniqueBanks
 }) => {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
+  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const bankScrollRef = useRef<HTMLDivElement>(null);
   const desktopBankScrollRef = useRef<HTMLDivElement>(null);
   
@@ -130,11 +131,16 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   return (
     <div className="relative z-40 mb-4 w-full">
       <div className={cn(
-        "bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-3xl shadow-lg p-2 transition-all duration-300",
-        isScrolled ? "shadow-xl bg-white/60 dark:bg-slate-950/60" : ""
+        "relative border border-slate-200/50 dark:border-white/[0.05] rounded-3xl shadow-lg p-2 transition-all duration-300",
+        isScrolled ? "shadow-xl" : ""
       )}>
+        {/* Ambient frosted background glass layer (Separated to prevent backdrop-filter clipping bug in Safari/Chrome) */}
+        <div className={cn(
+          "absolute inset-0 rounded-3xl -z-10 backdrop-blur-md bg-white/40 dark:bg-slate-950/40 transition-colors duration-300 pointer-events-none",
+          isScrolled ? "bg-white/60 dark:bg-slate-950/60" : ""
+        )} />
         {/* Top Row: Search and Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative z-10">
           {/* Search Bar Inner */}
           <div className="relative flex-1 group bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] focus-within:border-deposit-500/30 dark:focus-within:border-deposit-500/30 transition-all">
             <div className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 dark:text-slate-400 transition-colors group-focus-within:text-deposit-500">
@@ -197,10 +203,20 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
           {isFiltersExpanded && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: "visible" } }}
-              exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              onAnimationStart={() => {
+                if (!isFiltersExpanded) {
+                  setIsFullyExpanded(false);
+                }
+              }}
+              onAnimationComplete={() => {
+                if (isFiltersExpanded) {
+                  setIsFullyExpanded(true);
+                }
+              }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className="overflow-hidden"
+              className={cn("relative z-30", isFullyExpanded && isFiltersExpanded ? "overflow-visible" : "overflow-hidden")}
             >
               <div className="pt-3 pb-1 px-1 border-t border-slate-200/50 dark:border-white/[0.05] mt-2 flex flex-col gap-3">
                 
@@ -416,10 +432,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               onClick={() => exportToPDF('', undefined, filteredDeposits)}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
-                              <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
+                              <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
                                 <FileText className="w-3.5 h-3.5 text-rose-500 group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">PDF</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
                             </button>
                             <button 
                               onClick={() => exportToImage('', filteredDeposits)}
@@ -428,7 +444,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
                                 <ImageIcon className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">PNG</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                             </button>
                             <button 
                               onClick={() => exportToXLSX(filteredDeposits)}
@@ -437,7 +453,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               <div className="w-7 h-7 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
                                 <FileSpreadsheet className="w-3.5 h-3.5 text-[#21A366] group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Excel</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Excel</span>
                             </button>
                           </div>
                         </Popover.Panel>
@@ -637,28 +653,28 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               onClick={() => exportToPDF('', undefined, filteredDeposits)}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
-                              <div className="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
-                                <FileText className="w-3.5 h-3.5 text-rose-500 group-hover/btn:scale-110 transition-transform" />
+                              <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
+                                <FileText className="w-3 h-3 text-rose-500 group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">PDF</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
                             </button>
                             <button 
                               onClick={() => exportToImage('', filteredDeposits)}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
-                              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                                <ImageIcon className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
+                              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                                <ImageIcon className="w-3 h-3 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">PNG</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                             </button>
                             <button 
                               onClick={() => exportToXLSX(filteredDeposits)}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
-                              <div className="w-7 h-7 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
-                                <FileSpreadsheet className="w-3.5 h-3.5 text-[#21A366] group-hover/btn:scale-110 transition-transform" />
+                              <div className="w-6 h-6 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
+                                <FileSpreadsheet className="w-3 h-3 text-[#21A366] group-hover/btn:scale-110 transition-transform" />
                               </div>
-                              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Excel</span>
+                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Excel</span>
                             </button>
                           </div>
                         </Popover.Panel>

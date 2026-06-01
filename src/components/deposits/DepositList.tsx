@@ -39,7 +39,10 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
     return Array.from(new Set(names)).filter(Boolean).sort();
   }, [deposits]);
 
+  const [isMounted, setIsMounted] = useState(false);
+
   React.useEffect(() => {
+    setIsMounted(true);
     let scrollTimeout: NodeJS.Timeout;
     let isInitial = true;
     
@@ -203,7 +206,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       />
 
       {/* Floating Action Button for Mobile & Tablet */}
-      {typeof document !== 'undefined' && createPortal(
+      {isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
             "lg:hidden fixed right-4 sm:right-8 z-[60] transition-all", 
@@ -348,7 +351,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       </AnimatePresence>
 
       {/* Floating Holographic Analytics Panel for Mobile/Portrait Tablet */}
-      {filteredDeposits.length > 0 && typeof document !== 'undefined' && createPortal(
+      {filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
             "block lg:hidden fixed bottom-[92px] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 md:left-[calc(272px+1.5rem)] md:right-8 z-50 pointer-events-none drop-shadow-xl max-w-xl mx-auto transition-all",
