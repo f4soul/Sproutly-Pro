@@ -38,6 +38,12 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
 
   useEffect(() => {
     if (useBiometrics && credentialId && !enteredPin) {
+      // If we are in an iframe (e.g. AI Studio development or share preview),
+      // do not automatically trigger biometrics because webauthn is blocked by policy.
+      if (typeof window !== 'undefined' && window.self !== window.top) {
+        console.warn('Skipping automatic biometric authentication inside iframe container');
+        return;
+      }
       handleBiometricAuth();
     }
   }, [useBiometrics, credentialId]);
@@ -65,10 +71,23 @@ export function SecurityLock({ pin, useBiometrics, credentialId, onUnlock }: Sec
       await verifyBiometricCredential(credentialId);
       vibrate(50);
       onUnlock();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      vibrate([50, 50, 50]);
-      showToast('Биометрия не распознана', 'error');
+      
+      // Determine if error is a policy/iframe permission error, or manual cancellation.
+      // If so, do not show a scary "biometrics not recognized" error.
+      const isCancellationOrPolicyError = 
+        err?.name === 'NotAllowedError' || 
+        err?.name === 'SecurityError' ||
+        err?.message?.includes('Permissions Policy') ||
+        err?.message?.includes('not enabled') ||
+        err?.message?.includes('cancel') ||
+        err?.message?.includes('abort');
+
+      if (!isCancellationOrPolicyError) {
+        vibrate([50, 50, 50]);
+        showToast('Биометрия не распознана', 'error');
+      }
     } finally {
       setIsAuthenticating(false);
     }

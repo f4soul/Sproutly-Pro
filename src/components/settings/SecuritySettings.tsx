@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../../config/db';
 import { AppSettings } from '../../types';
-import { Shield, Fingerprint, Lock, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Shield, Fingerprint, Lock, ShieldCheck, ChevronDown, Delete } from 'lucide-react';
 import { registerBiometricCredential, isBiometricsSupported } from '../../lib/biometrics';
 import { useAppState } from '../../hooks/useAppState';
 import { cn } from '../../lib/utils';
@@ -14,6 +14,14 @@ interface SecuritySettingsProps {
 export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   const { addToast } = useAppState();
   const [isBiometricsAvail, setIsBiometricsAvail] = useState(false);
+
+  const vibrate = (pattern: number | number[] = 50) => {
+    if (typeof window !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  };
   const lockSettings = appSettings.privacyLock;
   const isEnabled = lockSettings?.enabled || false;
 
@@ -259,6 +267,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                   <button
                     key={num}
                     onClick={() => {
+                      vibrate(30);
                       if (step === 1 && pinInput.length < 4) setPinInput(prev => prev + num);
                       if (step === 2 && pinConfirm.length < 4) setPinConfirm(prev => prev + num);
                     }}
@@ -270,6 +279,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                 <div />
                 <button
                   onClick={() => {
+                    vibrate(30);
                     if (step === 1 && pinInput.length < 4) setPinInput(prev => prev + 0);
                     if (step === 2 && pinConfirm.length < 4) setPinConfirm(prev => prev + 0);
                   }}
@@ -279,12 +289,13 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                 </button>
                 <button
                   onClick={() => {
+                    vibrate(30);
                     if (step === 1) setPinInput(prev => prev.slice(0, -1));
                     if (step === 2) setPinConfirm(prev => prev.slice(0, -1));
                   }}
-                  className="w-12 h-12 rounded-full flex mx-auto items-center justify-center text-sm font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-colors"
+                  className="w-12 h-12 rounded-full flex mx-auto items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-colors"
                 >
-                  DEL
+                  <Delete size={20} className="stroke-[1.5px]" />
                 </button>
               </div>
 

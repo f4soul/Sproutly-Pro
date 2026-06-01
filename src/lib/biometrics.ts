@@ -1,6 +1,17 @@
 export const isBiometricsSupported = async () => {
-  if (window.PublicKeyCredential) {
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  if (typeof window === 'undefined') return false;
+  try {
+    // If running in an iframe (like the AI Studio development/share preview),
+    // WebAuthn is generally blocked by Permissions-Policy and security constraints.
+    if (window.self !== window.top) {
+      return false;
+    }
+    if (window.PublicKeyCredential) {
+      return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    }
+  } catch (e) {
+    console.warn("Biometrics support check failed:", e);
+    return false;
   }
   return false;
 };
