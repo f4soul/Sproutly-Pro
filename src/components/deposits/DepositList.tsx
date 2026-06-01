@@ -46,13 +46,11 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       interactTimer.current = setTimeout(() => setIsInteracting(false), 300);
     };
     
-    // Simple interaction tracker for touches and scrolls
+    // Simple interaction tracker for scrolls
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('touchstart', handleScroll, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('touchstart', handleScroll);
       if (interactTimer.current) clearTimeout(interactTimer.current);
     };
   }, []);
@@ -190,7 +188,6 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
       {/* Floating Action Button for Mobile & Tablet */}
       <div className={cn("lg:hidden fixed right-4 sm:right-8 z-[60] transition-all duration-300", 
-        isInteracting && "pointer-events-none",
         isAnalyticsExpanded 
           ? "bottom-[92px] md:bottom-[140px] opacity-0 scale-50 pointer-events-none translate-y-4" 
           : "bottom-[180px] md:bottom-[140px] opacity-100 scale-100"
