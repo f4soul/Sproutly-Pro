@@ -63,19 +63,20 @@ function AppContent() {
         const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
         const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
         
-        let isTimedOut = true;
+        let isWithinTimeout = false;
         if (timeoutMinutes > 0) {
            const lastActiveStr = localStorage.getItem('lockLastActive');
            if (lastActiveStr) {
              const elapsed = Date.now() - parseInt(lastActiveStr, 10);
              if (elapsed < timeoutMinutes * 60 * 1000) {
-               isTimedOut = false;
+               isWithinTimeout = true;
              }
            }
         }
 
-        if (sessionUnlocked && !isTimedOut) {
+        if (sessionUnlocked || isWithinTimeout) {
           setIsUnlocked(true);
+          sessionStorage.setItem('pinUnlocked', 'true');
         } else {
           setIsUnlocked(false);
           sessionStorage.removeItem('pinUnlocked');
