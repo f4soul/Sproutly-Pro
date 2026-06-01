@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Landmark, Plus, ChevronUp, ChevronDown, BarChart3, TrendingUp } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useIsPresent } from 'motion/react';
 import { Deposit } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
 import { DepositForm } from './DepositForm';
@@ -19,6 +20,7 @@ interface DepositListProps {
 }
 
 export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
+  const isPresent = useIsPresent();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeposit, setEditingDeposit] = useState<Deposit | undefined>();
   const [depositToDelete, setDepositToDelete] = useState<Deposit | null>(null);
@@ -28,6 +30,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [isAnalyticsExpanded, setIsAnalyticsExpanded] = useState(false);
   const [sortConfig, setSortConfigState] = useState<{ key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   const uniqueBanks = useMemo(() => {
     const names = deposits
@@ -37,14 +40,34 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   }, [deposits]);
 
   React.useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    let isInitial = true;
+    
+    // Shield the scroll event from the initial mount-time/tab-change scroll reset.
+    // This ensures that when the page / tab loads, the FAB does not falsely enter the
+    // "scrolling/dimmed" state, synchronized with the page load.
+    const initialTimeout = setTimeout(() => {
+      isInitial = false;
+    }, 250);
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 100);
+      
+      if (!isInitial) {
+        setIsScrolling(true);
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          setIsScrolling(false);
+        }, 800);
+      }
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+      clearTimeout(initialTimeout);
     };
   }, []);
 
@@ -180,31 +203,33 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       />
 
       {/* Floating Action Button for Mobile & Tablet */}
-      <div className={cn("lg:hidden fixed right-4 sm:right-8 z-[60] transition-all duration-300", 
-        isAnalyticsExpanded 
-          ? "bottom-[92px] md:bottom-[140px] opacity-0 scale-50 pointer-events-none translate-y-4" 
-          : "bottom-[180px] md:bottom-[140px] opacity-100 scale-100"
-      )}>
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, y: 20 }}
-          animate={{ 
-            opacity: 1,
-            scale: 1,
-            y: 0
-          }}
-          transition={{ 
-            type: "spring",
-            stiffness: 260,
-            damping: 20
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => { setEditingDeposit(undefined); setIsFormOpen(true); }}
-          className="w-14 h-14 rounded-full bg-deposit-500 hover:bg-deposit-600 dark:bg-deposit-600 dark:hover:bg-deposit-500 text-white flex items-center justify-center shadow-2xl shadow-deposit-500/40"
+      {typeof document !== 'undefined' && createPortal(
+        <motion.div 
+          className={cn(
+            "lg:hidden fixed right-4 sm:right-8 z-[60] transition-all", 
+            !isPresent 
+              ? "duration-100 opacity-0 scale-75 pointer-events-none" 
+              : (isAnalyticsExpanded 
+                ? "bottom-[92px] md:bottom-[140px] opacity-0 scale-50 pointer-events-none translate-y-4 duration-300" 
+                : cn(
+                    "bottom-[180px] md:bottom-[140px] duration-300",
+                    isScrolling
+                      ? "opacity-20 scale-90 pointer-events-none"
+                      : "opacity-100 scale-100"
+                  )
+                )
+          )}
         >
-          <Plus className="w-6 h-6 stroke-[3px]" />
-        </motion.button>
-      </div>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={() => { setEditingDeposit(undefined); setIsFormOpen(true); }}
+            className="w-14 h-14 rounded-full bg-deposit-500 hover:bg-deposit-600 dark:bg-deposit-600 dark:hover:bg-deposit-500 text-white flex items-center justify-center shadow-2xl shadow-deposit-500/40 active:scale-95 transition-transform"
+          >
+            <Plus className="w-6 h-6 stroke-[3px]" />
+          </motion.button>
+        </motion.div>,
+        document.body
+      )}
 
       {/* Desktop & Landscape Tablet Table */}
       <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
@@ -323,8 +348,15 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       </AnimatePresence>
 
       {/* Floating Holographic Analytics Panel for Mobile/Portrait Tablet */}
-      {filteredDeposits.length > 0 && (
-        <div className="block lg:hidden fixed bottom-[92px] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 md:left-[calc(272px+1.5rem)] md:right-8 z-50 pointer-events-none drop-shadow-xl max-w-xl mx-auto">
+      {filteredDeposits.length > 0 && typeof document !== 'undefined' && createPortal(
+        <motion.div 
+          className={cn(
+            "block lg:hidden fixed bottom-[92px] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 md:left-[calc(272px+1.5rem)] md:right-8 z-50 pointer-events-none drop-shadow-xl max-w-xl mx-auto transition-all",
+            !isPresent 
+              ? "duration-100 opacity-0 scale-95 translate-y-4" 
+              : "duration-300"
+          )}
+        >
           <div
             className={cn(
               "w-full pointer-events-auto overflow-hidden",
@@ -445,7 +477,8 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>,
+        document.body
       )}
     </div>
   );
