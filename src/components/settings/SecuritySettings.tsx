@@ -78,6 +78,8 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       setStep(2);
     } else if (step === 2) {
       if (pinInput === pinConfirm) {
+        sessionStorage.setItem('pinUnlocked', 'true');
+        localStorage.setItem('lockLastActive', Date.now().toString());
         await updateLockSettings({ enabled: true, pin: pinInput });
         addToast('PIN-код установлен');
         setShowPinSetup(false);

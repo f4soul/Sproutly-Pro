@@ -472,23 +472,22 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           ? "pt-24 md:pt-6 lg:pt-8 pb-[88px] md:pb-6 lg:pb-8 min-h-[100dvh]" 
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
       )}>
-        <div className={cn("w-full flex-1 min-w-0 flex flex-col mx-auto", activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl")}>
-          <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-              className={cn(
-                "flex-1 w-full min-w-0 flex flex-col h-full",
-                activeTab !== 'calendar' && "space-y-8 md:space-y-12"
-              )}
-            >
-              {children}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className={cn(
+              "flex-1 w-full min-w-0 flex flex-col h-full mx-auto",
+              activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl",
+              activeTab !== 'calendar' && "space-y-8 md:space-y-12"
+            )}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Logout Confirmation Dialog */}

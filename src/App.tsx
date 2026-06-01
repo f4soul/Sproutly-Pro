@@ -59,17 +59,26 @@ function AppContent() {
     if (_appSettings) {
       if (!_appSettings.privacyLock?.enabled) {
         setIsUnlocked(true);
-      } else if (!isUnlocked) {
-        // Evaluate timeout if lock is enabled AND we are currently locked
+      } else {
+        const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
         const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
+        
+        let isTimedOut = true;
         if (timeoutMinutes > 0) {
            const lastActiveStr = localStorage.getItem('lockLastActive');
            if (lastActiveStr) {
              const elapsed = Date.now() - parseInt(lastActiveStr, 10);
              if (elapsed < timeoutMinutes * 60 * 1000) {
-               setIsUnlocked(true);
+               isTimedOut = false;
              }
            }
+        }
+
+        if (sessionUnlocked && !isTimedOut) {
+          setIsUnlocked(true);
+        } else {
+          setIsUnlocked(false);
+          sessionStorage.removeItem('pinUnlocked');
         }
       }
     }
@@ -150,7 +159,12 @@ function AppContent() {
           pin={appSettings.privacyLock.pin || ''}
           useBiometrics={appSettings.privacyLock.useBiometrics}
           credentialId={appSettings.privacyLock.credentialId}
-          onUnlock={() => setIsUnlocked(true)}
+          onUnlock={() => {
+            sessionStorage.setItem('pinUnlocked', 'true');
+            // Refresh activity time when unlocking
+            localStorage.setItem('lockLastActive', Date.now().toString());
+            setIsUnlocked(true);
+          }}
         />
       )}
       <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
