@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
@@ -42,6 +42,26 @@ function AppContent() {
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const _deposits = useLiveQuery(() => db.deposits.toArray());
   const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
+  
+  const isLockedRequired = useMemo(() => {
+    if (!_appSettings || !_appSettings.privacyLock?.enabled) {
+      return false;
+    }
+    const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
+    if (sessionUnlocked) return false;
+
+    const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
+    if (timeoutMinutes > 0) {
+      const lastActiveStr = localStorage.getItem('lockLastActive');
+      if (lastActiveStr) {
+        const elapsed = Date.now() - parseInt(lastActiveStr, 10);
+        if (elapsed < timeoutMinutes * 60 * 1000) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }, [_appSettings]);
   
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
@@ -155,11 +175,12 @@ function AppContent() {
 
   return (
     <>
-      {appSettings?.privacyLock?.enabled && !isUnlocked && (
+      {isLockedRequired && !isUnlocked && (
         <SecurityLock
           pin={appSettings.privacyLock.pin || ''}
           useBiometrics={appSettings.privacyLock.useBiometrics}
           credentialId={appSettings.privacyLock.credentialId}
+          credentialIds={appSettings.privacyLock.credentialIds}
           onUnlock={() => {
             sessionStorage.setItem('pinUnlocked', 'true');
             // Refresh activity time when unlocking

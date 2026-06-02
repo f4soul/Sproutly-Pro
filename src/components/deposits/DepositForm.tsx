@@ -185,6 +185,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
   const confirmDeleteBank = async () => {
     if (!bankToDelete) return;
     await db.banks.delete(bankToDelete);
+    await syncCustomBanksCache(); // Sync RAM cache
     setBanks(prev => prev.filter(b => b.id !== bankToDelete));
     const deletedBank = banks.find(b => b.id === bankToDelete);
     if (formData.bank === deletedBank?.name) {
@@ -301,6 +302,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   } else {
                     setFormData({ ...formData, bank: val });
                   }
+                  if (typeof document !== 'undefined' && document.activeElement) {
+                    (document.activeElement as HTMLElement).blur();
+                  }
                 }}>
                   <div className="relative">
                     <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-left border border-transparent focus-within:border-deposit-500/30 transition-all">
@@ -310,7 +314,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder="Выберите банк"
                       />
-                      <Combobox.Button className="absolute inset-y-0 right-0 flex items-center px-3">
+                      <Combobox.Button 
+                        onClick={() => {
+                          if (typeof document !== 'undefined' && document.activeElement) {
+                            (document.activeElement as HTMLElement).blur();
+                          }
+                        }}
+                        className="absolute inset-y-0 right-0 flex items-center px-3"
+                      >
                         <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
                       </Combobox.Button>
                     </div>
@@ -688,35 +699,55 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       </div>
 
       {/* Delete Bank Confirmation Modal */}
-      {bankToDelete && (
-        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/60 animate-in fade-in duration-300">
-          <div className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-sm w-full p-6 sm:p-8 animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300 border border-slate-200 dark:border-slate-800">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6">
-              <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+      <AnimatePresence>
+        {bankToDelete && (
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setBankToDelete(null)} static>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
+                    <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight text-center">Удалить банк?</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-center">
+                    Вы уверены, что хотите удалить этот банк? Это действие нельзя отменить.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setBankToDelete(null)}
+                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDeleteBank}
+                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 cursor-pointer"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
             </div>
-            <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight">Удалить банк?</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-              Вы уверены, что хотите удалить этот банк? Это действие нельзя отменить.
-            </p>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setBankToDelete(null)}
-                className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                onClick={confirmDeleteBank}
-                className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20"
-              >
-                Удалить
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </Dialog>
+        )}
+      </AnimatePresence>
     </Dialog>
   );
 }

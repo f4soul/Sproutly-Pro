@@ -73,7 +73,7 @@ export function HeatmapFilters({
   }, []);
 
   return (
-    <div className="flex flex-col gap-3 lg:gap-4 shrink-0">
+    <div className="flex flex-col gap-2 md:gap-2.5 lg:gap-3 shrink-0">
       <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 relative z-30">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
            <h3 className="text-base sm:text-xl lg:text-2xl font-black uppercase tracking-tight text-slate-950 dark:text-white truncate">

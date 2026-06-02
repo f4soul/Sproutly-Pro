@@ -4,7 +4,7 @@ import { db, syncWithFirebase } from '../../config/db';
 import { Archive as ArchiveIcon, RefreshCcw, BrushCleaning, AlertTriangle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog } from '@headlessui/react';
 
 export const ArchiveHeaderActions = () => {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
@@ -45,32 +45,26 @@ export const ArchiveHeaderActions = () => {
       </button>
 
       {/* Clear Archive Confirmation Modal */}
-      <Transition show={isClearModalOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-[150]" onClose={() => setIsClearModalOpen(false)}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-black/60" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-                enterTo="opacity-100 translate-y-0 sm:scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                leaveTo="opacity-0 translate-y-full sm:translate-y-0 sm:scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 p-6 sm:p-8 text-center align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
+      <AnimatePresence>
+        {isClearModalOpen && (
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setIsClearModalOpen(false)} static>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 p-6 sm:p-8 text-center shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 pointer-events-auto"
+                >
                   <div className="flex justify-center mb-6">
                     <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
                       <AlertTriangle className="w-8 h-8 stroke-[1.5px]" />
@@ -88,25 +82,25 @@ export const ArchiveHeaderActions = () => {
                   <div className="flex flex-col gap-3">
                     <button
                       type="button"
-                      className="apple-button w-full bg-rose-600 text-white shadow-lg shadow-rose-600/20 text-sm sm:text-base"
+                      className="apple-button w-full bg-rose-600 text-white shadow-lg shadow-rose-600/20 text-sm sm:text-base cursor-pointer"
                       onClick={handleClearArchive}
                     >
                       Да, удалить всё
                     </button>
                     <button
                       type="button"
-                      className="apple-button w-full bg-white dark:bg-slate-950 text-slate-950 dark:text-white border border-slate-200 dark:border-slate-800 text-sm sm:text-base"
+                      className="apple-button w-full bg-white dark:bg-slate-950 text-slate-950 dark:text-white border border-slate-200 dark:border-slate-800 text-sm sm:text-base cursor-pointer"
                       onClick={() => setIsClearModalOpen(false)}
                     >
                       Отмена
                     </button>
                   </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                </motion.div>
+              </Dialog.Panel>
             </div>
-          </div>
-        </Dialog>
-      </Transition>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </>
   );
 };

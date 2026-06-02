@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, Fragment } from 'react';
+import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
 import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble } from 'lucide-react';
@@ -244,30 +245,33 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-300 relative w-full max-w-6xl mx-auto pb-12">
       {/* Backup Section */}
-      <section className="apple-card p-4 sm:p-5 xl:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <section className="apple-card p-4 sm:p-5 xl:p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 md:gap-4 min-w-0">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0">
-            <CloudSync className="w-5 h-5 md:w-6 md:h-6 text-primary-500 stroke-[1.5px]" />
+          <div className="w-11 h-11 md:w-12 md:h-12 rounded-[18px] bg-primary-500/10 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
+            <CloudSync className="w-5 h-5 md:w-6 md:h-6 text-primary-500 stroke-[1.8px]" />
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Резервная копия</h3>
-            <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Экспорт и импорт данных</p>
+            <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Экспорт и импорт данных</p>
           </div>
         </div>
         
-        <div className="flex gap-2 shrink-0 md:w-auto w-full">
+        <div className="flex gap-2.5 shrink-0 items-center">
           <button 
+            type="button"
             onClick={exportData}
-            className="apple-button flex-1 md:flex-none flex items-center justify-center p-2 lg:p-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 transition-all rounded-xl"
+            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-[14px] cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
             title="Экспорт"
           >
-            <Download className="w-4 h-4 md:w-5 md:h-5 stroke-[2px]" />
+            <Download className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
+            <span className="hidden lg:inline">Экспорт</span>
           </button>
           <label 
-            className="apple-button flex-1 md:flex-none flex items-center justify-center p-2 lg:p-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 transition-all rounded-xl cursor-pointer"
+            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-[14px] cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
             title="Импорт"
           >
-            <Upload className="w-4 h-4 md:w-5 md:h-5 stroke-[2px]" />
+            <Upload className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
+            <span className="hidden lg:inline">Импорт</span>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>
         </div>
@@ -275,7 +279,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       {/* Tax Brackets and Deposits Tax Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
         {/* Шкала НДФЛ Section */}
-        <section className="apple-card p-5 lg:p-6 space-y-6 h-full flex flex-col">
+        <section className="apple-card p-4 sm:p-5 xl:p-6 space-y-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-4 h-12">
             <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0">
@@ -455,7 +459,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
         </section>
 
         {/* Налог на вклады Section */}
-        <section className="apple-card p-5 lg:p-6 space-y-6 h-full flex flex-col">
+        <section className="apple-card p-4 sm:p-5 xl:p-6 space-y-6 h-full flex flex-col">
           <div className="flex items-center justify-between mb-4 h-12">
             <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 rounded-2xl bg-deposit-500/10 flex items-center justify-center shrink-0">
@@ -563,139 +567,178 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
         </section>
       </div>
 
-      {/* Security Section */}
-      <SecuritySettings appSettings={appSettings} />
+      {/* Security & Archive Section side by side grid layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8">
+        {/* Security Section */}
+        <SecuritySettings appSettings={appSettings} />
 
-      {/* Archive Section */}
-      <section className="apple-card p-5 lg:p-6">
-        <div className="flex items-center gap-4 mb-6 justify-between">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
-              <ArchiveIcon className="w-6 h-6 text-orange-600 stroke-[1.5px]" />
+        {/* Archive Section */}
+        <section className="apple-card p-4 sm:p-5 xl:p-6 h-full flex flex-col">
+          <div className="flex items-center gap-4 mb-6 justify-between">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                <ArchiveIcon className="w-6 h-6 text-orange-600 stroke-[1.5px]" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив</h3>
+                <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Удаленные вклады</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив вкладов</h3>
-              <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Все закрытые и завершенные вклады</p>
+            <div className="shrink-0">
+               <ArchiveHeaderActions />
             </div>
           </div>
-          <div className="shrink-0">
-             <ArchiveHeaderActions />
-          </div>
-        </div>
-        <Archive />
-      </section>
+          <Archive />
+        </section>
+      </div>
 
       {/* Delete Confirmation Modals */}
       <AnimatePresence>
         {yearToDelete !== null && (
-          <motion.div 
-            key="delete-year-modal-settings"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          >
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setYearToDelete(null)} static>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="apple-card p-6 max-w-sm w-full"
-            >
-              <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">Удалить период?</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                Вы уверены, что хотите удалить настройки налога на вклады для {yearToDelete} года? Это действие нельзя отменить.
-              </p>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setYearToDelete(null)}
-                  className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+              key="delete-year-modal-settings"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 text-center"
                 >
-                  Отмена
-                </button>
-                <button 
-                  onClick={confirmDeleteYear}
-                  className="flex-1 apple-button bg-rose-600 text-white hover:bg-rose-700 shadow-sm"
-                >
-                  Удалить
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+                  <div className="flex justify-center mb-4">
+                    <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                      <Trash2 className="w-6 h-6 stroke-[1.5px]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white mb-2">Удалить период?</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                    Вы уверены, что хотите удалить настройки налога на вклады для <strong>{yearToDelete}</strong> года? Это действие нельзя отменить.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setYearToDelete(null)}
+                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      onClick={confirmDeleteYear}
+                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 text-sm sm:text-base cursor-pointer"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
         )}
 
         {bracketYearToDelete !== null && (
-          <motion.div 
-            key="delete-bracket-year-modal-settings"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          >
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setBracketYearToDelete(null)} static>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="apple-card p-6 max-w-sm w-full"
-            >
-              <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">Удалить период из шкалы НДФЛ?</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                Вы уверены, что хотите удалить настройки шкалы НДФЛ для {bracketYearToDelete} года? Это действие нельзя отменить.
-              </p>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setBracketYearToDelete(null)}
-                  className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+              key="delete-bracket-year-modal-settings"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 text-center"
                 >
-                  Отмена
-                </button>
-                <button 
-                  onClick={confirmDeleteBracketYear}
-                  className="flex-1 apple-button bg-rose-600 text-white hover:bg-rose-700 shadow-sm"
-                >
-                  Удалить
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+                  <div className="flex justify-center mb-4">
+                    <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                      <Trash2 className="w-6 h-6 stroke-[1.5px]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white mb-2">Удалить период?</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                    Вы уверены, что хотите удалить настройки шкалы НДФЛ для <strong>{bracketYearToDelete}</strong> года? Это действие нельзя отменить.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setBracketYearToDelete(null)}
+                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      onClick={confirmDeleteBracketYear}
+                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 text-sm sm:text-base cursor-pointer"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
         )}
 
         {bracketToDelete !== null && (
-          <motion.div 
-            key="delete-bracket-modal-settings"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
-          >
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setBracketToDelete(null)} static>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="apple-card p-6 max-w-sm w-full"
-            >
-              <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">Удалить ступень?</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                Вы уверены, что хотите удалить эту ступень налога? Расчеты могут измениться.
-              </p>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setBracketToDelete(null)}
-                  className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
+              key="delete-bracket-modal-settings"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 text-center"
                 >
-                  Отмена
-                </button>
-                <button 
-                  onClick={confirmDeleteBracket}
-                  className="flex-1 apple-button bg-rose-600 text-white hover:bg-rose-700 shadow-sm"
-                >
-                  Удалить
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+                  <div className="flex justify-center mb-4">
+                    <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
+                      <Trash2 className="w-6 h-6 stroke-[1.5px]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white mb-2">Удалить ступень?</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                    Вы уверены, что хотите удалить эту ступень налога? Расчеты могут измениться.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setBracketToDelete(null)}
+                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      onClick={confirmDeleteBracket}
+                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 text-sm sm:text-base cursor-pointer"
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
         )}
       </AnimatePresence>
     </div>

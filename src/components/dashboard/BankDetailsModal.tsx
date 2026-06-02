@@ -1,5 +1,6 @@
 import React, { Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog } from '@headlessui/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { Deposit } from '../../types';
 import { formatCurrency } from '../../lib/utils';
@@ -22,32 +23,26 @@ export function BankDetailsModal({
   selectedBankDeposits 
 }: BankDetailsModalProps) {
   return (
-    <Transition show={!!selectedBank} as={Fragment}>
-      <Dialog as="div" className="relative z-[100]" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-slate-950/80" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300 transform"
-              enterFrom="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200 transform"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-            >
-              <Dialog.Panel className="apple-card w-full max-w-md transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] p-6 text-left align-middle transition-all shadow-2xl">
+    <AnimatePresence>
+      {!!selectedBank && (
+        <Dialog as="div" className="relative z-[100]" open={true} onClose={onClose} static>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <Dialog.Panel as={Fragment}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="bg-white dark:bg-slate-950 w-full max-w-md rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6"
+              >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-center overflow-hidden p-1.5 shadow-sm">
@@ -68,7 +63,7 @@ export function BankDetailsModal({
                   </div>
                   <button
                     onClick={onClose}
-                    className="p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/10 text-slate-500 transition-colors cursor-pointer"
+                    className="p-2 rounded-full hover:bg-slate-50 dark:hover:bg-white/10 text-slate-500 transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -125,11 +120,11 @@ export function BankDetailsModal({
                     Закрыть
                   </button>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </motion.div>
+            </Dialog.Panel>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+        </Dialog>
+      )}
+    </AnimatePresence>
   );
 }

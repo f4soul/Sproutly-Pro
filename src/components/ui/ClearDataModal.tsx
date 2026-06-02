@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { Fragment, useEffect } from 'react';
+import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, X } from 'lucide-react';
 
@@ -13,56 +14,59 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div 
-          key="clear-modal"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed top-0 left-0 w-full h-[100dvh] z-50 flex items-center justify-center p-4 bg-black/60"
-          onClick={onClose}
-        >
+        <Dialog as="div" className="relative z-[150]" open={true} onClose={onClose} static>
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={(e) => e.stopPropagation()}
-            className="apple-card p-6 max-w-md w-full relative z-10"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
-                <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-full">
-                  <Trash2 size={24} />
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <Dialog.Panel as={Fragment}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 pointer-events-auto"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-3 text-rose-500">
+                    <div className="p-3 bg-rose-500/10 rounded-2xl">
+                      <Trash2 size={24} className="stroke-[1.5px]" />
+                    </div>
+                    <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">Очистить данные?</h3>
+                  </div>
+                  <button onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all text-slate-500 cursor-pointer -mt-2 -mr-2">
+                    <X size={20} />
+                  </button>
                 </div>
-                <h3 className="text-xl font-bold text-slate-950 dark:text-white">Очистить данные?</h3>
-              </div>
-              <button onClick={onClose} className="text-slate-500 hover:text-slate-950 dark:hover:text-white cursor-pointer transition-colors">
-                <X size={20} />
-              </button>
-            </div>
-            <p className="text-slate-500 dark:text-slate-400 mb-6">
-              Вы уверены, что хотите очистить все введенные данные (оклады, премии) за <strong>{year} год</strong>? Это действие нельзя отменить.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={onClose}
-                className="apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-black/5 dark:hover:bg-white/10"
-              >
-                Отмена
-              </button>
-              <button 
-                onClick={() => {
-                  onConfirm();
-                  onClose();
-                }}
-                className="apple-button bg-rose-600 text-white shadow-sm"
-              >
-                Да, очистить
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                  Вы уверены, что хотите очистить все введенные данные (оклады, премии) за <strong>{year} год</strong>? Это действие нельзя отменить.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={onClose}
+                    className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                  >
+                    Отмена
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onConfirm();
+                      onClose();
+                    }}
+                    className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 text-sm sm:text-base cursor-pointer"
+                  >
+                    Да, очистить
+                  </button>
+                </div>
+              </motion.div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
       )}
     </AnimatePresence>
   );

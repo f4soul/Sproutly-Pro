@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { Fragment } from 'react';
+import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info, X } from 'lucide-react';
 import { TaxBracket } from '../../types';
@@ -18,32 +19,33 @@ export const TaxReferenceModal = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div 
-          key="tax-reference-modal"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex items-center justify-center p-2 sm:p-4 bg-black/60"
-          onClick={onClose}
-        >
+        <Dialog as="div" className="relative z-[100]" open={true} onClose={onClose} static>
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            onClick={(e) => e.stopPropagation()}
-            className="apple-card max-w-lg w-full max-h-[90dvh] flex flex-col overflow-hidden relative z-10"
-          >
-        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <Dialog.Panel as={Fragment}>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="bg-white dark:bg-slate-950 w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col max-h-[90vh] pointer-events-auto"
+              >
+        <div className="flex justify-between items-center px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="flex items-center gap-3 text-slate-950 dark:text-white">
             <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-full text-primary-600 dark:text-primary-400">
               <Info size={20} className="sm:w-6 sm:h-6" />
             </div>
-            <h3 className="text-lg sm:text-xl font-bold">Справка: НДФЛ {year}</h3>
+            <h3 className="text-lg sm:text-xl font-bold tracking-tight">Справка: НДФЛ {year}</h3>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-950 dark:hover:text-white cursor-pointer p-1 transition-colors">
-            <X size={20} />
+          <button onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4">
+            <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>
 
@@ -95,13 +97,15 @@ export const TaxReferenceModal = ({
         <div className="p-4 sm:p-6 border-t border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50 dark:bg-slate-800/50">
           <button 
             onClick={onClose}
-            className="apple-button w-full bg-white dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-950 dark:text-white hover:bg-slate-50 dark:hover:bg-white/20"
+            className="apple-button w-full bg-slate-950 dark:bg-white/10 border border-transparent dark:border-white/10 text-white hover:bg-slate-800 dark:hover:bg-white/20 shadow-sm"
           >
             Понятно
           </button>
         </div>
-      </motion.div>
-        </motion.div>
+              </motion.div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
       )}
     </AnimatePresence>
   );

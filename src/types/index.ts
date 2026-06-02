@@ -166,6 +166,7 @@ export interface AppSettings {
     pin: string | null;
     useBiometrics: boolean;
     credentialId?: string | null;
+    credentialIds?: string[] | null;
     timeoutMinutes?: number;
   };
   updatedAt?: number;

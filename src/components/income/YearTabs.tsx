@@ -89,10 +89,10 @@ export const YearTabs = ({
           <div className="relative xl:hidden" ref={yearDropdownRef}>
             <button
                onClick={() => setIsYearDropdownOpen(!isYearDropdownOpen)}
-               className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-200/60 dark:border-white/[0.05] transition-all shadow-sm h-9"
+               className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 px-4 py-1.5 rounded-xl border border-slate-200/60 dark:border-white/[0.05] transition-all shadow-sm h-9 cursor-pointer active:scale-95 outline-none text-left"
             >
               <span className="font-bold text-slate-800 dark:text-white text-xs">{activeYear}</span>
-              <ChevronDown size={14} className={cn("text-slate-500 transition-transform", isYearDropdownOpen && "rotate-180")} />
+              <ChevronDown size={14} className={cn("text-slate-500 transition-transform duration-200", isYearDropdownOpen && "rotate-180")} />
             </button>
             <AnimatePresence>
               {isYearDropdownOpen && (
@@ -110,13 +110,13 @@ export const YearTabs = ({
                         setIsYearDropdownOpen(false);
                       }}
                       className={cn(
-                        "w-full px-3 py-2 text-left text-xs rounded-xl font-bold transition-all duration-200 border border-transparent flex items-center justify-between gap-2",
+                        "w-full px-3 py-2 text-left text-xs rounded-xl font-bold transition-all duration-200 border border-transparent flex items-center justify-between gap-check cursor-pointer",
                         year === activeYear 
                           ? "bg-slate-100/80 dark:bg-slate-800/70 text-slate-900 dark:text-white border-slate-200/50 dark:border-white/[0.05] shadow-sm font-black" 
                           : "text-slate-600 dark:text-slate-400 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white hover:border-slate-200/40 dark:hover:border-white/[0.04] hover:shadow-sm"
                       )}
                     >
-                      <span>{year} год</span>
+                      <span>{year}</span>
                       {year === activeYear && (
                         <Check size={12} className="text-emerald-500 animate-fade-in shrink-0 stroke-[2.5px]" />
                       )}
@@ -167,7 +167,7 @@ export const YearTabs = ({
             </button>
           </div>
           
-          <div className="w-px h-5 bg-slate-200/50 dark:bg-slate-950 mx-0.5 hidden sm:block" />
+          <div className="w-px h-5 bg-slate-200/50 dark:bg-slate-900 hidden sm:block" />
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm p-0.5 h-9">
             <button 

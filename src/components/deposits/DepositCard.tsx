@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Edit2, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
 import { Deposit } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
 import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
@@ -43,8 +43,8 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
 
   const getDaysRemaining = () => {
     if (isClosed || progressPercent === 100) return 'Завершён';
-    const days = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-    return `Осталось дней: ${days}`;
+    const days = endDate ? differenceInCalendarDays(endDate, new Date()) : 0;
+    return `Осталось дней: ${Math.max(0, days)}`;
   };
 
   const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;

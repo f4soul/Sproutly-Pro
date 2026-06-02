@@ -44,17 +44,18 @@ export const registerBiometricCredential = async (userId: string, userName: stri
   return credential as PublicKeyCredential;
 };
 
-export const verifyBiometricCredential = async (credentialId: string) => {
+export const verifyBiometricCredential = async (credentialId: string | string[]) => {
   if (!window.PublicKeyCredential) throw new Error("WebAuthn not supported");
   
-  const idBuffer = base64UrlToArrayBuffer(credentialId);
+  const ids = Array.isArray(credentialId) ? credentialId : [credentialId];
+  const allowCredentials = ids.map(id => ({
+    id: base64UrlToArrayBuffer(id),
+    type: "public-key" as const,
+  }));
 
   const publicKey: PublicKeyCredentialRequestOptions = {
     challenge: randomChallenge(),
-    allowCredentials: [{
-      id: idBuffer,
-      type: "public-key",
-    }],
+    allowCredentials,
     userVerification: "required",
     timeout: 60000,
   };

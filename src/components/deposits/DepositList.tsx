@@ -165,11 +165,34 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   }, [filteredDeposits]);
 
   const requestSort = (key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total') => {
-    let direction: 'asc' | 'desc' = 'desc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc';
+    const defaultDir = key === 'bank' ? 'asc' : 'desc';
+    const nextDir = defaultDir === 'asc' ? 'desc' : 'asc';
+
+    if (sortConfig && sortConfig.key === key) {
+      if (sortConfig.direction === defaultDir) {
+        setSortConfigState({ key, direction: nextDir });
+      } else {
+        setSortConfigState(null);
+      }
+    } else {
+      setSortConfigState({ key, direction: defaultDir });
     }
-    setSortConfigState({ key, direction });
+  };
+
+  const renderSortIndicator = (key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total') => {
+    if (!sortConfig || sortConfig.key !== key) return null;
+    
+    // Для "bank" 'asc' (А до Я) показывает стрелку вниз (↓), а 'desc' (Я до А) - вверх (↑)
+    // Для остальных полей 'desc' (по убыванию) показывает стрелку вниз (↓), а 'asc' (по возрастанию) - вверх (↑)
+    const isDown = key === 'bank'
+      ? sortConfig.direction === 'asc'
+      : sortConfig.direction === 'desc';
+
+    return (
+      <span className="absolute -right-3.5 text-primary-500 dark:text-primary-400 font-bold select-none text-[10px]">
+        {isDown ? ' ↓' : ' ↑'}
+      </span>
+    );
   };
 
   const resetSort = () => setSortConfigState(null);
@@ -239,14 +262,54 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-white dark:bg-slate-950">
-                <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] text-left border-b border-slate-200 dark:border-slate-800">Банк</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>СТАВКА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>ОТКРЫТ</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>ЗАКРЫТ</th>
-                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>ПЕРИОД</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>СУММА</th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>ДОХОД</th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>ИТОГО</th>
+                <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('bank')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    Банк
+                    {renderSortIndicator('bank')}
+                  </span>
+                </th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    СТАВКА
+                    {renderSortIndicator('rate')}
+                  </span>
+                </th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    ОТКРЫТ
+                    {renderSortIndicator('startDate')}
+                  </span>
+                </th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    ЗАКРЫТ
+                    {renderSortIndicator('endDate')}
+                  </span>
+                </th>
+                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    ПЕРИОД
+                    {renderSortIndicator('startDate')}
+                  </span>
+                </th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    СУММА
+                    {renderSortIndicator('amount')}
+                  </span>
+                </th>
+                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    ДОХОД
+                    {renderSortIndicator('income')}
+                  </span>
+                </th>
+                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>
+                  <span className="relative inline-flex items-center justify-center">
+                    ИТОГО
+                    {renderSortIndicator('total')}
+                  </span>
+                </th>
                 <th className="pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 w-[84px] xl:w-[100px] sticky right-0 bg-white dark:bg-slate-950 z-10"></th>
               </tr>
             </thead>

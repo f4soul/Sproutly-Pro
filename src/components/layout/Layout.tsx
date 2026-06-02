@@ -457,7 +457,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       </div>
 
       {/* Bottom Nav for Mobile */}
-      <nav className="md:hidden fixed bottom-4 left-4 right-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+      <nav className="md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
@@ -539,11 +539,15 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                       Отмена
                     </button>
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         setShowLogoutConfirm(false);
-                        logout();
+                        await logout();
+                        const { db: localDb } = await import('../../config/db');
+                        await localDb.delete();
+                        localStorage.clear();
+                        window.location.reload();
                       }}
-                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20"
+                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 cursor-pointer"
                     >
                       Выйти
                     </button>
