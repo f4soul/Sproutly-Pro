@@ -41,7 +41,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
   useEffect(() => {
     const hasCredentials = (credentialIds && credentialIds.length > 0) || credentialId;
     if (useBiometrics && hasCredentials && !enteredPin) {
-      // If we are in an iframe (e.g. AI Studio development or share preview),
+       // If we are in an iframe (e.g. development or share preview sandbox),
       // do not automatically trigger biometrics because webauthn is blocked by policy.
       if (typeof window !== 'undefined' && window.self !== window.top) {
         console.warn('Skipping automatic biometric authentication inside iframe container');

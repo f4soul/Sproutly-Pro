@@ -1,7 +1,7 @@
 export const isBiometricsSupported = async () => {
   if (typeof window === 'undefined') return false;
   try {
-    // If running in an iframe (like the AI Studio development/share preview),
+    // If running in an iframe (like a preview sandbox),
     // WebAuthn is generally blocked by Permissions-Policy and security constraints.
     if (window.self !== window.top) {
       return false;

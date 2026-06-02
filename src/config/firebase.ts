@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, setDoc, onSnapshot, getDocFromServer } from 'firebase/firestore';
-import aiStudioConfig from '../../firebase-applet-config.json';
+import defaultPlatformConfig from '../../firebase-applet-config.json';
 
 const customConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,7 +13,7 @@ const customConfig = {
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "(default)",
 };
 
-const firebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY ? customConfig : aiStudioConfig;
+const firebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY ? customConfig : defaultPlatformConfig;
 
 // Initialize Firebase SDK
 const app = initializeApp(firebaseConfig);
