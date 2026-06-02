@@ -298,7 +298,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 bg-white/60 dark:bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-200/50 dark:border-white/[0.05] shadow-sm select-none">
-                  <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400">
+                  <span className="text-[9px] font-bold text-primary-600 dark:text-primary-400">
                     {timeoutOptions.find(o => o.value === (lockSettings?.timeoutMinutes || 0))?.label || 'Сразу'}
                   </span>
                 </div>
@@ -350,7 +350,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                       <Fingerprint size={14} className="stroke-[2px]" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Вход по Touch ID / Face ID</span>
+                      <span className="text-sm sm:text-xs font-bold text-slate-800 dark:text-slate-100">Вход по Touch ID / Face ID</span>
                       <span className="text-[9px] text-slate-400 font-medium">Быстрая разблокировка</span>
                     </div>
                   </div>
@@ -376,8 +376,31 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                         Устройств: {lockSettings.credentialIds?.length || 1}
                       </span>
                       {isThisDeviceBound ? (
-                        <div className="text-[8px] font-black uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md h-6 flex items-center shadow-sm">
-                          Устройство привязано
+                        <div className="flex items-center gap-1.5">
+                          {lockSettings.credentialIds && lockSettings.credentialIds.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const localId = localStorage.getItem('localBiometricCredId');
+                                if (!localId) return;
+                                try {
+                                  await updateLockSettings({
+                                    credentialId: localId,
+                                    credentialIds: [localId]
+                                  });
+                                  addToast('Все остальные устройства успешно сброшены');
+                                } catch (err) {
+                                  addToast('Ошибка сброса устройств', 'error');
+                                }
+                              }}
+                              className="text-[8px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
+                            >
+                              Сбросить остальные
+                            </button>
+                          )}
+                          <div className="text-[8px] font-black uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md h-6 flex items-center shadow-sm">
+                            Устройство привязано
+                          </div>
                         </div>
                       ) : (
                         <button

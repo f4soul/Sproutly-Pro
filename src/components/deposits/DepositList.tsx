@@ -24,13 +24,47 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeposit, setEditingDeposit] = useState<Deposit | undefined>();
   const [depositToDelete, setDepositToDelete] = useState<Deposit | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'closed'>('all');
-  const [selectedBanks, setSelectedBanks] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState(() => {
+    return sessionStorage.getItem('deposits_searchQuery') || '';
+  });
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'closed'>(() => {
+    return (sessionStorage.getItem('deposits_filterStatus') as 'all' | 'active' | 'closed') || 'active';
+  });
+  const [selectedBanks, setSelectedBanks] = useState<string[]>(() => {
+    try {
+      const stored = sessionStorage.getItem('deposits_selectedBanks');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isAnalyticsExpanded, setIsAnalyticsExpanded] = useState(false);
-  const [sortConfig, setSortConfigState] = useState<{ key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null>(null);
+  const [sortConfig, setSortConfigState] = useState<{ key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null>(() => {
+    try {
+      const stored = sessionStorage.getItem('deposits_sortConfig');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('deposits_searchQuery', searchQuery);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('deposits_filterStatus', filterStatus);
+  }, [filterStatus]);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('deposits_selectedBanks', JSON.stringify(selectedBanks));
+  }, [selectedBanks]);
+
+  React.useEffect(() => {
+    sessionStorage.setItem('deposits_sortConfig', sortConfig ? JSON.stringify(sortConfig) : '');
+  }, [sortConfig]);
 
   const uniqueBanks = useMemo(() => {
     const names = deposits
@@ -523,16 +557,16 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                       </div>
 
                       {/* Tags */}
-                      {(selectedBanks.length > 0 || filterStatus !== 'all') && (
+                      {(selectedBanks.length > 0 || filterStatus !== 'active') && (
                         <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.03] w-full">
                           {selectedBanks.map(b => (
                             <span key={b} className="px-2 py-0.5 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 text-[8px] font-bold rounded-md uppercase tracking-tight">
                               {b}
                             </span>
                           ))}
-                          {filterStatus !== 'all' && (
+                          {filterStatus !== 'active' && (
                             <span className="px-2 py-0.5 bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 text-[8px] font-bold rounded-md uppercase tracking-tight">
-                              {filterStatus === 'active' ? 'Активные' : 'Архив'}
+                              {filterStatus === 'all' ? 'Все' : 'Закрытые'}
                             </span>
                           )}
                         </div>

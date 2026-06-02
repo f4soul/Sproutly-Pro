@@ -1,6 +1,6 @@
 import React, { Fragment, useState, useRef, useEffect } from 'react';
 import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet, Download, ArrowDownUp } from 'lucide-react';
-import { Transition, Popover } from '@headlessui/react';
+import { Transition, Popover, Portal } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { Deposit } from '../../types';
@@ -40,7 +40,6 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   uniqueBanks
 }) => {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
-  const [isFullyExpanded, setIsFullyExpanded] = useState(false);
   const bankScrollRef = useRef<HTMLDivElement>(null);
   const desktopBankScrollRef = useRef<HTMLDivElement>(null);
   
@@ -174,13 +173,13 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
               onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
               className={cn(
                 "p-3 rounded-2xl transition-all flex items-center justify-center shrink-0 border relative backdrop-blur-md cursor-pointer",
-                isFiltersExpanded || filterStatus !== 'all' || sortConfig || selectedBanks.length > 0
+                isFiltersExpanded || filterStatus !== 'active' || sortConfig || selectedBanks.length > 0
                   ? "bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 border-deposit-500/20"
                   : "bg-white/60 dark:bg-slate-900/60 border-slate-200/50 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800"
               )}
             >
               <SlidersHorizontal className="w-4 h-4 stroke-[2px] transition-colors" />
-              {(!isFiltersExpanded && (filterStatus !== 'all' || sortConfig || selectedBanks.length > 0)) && (
+              {(!isFiltersExpanded && (filterStatus !== 'active' || sortConfig || selectedBanks.length > 0)) && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-deposit-500 rounded-full border-2 border-white dark:border-slate-900 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
               )}
             </button>
@@ -205,18 +204,8 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              onAnimationStart={() => {
-                if (!isFiltersExpanded) {
-                  setIsFullyExpanded(false);
-                }
-              }}
-              onAnimationComplete={() => {
-                if (isFiltersExpanded) {
-                  setIsFullyExpanded(true);
-                }
-              }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className={cn("relative z-30", isFullyExpanded && isFiltersExpanded ? "overflow-visible" : "overflow-hidden")}
+              className="relative z-30 overflow-hidden"
             >
               <div className="pt-3 pb-1 px-1 border-t border-slate-200/50 dark:border-white/[0.05] mt-2 flex flex-col gap-3">
                 
@@ -416,48 +405,50 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         <Download className="w-3 h-3 stroke-[2px]" />
                         <span className="ml-1.5 text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Экспорт</span>
                       </Popover.Button>
-                      <Transition
-                        as={Fragment}
-                        enter="transition ease-out duration-150"
-                        enterFrom="opacity-0 scale-95"
-                        enterTo="opacity-100 scale-100"
-                        leave="transition ease-in duration-150"
-                        leaveFrom="opacity-100 scale-100"
-                        leaveTo="opacity-0 scale-95"
-                      >
-                        <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
-                          <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
-                          <div className="flex flex-col gap-1">
-                            <button 
-                              onClick={() => exportToPDF('', undefined, filteredDeposits)}
-                              className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
-                            >
-                              <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
-                                <FileText className="w-3.5 h-3.5 text-rose-500 group-hover/btn:scale-110 transition-transform" />
-                              </div>
-                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
-                            </button>
-                            <button 
-                              onClick={() => exportToImage('', filteredDeposits)}
-                              className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
-                            >
-                              <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                                <ImageIcon className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
-                              </div>
-                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
-                            </button>
-                            <button 
-                              onClick={() => exportToXLSX(filteredDeposits)}
-                              className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
-                            >
-                              <div className="w-7 h-7 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
-                                <FileSpreadsheet className="w-3.5 h-3.5 text-[#21A366] group-hover/btn:scale-110 transition-transform" />
-                              </div>
-                              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Excel</span>
-                            </button>
-                          </div>
-                        </Popover.Panel>
-                      </Transition>
+                      <Portal>
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-150"
+                          enterFrom="opacity-0 scale-95"
+                          enterTo="opacity-100 scale-100"
+                          leave="transition ease-in duration-150"
+                          leaveFrom="opacity-100 scale-100"
+                          leaveTo="opacity-0 scale-95"
+                        >
+                          <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                            <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
+                            <div className="flex flex-col gap-1">
+                              <button 
+                                onClick={() => exportToPDF('', undefined, filteredDeposits)}
+                                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
+                              >
+                                <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
+                                  <FileText className="w-3.5 h-3.5 text-rose-500 group-hover/btn:scale-110 transition-transform" />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
+                              </button>
+                              <button 
+                                onClick={() => exportToImage('', filteredDeposits)}
+                                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
+                              >
+                                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
+                                  <ImageIcon className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
+                              </button>
+                              <button 
+                                onClick={() => exportToXLSX(filteredDeposits)}
+                                className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
+                              >
+                                <div className="w-7 h-7 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
+                                  <FileSpreadsheet className="w-3.5 h-3.5 text-[#21A366] group-hover/btn:scale-110 transition-transform" />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Excel</span>
+                              </button>
+                            </div>
+                          </Popover.Panel>
+                        </Transition>
+                      </Portal>
                     </Popover>
                   </div>
                 </div>
@@ -536,58 +527,60 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           <ArrowDownUp className="w-3 h-3 stroke-[2px]" />
                           <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Сортировка</span>
                         </Popover.Button>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-150"
-                          enterFrom="opacity-0 scale-95"
-                          enterTo="opacity-100 scale-100"
-                          leave="transition ease-in duration-150"
-                          leaveFrom="opacity-100 scale-100"
-                          leaveTo="opacity-0 scale-95"
-                        >
-                          <Popover.Panel className="absolute left-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
-                             <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-2 pt-1">Сортировка</h4>
-                            <div className="flex flex-col gap-0.5">
-                              {[
-                               { key: 'startDate', label: 'Дата' },
-                               { key: 'rate', label: 'Ставка' },
-                               { key: 'amount', label: 'Сумма' },
-                               { key: 'total', label: 'Итог' }
-                              ].map((item) => (
-                                <button
-                                  key={`sort-mobile-${item.key}`}
-                                  onClick={() => requestSort(item.key as any)}
-                                  className={cn(
-                                    "flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer group active:scale-95",
-                                    sortConfig?.key === item.key
-                                      ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
-                                      : "hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300"
-                                  )}
-                                >
-                                  <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
-                                  {sortConfig?.key === item.key && (
-                                    <div className="flex items-center gap-1.5">
-                                      <span className="text-[8px] font-bold bg-white dark:bg-black/20 px-1.5 py-0.5 rounded-md shadow-sm">
-                                        {sortConfig.direction === 'asc' ? 'По возраст.' : 'По убыв.'}
-                                      </span>
-                                    </div>
-                                  )}
-                                </button>
-                              ))}
-                              {sortConfig && (
-                                <div className="mt-1 pt-1 border-t border-slate-200/50 dark:border-white/[0.05]">
-                                  <button 
-                                    onClick={resetSort}
-                                    className="flex items-center justify-center gap-2 w-full p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer active:scale-95"
+                        <Portal>
+                          <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-150"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                          >
+                            <Popover.Panel className="absolute left-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                               <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-2 pt-1">Сортировка</h4>
+                              <div className="flex flex-col gap-0.5">
+                                {[
+                                 { key: 'startDate', label: 'Дата' },
+                                 { key: 'rate', label: 'Ставка' },
+                                 { key: 'amount', label: 'Сумма' },
+                                 { key: 'total', label: 'Итог' }
+                                ].map((item) => (
+                                  <button
+                                    key={`sort-mobile-${item.key}`}
+                                    onClick={() => requestSort(item.key as any)}
+                                    className={cn(
+                                      "flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer group active:scale-95",
+                                      sortConfig?.key === item.key
+                                        ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                        : "hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300"
+                                    )}
                                   >
-                                    <X className="w-3.5 h-3.5 stroke-[2px]" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest">Сбросить</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                    {sortConfig?.key === item.key && (
+                                      <div className="flex items-center gap-1.5">
+                                        <span className="text-[8px] font-bold bg-white dark:bg-black/20 px-1.5 py-0.5 rounded-md shadow-sm">
+                                          {sortConfig.direction === 'asc' ? 'По возраст.' : 'По убыв.'}
+                                        </span>
+                                      </div>
+                                    )}
                                   </button>
-                                </div>
-                              )}
-                            </div>
-                          </Popover.Panel>
-                        </Transition>
+                                ))}
+                                {sortConfig && (
+                                  <div className="mt-1 pt-1 border-t border-slate-200/50 dark:border-white/[0.05]">
+                                    <button 
+                                      onClick={resetSort}
+                                      className="flex items-center justify-center gap-2 w-full p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 transition-all cursor-pointer active:scale-95"
+                                    >
+                                      <X className="w-3.5 h-3.5 stroke-[2px]" />
+                                      <span className="text-[10px] font-bold uppercase tracking-widest">Сбросить</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </Popover.Panel>
+                          </Transition>
+                        </Portal>
                       </Popover>
 
                       {/* Landscape Tablet Sort Inline */}

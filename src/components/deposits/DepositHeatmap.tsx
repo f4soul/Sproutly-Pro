@@ -59,7 +59,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
 
   return (
     <div className="flex-1 flex flex-col w-full relative min-h-0">
-      <div className="flex-1 w-full flex flex-col min-h-0">
+      <div className="flex-1 w-full max-w-6xl xl:max-w-7xl 2xl:max-w-screen-2xl mx-auto flex flex-col justify-between min-h-0 gap-4 sm:gap-5 lg:gap-6">
         
         <HeatmapFilters 
           displayYear={displayYear}
@@ -72,7 +72,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
 
         <div 
           className={cn(
-            "grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 lg:gap-3 xl:gap-6 py-1 sm:py-2 md:py-2.5 xl:py-3.5 transition-all duration-300 ease-out w-full max-w-full lg:max-w-[820px] xl:max-w-screen-2xl mx-auto items-start mt-auto",
+            "grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 xl:gap-6 py-2 transition-all duration-300 ease-out w-full items-start my-auto",
             expandedMonth && "opacity-30 blur-md scale-[0.96] pointer-events-none grayscale-[50%]"
           )}
         >

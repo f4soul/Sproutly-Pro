@@ -3,7 +3,7 @@ import { AppState, Toast } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
 import { auth, onAuthStateChanged, User } from '../config/firebase';
-import { db, syncWithFirebase } from '../config/db';
+import { db, syncWithFirebase, startRealTimeSync, stopRealTimeSync, clearLocalData } from '../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 
 const getInitialState = (): AppState => {
@@ -107,7 +107,7 @@ export const useAppState = () => {
 
   // Auth Listener
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setIsAuthReady(true);
       const uid = currentUser?.uid || null;
@@ -117,11 +117,21 @@ export const useAppState = () => {
           globalAuthInitialized = true;
           globalLastUserUid = uid;
           setSyncStatus('syncing');
+          startRealTimeSync(currentUser);
           syncWithFirebase().catch(console.error);
         }
       } else {
         setSyncStatus('offline');
-        globalLastUserUid = null;
+        stopRealTimeSync();
+        if (globalLastUserUid !== null) {
+          globalLastUserUid = null;
+          globalAuthInitialized = false;
+          try {
+            await clearLocalData();
+          } catch (e) {
+            console.error("Failed to clear local data on logout:", e);
+          }
+        }
       }
     });
     return () => unsubscribe();

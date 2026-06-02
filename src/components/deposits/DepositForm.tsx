@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useMemo } from 'react';
+import React, { useState, useEffect, Fragment, useMemo, useRef } from 'react';
 import { X, Save, Calendar, CalendarX, Landmark, Percent, Wallet, Info, Clock, ChevronDown, Check, Plus, Trash2, Calculator, Settings, Edit2 } from 'lucide-react';
 import { Listbox, Transition, Combobox, Dialog } from '@headlessui/react';
 import DatePicker, { registerLocale } from 'react-datepicker';
@@ -62,6 +62,55 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     isArchived: 0,
     splitIncome: false,
   });
+
+  const [hasDraft, setHasDraft] = useState(false);
+  const isMountedRef = useRef(false);
+
+  // Check for draft on mount
+  useEffect(() => {
+    isMountedRef.current = true;
+    if (!deposit) {
+      const stored = localStorage.getItem('new_deposit_draft');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.formData && (parsed.formData.amount > 0 || parsed.formData.bank || parsed.formData.sourceNote || parsed.formData.comment || parsed.formData.rate > 0)) {
+            setHasDraft(true);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+    }
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [deposit]);
+
+  // Save draft on changes (only for new deposits)
+  useEffect(() => {
+    if (!deposit && !hasDraft && isMountedRef.current) {
+      const isInitialBlank = 
+        !formData.bank && 
+        (formData.amount === 0 || !formData.amount) && 
+        (formData.rate === 0 || !formData.rate) && 
+        !formData.sourceNote && 
+        !formData.comment && 
+        formData.formula === 'simple_days';
+
+      if (!isInitialBlank) {
+        const draftData = {
+          formData: {
+            ...formData,
+            startDate: formData.startDate ? formData.startDate.getTime() : null,
+            endDate: formData.endDate ? formData.endDate.getTime() : null,
+          },
+          duration
+        };
+        localStorage.setItem('new_deposit_draft', JSON.stringify(draftData));
+      }
+    }
+  }, [formData, duration, deposit, hasDraft]);
 
   useEffect(() => {
     const loadBanks = async () => {
@@ -229,6 +278,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       await db.deposits.put({ ...dataToSave, id: deposit.id });
     } else {
       await db.deposits.put(dataToSave);
+      localStorage.removeItem('new_deposit_draft');
     }
     onClose();
   };
@@ -265,6 +315,49 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar flex-1">
+            {hasDraft && (
+              <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-bold uppercase tracking-wider text-[9px] text-amber-600 dark:text-amber-400">Незавершенный черновик</span>
+                  <span>У вас остался незаполненный ранее вклад. Продолжить с того же места?</span>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      try {
+                        const stored = localStorage.getItem('new_deposit_draft');
+                        if (stored) {
+                          const parsed = JSON.parse(stored);
+                          setFormData({
+                            ...parsed.formData,
+                            startDate: parsed.formData.startDate ? new Date(parsed.formData.startDate) : new Date(),
+                            endDate: parsed.formData.endDate ? new Date(parsed.formData.endDate) : null,
+                          });
+                          setDuration(parsed.duration || '');
+                        }
+                      } catch (e) {
+                        console.error("Failed to restore draft:", e);
+                      }
+                      setHasDraft(false);
+                    }}
+                    className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[10px] uppercase tracking-wider"
+                  >
+                    Да
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      localStorage.removeItem('new_deposit_draft');
+                      setHasDraft(false);
+                    }}
+                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[10px] uppercase tracking-wider"
+                  >
+                    Сбросить
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2 w-full">
               <ToggleChip 
                 label="Накопительный" 
@@ -503,7 +596,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     className="apple-input w-full pr-12 cursor-pointer"
                     placeholderText="Выберите дату"
                     wrapperClassName="w-full"
-                    portalId="root"
+                    portalId="datepicker-portal-container"
                   />
                   <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-primary-500 transition-colors stroke-[1.5px]" />
                 </div>
@@ -551,7 +644,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     placeholderText="Бессрочно"
                     isClearable
                     wrapperClassName="w-full"
-                    portalId="root"
+                    portalId="datepicker-portal-container"
                   />
                   <CalendarX className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-primary-500 transition-colors stroke-[1.5px]" />
                 </div>
@@ -701,6 +794,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               Сохранить
             </button>
           </div>
+          {/* Embedded datepicker portal container so clicking dates doesn't close Headless UI Dialog */}
+          <div id="datepicker-portal-container" className="relative z-[200] pointer-events-auto" />
         </motion.div>
         </Dialog.Panel>
       </div>

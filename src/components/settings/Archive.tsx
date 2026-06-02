@@ -150,51 +150,54 @@ export const Archive: React.FC = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm hover:shadow-md transition-all group flex flex-col gap-3.5"
             >
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-center justify-center shrink-0">
-                  <ArchiveIcon className="w-5 h-5 text-slate-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 max-w-full">
-                    <h3 className="font-bold text-sm text-slate-950 dark:text-white">
-                      {deposit.bank}
-                    </h3>
-                    <span className="shrink-0 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">
-                      {deposit.rate}%
-                    </span>
+              <div className="flex items-center justify-between gap-3 w-full">
+                {/* Left Side: Icon & Details */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.05] flex items-center justify-center shrink-0">
+                    <ArchiveIcon className="w-5 h-5 text-slate-400" />
                   </div>
-                  <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-                    Удален: {format(deposit.updatedAt || Date.now(), 'dd.MM.yyyy')}
-                  </p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-sm text-slate-950 dark:text-white truncate">
+                        {deposit.bank}
+                      </h3>
+                      <span className="shrink-0 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-200/50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">
+                        {deposit.rate}%
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
+                      Удален: {format(deposit.updatedAt || Date.now(), 'dd.MM.yyyy')}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                <div className="text-right">
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5">Сумма</p>
-                  <p className="font-bold text-sm text-slate-950 dark:text-white font-mono whitespace-nowrap">
-                    {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
-                  </p>
-                </div>
-                
-                <div className="flex gap-1">
+                {/* Right Side: Restore/Delete Actions */}
+                <div className="flex gap-1 shrink-0">
                   <button
                     onClick={() => handleRestore(deposit.id!)}
-                    className="p-2.5 text-primary-600 hover:bg-primary-500/10 rounded-xl transition-all cursor-pointer"
+                    className="p-2 text-primary-600 hover:bg-primary-500/10 active:scale-95 rounded-xl transition-all cursor-pointer"
                     title="Восстановить"
                   >
                     <RefreshCcw className="w-4 h-4 stroke-[2px]" />
                   </button>
                   <button
                     onClick={() => handlePermanentDelete(deposit.id!)}
-                    className="p-2.5 text-rose-600 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer"
+                    className="p-2 text-rose-600 hover:bg-rose-500/10 active:scale-95 rounded-xl transition-all cursor-pointer"
                     title="Удалить навсегда"
                   >
                     <Trash2 className="w-4 h-4 stroke-[2px]" />
                   </button>
                 </div>
+              </div>
+
+              {/* Bottom Row: Sum */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/[0.03] w-full">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Сумма вклада</span>
+                <span className="font-black text-sm text-slate-950 dark:text-white font-mono bg-slate-100/30 dark:bg-slate-950/30 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/[0.05]">
+                  {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
+                </span>
               </div>
             </motion.div>
           ))}

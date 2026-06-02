@@ -1,9 +1,10 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { auth, signInWithGoogle, logout } from '../../config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { db } from '../../config/db';
+import { db, syncWithFirebase } from '../../config/db';
+import { showToast } from '../../lib/toast';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/react';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -55,7 +56,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
     let autoClearId: NodeJS.Timeout;
 
     const handleSync = (e: Event) => {
-      const customEvent = e as CustomEvent<{ status: 'syncing' | 'success' | 'error' }>;
+      const customEvent = e as CustomEvent<{ status: 'syncing' | 'success' | 'error'; error?: any }>;
       setSyncStatus(customEvent.detail.status);
       
       clearTimeout(timeoutId);
@@ -66,9 +67,33 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           setSyncStatus('idle');
         }, 1500);
       } else if (customEvent.detail.status === 'error') {
-        timeoutId = setTimeout(() => {
-          setSyncStatus('idle');
-        }, 3000);
+        const error = customEvent.detail.error;
+        let errMsg = 'Ошибка при синхронизации данных';
+        
+        if (error) {
+          const rawMessage = error instanceof Error ? error.message : String(error);
+          try {
+            if (rawMessage.startsWith('{') && rawMessage.endsWith('}')) {
+              const parsed = JSON.parse(rawMessage);
+              const errText = parsed.error || '';
+              if (errText.includes('permission') || errText.includes('insufficient')) {
+                errMsg = 'Ошибка синхронизации: недостаточный уровень доступа (проверьте авторизацию)';
+              } else {
+                errMsg = `Ошибка синхронизации: ${errText}`;
+              }
+            } else if (rawMessage.includes('permission') || rawMessage.includes('insufficient')) {
+              errMsg = 'Ошибка синхронизации: недостаточный уровень доступа или сессия истекла';
+            } else {
+              errMsg = `Ошибка синхронизации: ${rawMessage}`;
+            }
+          } catch (err) {
+            errMsg = `Ошибка синхронизации: ${rawMessage}`;
+          }
+        }
+        
+        showToast(errMsg, 'error', { duration: 6000 });
+        // NOTE: We do not set syncStatus to 'idle' automatically.
+        // It stays as 'error' until the user closes it manually or clicks retry.
       } else if (customEvent.detail.status === 'syncing') {
         autoClearId = setTimeout(() => {
           setSyncStatus('idle');
@@ -83,6 +108,17 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       clearTimeout(autoClearId);
     };
   }, []);
+
+  const handleRetrySync = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (syncStatus === 'error') {
+      showToast('Запуск принудительной синхронизации...', 'info');
+      setSyncStatus('syncing');
+      syncWithFirebase().catch(err => {
+        console.error('Manual retry sync failed:', err);
+      });
+    }
+  };
 
   const toggleTheme = async () => {
     await db.appSettings.update('main', { theme: theme === 'light' ? 'dark' : 'light' });
@@ -152,37 +188,52 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div className={cn(
-              "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-colors duration-500",
-              syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
-              syncStatus === 'success' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
-                  "bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20"
-                )}>
-                  <div className="relative w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center shrink-0">
-                    <AnimatePresence mode="popLayout">
-                      {syncStatus === 'syncing' && (
-                        <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                          <AnimatedCloudSync className="w-full h-full" />
-                        </motion.div>
-                      )}
-                      {syncStatus === 'success' && (
-                        <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                          <CheckCircle2 className="w-full h-full" />
-                        </motion.div>
-                      )}
-                      {syncStatus === 'error' && (
-                        <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                          <AlertTriangle className="w-full h-full" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                  <span className="md:hidden">
-                    {syncStatus === 'syncing' ? 'Синхронизация...' : 
-                     syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка синхронизации'}
-                  </span>
-                </div>
-            </motion.div>
+            <div 
+              onClick={handleRetrySync}
+              className={cn(
+                "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-all duration-500 relative",
+                syncStatus === 'error' ? "cursor-pointer bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20 hover:bg-rose-100/90 dark:hover:bg-rose-500/20 active:scale-95" :
+                syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
+                    "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20"
+              )}
+              title={syncStatus === 'error' ? "Ошибка синхронизации. Нажмите для повторной попытки." : undefined}
+            >
+              <div className="relative w-3.5 h-3.5 md:w-4 md:h-4 flex items-center justify-center shrink-0">
+                <AnimatePresence mode="popLayout">
+                  {syncStatus === 'syncing' && (
+                    <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                      <AnimatedCloudSync className="w-full h-full" />
+                    </motion.div>
+                  )}
+                  {syncStatus === 'success' && (
+                    <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                      <CheckCircle2 className="w-full h-full" />
+                    </motion.div>
+                  )}
+                  {syncStatus === 'error' && (
+                    <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                      <AlertTriangle className="w-full h-full" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <span className="md:hidden">
+                {syncStatus === 'syncing' ? 'Синхронизация...' : 
+                 syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка. Повторить?'}
+              </span>
+              {syncStatus === 'error' && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSyncStatus('idle');
+                  }}
+                  className="md:hidden ml-auto p-0.5 rounded-full hover:bg-rose-100 dark:hover:bg-rose-500/30 active:scale-90 transition-all text-rose-500 dark:text-rose-400 shrink-0 outline-none border-none cursor-pointer"
+                >
+                  <X className="w-3 h-3 stroke-[2.5px]" />
+                </button>
+              )}
+            </div>
+          </motion.div>
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 p-1.5 gap-1 shadow-sm">
             {user ? (
@@ -293,36 +344,50 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="fixed top-[calc(5rem+12px)] left-1/2 -translate-x-1/2 z-[60]"
         >
-          <div className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-colors duration-500",
-            syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
-            syncStatus === 'success' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
-                "bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20"
-              )}>
-                <div className="relative w-3 h-3 flex items-center justify-center shrink-0">
-                  <AnimatePresence mode="popLayout">
-                    {syncStatus === 'syncing' && (
-                      <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                        <AnimatedCloudSync className="w-full h-full" />
-                      </motion.div>
-                    )}
-                    {syncStatus === 'success' && (
-                      <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                        <CheckCircle2 className="w-full h-full" />
-                      </motion.div>
-                    )}
-                    {syncStatus === 'error' && (
-                      <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
-                        <AlertTriangle className="w-full h-full" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <span>
-                  {syncStatus === 'syncing' ? 'Синхронизация...' : 
-                   syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка'}
-                </span>
-              </div>
+          <div 
+            onClick={handleRetrySync}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-all duration-500 relative",
+              syncStatus === 'error' ? "cursor-pointer bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20 hover:bg-rose-600/95 active:scale-95 animate-pulse-once" : 
+              syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
+                  "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20"
+            )}
+          >
+            <div className="relative w-3 h-3 flex items-center justify-center shrink-0">
+              <AnimatePresence mode="popLayout">
+                {syncStatus === 'syncing' && (
+                  <motion.div key="syncing" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                    <AnimatedCloudSync className="w-full h-full" />
+                  </motion.div>
+                )}
+                {syncStatus === 'success' && (
+                  <motion.div key="success" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                    <CheckCircle2 className="w-full h-full" />
+                  </motion.div>
+                )}
+                {syncStatus === 'error' && (
+                  <motion.div key="error" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.5, opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0 flex items-center justify-center">
+                    <AlertTriangle className="w-full h-full" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+            <span>
+              {syncStatus === 'syncing' ? 'Синхронизация...' : 
+               syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка. Повторить?'}
+            </span>
+            {syncStatus === 'error' && (
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSyncStatus('idle');
+                }}
+                className="ml-1.5 p-0.5 rounded-full hover:bg-rose-600 active:scale-90 transition-all text-white/80 hover:text-white shrink-0 outline-none border-none cursor-pointer"
+              >
+                <X className="w-3 h-3 stroke-[2.5px]" />
+              </button>
+            )}
+          </div>
         </motion.div>
 
         <motion.header 

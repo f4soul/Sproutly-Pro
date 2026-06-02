@@ -21,16 +21,16 @@ export function HeatmapMonthCard({ month, heatmapData, setExpandedMonth }: Heatm
   return (
     <motion.div
       onClick={() => setExpandedMonth(month)}
-      className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-[1rem] sm:rounded-[1.25rem] border border-slate-200/60 dark:border-white/[0.05] p-1.5 sm:p-2 lg:p-2 xl:p-3 pb-1.5 sm:pb-2 flex flex-col cursor-pointer hover:border-deposit-500/40 dark:hover:border-deposit-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden"
+      className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-[1.25rem] sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] p-3 sm:p-3.5 lg:p-4 xl:p-4.5 pb-2.5 sm:pb-3 lg:pb-3.5 xl:pb-4 flex flex-col cursor-pointer hover:border-deposit-500/40 dark:hover:border-deposit-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-1 sm:mb-1.5 shrink-0">
-        <h4 className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-deposit-500 transition-colors leading-none">
+      <div className="flex items-center justify-between mb-1.5 sm:mb-2 shrink-0">
+        <h4 className="text-[10px] sm:text-[11px] lg:text-[12px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-deposit-500 transition-colors leading-none">
           {format(month, 'LLLL', { locale: ru })}
         </h4>
       </div>
       
       {/* Mini heat grid */}
-      <div className="grid grid-cols-7 grid-rows-6 gap-[1.5px] sm:gap-[2px] lg:gap-[2px] xl:gap-[3px] mt-auto">
+      <div className="grid grid-cols-7 grid-rows-6 gap-[2.5px] sm:gap-[3px] lg:gap-[3px] xl:gap-[4px] mt-auto">
         {emptyDays.map((_, i) => (
           <div key={`empty-${i}`} className="aspect-square rounded-[2px] sm:rounded-[3px]" />
         ))}
@@ -45,14 +45,14 @@ export function HeatmapMonthCard({ month, heatmapData, setExpandedMonth }: Heatm
               <div 
                 key={dateKey} 
                 className={cn(
-                  "aspect-square rounded-[2.5px] sm:rounded-[3px] lg:rounded-[4px] relative flex items-center justify-center pointer-events-none",
+                  "aspect-square rounded-[3px] sm:rounded-[4px] lg:rounded-[5px] relative flex items-center justify-center pointer-events-none",
                   getColorClass(intensity),
-                  isMaturing && "ring-[1px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10",
+                  isMaturing && "ring-[1.5px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10",
                   intensity > 0 ? "border border-white/10 shadow-sm" : ""
                 )}
               >
                 <span className={cn(
-                  "absolute inset-0 flex items-center justify-center text-[7.5px] sm:text-[8px] md:text-[8.5px] lg:text-[9.5px] xl:text-[11.5px] font-black leading-none pointer-events-none",
+                  "absolute inset-0 flex items-center justify-center text-[7.5px] sm:text-[8px] md:text-[8.5px] lg:text-[9px] xl:text-[11px] font-black leading-none pointer-events-none",
                   intensity === 0 ? "text-slate-400/60 dark:text-slate-500/60" : "text-white/90",
                   isMaturing && "text-amber-500 dark:text-amber-400/90 lg:text-[7.5px] drop-shadow-sm"
                 )}>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { Deposit } from '../../types';
 import { formatCurrency, formatPercent, cn } from '../../lib/utils';
 import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
@@ -84,13 +84,28 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
           <span className={cn("text-[13px] font-medium text-slate-950 dark:text-white", isClosed && "opacity-60")}>{startDate ? format(startDate, 'dd.MM.yy') : '-'}</span>
         </td>
         <td className={cn("hidden xl:table-cell px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
-          <span className={cn("text-[13px] font-medium text-slate-950 dark:text-white", isClosed && "opacity-60")}>{endDate ? format(endDate, 'dd.MM.yy') : '∞'}</span>
+          <span className={cn(
+            "text-[13px] font-medium",
+            isClosed && "opacity-60",
+            !isClosed && endDate && differenceInDays(endDate, new Date()) <= 7 && "text-amber-500 dark:text-amber-400 font-bold"
+          )}>
+            {endDate ? format(endDate, 'dd.MM.yy') : '∞'}
+          </span>
         </td>
         
         <td className={cn("table-cell xl:hidden px-2 py-2.5 text-center border-slate-200 dark:border-slate-800", !(isLast && !isExpanded) && "border-b")}>
           <div className={cn("flex flex-col items-center justify-center", isClosed && "opacity-60")}>
             <span className="text-[12px] font-medium text-slate-950 dark:text-white">{startDate ? format(startDate, 'dd.MM.yy') : '-'}</span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400">{endDate ? format(endDate, 'dd.MM.yy') : '∞'}</span>
+            <span className={cn(
+                "text-[10px]",
+                "hidden lg:block", // For tablet landscape
+                !isClosed && endDate && differenceInDays(endDate, new Date()) <= 7 ? "text-amber-500 dark:text-amber-400 font-bold" : "text-slate-500 dark:text-slate-400"
+              )}>
+                {endDate ? format(endDate, 'dd.MM.yy') : '∞'}
+            </span>
+            <span className={cn("text-[10px] text-slate-500 dark:text-slate-400 lg:hidden")}>
+                {endDate ? format(endDate, 'dd.MM.yy') : '∞'}
+            </span>
           </div>
         </td>
  

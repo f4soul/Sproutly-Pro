@@ -30,7 +30,7 @@ export class MyDepositsDB extends Dexie {
 }
 
 import { auth, db as firestore } from './firebase';
-import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField, onSnapshot } from 'firebase/firestore';
 
 enum OperationType {
   CREATE = 'create',
@@ -85,9 +85,203 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
 
 export const db = new MyDepositsDB();
 
-export const emitSyncEvent = (status: 'syncing' | 'success' | 'error') => {
-  window.dispatchEvent(new CustomEvent('app:sync', { detail: { status } }));
+export const emitSyncEvent = (status: 'syncing' | 'success' | 'error', error?: any) => {
+  window.dispatchEvent(new CustomEvent('app:sync', { detail: { status, error } }));
 };
+
+let activeUnsubscribers: (() => void)[] = [];
+
+export function stopRealTimeSync() {
+  activeUnsubscribers.forEach(unsub => {
+    try {
+      unsub();
+    } catch (e) {
+      console.error("Unsubscribe error:", e);
+    }
+  });
+  activeUnsubscribers = [];
+}
+
+export function startRealTimeSync(user: { uid: string }) {
+  stopRealTimeSync();
+
+  // Listen to deposits
+  const qDeposits = query(collection(firestore, 'deposits'), where('userId', '==', user.uid));
+  const unsubDeposits = onSnapshot(qDeposits, (snapshot) => {
+    (async () => {
+      try {
+        const pendingDeletes = await db.deletedQueue.toArray();
+        for (const change of snapshot.docChanges()) {
+          const docId = change.doc.id;
+          const remoteData = change.doc.data();
+          
+          let localId: string | number = docId;
+          if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+            const numPart = localId.replace(`${user.uid}_`, '');
+            if (!isNaN(Number(numPart))) {
+              localId = Number(numPart);
+            }
+          }
+
+          const isPendingDelete = pendingDeletes.some(d => d.collection === 'deposits' && d.docId === docId);
+          if (isPendingDelete) {
+            continue;
+          }
+
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.deposits.delete(localId as any);
+          } else {
+            const localData = await db.deposits.get(localId);
+            if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
+              // Convert fields appropriately
+              let startDateVal = remoteData.startDate;
+              if (startDateVal && typeof startDateVal.toDate === 'function') {
+                startDateVal = startDateVal.toDate();
+              } else if (startDateVal && (typeof startDateVal === 'string' || typeof startDateVal === 'number' || startDateVal instanceof Date)) {
+                startDateVal = new Date(startDateVal);
+              }
+              
+              let endDateVal = remoteData.endDate;
+              if (endDateVal && typeof endDateVal.toDate === 'function') {
+                endDateVal = endDateVal.toDate();
+              } else if (endDateVal && (typeof endDateVal === 'string' || typeof endDateVal === 'number' || endDateVal instanceof Date)) {
+                endDateVal = new Date(endDateVal);
+              }
+
+              await db.deposits.put({ 
+                ...remoteData, 
+                id: localId,
+                startDate: startDateVal,
+                endDate: endDateVal
+              } as Deposit);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Real-time deposits sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'deposits');
+  });
+  activeUnsubscribers.push(unsubDeposits);
+
+  // Listen to banks
+  const qBanks = query(collection(firestore, 'banks'), where('userId', '==', user.uid));
+  const unsubBanks = onSnapshot(qBanks, (snapshot) => {
+    (async () => {
+      try {
+        const pendingDeletes = await db.deletedQueue.toArray();
+        for (const change of snapshot.docChanges()) {
+          const docId = change.doc.id;
+          const remoteData = change.doc.data();
+          
+          let localId: string | number = docId;
+          if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+            const numPart = localId.replace(`${user.uid}_`, '');
+            if (!isNaN(Number(numPart))) {
+              localId = Number(numPart);
+            }
+          }
+
+          const isPendingDelete = pendingDeletes.some(d => d.collection === 'banks' && d.docId === docId);
+          if (isPendingDelete) {
+            continue;
+          }
+
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.banks.delete(localId as any);
+          } else {
+            const localData = await db.banks.get(localId);
+            if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
+              await db.banks.put({ ...remoteData, id: localId } as Bank);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Real-time banks sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'banks');
+  });
+  activeUnsubscribers.push(unsubBanks);
+
+  // Listen to userSettings
+  const unsubSettings = onSnapshot(doc(firestore, 'userSettings', user.uid), (snapshot) => {
+    (async () => {
+      try {
+        if (snapshot.exists()) {
+          const remoteData = snapshot.data() as AppSettings;
+          const localData = await db.appSettings.get('main');
+          if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
+            await db.appSettings.put({ ...remoteData, id: 'main' });
+          }
+        }
+      } catch (err) {
+        console.error("Real-time settings sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'userSettings');
+  });
+  activeUnsubscribers.push(unsubSettings);
+
+  // Listen to incomeState
+  const unsubIncome = onSnapshot(doc(firestore, `users/${user.uid}/data`, 'income'), (snapshot) => {
+    (async () => {
+      try {
+        if (snapshot.exists()) {
+          const remoteData = snapshot.data();
+          const localData = await db.incomeState.get('main');
+          if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
+            await db.incomeState.put({ ...remoteData, id: 'main' });
+          }
+        }
+      } catch (err) {
+        console.error("Real-time incomeState sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, `users/${user.uid}/data`);
+  });
+  activeUnsubscribers.push(unsubIncome);
+
+  // Listen to taxYearSettings
+  const qTax = query(collection(firestore, 'taxYearSettings'), where('userId', '==', user.uid));
+  const unsubTax = onSnapshot(qTax, (snapshot) => {
+    (async () => {
+      try {
+        for (const change of snapshot.docChanges()) {
+          const remoteData = change.doc.data() as TaxYearSettings & { isDeleted?: boolean };
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.taxYearSettings.delete(remoteData.year);
+          } else {
+            const localData = await db.taxYearSettings.get(remoteData.year);
+            if (!localData || ((remoteData.updatedAt || 0) > (localData.updatedAt || 0))) {
+              await db.taxYearSettings.put(remoteData);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Real-time tax settings sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'taxYearSettings');
+  });
+  activeUnsubscribers.push(unsubTax);
+}
+
+export async function clearLocalData() {
+  await db.deposits.clear();
+  await db.banks.clear();
+  await db.appSettings.clear();
+  await db.incomeState.clear();
+  await db.deletedQueue.clear();
+  await db.taxYearSettings.clear();
+  await initDB();
+}
 
 let syncPromise: Promise<void> | null = null;
 let pendingSync = false;
@@ -368,7 +562,7 @@ export async function syncWithFirebase() {
 
   emitSyncEvent('success');
     } catch (error) {
-      emitSyncEvent('error');
+      emitSyncEvent('error', error);
       throw error;
     }
   };
