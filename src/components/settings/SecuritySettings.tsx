@@ -15,6 +15,9 @@ interface SecuritySettingsProps {
 export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   const { addToast } = useAppState();
   const [isBiometricsAvail, setIsBiometricsAvail] = useState(false);
+  const [isThisDeviceBound, setIsThisDeviceBound] = useState(
+    localStorage.getItem('isBiometricBound') === 'true'
+  );
 
   const vibrate = (pattern: number | number[] = 50) => {
     if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -165,10 +168,14 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   const handleToggleBiometrics = async () => {
     if (lockSettings?.useBiometrics) {
       await updateLockSettings({ useBiometrics: false, credentialId: null });
+      localStorage.removeItem('isBiometricBound');
+      setIsThisDeviceBound(false);
     } else {
       try {
         const cred = await registerBiometricCredential(appSettings.userId || 'local_user', 'User');
         await updateLockSettings({ useBiometrics: true, credentialId: cred.id });
+        localStorage.setItem('isBiometricBound', 'true');
+        setIsThisDeviceBound(true);
         addToast('Биометрия подключена');
       } catch (err) {
         console.error(err);
@@ -352,24 +359,32 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                       <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                         Устройств: {lockSettings.credentialIds?.length || 1}
                       </span>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const cred = await registerBiometricCredential(appSettings.userId || 'local_user', `Device_${Date.now()}`);
-                            const currentIds = lockSettings.credentialIds || (lockSettings.credentialId ? [lockSettings.credentialId] : []);
-                            const newIds = Array.from(new Set([...currentIds, cred.id]));
-                            await updateLockSettings({ credentialId: cred.id, credentialIds: newIds });
-                            addToast('Это устройство добавлено в список разрешенных');
-                          } catch (err) {
-                            console.error(err);
-                            addToast('Ошибка регистрации ключа устройства', 'error');
-                          }
-                        }}
-                        className="text-[8px] font-black uppercase tracking-wider text-deposit-500 hover:text-deposit-600 transition-colors bg-deposit-500/10 hover:bg-deposit-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
-                      >
-                        Привязать это устройство
-                      </button>
+                      {isThisDeviceBound ? (
+                        <div className="text-[8px] font-black uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md h-6 flex items-center shadow-sm">
+                          Устройство привязано
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            try {
+                              const cred = await registerBiometricCredential(appSettings.userId || 'local_user', `Device_${Date.now()}`);
+                              const currentIds = lockSettings.credentialIds || (lockSettings.credentialId ? [lockSettings.credentialId] : []);
+                              const newIds = Array.from(new Set([...currentIds, cred.id]));
+                              await updateLockSettings({ credentialId: cred.id, credentialIds: newIds });
+                              localStorage.setItem('isBiometricBound', 'true');
+                              setIsThisDeviceBound(true);
+                              addToast('Это устройство добавлено в список разрешенных');
+                            } catch (err) {
+                              console.error(err);
+                              addToast('Ошибка регистрации ключа устройства', 'error');
+                            }
+                          }}
+                          className="text-[8px] font-black uppercase tracking-wider text-deposit-500 hover:text-deposit-600 transition-colors bg-deposit-500/10 hover:bg-deposit-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
+                        >
+                          Привязать это устройство
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -403,19 +418,19 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="p-6 py-10 sm:py-8 max-w-sm w-full flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl relative overflow-hidden pointer-events-auto rounded-t-[32px] sm:rounded-[32px] sm:max-w-xs"
+                  className="p-6 py-10 sm:py-8 max-w-[350px] w-full flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl relative overflow-hidden pointer-events-auto rounded-t-[32px] sm:rounded-[32px]"
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-4 mt-2 sm:mt-0">
-                    <Lock size={24} className="stroke-[1.5px]" />
+                  <div className="w-12 h-12 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-5 mt-2 sm:mt-0">
+                    <Lock size={22} className="stroke-[1.8px]" />
                   </div>
-                  <h3 className="text-xl sm:text-base font-bold tracking-tight text-slate-950 dark:text-white mb-1 text-center">
+                  <h3 className="text-lg font-black uppercase tracking-wider text-slate-950 dark:text-white mb-1.5 text-center">
                     {verificationType !== null 
                       ? 'Введите код-пароль' 
                       : step === 1 
                         ? 'Придумайте код-пароль' 
                         : 'Повторите код-пароль'}
                   </h3>
-                  <p className="text-[12px] sm:text-[10px] text-slate-500 text-center mb-8 sm:mb-6">
+                  <p className="text-[11px] sm:text-[10px] text-slate-500 font-medium text-center mb-8">
                     {verificationType !== null 
                       ? 'Введите текущие 4 цифры для подтверждения' 
                       : '4 цифры для защиты входа'}
@@ -424,7 +439,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                 <motion.div 
                   animate={isErrorShake ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
                   transition={{ duration: 0.4 }}
-                  className="flex justify-center gap-3 mb-8"
+                  className="flex justify-center gap-4 mb-10"
                 >
                   {[0, 1, 2, 3].map(i => {
                     const isConfirming = verificationType === null && step === 2;
@@ -433,16 +448,16 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                       <div key={i} className={cn(
                         "w-4 h-4 rounded-full transition-all duration-200",
                         isErrorShake 
-                          ? "bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.5)] scale-110" 
+                          ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110" 
                           : val 
-                            ? "bg-primary-500" 
-                            : "bg-slate-200 dark:bg-slate-700"
+                            ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110" 
+                            : "bg-slate-200 dark:bg-slate-700/60"
                       )} />
                     );
                   })}
                 </motion.div>
 
-                <div className="grid grid-cols-3 gap-3 mb-6 w-full max-w-[200px]">
+                <div className="grid grid-cols-3 gap-y-4 gap-x-6 mb-8 w-full max-w-[280px]">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
                     <button
                       key={num}
@@ -456,7 +471,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                           if (pinInput.length < 4) setPinInput(prev => prev + num);
                         }
                       }}
-                      className="w-12 h-12 rounded-full flex mx-auto items-center justify-center text-xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
+                      className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
                     >
                       {num}
                     </button>
@@ -473,7 +488,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                         if (pinInput.length < 4) setPinInput(prev => prev + 0);
                       }
                     }}
-                    className="w-12 h-12 rounded-full flex mx-auto items-center justify-center text-xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
+                    className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
                   >
                     0
                   </button>
@@ -488,9 +503,9 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                         setPinInput(prev => prev.slice(0, -1));
                       }
                     }}
-                    className="w-12 h-12 rounded-full flex mx-auto items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-colors cursor-pointer outline-none"
+                    className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-colors cursor-pointer outline-none"
                   >
-                    <Delete size={20} className="stroke-[1.5px]" />
+                    <Delete size={22} className="stroke-[1.5px]" />
                   </button>
                 </div>
 

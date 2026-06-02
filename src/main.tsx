@@ -5,6 +5,13 @@ import './index.css';
 import 'virtual:svg-icons-register';
 import { registerSW } from 'virtual:pwa-register';
 
+// Prevent theme flash
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
+
 if ('serviceWorker' in navigator) {
   registerSW({ immediate: true });
 }

@@ -472,7 +472,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           ? "pt-24 md:pt-6 lg:pt-8 pb-[88px] md:pb-6 lg:pb-8 min-h-[100dvh]" 
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
       )}>
-        <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+        <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 10 }}

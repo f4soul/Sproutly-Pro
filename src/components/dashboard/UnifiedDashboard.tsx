@@ -168,7 +168,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
       </div>
 
       <div className="pt-2 relative">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={activeSubTab}
             initial={{ opacity: 0, y: 10 }}

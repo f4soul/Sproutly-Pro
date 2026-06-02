@@ -157,23 +157,25 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
         </p>
 
         {/* PIN Indicators */}
-        <div className="flex gap-4 mb-10">
+        <motion.div 
+          animate={error ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
+          transition={{ duration: 0.4 }}
+          className="flex justify-center gap-4 mb-10"
+        >
           {[0, 1, 2, 3].map((index) => (
-            <motion.div
+            <div
               key={index}
-              animate={error ? { x: [-5, 5, -5, 5, 0] } : {}}
-              transition={{ duration: 0.4 }}
               className={cn(
                 "w-4 h-4 rounded-full transition-all duration-300",
                 error 
-                  ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]"
+                  ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110"
                   : enteredPin.length > index
                     ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110"
                     : "bg-slate-200 dark:bg-slate-800"
               )}
             />
           ))}
-        </div>
+        </motion.div>
 
         {/* Numpad */}
         <div className="grid grid-cols-3 gap-y-4 gap-x-6 w-full max-w-[280px]">
