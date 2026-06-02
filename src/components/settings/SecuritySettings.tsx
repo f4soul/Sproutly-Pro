@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { db, syncWithFirebase } from '../../config/db';
 import { AppSettings } from '../../types';
 import { Shield, Fingerprint, Lock, ShieldCheck, ChevronDown, Delete, ChevronRight, Key } from 'lucide-react';
-import { registerBiometricCredential, isBiometricsSupported } from '../../lib/biometrics';
+import { registerBiometricCredential, isBiometricsSupported, verifyBiometricCredential } from '../../lib/biometrics';
 import { useAppState } from '../../hooks/useAppState';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,10 +14,17 @@ interface SecuritySettingsProps {
 
 export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   const { addToast } = useAppState();
+  const lockSettings = appSettings.privacyLock;
+  const isEnabled = lockSettings?.enabled || false;
+
   const [isBiometricsAvail, setIsBiometricsAvail] = useState(false);
-  const [isThisDeviceBound, setIsThisDeviceBound] = useState(
-    localStorage.getItem('isBiometricBound') === 'true'
-  );
+  const [isThisDeviceBound, setIsThisDeviceBound] = useState(false);
+
+  useEffect(() => {
+    const localId = localStorage.getItem('localBiometricCredId');
+    const ids = lockSettings?.credentialIds || (lockSettings?.credentialId ? [lockSettings.credentialId] : []);
+    setIsThisDeviceBound(!!(localId && ids.includes(localId)));
+  }, [lockSettings?.credentialIds, lockSettings?.credentialId]);
 
   const vibrate = (pattern: number | number[] = 50) => {
     if (typeof window !== 'undefined' && navigator.vibrate) {
@@ -26,8 +33,6 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       } catch (e) {}
     }
   };
-  const lockSettings = appSettings.privacyLock;
-  const isEnabled = lockSettings?.enabled || false;
 
   const [showPinSetup, setShowPinSetup] = useState(false);
   const [verificationType, setVerificationType] = useState<'change' | 'disable' | null>(null);
@@ -172,10 +177,21 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       setIsThisDeviceBound(false);
     } else {
       try {
+        const localCredId = localStorage.getItem('localBiometricCredId');
+        const ids = lockSettings?.credentialIds || (lockSettings?.credentialId ? [lockSettings.credentialId] : []);
+
+        // Re-use already bound local key silently if listed in account
+        if (localCredId && ids.includes(localCredId)) {
+          await updateLockSettings({ useBiometrics: true, credentialId: localCredId });
+          addToast('Биометрия подключена');
+          return;
+        }
+
         const cred = await registerBiometricCredential(appSettings.userId || 'local_user', 'User');
-        await updateLockSettings({ useBiometrics: true, credentialId: cred.id });
+        const newIds = Array.from(new Set([...ids, cred.id]));
+        await updateLockSettings({ useBiometrics: true, credentialId: cred.id, credentialIds: newIds });
+        localStorage.setItem('localBiometricCredId', cred.id);
         localStorage.setItem('isBiometricBound', 'true');
-        setIsThisDeviceBound(true);
         addToast('Биометрия подключена');
       } catch (err) {
         console.error(err);
@@ -368,10 +384,35 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                           type="button"
                           onClick={async () => {
                             try {
-                              const cred = await registerBiometricCredential(appSettings.userId || 'local_user', `Device_${Date.now()}`);
                               const currentIds = lockSettings.credentialIds || (lockSettings.credentialId ? [lockSettings.credentialId] : []);
+                              
+                              // First, check if this physical device already owns one of the current keys
+                              if (currentIds.length > 0) {
+                                try {
+                                  const ver = await verifyBiometricCredential(currentIds);
+                                  if (ver && ver.id) {
+                                    localStorage.setItem('localBiometricCredId', ver.id);
+                                    localStorage.setItem('isBiometricBound', 'true');
+                                    setIsThisDeviceBound(true);
+                                    addToast('Устройство успешно распознано и связано');
+                                    return;
+                                  }
+                                } catch (verErr: any) {
+                                  const errMsg = verErr?.message?.toLowerCase() || '';
+                                  // User manually pressed "Cancel" during verification prompt, so we abort to respect their choice
+                                  if (verErr?.name === 'NotAllowedError' && !errMsg.includes('credential')) {
+                                    addToast('Привязка отклонена');
+                                    return;
+                                  }
+                                  // If they got 'No credential matches' etc, we proceed to create a new key
+                                }
+                              }
+
+                              // Register new credential if not matched/available
+                              const cred = await registerBiometricCredential(appSettings.userId || 'local_user', `Device_${Date.now()}`);
                               const newIds = Array.from(new Set([...currentIds, cred.id]));
                               await updateLockSettings({ credentialId: cred.id, credentialIds: newIds });
+                              localStorage.setItem('localBiometricCredId', cred.id);
                               localStorage.setItem('isBiometricBound', 'true');
                               setIsThisDeviceBound(true);
                               addToast('Это устройство добавлено в список разрешенных');

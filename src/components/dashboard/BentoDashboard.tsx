@@ -248,11 +248,11 @@ export function BentoDashboard({
           
           <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 relative z-10">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Доход (до вычета)</p>
+              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Доход (до вычета)</p>
               <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{formatVal(data.totalGross)}</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Всего налогов</p>
+              <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">Всего налогов</p>
               <p className="text-xl font-bold text-rose-500 dark:text-rose-400">{formatVal(data.totalTax)}</p>
             </div>
           </div>

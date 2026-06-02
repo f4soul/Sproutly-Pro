@@ -532,9 +532,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                               type="number" 
                               value={setting.limit}
                               onChange={(e) => updateYearSetting(setting.year, 'limit', Number(e.target.value))}
-                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right pr-6 bg-slate-50 dark:bg-slate-800"
+                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">₽</span>
+                            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">₽</span>
                           </div>
                         </div>
                         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
@@ -544,9 +544,9 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                               type="number" 
                               value={setting.ndflRate}
                               onChange={(e) => updateYearSetting(setting.year, 'ndflRate', Number(e.target.value))}
-                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right pr-6 bg-slate-50 dark:bg-slate-800"
+                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
                             />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold">%</span>
+                            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">%</span>
                           </div>
                         </div>
                       </div>

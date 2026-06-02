@@ -403,7 +403,7 @@ export async function initDB() {
     await db.taxYearSettings.bulkPut([
       { year: 2024, limit: 150000, ndflRate: 13 },
       { year: 2025, limit: 210000, ndflRate: 13 },
-      { year: 2026, limit: 250000, ndflRate: 13 }
+      { year: 2026, limit: 160000, ndflRate: 13 }
     ]);
   }
 
@@ -413,29 +413,7 @@ export async function initDB() {
     .filter(d => (d as any).isTest === true)
     .map(d => d.id)
     .filter((id): id is number => id !== undefined);
-
   if (testIds.length > 0) {
     await db.deposits.bulkDelete(testIds);
-  }
-
-  // Clear test banks
-  const allBanks = await db.banks.toArray();
-  const testBankIds = allBanks
-    .filter(b => b.isTest === true || b.name.toLowerCase().includes('бабуин'))
-    .map(b => b.id)
-    .filter((id): id is number | string => id !== undefined);
-
-  if (testBankIds.length > 0) {
-    await db.banks.bulkDelete(testBankIds);
-  }
-
-  // Double check all deposits for "Baboon" references to be safe
-  const testDepositIds = allDeposits
-    .filter(d => (d as any).isTest === true || d.bank.toLowerCase().includes('бабуин') || (d.sourceNote?.toLowerCase().includes('бабуин')))
-    .map(d => d.id)
-    .filter((id): id is number | string => id !== undefined);
-
-  if (testDepositIds.length > 0) {
-    await db.deposits.bulkDelete(testDepositIds);
   }
 }

@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Deposit, CalculationFormula, Bank } from '../../types';
 
 import { BankIconEditor } from './BankIconEditor';
-import { db } from '../../config/db';
+import { db, syncWithFirebase } from '../../config/db';
 import { cn } from '../../lib/utils';
 import { addDays, differenceInDays } from 'date-fns';
 import { auth } from '../../config/firebase';
@@ -151,6 +151,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     const user = auth.currentUser;
     const bankToSave = {
       ...newBank,
+      isCustom: true,
       userId: user?.uid,
       logoText: newBank.name.charAt(0).toUpperCase(),
       updatedAt: Date.now()
@@ -171,6 +172,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     
     setFormData(prev => ({ ...prev, bank: savedBank.name }));
     setShowBankEditor(false);
+
+    // Sync with Firebase in background
+    syncWithFirebase().catch(console.error);
   };
 
   const handleEditBank = (e: React.MouseEvent, bank: Bank) => {
@@ -197,6 +201,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       await db.deletedQueue.put({ collection: 'banks', docId: firestoreDocId, timestamp: Date.now() });
     }
     setBankToDelete(null);
+
+    // Sync deletion with Firebase in background
+    syncWithFirebase().catch(console.error);
   };
 
   const handleDeleteBank = (e: React.MouseEvent, bankId: string | number) => {
