@@ -205,7 +205,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-              className="relative z-30 overflow-hidden"
+              className="relative z-30"
             >
               <div className="pt-3 pb-1 px-1 border-t border-slate-200/50 dark:border-white/[0.05] mt-2 flex flex-col gap-3">
                 
@@ -405,7 +405,6 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         <Download className="w-3 h-3 stroke-[2px]" />
                         <span className="ml-1.5 text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Экспорт</span>
                       </Popover.Button>
-                      <Portal>
                         <Transition
                           as={Fragment}
                           enter="transition ease-out duration-150"
@@ -415,7 +414,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           leaveFrom="opacity-100 scale-100"
                           leaveTo="opacity-0 scale-95"
                         >
-                          <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                          <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-[100]">
                             <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                             <div className="flex flex-col gap-1">
                               <button 
@@ -448,8 +447,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                             </div>
                           </Popover.Panel>
                         </Transition>
-                      </Portal>
-                    </Popover>
+                      </Popover>
                   </div>
                 </div>
 
@@ -527,17 +525,16 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           <ArrowDownUp className="w-3 h-3 stroke-[2px]" />
                           <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Сортировка</span>
                         </Popover.Button>
-                        <Portal>
-                          <Transition
-                            as={Fragment}
-                            enter="transition ease-out duration-150"
-                            enterFrom="opacity-0 scale-95"
-                            enterTo="opacity-100 scale-100"
-                            leave="transition ease-in duration-150"
-                            leaveFrom="opacity-100 scale-100"
-                            leaveTo="opacity-0 scale-95"
-                          >
-                            <Popover.Panel className="absolute left-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                        <Transition
+                          as={Fragment}
+                          enter="transition ease-out duration-150"
+                          enterFrom="opacity-0 scale-95"
+                          enterTo="opacity-100 scale-100"
+                          leave="transition ease-in duration-150"
+                          leaveFrom="opacity-100 scale-100"
+                          leaveTo="opacity-0 scale-95"
+                        >
+                          <Popover.Panel className="absolute left-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
                                <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-2 pt-1">Сортировка</h4>
                               <div className="flex flex-col gap-0.5">
                                 {[
@@ -580,7 +577,6 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               </div>
                             </Popover.Panel>
                           </Transition>
-                        </Portal>
                       </Popover>
 
                       {/* Landscape Tablet Sort Inline */}

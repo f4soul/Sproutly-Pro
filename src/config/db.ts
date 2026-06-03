@@ -83,6 +83,10 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
+function stripUndefined(obj: any): any {
+  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
+}
+
 export const db = new MyDepositsDB();
 
 export const emitSyncEvent = (status: 'syncing' | 'success' | 'error', error?: any) => {
@@ -331,7 +335,7 @@ export async function syncWithFirebase() {
         const path = 'deposits';
         const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
         try {
-          await setDoc(doc(firestore, path, firestoreDocId), {
+          await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
             ...data,
             formula: data.formula || 'simple_days',
             currency: data.currency || '₽',
@@ -341,7 +345,7 @@ export async function syncWithFirebase() {
             userId: user.uid,
             isDeleted: deleteField(),
             updatedAt: deposit.updatedAt || Date.now()
-          }, { merge: true });
+          }), { merge: true });
         } catch (error) {
           handleFirestoreError(error, OperationType.WRITE, path);
         }
@@ -366,12 +370,12 @@ export async function syncWithFirebase() {
           const path = 'banks';
           const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + bank.name);
           try {
-            await setDoc(doc(firestore, path, firestoreDocId), {
+            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
               ...data,
               userId: user.uid,
               isDeleted: deleteField(),
               updatedAt: bank.updatedAt || Date.now()
-            }, { merge: true });
+            }), { merge: true });
           } catch (error) {
             handleFirestoreError(error, OperationType.WRITE, path);
           }
@@ -391,11 +395,11 @@ export async function syncWithFirebase() {
     if (remoteSettings && (!localSettings || localUpdated === 0 || remoteUpdated > localUpdated)) {
       await db.appSettings.put({ ...remoteSettings, id: 'main' });
     } else if (localSettings && (!remoteSettings || localUpdated > remoteUpdated)) {
-      await setDoc(doc(firestore, settingsPath, user.uid), {
+      await setDoc(doc(firestore, settingsPath, user.uid), stripUndefined({
         ...localSettings,
         userId: user.uid,
         updatedAt: localUpdated === 0 ? Date.now() : localUpdated
-      });
+      }));
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, settingsPath);
@@ -414,11 +418,11 @@ export async function syncWithFirebase() {
     if (remoteIncome && (!localIncomeState || localUpdated === 0 || remoteUpdated > localUpdated)) {
       await db.incomeState.put({ ...remoteIncome, id: 'main' });
     } else if (localIncomeState && (!remoteIncome || localUpdated > remoteUpdated)) {
-      await setDoc(doc(firestore, incomePath, 'income'), {
+      await setDoc(doc(firestore, incomePath, 'income'), stripUndefined({
         ...localIncomeState,
         userId: user.uid,
         updatedAt: localUpdated === 0 ? Date.now() : localUpdated
-      });
+      }));
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, incomePath);
@@ -511,11 +515,11 @@ export async function syncWithFirebase() {
 
       if (!remoteData || localUpdated > remoteUpdated) {
         const firestoreDocId = `${user.uid}_${localData.year}`;
-        await setDoc(doc(firestore, taxSettingsPath, firestoreDocId), {
+        await setDoc(doc(firestore, taxSettingsPath, firestoreDocId), stripUndefined({
           ...localData,
           userId: user.uid,
           updatedAt: localUpdated === 0 ? Date.now() : localUpdated
-        });
+        }));
       }
     }
   } catch (error) {
@@ -568,13 +572,19 @@ export async function syncWithFirebase() {
   };
 
   syncPromise = runSync();
+  let success = false;
   try {
     await syncPromise;
+    success = true;
+  } catch (err) {
+    console.error("Sync failed, dropping pending sync to avoid endless loop", err);
   } finally {
     syncPromise = null;
     if (pendingSync) {
       pendingSync = false;
-      syncWithFirebase();
+      if (success) {
+        syncWithFirebase();
+      }
     }
   }
 }

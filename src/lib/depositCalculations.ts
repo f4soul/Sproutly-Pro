@@ -86,7 +86,7 @@ export function isDepositClosed(deposit: Deposit): boolean {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
-  return today > end;
+  return today >= end;
 }
 
 function getDaysInYear(year: number) {

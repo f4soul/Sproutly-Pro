@@ -72,7 +72,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
 
         <div 
           className={cn(
-            "grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-4.5 xl:gap-6 py-2 transition-all duration-300 ease-out w-full items-start my-auto",
+            "grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 lg:gap-3 xl:gap-6 py-2 transition-all duration-300 ease-out w-full items-start my-auto",
             expandedMonth && "opacity-30 blur-md scale-[0.96] pointer-events-none grayscale-[50%]"
           )}
         >

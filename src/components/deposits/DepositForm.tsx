@@ -277,7 +277,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     if (deposit?.id) {
       await db.deposits.put({ ...dataToSave, id: deposit.id });
     } else {
-      await db.deposits.put(dataToSave);
+      const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9) + Date.now();
+      await db.deposits.put({ ...dataToSave, id: newId });
       localStorage.removeItem('new_deposit_draft');
     }
     onClose();

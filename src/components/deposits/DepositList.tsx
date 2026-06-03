@@ -451,7 +451,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       {filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
-            "block lg:hidden fixed bottom-[92px] md:bottom-8 left-4 right-4 sm:left-6 sm:right-6 md:left-[calc(272px+1.5rem)] md:right-8 z-50 pointer-events-none drop-shadow-xl max-w-xl mx-auto transition-all",
+            "block lg:hidden fixed bottom-[92px] md:bottom-8 left-2 right-2 sm:left-4 sm:right-4 md:left-[18.5rem] md:right-6 z-50 pointer-events-none drop-shadow-xl max-w-6xl mx-auto transition-all",
             !isPresent 
               ? "duration-100 opacity-0 scale-95 translate-y-4" 
               : "duration-300"
