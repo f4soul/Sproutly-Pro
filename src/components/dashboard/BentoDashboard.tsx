@@ -35,6 +35,7 @@ import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { useAppState } from '../../hooks/useAppState';
 import { calculateUnifiedFinance } from '../../lib/unifiedFinance';
 import { formatCurrency, cn } from '../../lib/utils';
+import { isDepositClosed } from '../../lib/depositCalculations';
 import { DepositHeatmap } from '../deposits/DepositHeatmap';
 import { HeatmapIcon } from '../ui/HeatmapIcon';
 
@@ -457,16 +458,7 @@ export function BentoDashboard({
               <Landmark size={18} className="sm:w-5 sm:h-5" />
             </div>
             {(() => {
-              const activeCount = deposits.filter(d => {
-                if (d.isArchived) return false;
-                if (d.isClosed) return false;
-                if (!d.endDate) return true;
-                const end = new Date(d.endDate);
-                end.setHours(0, 0, 0, 0);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                return end.getTime() >= today.getTime();
-              }).length;
+              const activeCount = deposits.filter(d => !d.isArchived && !isDepositClosed(d)).length;
               if (activeCount > 0) {
                 const lastDigit = activeCount % 10;
                 const lastTwo = activeCount % 100;

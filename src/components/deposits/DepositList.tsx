@@ -68,10 +68,16 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
   const uniqueBanks = useMemo(() => {
     const names = deposits
-      .filter(d => !d.isArchived)
+      .filter(d => {
+        if (d.isArchived) return false;
+        const depositClosed = isDepositClosed(d);
+        if (filterStatus === 'active' && depositClosed) return false;
+        if (filterStatus === 'closed' && !depositClosed) return false;
+        return true;
+      })
       .map(d => d.bank.trim());
     return Array.from(new Set(names)).filter(Boolean).sort();
-  }, [deposits]);
+  }, [deposits, filterStatus]);
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -451,7 +457,9 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       {filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
-            "block lg:hidden fixed bottom-[92px] md:bottom-8 left-2 right-2 sm:left-4 sm:right-4 md:left-[18.5rem] md:right-6 z-50 pointer-events-none drop-shadow-xl max-w-6xl mx-auto transition-all",
+            "block lg:hidden fixed z-[60] pointer-events-none drop-shadow-xl transition-all mx-auto",
+            "bottom-[92px] inset-x-4 max-w-sm",
+            "md:bottom-8 md:inset-x-auto md:left-[18.5rem] md:right-6 md:max-w-none md:max-w-6xl",
             !isPresent 
               ? "duration-100 opacity-0 scale-95 translate-y-4" 
               : "duration-300"

@@ -21,10 +21,10 @@ export function HeatmapMonthCard({ month, heatmapData, setExpandedMonth }: Heatm
   return (
     <motion.div
       onClick={() => setExpandedMonth(month)}
-      className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-[1.25rem] sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] p-3 sm:p-3.5 lg:p-2 xl:p-4.5 pb-2.5 sm:pb-3 lg:pb-2.5 xl:pb-4 flex flex-col cursor-pointer hover:border-deposit-500/40 dark:hover:border-deposit-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden"
+      className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-[1.25rem] sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] p-4 sm:p-5 lg:p-4 xl:p-6 pb-3.5 sm:pb-4 lg:pb-4 xl:pb-5 flex flex-col cursor-pointer hover:border-deposit-500/40 dark:hover:border-deposit-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-1.5 sm:mb-2 lg:mb-1 xl:mb-2 shrink-0">
-        <h4 className="text-[10px] sm:text-[11px] lg:text-[10px] xl:text-[12px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-deposit-500 transition-colors leading-none">
+      <div className="flex items-center justify-between mb-2.5 sm:mb-3 lg:mb-2.5 xl:mb-3 shrink-0">
+        <h4 className="text-[10px] sm:text-[11px] lg:text-[11px] xl:text-[12px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-400 group-hover:text-deposit-500 transition-colors leading-none">
           {format(month, 'LLLL', { locale: ru })}
         </h4>
       </div>

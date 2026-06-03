@@ -534,7 +534,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
         "px-2 sm:px-4 md:px-6 lg:px-8",
         activeTab === 'calendar' 
-          ? "pt-24 md:pt-4 lg:pt-5 pb-[88px] md:pb-4 lg:pb-5 min-h-[100dvh] md:max-h-screen md:overflow-y-auto lg:overflow-hidden xl:max-h-none xl:overflow-y-auto" 
+          ? "pt-24 md:pt-4 lg:pt-5 pb-[88px] md:pb-8 lg:pb-6 xl:pb-8 min-h-[100dvh] md:max-h-screen md:overflow-y-auto lg:overflow-hidden xl:max-h-none xl:overflow-y-auto" 
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
       )}>
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>

@@ -201,9 +201,9 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
         <AnimatePresence initial={false}>
           {isFiltersExpanded && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+              animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'hidden' } }}
+              exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
               transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
               className="relative z-30"
             >
@@ -414,7 +414,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           leaveFrom="opacity-100 scale-100"
                           leaveTo="opacity-0 scale-95"
                         >
-                          <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-[100]">
+                          <Popover.Panel anchor="bottom end" className="w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-[100] mt-1">
                             <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                             <div className="flex flex-col gap-1">
                               <button 
@@ -534,7 +534,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           leaveFrom="opacity-100 scale-100"
                           leaveTo="opacity-0 scale-95"
                         >
-                          <Popover.Panel className="absolute left-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                          <Popover.Panel anchor="bottom start" className="w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50 mt-1">
                                <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-2 pt-1">Сортировка</h4>
                               <div className="flex flex-col gap-0.5">
                                 {[
@@ -635,7 +635,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         leaveFrom="opacity-100 scale-100"
                         leaveTo="opacity-0 scale-95"
                       >
-                        <Popover.Panel className="absolute right-0 top-[calc(100%+0.5rem)] w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
+                        <Popover.Panel anchor="bottom end" className="w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50 mt-1">
                           <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                           <div className="flex flex-col gap-1">
                             <button 
