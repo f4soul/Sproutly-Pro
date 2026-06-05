@@ -171,12 +171,12 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                           <AnimatePresence>
                             {open && (
                               <Listbox.Options 
-                                as={motion.ul}
+                                as={motion.ul as any}
                                 static
                                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                                transition={{ duration: 0.15 }}
+                                transition={{ duration: 0.15 } as any}
                                 className="absolute right-0 mt-2 w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-900 p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none"
                               >
                                 {[
