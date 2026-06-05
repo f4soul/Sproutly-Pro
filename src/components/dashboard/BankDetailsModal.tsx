@@ -86,12 +86,12 @@ export function BankDetailsModal({
                           <div key={`bank-deposit-${d.id || i}-${i}`} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
                             <div className="flex justify-between items-start">
                               <div className="text-xs font-bold text-slate-950 dark:text-white truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
-                              <div className="text-xs font-bold text-deposit-600 dark:text-deposit-400">{formatCurrency(yearIncome)}</div>
+                              <div className="text-xs font-bold text-deposit-600 dark:text-deposit-400">{formatCurrency(yearIncome, d.currency || 'RUB')}</div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Сумма</span>
-                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{formatCurrency(d.amount)}</span>
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{formatCurrency(d.amount, d.currency || 'RUB')}</span>
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ставка</span>

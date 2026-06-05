@@ -5,7 +5,7 @@ import { BentoDashboard } from './BentoDashboard';
 import { DepositsDashboard } from './DepositsDashboard';
 import { ChartsSection } from './ChartsSection';
 import { YearSummary } from '../income/YearSummary';
-import { Deposit, TaxYearSettings, AppSettings, AppState } from '../../types';
+import { Deposit, CashAsset, TaxYearSettings, AppSettings, AppState } from '../../types';
 import { calculateProgressiveTaxDetailed } from '../../lib/taxCalculator';
 import { calculateYearTotals } from '../../lib/helpers';
 import { cn } from '../../lib/utils';
@@ -13,6 +13,7 @@ import { useAppState } from '../../hooks/useAppState';
 
 interface UnifiedDashboardProps {
   deposits: Deposit[];
+  cashAssets?: CashAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate: boolean;
@@ -36,7 +37,7 @@ const DASHBOARD_ITEM_VARIANTS = {
   show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
 } as const;
 
-export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
+export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
   const { state, setState } = useAppState();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
   
@@ -180,6 +181,7 @@ export function UnifiedDashboard({ deposits, taxSettings, appSettings, isPrivate
             {activeSubTab === 'dashboard' && (
               <BentoDashboard 
                 deposits={deposits} 
+                cashAssets={cashAssets}
                 taxSettings={taxSettings} 
                 appSettings={appSettings} 
                 isPrivate={isPrivate}

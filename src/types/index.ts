@@ -101,6 +101,18 @@ export interface Bank {
   updatedAt?: number;
 }
 
+export interface CashAsset {
+  id?: string | number;
+  userId?: string;
+  amount: number;
+  currency: string;
+  name: string; // e.g. "Копилка дома", "Сейф"
+  comment?: string;
+  isArchived?: boolean;
+  exchangeRateOnOpen?: number;
+  updatedAt?: number;
+}
+
 export interface Deposit {
   id?: string | number;
   userId?: string; // For Firebase sync
@@ -109,6 +121,7 @@ export interface Deposit {
   endDate: Date | null;
   amount: number;
   currency: string;
+  exchangeRateOnOpen?: number;
   sourceNote?: string;
   rate: number;
   formula: CalculationFormula;
@@ -160,7 +173,6 @@ export interface AppSettings {
   incomeCalculationMode?: 'salary' | 'combined';
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
-  showDevTools?: boolean;
   privacyLock?: {
     enabled: boolean;
     pin: string | null;

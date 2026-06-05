@@ -20,7 +20,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({ deposit, onEdit, onDelet
   const [isExpanded, setIsExpanded] = useState(false);
   const income = calculateIncome(deposit);
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val, deposit.currency || 'RUB')}</PrivacyBlur>;
   
   const parseDate = (dateVal: string | Date | undefined | null) => {
     if (!dateVal) return null;

@@ -1,8 +1,9 @@
 import Dexie, { type Table } from 'dexie';
-import { Deposit, TaxYearSettings, AppSettings, Bank, DeletedRecord } from '../types';
+import { Deposit, CashAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord } from '../types';
 
 export class MyDepositsDB extends Dexie {
   deposits!: Table<Deposit>;
+  cashAssets!: Table<CashAsset>;
   taxYearSettings!: Table<TaxYearSettings>;
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
@@ -11,6 +12,15 @@ export class MyDepositsDB extends Dexie {
 
   constructor() {
     super('MyDepositsDB');
+    this.version(6).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      cashAssets: '++id, userId, name, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      deletedQueue: '++id, collection, docId'
+    });
     this.version(5).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       taxYearSettings: 'year',
@@ -275,6 +285,44 @@ export function startRealTimeSync(user: { uid: string }) {
     handleFirestoreError(error, OperationType.GET, 'taxYearSettings');
   });
   activeUnsubscribers.push(unsubTax);
+
+  // Listen to cashAssets
+  const qCashAssets = query(collection(firestore, 'cashAssets'), where('userId', '==', user.uid));
+  const unsubCashAssets = onSnapshot(qCashAssets, (snapshot) => {
+    (async () => {
+      try {
+        const pendingDeletes = await db.deletedQueue.toArray();
+        for (const change of snapshot.docChanges()) {
+          const docId = change.doc.id;
+          const remoteData = change.doc.data() as CashAsset & { isDeleted?: boolean };
+          
+          let localId: string | number = docId;
+          if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+            const numPart = localId.replace(`${user.uid}_`, '');
+            if (!isNaN(Number(numPart))) {
+              localId = Number(numPart);
+            }
+          }
+
+          const isPendingDelete = pendingDeletes.some(d => d.collection === 'cashAssets' && d.docId === docId);
+          if (isPendingDelete) {
+            continue;
+          }
+
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.cashAssets.delete(localId as any);
+          } else {
+            await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+          }
+        }
+      } catch (err) {
+        console.error("Real-time cashAssets sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'cashAssets');
+  });
+  activeUnsubscribers.push(unsubCashAssets);
 }
 
 export async function clearLocalData() {
@@ -318,7 +366,39 @@ export async function syncWithFirebase() {
         }
       }
 
-      // 1. Upload local changes to Firebase
+      // Upload local changes to Firebase
+      let remoteCashMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'cashAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteCashMap.set(d.id, d.data())); } catch(e) {}
+      
+      const localCash = await db.cashAssets.toArray();
+      for (const cash of localCash) {
+        if (cash.userId !== user.uid) {
+          cash.userId = user.uid;
+          await db.cashAssets.put({...cash});
+        }
+        const { id, ...data } = cash;
+        const path = 'cashAssets';
+        const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
+        try {
+          const remoteCashUpdate = remoteCashMap.get(firestoreDocId)?.updatedAt || 0;
+          const localCashUpdate = cash.updatedAt || 0;
+          if (localCashUpdate >= remoteCashUpdate) {
+            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+              ...data,
+              currency: data.currency || 'RUB',
+              userId: user.uid,
+              isDeleted: deleteField(),
+              updatedAt: localCashUpdate === 0 ? Date.now() : localCashUpdate
+            }), { merge: true });
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
+      }
+
+      let remoteDepMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'deposits'), where('userId', '==', user.uid))); snap.forEach((d) => remoteDepMap.set(d.id, d.data())); } catch(e) {}
+      
       const localDeposits = await db.deposits.toArray();
       for (const deposit of localDeposits) {
         if (deposit.isTest) continue; // Skip test records
@@ -335,17 +415,21 @@ export async function syncWithFirebase() {
         const path = 'deposits';
         const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
         try {
-          await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
-            ...data,
-            formula: data.formula || 'simple_days',
-            currency: data.currency || '₽',
-            rate: data.rate || 0,
-            amount: data.amount || 0,
-            bank: data.bank || 'Unknown',
-            userId: user.uid,
-            isDeleted: deleteField(),
-            updatedAt: deposit.updatedAt || Date.now()
-          }), { merge: true });
+          const remoteDepUpdate = remoteDepMap.get(firestoreDocId)?.updatedAt || 0;
+          const localDepUpdate = deposit.updatedAt || Date.now();
+          if (localDepUpdate >= remoteDepUpdate) {
+            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+              ...data,
+              formula: data.formula || 'simple_days',
+              currency: (data.currency === '₽' ? 'RUB' : (data.currency || 'RUB')),
+              rate: data.rate || 0,
+              amount: data.amount || 0,
+              bank: data.bank || 'Unknown',
+              userId: user.uid,
+              isDeleted: deleteField(),
+              updatedAt: localDepUpdate
+            }), { merge: true });
+          }
         } catch (error) {
           handleFirestoreError(error, OperationType.WRITE, path);
         }
@@ -354,6 +438,9 @@ export async function syncWithFirebase() {
       // Download remote changes first
       
       // Upload custom banks
+      let remoteBankMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'banks'), where('userId', '==', user.uid))); snap.forEach((d) => remoteBankMap.set(d.id, d.data())); } catch(e) {}
+      
       const localBanks = await db.banks.toArray();
       for (const bank of localBanks) {
         if (bank.isTest) continue; // Skip test records
@@ -370,12 +457,16 @@ export async function syncWithFirebase() {
           const path = 'banks';
           const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + bank.name);
           try {
-            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
-              ...data,
-              userId: user.uid,
-              isDeleted: deleteField(),
-              updatedAt: bank.updatedAt || Date.now()
-            }), { merge: true });
+            const remoteBankUpdate = remoteBankMap.get(firestoreDocId)?.updatedAt || 0;
+            const localBankUpdate = bank.updatedAt || Date.now();
+            if (localBankUpdate >= remoteBankUpdate) {
+              await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+                ...data,
+                userId: user.uid,
+                isDeleted: deleteField(),
+                updatedAt: localBankUpdate
+              }), { merge: true });
+            }
           } catch (error) {
             handleFirestoreError(error, OperationType.WRITE, path);
           }
@@ -466,6 +557,9 @@ export async function syncWithFirebase() {
         if (remoteData.endDate && typeof remoteData.endDate.toDate === 'function') {
           remoteData.endDate = remoteData.endDate.toDate();
         }
+        if (remoteData.currency === '₽') {
+          remoteData.currency = 'RUB';
+        }
         await db.deposits.put({ ...remoteData, id: localId } as Deposit);
       }
     }
@@ -524,6 +618,41 @@ export async function syncWithFirebase() {
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, taxSettingsPath);
+  }
+
+  // CashAssets
+  const cashPath = 'cashAssets';
+  try {
+    const qCash = query(collection(firestore, cashPath), where('userId', '==', user.uid));
+    const cashSnapshot = await getDocs(qCash);
+    for (const docSnap of cashSnapshot.docs) {
+      const isPendingDelete = pendingDeletes.some(d => d.collection === 'cashAssets' && d.docId === docSnap.id);
+      if (isPendingDelete) {
+        continue;
+      }
+      const remoteData = docSnap.data();
+      let localId: string | number = docSnap.id;
+      if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+        const numPart = localId.replace(`${user.uid}_`, '');
+        if (!isNaN(Number(numPart))) {
+          localId = Number(numPart);
+        }
+      }
+      
+      const localData = await db.cashAssets.get(localId);
+      if (remoteData.isDeleted) {
+        if (localData) {
+          await db.cashAssets.delete(localId as any);
+        }
+        continue;
+      }
+      
+      // Since Cash Asset doesn't have updatedAt yet, we just overwrite if different, or we can add updatedAt
+      // Simple sync: just overwrite it if we don't have updatedAt for cash assets.
+      await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, cashPath);
   }
 
   // Banks

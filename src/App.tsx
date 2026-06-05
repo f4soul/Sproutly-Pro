@@ -2,12 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
-import { DevTools } from './components/devtools/DevTools';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
 import { UnifiedDashboard } from './components/dashboard/UnifiedDashboard';
-import { DepositList } from './components/deposits/DepositList';
+import { AssetsView } from './components/assets/AssetsView';
 import { DepositHeatmap } from './components/deposits/DepositHeatmap';
 import { Settings } from './components/settings/Settings';
 import { IncomeTracker } from './components/income/IncomeTracker';
@@ -41,27 +40,57 @@ function AppContent() {
   const [isPrivate, setIsPrivate] = useState(false);
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const _deposits = useLiveQuery(() => db.deposits.toArray());
+  const _cashAssets = useLiveQuery(() => db.cashAssets.toArray());
   const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
   
-  const isLockedRequired = useMemo(() => {
-    if (!_appSettings || !_appSettings.privacyLock?.enabled) {
-      return false;
+  const isLockActive = useMemo(() => {
+    return !!(_appSettings && _appSettings.privacyLock?.enabled && _appSettings.privacyLock?.pin);
+  }, [_appSettings]);
+
+  const checkLockStatus = () => {
+    if (!_appSettings || !_appSettings.privacyLock?.enabled || !_appSettings.privacyLock?.pin) {
+      setIsUnlocked(true);
+      return;
     }
-    const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
-    if (sessionUnlocked) return false;
 
     const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
-    if (timeoutMinutes > 0) {
-      const lastActiveStr = localStorage.getItem('lockLastActive');
-      if (lastActiveStr) {
-        const elapsed = Date.now() - parseInt(lastActiveStr, 10);
-        if (elapsed < timeoutMinutes * 60 * 1000) {
-          return false;
+    const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
+
+    // 1. If timeout is "Immediately" (0 minutes):
+    if (timeoutMinutes === 0) {
+      if (sessionUnlocked) {
+        setIsUnlocked(true);
+      } else {
+        setIsUnlocked(false);
+      }
+      return;
+    }
+
+    // 2. If timeout is a specific interval (e.g., 1 min, 5 min):
+    const lastActiveStr = localStorage.getItem('lockLastActive');
+    if (lastActiveStr) {
+      const elapsed = Date.now() - parseInt(lastActiveStr, 10);
+      const isExpired = elapsed >= timeoutMinutes * 60 * 1000;
+
+      if (isExpired) {
+        setIsUnlocked(false);
+        sessionStorage.removeItem('pinUnlocked');
+      } else {
+        // If we reach here, elapsed < timeout.
+        // We only automatically grant access if the session was already unlocked, OR 
+        // if we decide to share the unlock state across tabs (which this does by setting it true).
+        // For maximum security, we shouldn't unlock a fresh tab if it was never unlocked.
+        if (!sessionUnlocked) {
+          setIsUnlocked(false);
+        } else {
+          setIsUnlocked(true);
         }
       }
+    } else {
+      setIsUnlocked(false);
+      sessionStorage.removeItem('pinUnlocked');
     }
-    return true;
-  }, [_appSettings]);
+  };
   
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
@@ -75,40 +104,80 @@ function AppContent() {
       setLocalTheme(_appSettings.theme);
     }
     
-    // Auto-unlock if not enabled, or if within timeout
     if (_appSettings) {
-      if (!_appSettings.privacyLock?.enabled) {
-        setIsUnlocked(true);
-      } else {
-        const sessionUnlocked = sessionStorage.getItem('pinUnlocked') === 'true';
-        const timeoutMinutes = _appSettings.privacyLock.timeoutMinutes ?? 0;
-        
-        let isWithinTimeout = false;
-        if (timeoutMinutes > 0) {
-           const lastActiveStr = localStorage.getItem('lockLastActive');
-           if (lastActiveStr) {
-             const elapsed = Date.now() - parseInt(lastActiveStr, 10);
-             if (elapsed < timeoutMinutes * 60 * 1000) {
-               isWithinTimeout = true;
-             }
-           }
-        }
-
-        if (sessionUnlocked || isWithinTimeout) {
-          setIsUnlocked(true);
-          sessionStorage.setItem('pinUnlocked', 'true');
-        } else {
-          setIsUnlocked(false);
-          sessionStorage.removeItem('pinUnlocked');
-        }
-      }
+      checkLockStatus();
     }
   }, [_appSettings]);
 
+  // Set up visibility change, focus and inactive timers
+  useEffect(() => {
+    if (!isLockActive) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        const timeoutMinutes = _appSettings?.privacyLock?.timeoutMinutes ?? 0;
+        if (timeoutMinutes === 0) {
+          // Immediately lock when tab goes hidden
+          sessionStorage.removeItem('pinUnlocked');
+          setIsUnlocked(false);
+        } else {
+          // Record background departure timestamp
+          localStorage.setItem('lockLastActive', Date.now().toString());
+        }
+      } else if (document.visibilityState === 'visible') {
+        // Return checking
+        checkLockStatus();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', checkLockStatus);
+
+    const interval = setInterval(() => {
+      const timeoutMinutes = _appSettings?.privacyLock?.timeoutMinutes ?? 0;
+      if (timeoutMinutes > 0 && isUnlocked) {
+        const lastActiveStr = localStorage.getItem('lockLastActive');
+        if (lastActiveStr) {
+          const elapsed = Date.now() - parseInt(lastActiveStr, 10);
+          if (elapsed >= timeoutMinutes * 60 * 1000) {
+            setIsUnlocked(false);
+            sessionStorage.removeItem('pinUnlocked');
+          }
+        }
+      }
+    }, 4000); // Check every 4 seconds
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', checkLockStatus);
+      clearInterval(interval);
+    };
+  }, [isLockActive, isUnlocked, _appSettings]);
+
   // Track user activity to update last active timestamp
   useEffect(() => {
+    // ONLY track activity if the user is currently unlocked, or lock is not active at all.
+    // Otherwise, moving the mouse on the lock screen will reset the timer and bypass the lock!
+    if (isLockActive && !isUnlocked) return;
+
     let timeout: NodeJS.Timeout;
     const trackActivity = () => {
+      // Check if we ALREADY expired before updating the timestamp!
+      // This prevents a race condition on iOS Safari resumed from sleep where a tap updates the timestamp
+      // before the interval or visibility listener has a chance to lock the app.
+      const timeoutMinutes = _appSettings?.privacyLock?.timeoutMinutes ?? 0;
+      if (timeoutMinutes > 0 && isUnlocked) {
+        const lastActiveStr = localStorage.getItem('lockLastActive');
+        if (lastActiveStr) {
+          const elapsed = Date.now() - parseInt(lastActiveStr, 10);
+          if (elapsed >= timeoutMinutes * 60 * 1000) {
+            setIsUnlocked(false);
+            sessionStorage.removeItem('pinUnlocked');
+            return; // STOP! We expired! Do not update the timer.
+          }
+        }
+      }
+
       // Throttle write to localStorage
       if (!timeout) {
         timeout = setTimeout(() => {
@@ -121,6 +190,7 @@ function AppContent() {
     // Initial timestamp
     localStorage.setItem('lockLastActive', Date.now().toString());
 
+    // We use capture phase for immediate interception if needed, though bubble is fine.
     window.addEventListener('mousemove', trackActivity);
     window.addEventListener('touchstart', trackActivity);
     window.addEventListener('keydown', trackActivity);
@@ -133,7 +203,7 @@ function AppContent() {
       window.removeEventListener('click', trackActivity);
       if (timeout) clearTimeout(timeout);
     };
-  }, []);
+  }, [isLockActive, isUnlocked, _appSettings]);
 
   // Sync theme to document element
   useEffect(() => {
@@ -145,10 +215,11 @@ function AppContent() {
   }, [theme]);
 
   const deposits = _deposits || [];
+  const cashAssets = _cashAssets || [];
   const taxSettings = _taxSettings || [];
   const appSettings = _appSettings;
 
-  const isLoading = _appSettings === undefined || _deposits === undefined || _taxSettings === undefined;
+  const isLoading = _appSettings === undefined || _deposits === undefined || _taxSettings === undefined || _cashAssets === undefined;
 
   const { state } = useAppState();
   const selectedYear = state?.activeYear || new Date().getFullYear();
@@ -175,7 +246,7 @@ function AppContent() {
 
   return (
     <>
-      {isLockedRequired && !isUnlocked && (
+      {isLockActive && !isUnlocked && appSettings?.privacyLock && (
         <SecurityLock
           pin={appSettings.privacyLock.pin || ''}
           useBiometrics={appSettings.privacyLock.useBiometrics}
@@ -197,6 +268,7 @@ function AppContent() {
             {activeTab === 'dashboard' && (
               <UnifiedDashboard 
                 deposits={deposits} 
+                cashAssets={cashAssets}
                 taxSettings={taxSettings} 
                 appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
                 isPrivate={isPrivate}
@@ -204,8 +276,9 @@ function AppContent() {
               />
             )}
             {activeTab === 'deposits' && (
-              <DepositList 
+              <AssetsView 
                 deposits={deposits} 
+                cashAssets={cashAssets}
                 selectedYear={selectedYear} 
                 isPrivate={isPrivate}
               />
@@ -221,7 +294,6 @@ function AppContent() {
             )}
           </>
         )}
-        <DevTools />
         <GlobalToasts />
       </Layout>
     </>

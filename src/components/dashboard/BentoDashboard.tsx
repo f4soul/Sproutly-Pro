@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   Shield,
+  Info,
   X as CloseIcon,
   Calculator,
   Activity
@@ -31,10 +32,11 @@ import {
   YAxis, 
   CartesianGrid 
 } from 'recharts';
-import { Deposit, TaxYearSettings, AppSettings } from '../../types';
+import { Deposit, CashAsset, TaxYearSettings, AppSettings } from '../../types';
 import { useAppState } from '../../hooks/useAppState';
 import { calculateUnifiedFinance } from '../../lib/unifiedFinance';
 import { formatCurrency, cn } from '../../lib/utils';
+import { getExchangeRates, convertToRub, CurrencyRates } from '../../services/currency';
 import { isDepositClosed } from '../../lib/depositCalculations';
 import { DepositHeatmap } from '../deposits/DepositHeatmap';
 import { HeatmapIcon } from '../ui/HeatmapIcon';
@@ -46,16 +48,16 @@ import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface BentoDashboardProps {
   deposits: Deposit[];
+  cashAssets?: CashAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate?: boolean;
   setIsPrivate?: (val: boolean) => void;
 }
 
-
-
 export function BentoDashboard({ 
   deposits, 
+  cashAssets = [],
   taxSettings, 
   appSettings, 
   isPrivate = false,
@@ -63,11 +65,17 @@ export function BentoDashboard({
 }: BentoDashboardProps) {
   const { state } = useAppState();
   const selectedYear = state.activeYear;
+  const [rates, setRates] = React.useState<CurrencyRates | null>(null);
+
+  React.useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
 
   const data = useMemo(() => {
     // ... (logic remains same)
     let totalDepositsAmount = 0;
-    const upcomingEvents: { date: Date; type: 'deposit_end' | 'salary'; label: string; amount?: number }[] = [];
+    let totalCashAmount = 0;
+    const upcomingEvents: { date: Date; type: 'deposit_end' | 'salary'; label: string; amount?: number; currency?: string }[] = [];
 
     deposits.forEach(d => {
       if (d.isArchived) return;
@@ -82,7 +90,7 @@ export function BentoDashboard({
       })();
       
       if (!isClosed) {
-        totalDepositsAmount += d.amount;
+        totalDepositsAmount += convertToRub(d.amount, d.currency || 'RUB', rates);
       }
 
       if (d.endDate) {
@@ -92,9 +100,16 @@ export function BentoDashboard({
             date: endDate,
             type: 'deposit_end',
             label: `Окончание: ${d.bank}`,
-            amount: d.amount
+            amount: d.amount,
+            currency: d.currency || 'RUB'
           });
         }
+      }
+    });
+
+    cashAssets.forEach(c => {
+      if (!c.isArchived) {
+        totalCashAmount += convertToRub(c.amount, c.currency || 'RUB', rates);
       }
     });
 
@@ -160,6 +175,8 @@ export function BentoDashboard({
       ...unified,
       limit: unified.depositLimit,
       totalDepositsAmount,
+      totalCashAmount,
+      totalNetCapital: totalDepositsAmount + totalCashAmount,
       upcomingEvents: sortedEvents,
       insights,
       netDiffPercent,
@@ -173,8 +190,12 @@ export function BentoDashboard({
     { name: 'Вклады', value: data.depositsIncome, color: 'var(--color-deposit-500)' },
   ];
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={val} /></PrivacyBlur>;
-  const formatValPlain = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  const formatVal = (val: number, cur: string = 'RUB') => <PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={val} currency={cur} /></PrivacyBlur>;
+  const formatValPlain = (val: number, cur: string = 'RUB', hideSymbol: boolean = false) => {
+    let formatted = formatCurrency(val, cur);
+    if (hideSymbol) formatted = formatted.replace(/[^\d\s.,-]/g, '').trim(); 
+    return <PrivacyBlur isPrivate={isPrivate}>{formatted}</PrivacyBlur>;
+  };
   const limitProgress = Math.min(100, (data.depositsIncome / data.limit) * 100);
 
   return (
@@ -210,9 +231,15 @@ export function BentoDashboard({
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 group/tooltip">
                   <Wallet size={18} className="text-primary-500 dark:text-primary-400" />
                   <span className="text-sm font-bold uppercase tracking-wider">Чистый капитал (Net)</span>
+                  <div className="relative flex items-center justify-center">
+                    <Info size={14} className="text-slate-400 dark:text-slate-500 hover:text-primary-500 transition-colors cursor-help" />
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-200 z-50 origin-top text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight">
+                      Включает валютные активы, конвертированные по курсу ЦБ РФ на сегодня.
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -227,7 +254,7 @@ export function BentoDashboard({
               )}
             </div>
             <h2 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tighter mb-2 text-slate-950 dark:text-white">
-              {formatVal(data.totalNet)}
+              {formatVal(data.totalNetCapital)}
             </h2>
             <div className="flex items-center gap-1 font-medium">
               {data.netDiffPercent! >= 0 ? (
@@ -475,9 +502,25 @@ export function BentoDashboard({
             })()}
           </div>
           
-          <div className="min-w-0 w-full mt-2">
-            <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-0.5 sm:mb-1 truncate">Во вкладах</h3>
-            <p className="text-lg sm:text-[1.35rem] md:text-xl lg:text-[1.15rem] xl:text-[1.45rem] font-black text-slate-950 dark:text-white truncate tracking-tight">{formatVal(data.totalDepositsAmount)}</p>
+          <div className="min-w-0 w-full mt-auto pt-1.5 flex flex-col gap-0.5 items-start">
+            <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate mb-0.5">Всего сбережений</h3>
+            <p className="text-xl min-[360px]:text-xl sm:text-xl lg:text-2xl xl:text-3xl font-black text-slate-950 dark:text-white truncate tracking-tight w-full">{formatVal(data.totalDepositsAmount + data.totalCashAmount)}</p>
+            {data.totalCashAmount > 0 && (
+              <div className="grid grid-cols-2 gap-4 w-full pt-0.5">
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Вклады:</span>
+                  <span className="text-xs sm:text-sm lg:text-xs xl:text-sm font-black text-slate-950 dark:text-white truncate tracking-tight">
+                    {formatValPlain(Math.round(data.totalDepositsAmount), 'RUB', true)}
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Наличные:</span>
+                  <span className="text-xs sm:text-sm lg:text-xs xl:text-sm font-black text-deposit-500 dark:text-deposit-400 truncate tracking-tight">
+                    {formatValPlain(Math.round(data.totalCashAmount), 'RUB', true)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -508,7 +551,7 @@ export function BentoDashboard({
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-black text-slate-950 dark:text-white">{formatVal(event.amount || 0)}</p>
+                    <p className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(event.amount || 0, event.currency || 'RUB')}</p>
                   </div>
                 </div>
               ))

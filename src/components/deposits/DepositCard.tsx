@@ -47,7 +47,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({ deposit, onEdit, onDel
     return `Осталось дней: ${Math.max(0, days)}`;
   };
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val, deposit.currency || 'RUB')}</PrivacyBlur>;
 
   return (
     <div 

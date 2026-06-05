@@ -49,3 +49,16 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 
 ## Rule of Thumb for AI Agents:
 When asked to build or modify a new component, **DO NOT** use standard default Tailwind (like basic square buttons or generic flat grey backgrounds). Blend it with the glassmorphism, rounded corners, and deposit-accented design rules defined above so it feels like a native part of the Sproutly.Pro platform.
+
+---
+
+## 7. Release Notes & Changelog (MANDATORY FOR ALL AGENTS)
+**CRITICAL INSTRUCTION FOR ALL AI MODELS:**
+Whenever you implement a meaningful, non-trivial feature, enhancement, or major bug fix, you **MUST** update the application's Release Notes history. 
+
+- **Where to log:** Update the `src/data/changelog.ts` file (or the designated changelog file in the project).
+- **What to log:** Add a new entry detailing the change in user-friendly language. DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes. ONLY log user-facing features and important updates.
+- **Format:** Use the existing array structure in the changelog file. For new versions, increment the version number appropriately (e.g., from `1.0.0` to `1.1.0` or `1.0.1`).
+- **Why:** This project uses an active user base, and showing them a beautifully formatted "What's New" popup after updates is critical for adoption and transparency.
+
+**Never forget to log your major implementations here without the user having to remind you.**

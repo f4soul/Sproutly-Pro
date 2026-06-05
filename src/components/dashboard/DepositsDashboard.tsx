@@ -5,6 +5,7 @@ import { calculateIncomeByYears, calculateTax } from '../../lib/depositCalculati
 import { getBankDetails } from '../../lib/banks';
 import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
+import { getExchangeRates, convertToRub, CurrencyRates } from '../../services/currency';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 import { TrendingUp, ShieldAlert, ReceiptRussianRuble, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
 import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
@@ -29,8 +30,13 @@ interface DashboardProps {
 export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearChange, appSettings, isPrivate = false }: DashboardProps) {
   const [selectedBank, setSelectedBank] = useState<string | null>(null);
   const [bankLogoErrors, setBankLogoErrors] = useState<Record<string, boolean>>({});
+  const [rates, setRates] = useState<CurrencyRates | null>(null);
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  React.useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const formatVal = (val: number, currency: string = 'RUB') => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val, currency)}</PrivacyBlur>;
 
   const currentYearSettings = useMemo(() => 
     taxSettings.find(s => Number(s.year) === Number(selectedYear)) || { year: Number(selectedYear), limit: 210000, ndflRate: 13 },
@@ -59,7 +65,8 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
       }
 
       const yearIncomes = calculateIncomeByYears(d);
-      const yearIncome = yearIncomes.find(yi => Number(yi.year) === Number(selectedYear))?.income || 0;
+      const yearIncomeRaw = yearIncomes.find(yi => Number(yi.year) === Number(selectedYear))?.income || 0;
+      const yearIncome = convertToRub(yearIncomeRaw, d.currency || 'RUB', rates);
       
       if (isRelevant || yearIncome > 0) {
         totalIncome += yearIncome;
@@ -162,6 +169,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={stats.totalIncome} /></PrivacyBlur>} 
             icon={<TrendingUp className="w-4 h-4 text-deposit-600" />}
             description="Все проценты"
+            tooltip="Включает валютные вклады, конвертированные по курсу ЦБ РФ на сегодня."
           />
         </div>
         <div>

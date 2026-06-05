@@ -143,64 +143,57 @@ export const Archive: React.FC = () => {
     <div className="space-y-4">
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
-          {archivedDeposits.map((deposit) => (
-            <motion.div
-              key={deposit.id}
-              layout
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm hover:shadow-md transition-all group flex flex-col gap-3.5"
-            >
-              <div className="flex items-center justify-between gap-3 w-full">
-                {/* Left Side: Icon & Details */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-white/[0.05] flex items-center justify-center shrink-0">
-                    <ArchiveIcon className="w-5 h-5 text-slate-400" />
+          {archivedDeposits.map((deposit) => {
+            return (
+              <motion.div
+                key={deposit.id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="flex flex-row items-center px-3.5 py-3.5 rounded-xl bg-white/45 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] gap-3 relative group overflow-hidden hover:border-orange-500/30 transition-all duration-300"
+              >
+                {/* Deletion Date Badge in Top Right */}
+                <div className="absolute top-1.5 right-2 text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none select-none">
+                  {format(deposit.updatedAt || Date.now(), 'dd.MM.yy')}
+                </div>
+
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 dark:bg-orange-500/5 flex items-center justify-center shrink-0">
+                    <ArchiveIcon className="w-4 h-4 text-orange-500 dark:text-orange-400/95 stroke-[2.5px]" />
                   </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-sm text-slate-950 dark:text-white truncate">
-                        {deposit.bank}
-                      </h3>
-                      <span className="shrink-0 text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest bg-slate-200/50 dark:bg-slate-800/50 px-2 py-0.5 rounded-md">
-                        {deposit.rate}%
-                      </span>
+                  <div className="flex-1 min-w-0 pr-1">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="font-bold text-xs text-slate-950 dark:text-white truncate">{deposit.bank}</span>
+                      <span className="text-[10px] font-black text-deposit-500 dark:text-deposit-400 shrink-0">+{deposit.rate}%</span>
                     </div>
-                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
-                      Удален: {format(deposit.updatedAt || Date.now(), 'dd.MM.yyyy')}
-                    </p>
+                    <div className="flex items-center text-[10px] text-slate-500 dark:text-slate-400 truncate gap-2 mt-0.5">
+                       <span className="font-semibold text-slate-900 dark:text-slate-100">
+                         {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
+                       </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Side: Restore/Delete Actions */}
-                <div className="flex gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0 mt-1">
                   <button
                     onClick={() => handleRestore(deposit.id!)}
-                    className="p-2 text-primary-600 hover:bg-primary-500/10 active:scale-95 rounded-xl transition-all cursor-pointer"
+                    className="p-1.5 text-primary-600 hover:bg-primary-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center"
                     title="Восстановить"
                   >
                     <RefreshCcw className="w-4 h-4 stroke-[2px]" />
                   </button>
                   <button
                     onClick={() => handlePermanentDelete(deposit.id!)}
-                    className="p-2 text-rose-600 hover:bg-rose-500/10 active:scale-95 rounded-xl transition-all cursor-pointer"
+                    className="p-1.5 text-rose-600 hover:bg-rose-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center"
                     title="Удалить навсегда"
                   >
                     <Trash2 className="w-4 h-4 stroke-[2px]" />
                   </button>
                 </div>
-              </div>
-
-              {/* Bottom Row: Sum */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-white/[0.03] w-full">
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Сумма вклада</span>
-                <span className="font-black text-sm text-slate-950 dark:text-white font-mono bg-slate-100/30 dark:bg-slate-950/30 px-2.5 py-1 rounded-xl border border-slate-200/50 dark:border-white/[0.05]">
-                  {deposit.amount.toLocaleString('ru-RU')} {(!deposit.currency || deposit.currency === 'RUB') ? '₽' : deposit.currency}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
     </div>

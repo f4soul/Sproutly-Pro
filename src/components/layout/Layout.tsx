@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { auth, signInWithGoogle, logout } from '../../config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -9,6 +9,7 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
+import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -92,12 +93,8 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         }
         
         showToast(errMsg, 'error', { duration: 6000 });
-        // NOTE: We do not set syncStatus to 'idle' automatically.
-        // It stays as 'error' until the user closes it manually or clicks retry.
       } else if (customEvent.detail.status === 'syncing') {
-        autoClearId = setTimeout(() => {
-          setSyncStatus('idle');
-        }, 6000);
+        // useAppState handles this
       }
     };
 
@@ -153,7 +150,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             active={activeTab === 'deposits'} 
             onClick={() => onTabChange('deposits')}
             icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
-            label="Вклады"
+            label="Активы"
           />
           <NavItem 
             active={activeTab === 'calendar'} 
@@ -263,33 +260,23 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                   leaveTo="transform opacity-0 scale-95 translate-y-2"
                 >
                   <Menu.Items className="absolute bottom-full mb-2 left-0 min-w-[220px] w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
-                  {isAdmin && (
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={() => db.appSettings.update('main', { showDevTools: !appSettings?.showDevTools })}
-                          className={cn(
-                            "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                            active ? "bg-primary-500/10 text-primary-600 dark:text-primary-400" : "text-slate-500 dark:text-slate-400"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <Wrench className="w-5 h-5 shrink-0" />
-                            <span>DevTools</span>
-                          </div>
-                          <div className={cn(
-                            "w-8 h-4 rounded-full transition-colors relative flex items-center shrink-0",
-                            appSettings?.showDevTools ? "bg-primary-500" : "bg-slate-200 dark:bg-slate-700"
-                          )}>
-                            <div className={cn(
-                              "w-3 h-3 bg-white rounded-full transition-transform shadow-sm mx-0.5",
-                              appSettings?.showDevTools ? "translate-x-4" : "translate-x-0"
-                            )} />
-                          </div>
-                        </button>
-                      )}
-                    </Menu.Item>
-                  )}
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => { 
+                          e.preventDefault(); 
+                          setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150); 
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                          active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
+                        )}
+                      >
+                        <Sparkles className="w-5 h-5 shrink-0" />
+                        <span>Что нового?</span>
+                      </button>
+                    )}
+                  </Menu.Item>
                   <Menu.Item>
                     {({ active }) => (
                       <button
@@ -467,34 +454,26 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                     </button>
                   )}
                 </Menu.Item>
-
-                {isAdmin && (
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={(e) => { e.preventDefault(); db.appSettings.update('main', { showDevTools: !appSettings?.showDevTools }); }}
-                        className={cn(
-                          "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                          active ? "bg-primary-500/10 text-primary-600 dark:text-primary-400" : "text-slate-600 dark:text-slate-300"
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Wrench className="w-5 h-5 shrink-0" />
-                          <span>DevTools</span>
-                        </div>
-                        <div className={cn(
-                          "w-8 h-4 rounded-full transition-colors relative flex items-center shrink-0",
-                          appSettings?.showDevTools ? "bg-primary-500" : "bg-slate-200 dark:bg-slate-700"
-                        )}>
-                          <div className={cn(
-                            "w-3 h-3 bg-white rounded-full transition-transform shadow-sm mx-0.5",
-                            appSettings?.showDevTools ? "translate-x-4" : "translate-x-0"
-                          )} />
-                        </div>
-                      </button>
-                    )}
-                  </Menu.Item>
-                )}
+                
+                <Menu.Item>
+                  {({ active }) => (
+                    <button
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150); 
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                        active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Sparkles className="w-5 h-5 shrink-0" />
+                        <span>Что нового?</span>
+                      </div>
+                    </button>
+                  )}
+                </Menu.Item>
                 
                 {user && (
                   <Menu.Item>
@@ -524,7 +503,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       {/* Bottom Nav for Mobile */}
       <nav className="md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
-        <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Вклады" />
+        <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Сбережения" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
         <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
@@ -534,7 +513,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
         "px-2 sm:px-4 md:px-6 lg:px-8",
         activeTab === 'calendar' 
-          ? "pt-24 md:pt-4 lg:pt-5 pb-[88px] md:pb-8 lg:pb-6 xl:pb-8 min-h-[100dvh] md:max-h-screen md:overflow-y-auto lg:overflow-hidden xl:max-h-none xl:overflow-y-auto" 
+          ? "pt-24 md:pt-6 lg:pt-8 pb-[104px] md:pb-8 lg:pb-12 min-h-[100dvh]" 
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
       )}>
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
@@ -623,6 +602,8 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           </div>
         </Dialog>
       </Transition>
+
+      <ReleaseNotesDialog />
     </div>
   );
 }

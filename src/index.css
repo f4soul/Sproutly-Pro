@@ -195,23 +195,23 @@
 }
 
 .react-datepicker {
-  @apply !font-sans !border-none !rounded-[2rem] !shadow-2xl !bg-white/95 dark:!bg-slate-950/95 !backdrop-blur-2xl !p-5 !border !border-slate-100 dark:!border-slate-800;
+  @apply !font-sans !border-none !rounded-[1.75rem] !shadow-2xl !bg-white/95 dark:!bg-slate-950/95 !backdrop-blur-2xl !p-4 !border !border-slate-100 dark:!border-slate-800;
 }
 
 .react-datepicker__header {
-  @apply !bg-transparent !border-none !pb-4;
+  @apply !bg-transparent !border-none !pb-2.5;
 }
 
 .react-datepicker__current-month {
-  @apply !text-slate-950 dark:!text-white !font-bold !text-lg !tracking-tight;
+  @apply !text-slate-950 dark:!text-white !font-bold !text-base !tracking-tight;
 }
 
 .react-datepicker__day-name {
-  @apply !text-slate-500 dark:!text-slate-400 !font-bold !uppercase !text-[10px] !tracking-widest !w-9;
+  @apply !text-slate-500 dark:!text-slate-400 !font-bold !uppercase !text-[9px] !tracking-widest !w-8;
 }
 
 .react-datepicker__day {
-  @apply !text-slate-950 dark:!text-white !rounded-xl hover:!bg-primary-50 dark:hover:!bg-primary-900/20 !transition-all !w-9 !h-9 !leading-9 !font-medium !m-[2px] !text-[13px];
+  @apply !text-slate-950 dark:!text-white !rounded-lg hover:!bg-primary-50 dark:hover:!bg-primary-900/20 !transition-all !w-8 !h-8 !leading-8 !font-medium !m-[1px] !text-[12px];
 }
 
 .react-datepicker__day--selected {
@@ -227,15 +227,15 @@
 }
 
 .react-datepicker__navigation {
-  @apply !top-6;
+  @apply !top-5;
 }
 
 .react-datepicker__navigation--previous {
-  @apply !left-5;
+  @apply !left-4;
 }
 
 .react-datepicker__navigation--next {
-  @apply !right-5;
+  @apply !right-4;
 }
 
 .react-datepicker__navigation-icon::before {

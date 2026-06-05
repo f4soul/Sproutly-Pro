@@ -11,6 +11,7 @@ import { DepositRow } from './DepositRow';
 import { DepositCard } from './DepositCard';
 import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { cn, formatCurrency } from '../../lib/utils';
+import { getExchangeRates, convertToRub, CurrencyRates } from '../../services/currency';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface DepositListProps {
@@ -49,6 +50,11 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   });
   const [isScrolled, setIsScrolled] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [rates, setRates] = useState<CurrencyRates | null>(null);
+
+  React.useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
 
   React.useEffect(() => {
     sessionStorage.setItem('deposits_searchQuery', searchQuery);
@@ -163,12 +169,15 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
           aVal = a.endDate ? new Date(a.endDate).getTime() : 0;
           bVal = b.endDate ? new Date(b.endDate).getTime() : 0;
         } else if (sortConfig.key === 'income') {
-          aVal = calculateIncome(a);
-          bVal = calculateIncome(b);
+          aVal = convertToRub(calculateIncome(a), a.currency || 'RUB', rates);
+          bVal = convertToRub(calculateIncome(b), b.currency || 'RUB', rates);
         } else if (sortConfig.key === 'total') {
-          aVal = (Number(a.amount) || 0) + calculateIncome(a);
-          bVal = (Number(b.amount) || 0) + calculateIncome(b);
-        } else if (sortConfig.key === 'amount' || sortConfig.key === 'rate') {
+          aVal = convertToRub(Number(a.amount) || 0, a.currency || 'RUB', rates) + convertToRub(calculateIncome(a), a.currency || 'RUB', rates);
+          bVal = convertToRub(Number(b.amount) || 0, b.currency || 'RUB', rates) + convertToRub(calculateIncome(b), b.currency || 'RUB', rates);
+        } else if (sortConfig.key === 'amount') {
+          aVal = convertToRub(Number(a.amount) || 0, a.currency || 'RUB', rates);
+          bVal = convertToRub(Number(b.amount) || 0, b.currency || 'RUB', rates);
+        } else if (sortConfig.key === 'rate') {
           aVal = Number(aVal) || 0;
           bVal = Number(bVal) || 0;
         }
@@ -194,15 +203,15 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   }, [deposits, searchQuery, filterStatus, sortConfig, selectedBanks]);
 
   const filteredTotals = useMemo(() => {
-    const amount = filteredDeposits.reduce((acc, d) => acc + (Number(d.amount) || 0), 0);
-    const income = filteredDeposits.reduce((acc, d) => acc + calculateIncome(d), 0);
+    const amount = filteredDeposits.reduce((acc, d) => acc + convertToRub(Number(d.amount) || 0, d.currency || 'RUB', rates), 0);
+    const income = filteredDeposits.reduce((acc, d) => acc + convertToRub(calculateIncome(d), d.currency || 'RUB', rates), 0);
     return {
       amount,
       income,
       total: amount + income,
       count: filteredDeposits.length
     };
-  }, [filteredDeposits]);
+  }, [filteredDeposits, rates]);
 
   const requestSort = (key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total') => {
     const defaultDir = key === 'bank' ? 'asc' : 'desc';
@@ -367,7 +376,39 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                 <tr>
                   <td colSpan={9} className="py-24 text-center">
                     <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
-                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                    {searchQuery ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">
+                          По фильтру «{filterStatus === 'active' ? 'Текущие' : filterStatus === 'closed' ? 'Закрытые' : 'Все'}» ничего не найдено
+                        </p>
+                        {filterStatus !== 'all' && (
+                          <button
+                            onClick={() => setFilterStatus('all')}
+                            className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold text-sm rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
+                          >
+                            Искать во всех вкладах
+                          </button>
+                        )}
+                        <button
+                          onClick={() => { setSearchQuery(''); setSelectedBanks([]); }}
+                          className="text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors mt-2 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-700 hover:decoration-slate-500"
+                        >
+                          Сбросить поиск
+                        </button>
+                      </div>
+                    ) : selectedBanks.length > 0 ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Для выбранных банков нет записей</p>
+                        <button
+                          onClick={() => setSelectedBanks([])}
+                          className="text-primary-500 hover:text-primary-600 font-semibold underline underline-offset-4 decoration-primary-500/30 hover:decoration-primary-600 transition-colors"
+                        >
+                          Сбросить фильтр банков
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                    )}
                   </td>
                 </tr>
               )}
@@ -426,9 +467,41 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                 isLast={index === filteredDeposits.length - 1}
               />
             )) : (
-              <div className="py-24 text-center">
+              <div className="py-24 text-center px-4">
                 <Landmark className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                {searchQuery ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg text-center leading-snug">
+                      По фильтру «{filterStatus === 'active' ? 'Текущие' : filterStatus === 'closed' ? 'Закрытые' : 'Все'}» ничего не найдено
+                    </p>
+                    {filterStatus !== 'all' && (
+                      <button
+                        onClick={() => setFilterStatus('all')}
+                        className="px-4 py-2 mt-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold inline-flex rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
+                      >
+                        Искать во всех
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setSearchQuery(''); setSelectedBanks([]); }}
+                      className="text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors mt-2 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-700 hover:decoration-slate-500"
+                    >
+                      Сбросить поиск
+                    </button>
+                  </div>
+                ) : selectedBanks.length > 0 ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Выбранные банки пусты</p>
+                    <button
+                      onClick={() => setSelectedBanks([])}
+                      className="text-primary-500 hover:text-primary-600 font-semibold underline underline-offset-4 decoration-primary-500/30 hover:decoration-primary-600 transition-colors"
+                    >
+                      Сбросить фильтр банков
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Вклады не найдены</p>
+                )}
               </div>
             )}
           </div>

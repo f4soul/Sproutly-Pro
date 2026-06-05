@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment, useMemo, useRef } from 'react';
-import { X, Save, Calendar, CalendarX, Landmark, Percent, Wallet, Info, Clock, ChevronDown, Check, Plus, Trash2, Calculator, Settings, Edit2 } from 'lucide-react';
+import { X, Save, Calendar, CalendarX, Landmark, Percent, Wallet, Info, Clock, ChevronDown, Check, Plus, Trash2, Calculator, Settings, Edit2, TrendingUp } from 'lucide-react';
 import { Listbox, Transition, Combobox, Dialog } from '@headlessui/react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import { ru } from 'date-fns/locale';
@@ -54,6 +54,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     startDate: new Date(),
     endDate: null,
     amount: 0,
+    currency: 'RUB',
     rate: 0,
     formula: 'simple_days',
     sourceNote: '',
@@ -65,6 +66,68 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
   const [hasDraft, setHasDraft] = useState(false);
   const isMountedRef = useRef(false);
+  const bankInputRef = useRef<HTMLInputElement>(null);
+
+  const [isStartDateOpen, setIsStartDateOpen] = useState(false);
+  const [isEndDateOpen, setIsEndDateOpen] = useState(false);
+  const [bankInputMode, setBankInputMode] = useState<'text' | 'none'>('text');
+
+  // String state variants to allow natural typing with dots, commas, leading zeros (e.g. "0.1", "0,1")
+  const [amountStr, setAmountStr] = useState<string>('');
+  const [rateStr, setRateStr] = useState<string>('');
+  const [durationStr, setDurationStr] = useState<string>('');
+  const [factIncomeStr, setFactIncomeStr] = useState<string>('');
+  const [exchangeRateOnOpenStr, setExchangeRateOnOpenStr] = useState<string>('');
+
+  // Synchronize string states on initial load, draft restore, or external changes
+  useEffect(() => {
+    if (formData.amount !== undefined) {
+      const parsedAmount = Number(amountStr) || 0;
+      if (parsedAmount !== formData.amount) {
+        setAmountStr(formData.amount === 0 ? '' : String(formData.amount));
+      }
+    }
+  }, [formData.amount]);
+
+  useEffect(() => {
+    if (formData.rate !== undefined) {
+      const parsedRate = Number(rateStr) || 0;
+      if (parsedRate !== formData.rate) {
+        setRateStr(formData.rate === 0 ? '' : String(formData.rate));
+      }
+    }
+  }, [formData.rate]);
+
+  useEffect(() => {
+    if (duration !== undefined) {
+      const parsedDuration = Number(durationStr) || 0;
+      if (parsedDuration !== (duration === '' ? 0 : duration)) {
+        setDurationStr(duration === '' ? '' : String(duration));
+      }
+    }
+  }, [duration]);
+
+  useEffect(() => {
+    if (formData.factIncome !== undefined && formData.factIncome !== null) {
+      const parsedFact = Number(factIncomeStr) || 0;
+      if (parsedFact !== formData.factIncome) {
+        setFactIncomeStr(String(formData.factIncome));
+      }
+    } else {
+      setFactIncomeStr('');
+    }
+  }, [formData.factIncome]);
+
+  useEffect(() => {
+    if (formData.exchangeRateOnOpen !== undefined && formData.exchangeRateOnOpen !== null) {
+      const parsedRate = Number(exchangeRateOnOpenStr.replace(',', '.')) || 0;
+      if (parsedRate !== formData.exchangeRateOnOpen) {
+        setExchangeRateOnOpenStr(String(formData.exchangeRateOnOpen));
+      }
+    } else {
+      setExchangeRateOnOpenStr('');
+    }
+  }, [formData.exchangeRateOnOpen]);
 
   // Check for draft on mount
   useEffect(() => {
@@ -406,22 +469,69 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   if (typeof document !== 'undefined' && document.activeElement) {
                     (document.activeElement as HTMLElement).blur();
                   }
+                  setBankInputMode('text');
                 }}>
                   <div className="relative">
                     <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-left border border-transparent focus-within:border-deposit-500/30 transition-all">
                       <Combobox.Input
-                        className="w-full border-none py-3 pl-4 pr-10 text-sm font-medium bg-transparent outline-none text-slate-950 dark:text-white"
+                        ref={bankInputRef}
+                        className="w-full border-none py-3 pl-4 pr-16 text-sm font-medium bg-transparent outline-none text-slate-950 dark:text-white"
                         displayValue={(val: any) => (typeof val === 'string' ? val : '')}
                         onChange={(event) => setQuery(event.target.value)}
                         placeholder="Выберите банк"
+                        inputMode={bankInputMode}
+                        onMouseDown={() => setBankInputMode('text')}
+                        onTouchStart={() => setBankInputMode('text')}
                       />
+                      {(formData.bank || query) ? (
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (bankInputRef.current) {
+                              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                              if (nativeInputValueSetter) {
+                                nativeInputValueSetter.call(bankInputRef.current, '');
+                              }
+                              bankInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+                              bankInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                            setFormData(prev => ({ ...prev, bank: '' }));
+                            setQuery('');
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (bankInputRef.current) {
+                              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+                              if (nativeInputValueSetter) {
+                                nativeInputValueSetter.call(bankInputRef.current, '');
+                              }
+                              bankInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+                              bankInputRef.current.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                            setFormData(prev => ({ ...prev, bank: '' }));
+                            setQuery('');
+                          }}
+                          className="absolute inset-y-0 right-10 flex items-center px-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer z-20"
+                          title="Очистить"
+                        >
+                          <X className="h-4 w-4 stroke-[2.5px]" />
+                        </button>
+                      ) : null}
                       <Combobox.Button 
+                        onMouseDown={() => setBankInputMode('none')}
+                        onTouchStart={() => setBankInputMode('none')}
                         onClick={() => {
                           if (typeof document !== 'undefined' && document.activeElement) {
                             (document.activeElement as HTMLElement).blur();
                           }
+                          setTimeout(() => {
+                            setBankInputMode('text');
+                          }, 150);
                         }}
-                        className="absolute inset-y-0 right-0 flex items-center px-3"
+                        className="absolute inset-y-0 right-0 flex items-center px-3 cursor-pointer"
                       >
                         <ChevronDown className="h-4 w-4 text-slate-500" aria-hidden="true" />
                       </Combobox.Button>
@@ -522,20 +632,103 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                  <Wallet className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" /> Сумма (₽)
+                  <Wallet className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" /> Сумма
                 </label>
-                <input 
-                  required
-                  type="number" 
-                  inputMode="decimal"
-                  pattern="[0-9]*"
-                  step="0.01"
-                  value={formData.amount === 0 ? '' : formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value === '' ? 0 : Number(e.target.value) })}
-                  className="apple-input w-full font-mono text-sm"
-                  placeholder="0.00"
-                />
+                <div className="relative">
+                  <input 
+                    required
+                    type="text" 
+                    inputMode="decimal"
+                    value={amountStr}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(',', '.');
+                      // Allow only digits, single dot or comma and decimals
+                      if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === '') {
+                        setAmountStr(val);
+                        const parsed = val === '' ? 0 : Number(val);
+                        if (!isNaN(parsed)) {
+                          setFormData(prev => ({ ...prev, amount: parsed }));
+                        }
+                      }
+                    }}
+                    className="apple-input w-full font-mono text-sm pr-16"
+                    placeholder="0.00"
+                  />
+                  <div className="absolute inset-y-1 right-1 z-10">
+                    <Listbox value={formData.currency || 'RUB'} onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))}>
+                      {({ open }) => (
+                        <div className="relative h-full text-slate-950 dark:text-white">
+                          <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
+                            <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center w-4 text-center">
+                              {({ 'RUB': '₽', 'USD': '$', 'EUR': '€', 'CNY': '¥' }[(formData.currency || 'RUB') as 'RUB'|'USD'|'EUR'|'CNY'] || '₽')}
+                            </span>
+                            <ChevronDown className={cn("w-3.5 h-3.5 text-slate-400 stroke-[2.5px] transition-transform", open && "rotate-180")} />
+                          </Listbox.Button>
+                          <Transition
+                            as={Fragment}
+                            leave="transition ease-in duration-100"
+                            leaveFrom="opacity-100"
+                            leaveTo="opacity-0"
+                          >
+                            <Listbox.Options className="absolute right-0 mt-2 w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
+                              {[
+                                { id: 'RUB', symbol: '₽', label: 'RUB' },
+                                { id: 'USD', symbol: '$', label: 'USD' },
+                                { id: 'EUR', symbol: '€', label: 'EUR' },
+                                { id: 'CNY', symbol: '¥', label: 'CNY' }
+                              ].map((c) => (
+                                <Listbox.Option
+                                  key={c.id}
+                                  value={c.id}
+                                  className={({ active, selected }) => cn(
+                                    'flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer',
+                                    active || selected ? 'bg-deposit-50 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                                  )}
+                                >
+                                  {({ selected }) => (
+                                    <>
+                                      <span className={cn("w-4 text-center shrink-0", selected ? "text-deposit-500" : "text-slate-400")}>{c.symbol}</span>
+                                      <span className="flex-1 truncate">{c.label}</span>
+                                    </>
+                                  )}
+                                </Listbox.Option>
+                              ))}
+                            </Listbox.Options>
+                          </Transition>
+                        </div>
+                      )}
+                    </Listbox>
+                  </div>
+                </div>
               </div>
+
+              {formData.currency && formData.currency !== 'RUB' && (
+                <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <TrendingUp className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" /> Курс ЦБ на дату открытия (₽)
+                  </label>
+                  <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={exchangeRateOnOpenStr}
+                    onChange={(e) => {
+                      const typed = e.target.value;
+                      const normalized = typed.replace(',', '.');
+                      if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === '') {
+                        setExchangeRateOnOpenStr(typed);
+                        const parsed = typed === '' ? undefined : Number(normalized);
+                        if (parsed === undefined || !isNaN(parsed)) {
+                          setFormData(prev => ({ ...prev, exchangeRateOnOpen: parsed }));
+                        }
+                      }
+                    }}
+                    className="apple-input w-full font-mono text-sm"
+                    placeholder="95.50"
+                  />
+                  <p className="text-[10px] text-slate-500 px-1">Зафиксируйте курс, чтобы в будущем сравнивать его с текущим.</p>
+                </div>
+              )}
+
 
               {showBankEditor && (
                 <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative overflow-hidden">
@@ -590,16 +783,42 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 <div className="relative w-full group">
                   <DatePicker
                     selected={formData.startDate}
-                    onChange={(date) => date && handleStartDateChange(date)}
-                    onKeyDown={(e) => handleRawDateInput(e, true)}
+                    onChange={(date) => {
+                      if (date) {
+                        handleStartDateChange(date);
+                      }
+                      setIsStartDateOpen(false);
+                    }}
+                    onKeyDown={(e) => {
+                      handleRawDateInput(e, true);
+                      if (e.key === 'Enter') {
+                        setIsStartDateOpen(false);
+                      }
+                    }}
+                    onClickOutside={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest('.datepicker-toggle-btn-start')) {
+                        return;
+                      }
+                      setIsStartDateOpen(false);
+                    }}
+                    open={isStartDateOpen}
+                    preventOpenOnFocus={true}
                     locale="ru"
                     dateFormat="dd.MM.yyyy"
-                    className="apple-input w-full pr-12 cursor-pointer"
+                    className="apple-input w-full pr-12 cursor-text"
                     placeholderText="Выберите дату"
                     wrapperClassName="w-full"
                     portalId="datepicker-portal-container"
                   />
-                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-primary-500 transition-colors stroke-[1.5px]" />
+                  <button
+                    type="button"
+                    onClick={() => setIsStartDateOpen(!isStartDateOpen)}
+                    className="datepicker-toggle-btn-start absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+                    title="Выбрать дату"
+                  >
+                    <Calendar className="w-4 h-4 stroke-[1.5px]" />
+                  </button>
                 </div>
               </div>
 
@@ -608,14 +827,17 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   <Clock className="w-3.5 h-3.5 text-violet-500 stroke-[1.5px]" /> Срок (дней)
                 </label>
                 <input 
-                  type="number" 
-                  inputMode="decimal"
-                  pattern="[0-9]*"
+                  type="text" 
+                  inputMode="numeric"
                   disabled={formData.formula === 'daily_balance' || formData.formula === 'min_balance'}
                   placeholder="91, 181..."
-                  value={duration}
-                  onChange={(e) => handleDurationChange(e.target.value ? Number(e.target.value) : '')}
-                  className="apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  value={durationStr}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    setDurationStr(val);
+                    handleDurationChange(val === '' ? '' : Number(val));
+                  }}
+                  className="apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
                 />
               </div>
 
@@ -636,18 +858,41 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                         setFormData({ ...formData, endDate: null });
                         setDuration('');
                       }
+                      setIsEndDateOpen(false);
                     }}
-                    onKeyDown={(e) => handleRawDateInput(e, false)}
+                    onKeyDown={(e) => {
+                      handleRawDateInput(e, false);
+                      if (e.key === 'Enter') {
+                        setIsEndDateOpen(false);
+                      }
+                    }}
+                    onClickOutside={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest('.datepicker-toggle-btn-end')) {
+                        return;
+                      }
+                      setIsEndDateOpen(false);
+                    }}
+                    open={isEndDateOpen}
+                    preventOpenOnFocus={true}
                     locale="ru"
                     dateFormat="dd.MM.yyyy"
                     disabled={formData.formula === 'daily_balance' || formData.formula === 'min_balance'}
-                    className="apple-input w-full pr-12 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="apple-input w-full pr-12 disabled:opacity-50 disabled:cursor-not-allowed cursor-text"
                     placeholderText="Бессрочно"
                     isClearable
                     wrapperClassName="w-full"
                     portalId="datepicker-portal-container"
                   />
-                  <CalendarX className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none group-focus-within:text-primary-500 transition-colors stroke-[1.5px]" />
+                  <button
+                    type="button"
+                    disabled={formData.formula === 'daily_balance' || formData.formula === 'min_balance'}
+                    onClick={() => setIsEndDateOpen(!isEndDateOpen)}
+                    className="datepicker-toggle-btn-end absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+                    title="Выбрать дату"
+                  >
+                    <CalendarX className="w-4 h-4 stroke-[1.5px]" />
+                  </button>
                 </div>
               </div>
 
@@ -657,12 +902,19 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 </label>
                 <input 
                   required
-                  type="number" 
+                  type="text" 
                   inputMode="decimal"
-                  pattern="[0-9]*"
-                  step="0.01"
-                  value={formData.rate === 0 ? '' : formData.rate}
-                  onChange={(e) => setFormData({ ...formData, rate: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  value={rateStr}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(',', '.');
+                    if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === '') {
+                      setRateStr(val);
+                      const parsed = val === '' ? 0 : Number(val);
+                      if (!isNaN(parsed)) {
+                        setFormData(prev => ({ ...prev, rate: parsed }));
+                      }
+                    }
+                  }}
                   className="apple-input w-full font-mono text-sm"
                   placeholder="0.00"
                 />
@@ -755,12 +1007,16 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   <Wallet className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" /> Факт. доход (₽)
                 </label>
                 <input 
-                  type="number" 
+                  type="text" 
                   inputMode="decimal"
-                  pattern="[0-9]*"
-                  step="0.01"
-                  value={formData.factIncome !== undefined && formData.factIncome !== null ? formData.factIncome : ''}
-                  onChange={(e) => setFormData({ ...formData, factIncome: e.target.value === '' ? undefined : Number(e.target.value) })}
+                  value={factIncomeStr}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(',', '.');
+                    if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === '') {
+                      setFactIncomeStr(val);
+                      setFormData(prev => ({ ...prev, factIncome: val === '' ? undefined : Number(val) }));
+                    }
+                  }}
                   className="apple-input w-full font-mono text-sm"
                   placeholder="0.00"
                 />

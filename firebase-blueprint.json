@@ -98,6 +98,21 @@
         "isCustom": { "type": "boolean" },
         "updatedAt": { "type": "number" }
       }
+    },
+    "CashAsset": {
+      "title": "Cash Asset",
+      "description": "A cash asset record (physical money, safe custody, etc.).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "currency": { "type": "string" },
+        "name": { "type": "string" },
+        "comment": { "type": "string" },
+        "isArchived": { "type": "boolean" },
+        "exchangeRateOnOpen": { "type": "number" }
+      },
+      "required": ["amount", "currency", "name"]
     }
   },
   "firestore": {
@@ -116,6 +131,10 @@
     "/banks/{bankId}": {
       "schema": "Bank",
       "description": "Bank records."
+    },
+    "/cashAssets/{cashAssetId}": {
+      "schema": "CashAsset",
+      "description": "Individual cash asset records."
     }
   }
 }

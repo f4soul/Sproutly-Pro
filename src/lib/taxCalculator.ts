@@ -32,13 +32,30 @@ export const calculateProgressiveTaxDetailed = (
   return { tax, brackets };
 };
 
-export const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+export const formatCurrency = (value: number, currencyCode: string = 'RUB') => {
+  let validCurrency = currencyCode;
+  
+  if (validCurrency === '₽') {
+    validCurrency = 'RUB'; // Map old stored values
+  }
+
+  try {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: validCurrency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch (err) {
+    console.error('Invalid currency code:', validCurrency);
+    // Fallback if the code is really invalid
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
 };
 
 export const formatNumber = (value: number) => {
