@@ -382,7 +382,7 @@ export async function syncWithFirebase() {
         try {
           const remoteCashUpdate = remoteCashMap.get(firestoreDocId)?.updatedAt || 0;
           const localCashUpdate = cash.updatedAt || 0;
-          if (localCashUpdate >= remoteCashUpdate) {
+          if (localCashUpdate > remoteCashUpdate || (localCashUpdate === 0 && !remoteCashMap.has(firestoreDocId))) {
             await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
               ...data,
               currency: data.currency || 'RUB',
@@ -416,8 +416,11 @@ export async function syncWithFirebase() {
         const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
         try {
           const remoteDepUpdate = remoteDepMap.get(firestoreDocId)?.updatedAt || 0;
+          // IMPORTANT: If no local timestamp, we ONLY upload if it's a completely new doc to prevent overwriting newer remotes with Date.now()
+          if (!deposit.updatedAt && remoteDepUpdate > 0) continue; 
+          
           const localDepUpdate = deposit.updatedAt || Date.now();
-          if (localDepUpdate >= remoteDepUpdate) {
+          if (localDepUpdate > remoteDepUpdate) {
             await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
               ...data,
               formula: data.formula || 'simple_days',
@@ -458,8 +461,10 @@ export async function syncWithFirebase() {
           const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + bank.name);
           try {
             const remoteBankUpdate = remoteBankMap.get(firestoreDocId)?.updatedAt || 0;
+            if (!bank.updatedAt && remoteBankUpdate > 0) continue;
+            
             const localBankUpdate = bank.updatedAt || Date.now();
-            if (localBankUpdate >= remoteBankUpdate) {
+            if (localBankUpdate > remoteBankUpdate) {
               await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
                 ...data,
                 userId: user.uid,

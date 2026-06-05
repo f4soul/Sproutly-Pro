@@ -123,7 +123,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
   return (
     <div className={cn(
-      "min-h-screen flex flex-col md:flex-row transition-colors duration-500", 
+      "min-h-[100dvh] flex flex-col md:flex-row transition-colors duration-500", 
       theme === 'dark' ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-950"
     )}>
       {/* Sidebar for Desktop */}
@@ -513,8 +513,8 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
         "px-2 sm:px-4 md:px-6 lg:px-8",
         activeTab === 'calendar' 
-          ? "pt-24 md:pt-6 lg:pt-8 pb-[104px] md:pb-8 lg:pb-12 min-h-[100dvh]" 
-          : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-8 min-h-[100dvh]"
+          ? "pt-24 md:pt-6 lg:pt-8 pb-[104px] md:pb-14 lg:pb-16 min-h-[100dvh]" 
+          : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-12 min-h-[100dvh]"
       )}>
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div

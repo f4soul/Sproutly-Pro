@@ -654,7 +654,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     className="apple-input w-full font-mono text-sm pr-16"
                     placeholder="0.00"
                   />
-                  <div className="absolute inset-y-1 right-1 z-10">
+                  <div className="absolute inset-y-1 right-1 z-[25]">
                     <Listbox value={formData.currency || 'RUB'} onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))}>
                       {({ open }) => (
                         <div className="relative h-full text-slate-950 dark:text-white">

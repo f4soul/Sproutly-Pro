@@ -249,8 +249,8 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                   </div>
                 </div>
 
-                {/* Micro Actions Container: Hover interactive only for noise-free experience */}
-                <div className="flex items-center gap-0.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
+                {/* Micro Actions Container: Hover interactive only for noise-free experience but visible on touch */}
+                <div className="flex items-center gap-0.5 opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

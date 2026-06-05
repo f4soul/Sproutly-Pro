@@ -18,7 +18,7 @@ export interface CurrencyRates {
 
 let cachedRates: CurrencyRates | null = null;
 let lastFetchTime = 0;
-const CACHE_DURATION = 1000 * 60 * 60 * 4; // 4 hours
+const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
 // Try to hydrate cached rates from localStorage immediately on load
 try {
@@ -35,16 +35,19 @@ try {
 }
 
 export async function getExchangeRates(): Promise<CurrencyRates | null> {
-  if (cachedRates && Date.now() - lastFetchTime < CACHE_DURATION) {
+  const now = Date.now();
+  const isSameDay = new Date(lastFetchTime).getDate() === new Date(now).getDate();
+  
+  if (cachedRates && isSameDay && now - lastFetchTime < CACHE_DURATION) {
     return cachedRates;
   }
 
   try {
-    const res = await fetch('https://www.cbr-xml-daily.ru/daily_json.js');
+    const res = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' });
     if (!res.ok) throw new Error('Network error');
     const data: CurrencyRates = await res.json();
     cachedRates = data;
-    lastFetchTime = Date.now();
+    lastFetchTime = now;
     
     // Save to localStorage
     try {
