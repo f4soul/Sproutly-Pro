@@ -6,12 +6,13 @@ import { AnimatedCurrency } from '../ui/AnimatedCurrency';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
 
 interface AnnualBonusSectionProps {
-  activeYearData: YearData;
+  activeYearData: Pick<YearData, 'annualBonusCoef' | 'annualBonusAmount' | 'bonusBase' | 'extraBonusAmount' | 'additionalIncome' | 'iisContribution' | 'deductions'>;
   handleAnnualBonusChange: (field: any, value: any) => void;
   calculatedMonths: CalculatedMonth[];
   yearlyTotals: YearlyTotals;
   isMobile?: boolean;
   isPrivate?: boolean;
+  additionalColSpan?: number;
 }
 
 export const AnnualBonusSection = ({
@@ -20,7 +21,8 @@ export const AnnualBonusSection = ({
   calculatedMonths,
   yearlyTotals,
   isMobile = false,
-  isPrivate = false
+  isPrivate = false,
+  additionalColSpan = 0
 }: AnnualBonusSectionProps) => {
   const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
 
@@ -75,6 +77,9 @@ export const AnnualBonusSection = ({
             />
           )}
         </td>
+        {additionalColSpan > 0 && Array.from({ length: additionalColSpan }).map((_, i) => (
+          <td key={i} className="px-1 py-2 align-middle border-none"></td>
+        ))}
         <td className="px-1 py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[100px] lg:min-w-[120px]">{formatVal(activeYearData.annualBonusAmount || 0)}</td>
         <td className="pl-1 pr-2 md:pr-3 lg:pr-4 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[100px] lg:min-w-[120px]">{formatVal((activeYearData.annualBonusAmount || 0) * 0.87)}</td>
        </tr>
@@ -93,6 +98,9 @@ export const AnnualBonusSection = ({
             />
           )}
         </td>
+        {additionalColSpan > 0 && Array.from({ length: additionalColSpan }).map((_, i) => (
+          <td key={i} className="px-1 py-2 align-middle border-none"></td>
+        ))}
         <td className="px-1 py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[100px] lg:min-w-[120px]">{formatVal(activeYearData.extraBonusAmount || 0)}</td>
         <td className="pl-1 pr-2 md:pr-3 lg:pr-4 py-2 text-right font-mono text-emerald-600 dark:text-emerald-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[100px] lg:min-w-[120px]">{formatVal((activeYearData.extraBonusAmount || 0) * 0.87)}</td>
        </tr>
@@ -113,6 +121,9 @@ export const AnnualBonusSection = ({
             } />
           </PrivacyBlur>
         </td>
+        {additionalColSpan > 0 && Array.from({ length: additionalColSpan }).map((_, i) => (
+          <td key={i} className="px-1 py-2 lg:py-3 align-middle border-none"></td>
+        ))}
         <td className="px-1 py-2 lg:py-3 text-right font-mono text-primary-600 dark:text-primary-400 text-[11px] lg:text-xs xl:text-sm min-w-[100px] lg:min-w-[120px]">
           {<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={yearlyTotals.totalGross} /></PrivacyBlur>}
         </td>

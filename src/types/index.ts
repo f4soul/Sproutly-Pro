@@ -17,6 +17,25 @@ export type QuarterData = {
   bonusAmount: number;
 };
 
+export interface IncomeColumnDef {
+  id: string;
+  name: string;
+  type: 'rub' | 'percent_base';
+  group: 'base' | 'bonus' | 'allowance' | 'other';
+}
+
+export interface MonthDataV2 {
+  normDays: number;
+  factDays: number;
+  salary: number;
+  values: Record<string, number>;
+}
+
+export interface YearDataV2 {
+  columns: IncomeColumnDef[];
+  months: MonthDataV2[];
+}
+
 export type YearData = {
   year: number;
   additionalIncome: number;
@@ -33,6 +52,7 @@ export type YearData = {
   annualBonusCoef: number;
   annualBonusAmount: number;
   extraBonusAmount: number;
+  v2?: YearDataV2; // New architecture data
 };
 
 export type TaxBracket = {

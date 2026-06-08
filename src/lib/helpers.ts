@@ -35,7 +35,7 @@ export const generateEmptyYear = (year: number): YearData => {
   return {
     year,
     additionalIncome: 0,
-    bonusBase: 169500, // Default base
+    bonusBase: 0, // Default base
     baseSalary: 0,
     iisContribution: 0,
     deductions: { social: 0, property: 0, standard: 0 },

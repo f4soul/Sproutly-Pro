@@ -52,6 +52,7 @@ export const useAppState = () => {
     if (dbState) {
       // Avoid redundant updates if local state is already matched or newer
       if (globalIsLoaded && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
+        if (!isInitialized) setIsInitialized(true);
         return;
       }
       const dataToSet = { ...dbState as AppState };
@@ -88,7 +89,7 @@ export const useAppState = () => {
           }
           syncTimeoutRef.current = setTimeout(() => {
             syncWithFirebase().catch(console.error);
-          }, 2000);
+          }, 5000);
         }
       });
       return updated;

@@ -1,0 +1,136 @@
+import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Info } from 'lucide-react';
+import { YearData, YearlyTotals, CalculatedMonth } from '../../types';
+import { QUARTERS } from '../../lib/constants';
+import { BonusConfigControls } from './BonusConfigControls';
+import { QuarterRowV2 } from './QuarterRowV2';
+import { AnnualBonusSection } from './AnnualBonusSection';
+
+interface IncomeDesktopTableV2Props {
+  yearKey: number;
+  activeYearData: YearData;
+  calculatedMonths: CalculatedMonth[];
+  yearlyTotals: YearlyTotals;
+  onBonusBaseChange: (value: number) => void;
+  onQuarterCoefChange: (quarterIndex: number, value: number) => void;
+  onAnnualCoefChange: (value: number) => void;
+  onApplyBaseToAll?: () => void;
+  handleQuarterChange: (qIndex: number, field: 'bonusCoef' | 'bonusAmount', value: number) => void;
+  handleMonthChange: (monthIndex: number, field: 'normDays' | 'factDays' | 'salary', value: number) => void;
+  onValueChange: (monthIndex: number, colId: string, value: number) => void;
+  handleAnnualBonusChange: (field: any, value: any) => void;
+  onShowTaxInfo: () => void;
+  isPrivate?: boolean;
+}
+
+export function IncomeDesktopTableV2({
+  yearKey,
+  activeYearData,
+  calculatedMonths,
+  yearlyTotals,
+  onBonusBaseChange,
+  onQuarterCoefChange,
+  onAnnualCoefChange,
+  onApplyBaseToAll,
+  handleQuarterChange,
+  handleMonthChange,
+  onValueChange,
+  handleAnnualBonusChange,
+  onShowTaxInfo,
+  isPrivate = false
+}: IncomeDesktopTableV2Props) {
+  if (!activeYearData.v2) return null;
+  
+  const colCount = 6 + activeYearData.v2.columns.length;
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={yearKey}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.2 }}
+        className="hidden lg:block relative isolate"
+      >
+        <div className="bg-white dark:bg-slate-950 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] border border-slate-200/60 dark:border-slate-800/60 p-1 md:p-2 relative z-10 w-full overflow-hidden">
+          <div className="overflow-x-auto custom-scrollbar relative rounded-2xl no-scrollbar block w-full">
+            <table className="w-full text-sm text-left border-separate border-spacing-0 min-w-full">
+              <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
+                <tr>
+                  <th colSpan={colCount} className="p-2.5 shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] relative">
+                    <div className="w-full">
+                      <BonusConfigControls
+                        compact
+                        activeYearData={activeYearData}
+                        onBonusBaseChange={onBonusBaseChange}
+                        onQuarterCoefChange={onQuarterCoefChange}
+                        onAnnualCoefChange={onAnnualCoefChange}
+                        onApplyBaseToAll={onApplyBaseToAll}
+                      />
+                    </div>
+                  </th>
+                </tr>
+                <tr>
+                  <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-left shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Месяц</th>
+                  <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle" title="Фактически отработано / Норма">Дни (ф/н)</th>
+                  <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Оклад (₽)</th>
+                  <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Премия (₽)</th>
+                  
+                  {activeYearData.v2.columns.map(col => (
+                    <th key={col.id} className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle relative group/col max-w-[120px]">
+                      <div className="flex flex-col items-end">
+                        <span className="truncate w-full text-right" title={col.name}>{col.name}</span>
+                        <span className="text-[8px] text-slate-400/70 font-bold tracking-widest uppercase">{col.type === 'rub' ? '₽' : '% от оклада'}</span>
+                      </div>
+                    </th>
+                  ))}
+
+                  <th className="px-1 md:px-2 py-2 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap w-[100px] md:w-[115px] lg:w-[130px] align-middle">Gross (₽)</th>
+                  <th className="pl-1 pr-2 md:pr-3 lg:pr-4 py-2 text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap group/tax-header relative w-[100px] md:w-[115px] lg:w-[130px] align-middle">
+                    <button 
+                      onClick={onShowTaxInfo}
+                      className="inline-flex items-center gap-1.5 ml-auto text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-emerald-600 dark:text-emerald-400 font-semibold transition-all hover:opacity-80 active:scale-95 focus:outline-none"
+                    >
+                      <span>{yearKey >= 2025 ? 'Net (₽)' : 'Net 13% (₽)'}</span>
+                      <div className="relative flex items-center justify-center">
+                        <div className="absolute inset-0 bg-emerald-500/15 rounded-full scale-0 group-hover/tax-header:scale-150 transition-transform duration-500" />
+                        <Info size={10} className="text-emerald-500/50 group-hover/tax-header:text-emerald-500 group-hover/tax-header:rotate-[15deg] transition-all duration-300" />
+                      </div>
+                    </button>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                {QUARTERS.map((q, qIndex) => (
+                  <QuarterRowV2
+                    key={qIndex}
+                    q={q}
+                    qIndex={qIndex}
+                    activeYearData={activeYearData}
+                    v2Data={activeYearData.v2!}
+                    calculatedMonths={calculatedMonths}
+                    handleQuarterChange={handleQuarterChange}
+                    handleMonthChange={handleMonthChange}
+                    onValueChange={onValueChange}
+                    isPrivate={isPrivate}
+                  />
+                ))}
+
+                <AnnualBonusSection
+                  activeYearData={activeYearData}
+                  handleAnnualBonusChange={handleAnnualBonusChange}
+                  calculatedMonths={calculatedMonths}
+                  yearlyTotals={yearlyTotals}
+                  isPrivate={isPrivate}
+                  additionalColSpan={activeYearData.v2.columns.length}
+                />
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

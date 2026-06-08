@@ -13,8 +13,8 @@ import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar';
-  onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => void;
+  activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar';
+  onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar') => void;
   theme: 'light' | 'dark';
 }
 
@@ -164,6 +164,14 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />}
             label="Доходы"
           />
+          {isAdmin && (
+            <NavItem 
+              active={activeTab === 'ndflV2'} 
+              onClick={() => onTabChange('ndflV2')}
+              icon={<TrendingUp className="w-5 h-5 stroke-[1.5px] text-amber-500" />}
+              label="Доходы V2"
+            />
+          )}
           <NavItem 
             active={activeTab === 'settings'} 
             onClick={() => onTabChange('settings')}
@@ -216,7 +224,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
               </div>
               <span className="md:hidden">
                 {syncStatus === 'syncing' ? 'Синхронизация...' : 
-                 syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка. Повторить?'}
+                 syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
               </span>
               {syncStatus === 'error' && (
                 <button 
@@ -361,7 +369,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             </div>
             <span>
               {syncStatus === 'syncing' ? 'Синхронизация...' : 
-               syncStatus === 'success' ? 'Синхронизировано' : 'Ошибка. Повторить?'}
+               syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
             </span>
             {syncStatus === 'error' && (
               <button 
@@ -506,6 +514,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
         <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
+        {isAdmin && <MobileNavItem active={activeTab === 'ndflV2'} onClick={() => onTabChange('ndflV2')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px] text-amber-500" />} label="V2" />}
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
@@ -513,7 +522,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
         "px-2 sm:px-4 md:px-6 lg:px-8",
         activeTab === 'calendar' 
-          ? "pt-24 md:pt-4 lg:pt-5 pb-[104px] md:pb-6 lg:pb-8 min-h-[100dvh]" 
+          ? "pt-24 md:pt-4 lg:pt-5 pb-[104px] md:pb-6 lg:pb-6 min-h-[100dvh]" 
           : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-12 min-h-[100dvh]"
       )}>
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>

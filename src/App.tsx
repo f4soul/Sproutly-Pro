@@ -10,8 +10,11 @@ import { AssetsView } from './components/assets/AssetsView';
 import { DepositHeatmap } from './components/deposits/DepositHeatmap';
 import { Settings } from './components/settings/Settings';
 import { IncomeTracker } from './components/income/IncomeTracker';
+import { IncomeTrackerV2 } from './components/income/IncomeTrackerV2';
 import { SecurityLock } from './components/auth/SecurityLock';
 import { useAppState } from './hooks/useAppState';
+import { auth } from './config/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { SproutlyLogo } from './components/ui/SproutlyLogo';
 
@@ -44,8 +47,10 @@ export default function App() {
 }
 
 function AppContent() {
+  const [user] = useAuthState(auth);
   const [isUnlocked, setIsUnlocked] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>('dashboard');
+  const [hasCheckedLock, setHasCheckedLock] = useState(false);
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar'>('dashboard');
   const [isPrivate, setIsPrivate] = useState(false);
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const _deposits = useLiveQuery(() => db.deposits.toArray());
@@ -59,6 +64,7 @@ function AppContent() {
   const checkLockStatus = () => {
     if (!_appSettings || !_appSettings.privacyLock?.enabled || !_appSettings.privacyLock?.pin) {
       setIsUnlocked(true);
+      setHasCheckedLock(true);
       return;
     }
 
@@ -72,6 +78,7 @@ function AppContent() {
       } else {
         setIsUnlocked(false);
       }
+      setHasCheckedLock(true);
       return;
     }
 
@@ -99,6 +106,7 @@ function AppContent() {
       setIsUnlocked(false);
       sessionStorage.removeItem('pinUnlocked');
     }
+    setHasCheckedLock(true);
   };
   
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(() => {
@@ -233,7 +241,7 @@ function AppContent() {
   const { state } = useAppState();
   const selectedYear = state?.activeYear || new Date().getFullYear();
 
-  const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => {
+  const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar') => {
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -243,7 +251,7 @@ function AppContent() {
 
   useEffect(() => {
     const handleTabChange = (e: Event) => {
-      const customEvent = e as CustomEvent<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>;
+      const customEvent = e as CustomEvent<'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar'>;
       handleNavigation(customEvent.detail);
     };
     window.addEventListener('app:change-tab', handleTabChange as EventListener);
@@ -253,7 +261,7 @@ function AppContent() {
     };
   }, []);
 
-  if (isLoading) {
+  if (isLoading || (isLockActive && !hasCheckedLock)) {
     return <SplashLoader theme={theme} />;
   }
 
@@ -273,36 +281,41 @@ function AppContent() {
           }}
         />
       )}
-      <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
-        {activeTab === 'dashboard' && (
-          <UnifiedDashboard 
-            deposits={deposits} 
-            cashAssets={cashAssets}
-            taxSettings={taxSettings} 
-            appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
-            isPrivate={isPrivate}
-            setIsPrivate={setIsPrivate}
-          />
-        )}
-        {activeTab === 'deposits' && (
-          <AssetsView 
-            deposits={deposits} 
-            cashAssets={cashAssets}
-            selectedYear={selectedYear} 
-            isPrivate={isPrivate}
-          />
-        )}
-        {activeTab === 'calendar' && (
-          <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
-        )}
-        {activeTab === 'ndfl' && (
-          <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
-        )}
-        {activeTab === 'settings' && (
-          <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
-        )}
-        <GlobalToasts />
-      </Layout>
+      <div className={isLockActive && !isUnlocked ? 'hidden' : 'contents'}>
+        <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
+          {activeTab === 'dashboard' && (
+            <UnifiedDashboard 
+              deposits={deposits} 
+              cashAssets={cashAssets}
+              taxSettings={taxSettings} 
+              appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
+              isPrivate={isPrivate}
+              setIsPrivate={setIsPrivate}
+            />
+          )}
+          {activeTab === 'deposits' && (
+            <AssetsView 
+              deposits={deposits} 
+              cashAssets={cashAssets}
+              selectedYear={selectedYear} 
+              isPrivate={isPrivate}
+            />
+          )}
+          {activeTab === 'calendar' && (
+            <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
+          )}
+          {activeTab === 'ndfl' && (
+            <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+          )}
+          {activeTab === 'ndflV2' && user?.email === 'filimlive@gmail.com' && (
+            <IncomeTrackerV2 isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+          )}
+          {activeTab === 'settings' && (
+            <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
+          )}
+          <GlobalToasts />
+        </Layout>
+      </div>
     </>
   );
 }

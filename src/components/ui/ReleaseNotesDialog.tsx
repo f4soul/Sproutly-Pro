@@ -76,8 +76,8 @@ export function ReleaseNotesDialog() {
                     </button>
                   </div>
                   
-                  {/* Decorative glow: using radial gradient instead of blur-3xl to prevent Safari clipping bugs */}
-                  <div className="absolute top-[-100px] right-[-100px] w-[250px] h-[250px] bg-[radial-gradient(circle,rgba(16,185,129,0.15)_0%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(16,185,129,0.25)_0%,transparent_70%)] pointer-events-none" />
+                  {/* Decorative glow: transform-gpu fixes Safari overflow clipping bugs */}
+                  <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl transform-gpu" style={{ WebkitTransform: 'translate3d(0,0,0)' }} />
                   
                   <div className="flex flex-col items-center justify-center text-center relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="w-14 h-14 bg-white/80 dark:bg-slate-900/80 shadow-xl border border-slate-200/50 dark:border-white/10 rounded-2xl flex items-center justify-center mb-4">

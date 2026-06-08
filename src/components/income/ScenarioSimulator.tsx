@@ -11,7 +11,7 @@ interface ScenarioSimulatorProps {
   averageMonthlyNet?: number;
 }
 
-export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 169500, averageMonthlyNet }: ScenarioSimulatorProps) {
+export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, averageMonthlyNet }: ScenarioSimulatorProps) {
   const [showFreqDropdown, setShowFreqDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   

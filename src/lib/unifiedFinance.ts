@@ -58,7 +58,7 @@ export function calculateUnifiedFinance({
 
   let salaryGross = 0;
   if (isSimActive) {
-    const projectionBaseSalary = sim.projectedSalary || (yearData?.bonusBase || 169500);
+    const projectionBaseSalary = sim.projectedSalary || (yearData?.bonusBase || 0);
     const displaySalary = projectionBaseSalary * salaryMult;
     
     let simulatedSalaryGross = 0;
@@ -80,20 +80,17 @@ export function calculateUnifiedFinance({
       // Logic for Option A: Actuals + Projections
       // If month has salary entered, use it as Actual. 
       // If it's 0, it's a Projected month.
-      const isActual = m.salary > 0;
+      let isActual = m.salary > 0;
       
       let base: number;
       if (isActual) {
         // For actual months, we don't apply the projection increase, 
-        // as they have real values entered.
         base = m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary;
       } else if (isSimActive) {
         // For projected months, use bonusBase (standard salary) and apply salaryIncrease
         const projectedSalary = yearData.bonusBase * salaryMult;
-        // Assume full attendance for projected months (1.0 KRD)
         base = projectedSalary;
       } else {
-        // If not actual and not simulating, salary is 0
         base = 0;
       }
 
@@ -104,17 +101,28 @@ export function calculateUnifiedFinance({
         const hasActualBonus = (qData?.bonusAmount || 0) > 0;
 
         if (hasActualBonus) {
-          // If bonus is entered, apply the multiplier to it
           bonus = qData.bonusAmount * bonusMult;
         } else if (isSimActive && (qData?.bonusCoef || 0) > 0) {
-          // If bonus is not entered but simulation is active and a coef exists, project it
-          // For the projection, we use the bonusBase and bonusMult
-          // We also need to decide on KRD for projection. Let's use 1.0.
           bonus = yearData.bonusBase * qData.bonusCoef * bonusMult;
         }
       }
       
-      return base + bonus;
+      let mGross = base + bonus;
+      
+      // V2 dynamic columns
+      if (yearData.v2) {
+        const v2Month = yearData.v2.months[index];
+        yearData.v2.columns.forEach(col => {
+          const val = v2Month?.values?.[col.id] || 0;
+          if (col.type === 'rub') {
+            mGross += val;
+          } else if (col.type === 'percent_base') {
+            mGross += base * (val / 100);
+          }
+        });
+      }
+      
+      return mGross;
     });
 
     salaryGross = calcMonths.reduce((sum, m) => sum + m, 0) +
