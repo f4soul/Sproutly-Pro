@@ -9,7 +9,7 @@ interface HeatmapLegendProps {
 
 export function HeatmapLegend({ className }: HeatmapLegendProps) {
   return (
-    <div className={cn("w-full flex justify-center shrink-0 mt-8 mb-2 sm:mb-0", className)}>
+    <div className={cn("w-full flex justify-center shrink-0", className)}>
       <div className="flex flex-col md:flex-row items-center justify-center w-max max-w-full gap-4 md:gap-10">
         
         {/* Intensity Legend */}
