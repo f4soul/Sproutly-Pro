@@ -272,7 +272,13 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
   React.useEffect(() => {
     if (isOpen) {
       setActiveTab('main');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   const sensors = useSensors(
@@ -333,7 +339,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col h-[94dvh] sm:h-auto max-h-[94dvh] sm:max-h-[85vh] pointer-events-auto overflow-hidden"
+            className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col h-[86dvh] sm:h-auto max-h-[86dvh] sm:max-h-[85vh] pointer-events-auto overflow-hidden"
           >
                 {/* Decorative Ambient Lighting */}
                 <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary-500/20 dark:bg-primary-500/10 blur-[80px] rounded-full mt-4 ml-4 mix-blend-screen pointer-events-none" />
@@ -413,20 +419,20 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="absolute inset-0 overflow-y-auto px-5 sm:px-6 py-1 sm:py-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
-                  <div className="space-y-4">
-                    <div className="p-3 sm:p-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col gap-3">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="p-3 sm:p-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-3">
                         <div>
                           <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">Базовый оклад</label>
-                          <div className="text-[11px] text-slate-400 mt-0.5">Применяется для расчетов премий</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5">Для расчетов премий</div>
                         </div>
                         <TableInput
                           value={baseSalary}
                           onChange={setBaseSalary}
-                          className="w-full sm:w-[140px] bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-xl px-3 py-2 text-sm sm:text-base outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all font-mono font-bold shadow-inner text-right"
+                          className="w-[124px] sm:w-[140px] bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-xl px-3 py-1.5 sm:py-2 text-sm sm:text-base outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all font-mono font-bold shadow-inner text-right"
                         />
                       </div>
-                      <label className="flex items-center gap-3 cursor-pointer group bg-slate-50/50 dark:bg-slate-950/30 p-2.5 sm:p-3 rounded-xl border border-transparent hover:border-slate-200/50 dark:hover:border-slate-800/50 transition-colors mt-1">
+                      <label className="flex items-center gap-3 cursor-pointer group bg-slate-50/50 dark:bg-slate-950/30 p-2 sm:p-3 rounded-xl border border-transparent hover:border-slate-200/50 dark:hover:border-slate-800/50 transition-colors mt-0.5">
                         <div className="relative flex items-center justify-center shrink-0">
                           <input 
                             type="checkbox" 
