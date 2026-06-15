@@ -84,7 +84,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSe
       <div className="flex flex-col items-center gap-4 mb-2 w-full z-20">
         {/* Navigation Panel */}
         <div className="flex items-center justify-center w-full md:w-auto relative gap-1 z-30">
-          <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto">
+          <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto p-0.5 border border-slate-100 dark:border-white/[0.03]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -103,7 +103,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSe
                 {activeSubTab === tab.id && (
                   <motion.div 
                     layoutId="activeTabPill"
-                    className="absolute inset-0 bg-white dark:bg-primary-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-primary-400/30"
+                    className="absolute inset-0 bg-white dark:bg-slate-900 rounded-[10px] shadow-sm border border-slate-200/50 dark:border-white/[0.05] z-10"
                     transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                   />
                 )}

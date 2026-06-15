@@ -44,7 +44,7 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
                   </button>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-                  Вы уверены, что хотите очистить все введенные данные (оклады, премии) за <strong>{year} год</strong>? Это действие нельзя отменить.
+                  Вы уверены, что хотите очистить все введенные данные за <strong>{year} год</strong>? Это действие нельзя отменить.
                 </p>
                 <div className="flex items-center gap-3">
                   <button 

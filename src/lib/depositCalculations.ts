@@ -168,10 +168,10 @@ export function calculateIncome(deposit: Deposit): number {
     return deposit.factIncome;
   }
   
-  if (!deposit.endDate || !deposit.startDate) return 0;
+  if (!deposit.startDate) return 0;
   
   const startDate = new Date(deposit.startDate);
-  const endDate = new Date(deposit.endDate);
+  const endDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
   
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
   
@@ -198,10 +198,10 @@ export interface YearIncome {
 }
 
 export function calculateIncomeByYears(deposit: Deposit): YearIncome[] {
-  if (!deposit.endDate || !deposit.startDate) return [];
+  if (!deposit.startDate) return [];
   
   const startDate = new Date(deposit.startDate);
-  const endDate = new Date(deposit.endDate);
+  const endDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
   
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
   

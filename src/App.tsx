@@ -10,7 +10,6 @@ import { AssetsView } from './components/assets/AssetsView';
 import { DepositHeatmap } from './components/deposits/DepositHeatmap';
 import { Settings } from './components/settings/Settings';
 import { IncomeTracker } from './components/income/IncomeTracker';
-import { IncomeTrackerV2 } from './components/income/IncomeTrackerV2';
 import { SecurityLock } from './components/auth/SecurityLock';
 import { useAppState } from './hooks/useAppState';
 import { auth } from './config/firebase';
@@ -50,7 +49,7 @@ function AppContent() {
   const [user] = useAuthState(auth);
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [hasCheckedLock, setHasCheckedLock] = useState(false);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>('dashboard');
   const [isPrivate, setIsPrivate] = useState(false);
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const _deposits = useLiveQuery(() => db.deposits.toArray());
@@ -241,7 +240,7 @@ function AppContent() {
   const { state } = useAppState();
   const selectedYear = state?.activeYear || new Date().getFullYear();
 
-  const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar') => {
+  const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => {
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
@@ -251,7 +250,7 @@ function AppContent() {
 
   useEffect(() => {
     const handleTabChange = (e: Event) => {
-      const customEvent = e as CustomEvent<'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar'>;
+      const customEvent = e as CustomEvent<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>;
       handleNavigation(customEvent.detail);
     };
     window.addEventListener('app:change-tab', handleTabChange as EventListener);
@@ -306,9 +305,6 @@ function AppContent() {
           )}
           {activeTab === 'ndfl' && (
             <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
-          )}
-          {activeTab === 'ndflV2' && user?.email === 'filimlive@gmail.com' && (
-            <IncomeTrackerV2 isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
           )}
           {activeTab === 'settings' && (
             <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />

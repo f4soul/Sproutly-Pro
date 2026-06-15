@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { db, syncWithFirebase } from '../../config/db';
 import { AppSettings } from '../../types';
-import { Shield, Fingerprint, Lock, ShieldCheck, ChevronDown, Delete, ChevronRight, Key } from 'lucide-react';
+import { Shield, Fingerprint, Lock, ShieldUser, ChevronDown, Delete, ChevronRight, KeyRound } from 'lucide-react';
 import { registerBiometricCredential, isBiometricsSupported, verifyBiometricCredential } from '../../lib/biometrics';
 import { useAppState } from '../../hooks/useAppState';
 import { cn } from '../../lib/utils';
@@ -205,7 +205,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       {/* Segment Header */}
       <div className="flex items-center gap-4 mb-6">
         <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0">
-          <ShieldCheck className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
+          <ShieldUser className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
         </div>
         <div className="min-w-0">
           <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">
@@ -253,7 +253,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 shrink-0">
-                    <Key size={14} className="stroke-[2px]" />
+                    <KeyRound size={14} className="stroke-[2px]" />
                   </div>
                   <div>
                     <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100">Изменить код-пароль</span>
@@ -346,7 +346,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
               <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] p-2.5 space-y-2.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                    <div className="w-7 h-7 rounded-lg bg-deposit-500/10 flex items-center justify-center text-deposit-500 shrink-0">
                       <Fingerprint size={14} className="stroke-[2px]" />
                     </div>
                     <div className="flex flex-col">
@@ -398,7 +398,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                               Сбросить остальные
                             </button>
                           )}
-                          <div className="text-[8px] font-black uppercase tracking-wider text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md h-6 flex items-center shadow-sm">
+                          <div className="text-[8px] font-black uppercase tracking-wider text-deposit-500 bg-deposit-500/10 px-2 py-1 rounded-md h-6 flex items-center shadow-sm">
                             Устройство привязано
                           </div>
                         </div>

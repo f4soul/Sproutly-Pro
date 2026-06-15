@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { formatNumber } from '../../lib/taxCalculator';
 
@@ -20,25 +20,52 @@ export const TableInput = ({
   isInteger?: boolean
 }) => {
   const [focused, setFocused] = useState(false);
+  const [localValue, setLocalValue] = useState('');
   
   const displayValue = focused 
-    ? (value === 0 ? '' : value) 
+    ? localValue
     : (isInteger 
         ? Math.round(value).toString() 
         : (hideDecimals 
             ? Math.round(value).toLocaleString('ru-RU') 
             : formatNumber(value)));
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setFocused(true);
+    setLocalValue(value === 0 ? '' : value.toString().replace('.', ','));
+  };
+
+  const commitValue = () => {
+    let valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
+    let num = parseFloat(valStr);
+    if (isNaN(num)) num = 0;
+    if (isInteger) num = Math.round(num);
+    
+    setFocused(false);
+    if (num !== value) {
+      onChange(num);
+    }
+  };
+
+  const handleBlur = () => {
+    commitValue();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+  };
+
   return (
     <input
-      type={focused ? "number" : "text"}
-      inputMode={focused ? "decimal" : undefined}
-      pattern={focused ? "[0-9]*" : undefined}
+      type="text"
+      inputMode="decimal"
       value={displayValue}
-      onFocus={(e) => { setFocused(true); e.target.select(); }}
-      onBlur={() => setFocused(false)}
-      onChange={(e) => onChange(isInteger ? Math.round(parseFloat(e.target.value) || 0) : (parseFloat(e.target.value) || 0))}
-      step={isInteger ? "1" : step}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onKeyDown={handleKeyDown}
       className={cn(
         "w-full min-w-0 px-1.5 py-1 text-right font-mono tabular-nums text-xs md:text-sm bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded transition-all outline-none",
         className
@@ -46,3 +73,4 @@ export const TableInput = ({
     />
   );
 };
+

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Deposit, SimulationState, TaxBracket, TaxYearSettings, YearData, YearlyTotals } from '../types';
 import { calculateUnifiedFinance, UnifiedFinanceResult } from '../lib/unifiedFinance';
-import { IncomeCalculationMode } from './useIncomeCalculationMode';
 
 interface UseIncomeTotalsInput {
   activeYear: number;
@@ -11,7 +10,6 @@ interface UseIncomeTotalsInput {
   taxSettings: TaxYearSettings[];
   taxBrackets: Record<number, TaxBracket[]>;
   simulation?: SimulationState;
-  calculationMode: IncomeCalculationMode;
 }
 
 export interface IncomeTotalsResult {
@@ -28,8 +26,7 @@ export function calculateIncomeTotals({
   deposits,
   taxSettings,
   taxBrackets,
-  simulation,
-  calculationMode
+  simulation
 }: UseIncomeTotalsInput): IncomeTotalsResult {
   const yearlyFinance = calculateUnifiedFinance({
     selectedYear: activeYear,
@@ -38,7 +35,7 @@ export function calculateIncomeTotals({
     taxSettings,
     taxBrackets,
     simulation,
-    includeDeposits: calculationMode === 'combined'
+    includeDeposits: false
   });
 
   const { totalGross, totalTax: progressiveTax, totalNet: finalNet, totalDeductions } = yearlyFinance;
@@ -65,7 +62,7 @@ export function calculateIncomeTotals({
         deposits,
         taxSettings,
         taxBrackets,
-        includeDeposits: calculationMode === 'combined'
+        includeDeposits: false
       })
     : null;
 
@@ -85,8 +82,7 @@ export function useIncomeTotals(input: UseIncomeTotalsInput) {
       input.deposits,
       input.taxSettings,
       input.taxBrackets,
-      input.simulation,
-      input.calculationMode
+      input.simulation
     ]
   );
 }

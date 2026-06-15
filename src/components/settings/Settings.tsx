@@ -283,7 +283,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           <div className="flex items-center justify-between mb-4 h-12">
             <div className="flex items-center gap-4 min-w-0">
               <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center shrink-0">
-                <Settings2Icon className="w-6 h-6 text-primary-600 stroke-[1.5px]" />
+                <Settings2Icon className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
               </div>
               <div className="min-w-0">
                 <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Шкала НДФЛ</h3>

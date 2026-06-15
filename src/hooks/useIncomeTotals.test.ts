@@ -50,29 +50,18 @@ const taxSettings: TaxYearSettings[] = [
   { year: 2026, limit: 50_000, ndflRate: 13 }
 ];
 
-test('calculateIncomeTotals: combined mode includes deposits while salary mode excludes them', () => {
+test('calculateIncomeTotals: returns correct figures for active year', () => {
   const activeYearData = makeYearData(2026, 100_000);
 
-  const salaryMode = calculateIncomeTotals({
+  const activeTotals = calculateIncomeTotals({
     activeYear: 2026,
     activeYearData,
     deposits,
     taxSettings,
-    taxBrackets,
-    calculationMode: 'salary'
+    taxBrackets
   });
 
-  const combinedMode = calculateIncomeTotals({
-    activeYear: 2026,
-    activeYearData,
-    deposits,
-    taxSettings,
-    taxBrackets,
-    calculationMode: 'combined'
-  });
-
-  assert.equal(salaryMode.yearlyTotals.totalGross, 1_200_000);
-  assert.ok(combinedMode.yearlyTotals.totalGross > salaryMode.yearlyTotals.totalGross);
+  assert.equal(activeTotals.yearlyTotals.totalGross, 1_200_000);
 });
 
 test('calculateIncomeTotals: returns grossDiff/netDiff against previous year', () => {
@@ -82,8 +71,7 @@ test('calculateIncomeTotals: returns grossDiff/netDiff against previous year', (
     prevYearData: makeYearData(2025, 100_000),
     deposits: [],
     taxSettings,
-    taxBrackets,
-    calculationMode: 'salary'
+    taxBrackets
   });
 
   assert.ok(result.grossDiff !== null);
@@ -98,8 +86,7 @@ test('calculateIncomeTotals: returns null diffs when prevYearData is missing', (
     activeYearData: makeYearData(2026, 100_000),
     deposits: [],
     taxSettings,
-    taxBrackets,
-    calculationMode: 'salary'
+    taxBrackets
   });
 
   assert.equal(result.prevYearTotals, null);

@@ -62,7 +62,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
 
   return (
     <div className={cn(
-      "rounded-[2rem] p-5 lg:p-6 transition-all duration-700 relative",
+      "rounded-3xl p-5 lg:p-6 transition-all duration-700 relative",
       simulation.isActive 
         ? "bg-slate-100/50 dark:bg-[#0f121b] text-slate-900 dark:text-white border border-primary-500/25 dark:border-primary-500/30 shadow-[0_20px_50px_rgba(37,99,235,0.08)] dark:shadow-[0_20px_50px_rgba(37,99,235,0.15)]" 
         : "bg-white bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200 dark:border-white/10"
@@ -114,7 +114,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="absolute left-0 top-0 whitespace-nowrap flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.25)] select-none"
+                        className="absolute left-0 top-0 whitespace-nowrap flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 rounded-full bg-deposit-500/10 border border-deposit-500/20 text-[9px] sm:text-[10px] font-bold text-deposit-600 dark:text-deposit-400 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.25)] select-none"
                       >
                         <span className="opacity-75 uppercase tracking-wide text-[8px] sm:text-[9px]">Средний Net:</span>
                         <span className="font-extrabold font-mono text-[9px] sm:text-[10px]">~{Math.round(averageMonthlyNet).toLocaleString('ru-RU')} ₽/мес.</span>
@@ -156,18 +156,18 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
             <div className={cn(
               "relative flex-1 group p-4 lg:p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px]",
               simulation.isActive 
-                ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-emerald-500/30 dark:border-emerald-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:border-emerald-500/40" 
+                ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-deposit-500/30 dark:border-deposit-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:border-deposit-500/40" 
                 : "bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200 dark:border-white/5"
             )}>
               <div className="flex items-start justify-between gap-1.5 flex-nowrap w-full">
                 <div className="flex items-center gap-1.5 min-w-0 pr-1">
-                  <TrendingUp size={14} className={cn("shrink-0", simulation.isActive ? "text-emerald-550 dark:text-emerald-400" : "text-slate-400")} />
+                  <TrendingUp size={14} className={cn("shrink-0", simulation.isActive ? "text-deposit-550 dark:text-deposit-400" : "text-slate-400")} />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
                     {simulation.isActive ? "Новый оклад" : "Оклад"}
                   </span>
                 </div>
                 {simulation.isActive && (simulation.salaryIncrease ?? 0) > 0 && (
-                  <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-md border border-emerald-500/20 shrink-0 select-none">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-deposit-600 dark:text-deposit-400 bg-deposit-500/10 px-1.5 py-0.5 rounded-md border border-deposit-500/20 shrink-0 select-none">
                     +{simulation.salaryIncrease}%
                   </span>
                 )}
@@ -175,7 +175,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
 
               {simulation.isActive ? (
                 <div className="mt-auto flex flex-col gap-0.5">
-                  <div className="flex items-baseline text-emerald-600 dark:text-emerald-400 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.15)] dark:drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] select-all font-sans font-semibold text-xl sm:text-2xl tracking-tight leading-none">
+                  <div className="flex items-baseline text-deposit-600 dark:text-deposit-400 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.15)] dark:drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] select-all font-sans font-semibold text-xl sm:text-2xl tracking-tight leading-none">
                     <span>{Math.round((simulation.projectedSalary ?? bonusBase) * (1 + (simulation.salaryIncrease || 0) / 100)).toLocaleString('ru-RU')}</span>
                     <span className="text-sm font-semibold opacity-85 ml-1">₽</span>
                   </div>
@@ -284,7 +284,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                               >
                                 <span>{opt.label}</span>
                                 {(simulation.bonusFrequency || 'quarterly') === opt.value && (
-                                  <Check size={10} className="text-emerald-500 shrink-0 stroke-[2.5px]" />
+                                  <Check size={10} className="text-deposit-500 shrink-0 stroke-[2.5px]" />
                                 )}
                               </button>
                             ))}
@@ -351,7 +351,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                               >
                                 <span>{opt.label}</span>
                                 {(simulation.bonusType || 'coef') === opt.value && (
-                                  <Check size={10} className="text-emerald-500 shrink-0 stroke-[2.5px]" />
+                                  <Check size={10} className="text-deposit-500 shrink-0 stroke-[2.5px]" />
                                 )}
                               </button>
                             ))}

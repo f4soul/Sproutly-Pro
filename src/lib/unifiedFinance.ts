@@ -95,15 +95,23 @@ export function calculateUnifiedFinance({
       }
 
       let bonus = 0;
-      if (index % 3 === 2) {
+      const showQuarterly = yearData.v2?.settings?.showQuarterly ?? true;
+      if (showQuarterly && index % 3 === 2) {
         const qIndex = Math.floor(index / 3);
         const qData = yearData.quarters?.[qIndex];
-        const hasActualBonus = (qData?.bonusAmount || 0) > 0;
+        const val = qData?.bonusAmount || 0;
 
-        if (hasActualBonus) {
-          bonus = qData.bonusAmount * bonusMult;
-        } else if (isSimActive && (qData?.bonusCoef || 0) > 0) {
-          bonus = yearData.bonusBase * qData.bonusCoef * bonusMult;
+        if (val > 0) {
+          const type = yearData.v2?.settings?.quarterCalcType || 'rub';
+          const calcBase = yearData.bonusBase || 0;
+          if (type === 'percent') {
+            bonus = calcBase * (val / 100) * bonusMult;
+          } else if (type === 'coef') {
+            bonus = calcBase * val * bonusMult;
+          } else {
+            // fallback rub
+            bonus = val * bonusMult;
+          }
         }
       }
       
@@ -112,6 +120,16 @@ export function calculateUnifiedFinance({
       // V2 dynamic columns
       if (yearData.v2) {
         const v2Month = yearData.v2.months[index];
+        const mainVal = v2Month?.values?.['system_main_bonus'] || 0;
+        const mainType = yearData.v2.settings?.mainCalcType || 'rub';
+        if (mainType === 'percent') {
+          mGross += base * (mainVal / 100);
+        } else if (mainType === 'coef') {
+          mGross += base * mainVal;
+        } else {
+          mGross += mainVal;
+        }
+        
         yearData.v2.columns.forEach(col => {
           const val = v2Month?.values?.[col.id] || 0;
           if (col.type === 'rub') {
@@ -125,9 +143,50 @@ export function calculateUnifiedFinance({
       return mGross;
     });
 
+    const showAnnual = yearData.v2?.settings?.showAnnual ?? true;
+    const showExtraAnnual = yearData.v2?.settings?.showExtraAnnual ?? true;
+    
+    // Calculate total base salary for the year to apply % or coef for annual bonuses
+    const totalBaseSalaryForYear = calcMonths.reduce((sum, m, i) => {
+      let isActual = yearData.months[i].salary > 0;
+      let base = 0;
+      if (isActual) {
+        base = yearData.months[i].factDays < yearData.months[i].normDays ? yearData.months[i].salary * (yearData.months[i].factDays / yearData.months[i].normDays) : yearData.months[i].salary;
+      } else if (isSimActive) {
+        base = yearData.bonusBase * salaryMult;
+      }
+      return sum + base;
+    }, 0);
+
+    let annualBonusFinal = 0;
+    if (showAnnual && (yearData.annualBonusAmount || 0) > 0) {
+      const type = yearData.v2?.settings?.annualCalcType || 'rub';
+      const val = yearData.annualBonusAmount || 0;
+      if (type === 'percent') {
+        annualBonusFinal = totalBaseSalaryForYear * (val / 100) * bonusMult;
+      } else if (type === 'coef') {
+        annualBonusFinal = totalBaseSalaryForYear * val * bonusMult;
+      } else {
+        annualBonusFinal = val * bonusMult;
+      }
+    }
+
+    let extraAnnualBonusFinal = 0;
+    if (showExtraAnnual && (yearData.extraBonusAmount || 0) > 0) {
+      const type = yearData.v2?.settings?.extraAnnualCalcType || 'rub';
+      const val = yearData.extraBonusAmount || 0;
+      if (type === 'percent') {
+        extraAnnualBonusFinal = totalBaseSalaryForYear * (val / 100) * bonusMult;
+      } else if (type === 'coef') {
+        extraAnnualBonusFinal = totalBaseSalaryForYear * val * bonusMult;
+      } else {
+        extraAnnualBonusFinal = val * bonusMult;
+      }
+    }
+
     salaryGross = calcMonths.reduce((sum, m) => sum + m, 0) +
-      ((yearData.annualBonusAmount || 0) * bonusMult) +
-      ((yearData.extraBonusAmount || 0) * bonusMult) +
+      annualBonusFinal +
+      extraAnnualBonusFinal +
       (yearData.additionalIncome || 0) +
       extraSimIncome;
   }

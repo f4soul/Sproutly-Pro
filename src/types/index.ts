@@ -32,6 +32,16 @@ export interface MonthDataV2 {
 }
 
 export interface YearDataV2 {
+  settings?: {
+    showQuarterly?: boolean;
+    showAnnual?: boolean;
+    showMonthly?: boolean;
+    showExtraAnnual?: boolean;
+    annualCalcType?: 'rub' | 'percent' | 'coef';
+    extraAnnualCalcType?: 'rub' | 'percent' | 'coef';
+    quarterCalcType?: 'rub' | 'percent' | 'coef';
+    mainCalcType?: 'rub' | 'percent' | 'coef';
+  };
   columns: IncomeColumnDef[];
   months: MonthDataV2[];
 }

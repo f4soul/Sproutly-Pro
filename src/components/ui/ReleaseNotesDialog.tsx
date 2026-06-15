@@ -140,13 +140,13 @@ export function ReleaseNotesDialog() {
                           {release.improvements && release.improvements.length > 0 && (
                             <div>
                               <div className="flex items-center gap-1.5 mb-2">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-500">Улучшения</span>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-deposit-500" />
+                                <span className="text-[11px] font-black uppercase tracking-widest text-deposit-600 dark:text-deposit-500">Улучшения</span>
                               </div>
                               <ul className="space-y-2">
                                 {release.improvements.map((imp, idx) => (
                                   <li key={idx} className="flex gap-2.5 text-sm text-slate-600 dark:text-slate-300 leading-snug">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 mt-1.5" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-deposit-500 shrink-0 mt-1.5" />
                                     <span>{imp}</span>
                                   </li>
                                 ))}

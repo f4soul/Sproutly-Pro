@@ -84,14 +84,13 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   };
 
   return (
-    <div className="w-full relative pb-24">
-      {/* Decorative outer glow behind the banner for extreme depth */}
-      <div className="absolute -inset-1.5 bg-gradient-to-tr from-deposit-500/15 via-transparent to-primary-500/10 rounded-[2.1rem] blur-2xl opacity-60 pointer-events-none" />
-
-      {/* Header Stats / Safe Overview Card */}
-      <div className="relative overflow-hidden bg-gradient-to-tr from-white/60 to-white/90 dark:from-slate-900/60 dark:to-slate-950/80 backdrop-blur-2xl rounded-[2rem] p-6 lg:p-8 border border-white/20 dark:border-white/[0.05] shadow-[0_12px_40px_rgba(0,0,0,0.04)] mb-8 z-10">
-        
-        {/* Background glow effects according to Sproutly.Pro Guidelines */}
+    <div className="w-full pb-24">
+      {/* Header Stats / Safe Overview Card Wrapper */}
+      <div className="relative mb-8">
+        {/* Header Stats / Safe Overview Card */}
+        <div className="relative overflow-hidden bg-gradient-to-tr from-white/60 to-white/90 dark:from-slate-900/60 dark:to-slate-950/80 backdrop-blur-2xl rounded-[2rem] p-6 lg:p-8 border border-white/20 dark:border-[rgba(255,255,255,0.05)] shadow-[0_12px_40px_rgba(0,0,0,0.04)] z-10">
+          
+          {/* Background glow effects according to Sproutly.Pro Guidelines */}
         <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-deposit-500/15 dark:bg-deposit-500/5 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary-500/10 dark:bg-primary-500/5 blur-2xl rounded-full pointer-events-none" />
 
@@ -152,6 +151,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Grid of Redesigned Safe Cards resembling Archive and Deposits List */}
@@ -250,7 +250,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 </div>
 
                 {/* Micro Actions Container: Hover interactive only for noise-free experience but visible on touch */}
-                <div className="flex items-center gap-0.5 opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
+                <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

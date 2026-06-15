@@ -32,7 +32,7 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
               ) : isLoading ? (
                 <Loader2 size={18} className="text-primary-500 animate-spin shrink-0" />
               ) : isSuccess ? (
-                <Check size={18} className="text-emerald-500 shrink-0" />
+                <Check size={18} className="text-deposit-500 shrink-0" />
               ) : (
                 <Info size={18} className="text-primary-500 shrink-0" />
               )}

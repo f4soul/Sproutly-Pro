@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Info, TrendingUp, Shield, Eye, EyeOff, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MonthData, SimulationState, CalculatedMonth } from '../../types';
+import { MonthData, SimulationState, CalculatedMonth, MonthDataV2, IncomeColumnDef } from '../../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../../lib/constants';
 import { generateDefaultYear, generateEmptyYear, getDefaultExpandedQuarters } from '../../lib/helpers';
 import { TaxReferenceModal } from './TaxReferenceModal';
@@ -10,8 +10,6 @@ import { DeleteYearModal } from './DeleteYearModal';
 import { ToastContainer } from '../ui/ToastContainer';
 import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
-import { AnnualBonusSection } from './AnnualBonusSection';
-import { QuarterAccordion } from './QuarterAccordion';
 import { ScenarioSimulator } from './ScenarioSimulator';
 import { exportToPDF, exportIncomeToXLSX } from '../../services/ExportService';
 import { useAppState } from '../../hooks/useAppState';
@@ -20,10 +18,9 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../config/db';
 import { IncomeDesktopTable } from './IncomeDesktopTable';
 import { IncomeMobileView } from './IncomeMobileView';
-import { useIncomeCalculationMode } from '../../hooks/useIncomeCalculationMode';
 import { useIncomeTotals } from '../../hooks/useIncomeTotals';
-import { BonusConfigControls } from './BonusConfigControls';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
+import { IncomeTableConfigDialog } from './IncomeTableConfigDialog';
 
 interface IncomeTrackerProps {
   isPrivate: boolean;
@@ -34,7 +31,6 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const { state, setState, addToast, toasts, removeToast, isInitialized } = useAppState();
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
-  const { mode: calculationMode, setMode: setCalculationMode } = useIncomeCalculationMode('salary');
   
   const handleCopy = (value: number, type: 'net' | 'gross' | 'tax') => {
     navigator.clipboard.writeText(value.toString());
@@ -46,6 +42,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
+  const [isV2ConfigOpen, setIsV2ConfigOpen] = useState(false);
   
   const [simulation, setSimulation] = useState<SimulationState>({
     isActive: false,
@@ -55,6 +52,34 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   });
 
   const activeYearData = state.years[state.activeYear];
+
+  // Initialize V2 data structure if not present
+  useEffect(() => {
+    if (isInitialized && activeYearData && !activeYearData.v2) {
+      setState(prev => {
+        const newYears = { ...prev.years };
+        const currentData = newYears[prev.activeYear];
+        if (!currentData.v2) {
+          newYears[prev.activeYear] = {
+            ...currentData,
+            v2: {
+              columns: [
+                { id: 'col_bonus', name: 'Ежемесячная премия', type: 'rub', group: 'bonus' },
+                { id: 'col_north', name: 'Северная надбавка', type: 'percent_base', group: 'allowance' },
+              ],
+              months: currentData.months.map(m => ({
+                normDays: m.normDays,
+                factDays: m.factDays,
+                salary: m.salary,
+                values: { 'col_bonus': 0, 'col_north': 0 }
+              }))
+            }
+          };
+        }
+        return { ...prev, years: newYears };
+      });
+    }
+  }, [activeYearData, setState]);
 
   useEffect(() => {
     if (isSimulationOpen && !simulation.isActive) {
@@ -91,15 +116,31 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   const addNewYear = () => {
     const newYear = Math.max(...Object.keys(state.years).map(Number)) + 1;
-    setState(prev => ({
-      ...prev,
-      years: { ...prev.years, [newYear]: generateDefaultYear(newYear) },
-      activeYear: newYear,
-      taxBrackets: {
-        ...prev.taxBrackets,
-        [newYear]: prev.taxBrackets[newYear - 1] || prev.taxBrackets[2025] || DEFAULT_TAX_BRACKETS[2025]
-      }
-    }));
+    setState(prev => {
+      const defaultYear = generateDefaultYear(newYear);
+      const emptyV2 = {
+        columns: [],
+        months: defaultYear.months.map(m => ({
+          normDays: m.normDays,
+          factDays: m.factDays,
+          salary: m.salary,
+          values: {}
+        }))
+      };
+
+      return {
+        ...prev,
+        years: { 
+          ...prev.years, 
+          [newYear]: { ...defaultYear, v2: emptyV2 }
+        },
+        activeYear: newYear,
+        taxBrackets: {
+          ...prev.taxBrackets,
+          [newYear]: prev.taxBrackets[newYear - 1] || prev.taxBrackets[2025] || DEFAULT_TAX_BRACKETS[2025]
+        }
+      };
+    });
     addToast(`Добавлен ${newYear} год`);
   };
 
@@ -315,7 +356,21 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         bonus = qData?.bonusAmount || 0;
       }
 
-      const gross = base + bonus;
+      let v2Bonus = 0;
+      if (activeYearData.v2 && activeYearData.v2.months[index]) {
+        const v2M = activeYearData.v2.months[index];
+        v2Bonus += v2M.values?.['system_main_bonus'] || 0;
+        
+        activeYearData.v2.columns.forEach(col => {
+          let val = v2M.values?.[col.id] || 0;
+          if (col.type === 'percent_base') {
+             val = base * (val / 100);
+          }
+          v2Bonus += val;
+        });
+      }
+
+      const gross = base + bonus + v2Bonus;
       runningGross += gross;
 
       // Better tax estimation for 2025+ (still a row-by-row approx)
@@ -362,7 +417,21 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         // Apply Bonus Multiplier to everything (user requested flexibility)
         bonus *= (simulation.bonusMultiplier || 1);
 
-        const gross = displaySalary + bonus;
+        let v2Bonus = 0;
+        if (activeYearData.v2 && activeYearData.v2.months[index]) {
+          const v2M = activeYearData.v2.months[index];
+          v2Bonus += v2M.values?.['system_main_bonus'] || 0;
+          
+          activeYearData.v2.columns.forEach(col => {
+            let val = v2M.values?.[col.id] || 0;
+            if (col.type === 'percent_base') {
+               val = displaySalary * (val / 100);
+            }
+            v2Bonus += val;
+          });
+        }
+
+        const gross = displaySalary + bonus + (v2Bonus * (simulation.bonusMultiplier || 1));
         runningGross += gross;
         
         // Simplified monthly tax calculation for simulation (doesn't account for complex deductions)
@@ -396,8 +465,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     deposits,
     taxSettings,
     taxBrackets: state.taxBrackets,
-    simulation,
-    calculationMode
+    simulation
   });
 
   const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
@@ -414,11 +482,11 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   }
 
   return (
-    <div id="income-tracker-content" className="text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-primary-500/30">
+    <div id="income-tracker-content" className="relative text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-primary-500/30 min-h-screen">
       <div className="max-w-full lg:max-w-6xl mx-auto space-y-6">
-        
+
         {/* Top Summary Section Wrapper */}
-        <div className="flex flex-col gap-3">
+        <div className="hidden md:flex flex-col gap-3">
           <YearSummary 
             yearlyTotals={yearlyTotals}
             netDiff={netDiff}
@@ -431,8 +499,25 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
           />
         </div>
 
-        <div className="flex flex-col gap-3 md:gap-4">
+        <div className="flex flex-col gap-3 lg:bg-white lg:dark:bg-slate-950 lg:rounded-3xl lg:shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)] lg:border lg:border-slate-200/60 lg:dark:border-slate-800/60 lg:p-2 lg:pt-3 lg:px-2">
           <div className="flex flex-col">
+            {/* Scenario Simulator (Collapsible) */}
+            <div 
+              className={cn(
+                "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                isSimulationOpen ? "grid-rows-[1fr] opacity-100 pointer-events-auto mb-4" : "grid-rows-[0fr] opacity-0 pointer-events-none mb-0"
+              )}
+            >
+              <div className={cn("min-h-0", isSimulationOpen ? "overflow-visible" : "overflow-hidden")}>
+                  <ScenarioSimulator 
+                    simulation={simulation}
+                    onUpdate={setSimulation}
+                    bonusBase={activeYearData.bonusBase}
+                    averageMonthlyNet={yearlyTotals.finalNet / 12}
+                  />
+              </div>
+            </div>
+
             {/* Tabs & Toolbar */}
             <YearTabs 
               availableYears={availableYears}
@@ -459,67 +544,150 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
               }}
               isSimulationOpen={isSimulationOpen}
               setIsSimulationOpen={setIsSimulationOpen}
+              onOpenStructureConfig={() => setIsV2ConfigOpen(true)}
             />
-
-            {/* Scenario Simulator (Collapsible) */}
-            <div 
-              className={cn(
-                "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
-                isSimulationOpen ? "grid-rows-[1fr] opacity-100 pointer-events-auto mt-6" : "grid-rows-[0fr] opacity-0 pointer-events-none mt-0"
-              )}
-            >
-              <div className={cn("min-h-0", isSimulationOpen ? "overflow-visible" : "overflow-hidden")}>
-                <div className="pb-2">
-                  <ScenarioSimulator 
-                    simulation={simulation}
-                    onUpdate={setSimulation}
-                    bonusBase={activeYearData.bonusBase}
-                    averageMonthlyNet={yearlyTotals.finalNet / 12}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
 
           <div className="flex flex-col gap-8 md:gap-10">
             {/* Mobile Layout (Cards) */}
             <div className="block lg:hidden">
-              <IncomeMobileView
-                activeYearData={activeYearData}
-                calculatedMonths={actualCalculatedMonths}
-                yearlyTotals={yearlyTotals}
-                expandedQuarters={expandedQuarters}
-                onToggleQuarter={(qIndex) => setExpandedQuarters(prev => ({ ...prev, [qIndex]: !prev[qIndex] }))}
-                handleAnnualBonusChange={handleAnnualBonusChange}
-                handleQuarterChange={handleQuarterChange}
-                handleMonthChange={handleMonthChange}
-                onApplyBaseToAll={() => handleAnnualBonusChange('applyBaseToAll', 0)}
-                isPrivate={isPrivate}
-              />
+              {activeYearData.v2 && (
+                <IncomeMobileView
+                  activeYearData={activeYearData}
+                  calculatedMonths={calculatedMonths}
+                  yearlyTotals={yearlyTotals}
+                  expandedQuarters={expandedQuarters}
+                  onToggleQuarter={(qIndex) => setExpandedQuarters(prev => ({ ...prev, [qIndex]: !prev[qIndex] }))}
+                  handleAnnualBonusChange={handleAnnualBonusChange}
+                  handleQuarterChange={handleQuarterChange}
+                  handleMonthChange={handleMonthChange}
+                  onValueChange={(index, colId, value) => {
+                    setState(prev => {
+                      const newYears = { ...prev.years };
+                      const currentYear = newYears[prev.activeYear];
+                      if (!currentYear.v2) return prev;
+                      const newMonths = [...currentYear.v2.months];
+                      newMonths[index] = { 
+                        ...newMonths[index], 
+                        values: { ...newMonths[index].values, [colId]: value } 
+                      };
+                      newYears[prev.activeYear] = { ...currentYear, v2: { ...currentYear.v2, months: newMonths } };
+                      return { ...prev, years: newYears };
+                    });
+                  }}
+                  onApplyBaseToAll={() => handleAnnualBonusChange('applyBaseToAll', 0)}
+                  isPrivate={isPrivate}
+                  isSimulationOpen={isSimulationOpen}
+                />
+              )}
             </div>
 
             {/* Desktop Layout (Table) */}
             <div className="hidden lg:block">
-              <IncomeDesktopTable
-                yearKey={state.activeYear}
-                activeYearData={activeYearData}
-                calculatedMonths={actualCalculatedMonths}
-                yearlyTotals={yearlyTotals}
-                onBonusBaseChange={(value) => handleAnnualBonusChange('bonusBase', value)}
-                onQuarterCoefChange={(qIndex, value) => handleQuarterChange(qIndex, 'bonusCoef', value)}
-                onAnnualCoefChange={(value) => handleAnnualBonusChange('annualBonusCoef', value)}
-                handleQuarterChange={handleQuarterChange}
-                handleMonthChange={handleMonthChange}
-                handleAnnualBonusChange={handleAnnualBonusChange}
-                onApplyBaseToAll={() => handleAnnualBonusChange('applyBaseToAll', 0)}
-                onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
-                isPrivate={isPrivate}
-              />
+              {activeYearData.v2 && (
+                <IncomeDesktopTable
+                  yearKey={state.activeYear}
+                  activeYearData={activeYearData}
+                  calculatedMonths={calculatedMonths}
+                  yearlyTotals={yearlyTotals}
+                  handleQuarterChange={handleQuarterChange}
+                  handleMonthChange={handleMonthChange}
+                  handleAnnualBonusChange={handleAnnualBonusChange}
+                  onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
+                  isPrivate={isPrivate}
+                  onValueChange={(index, colId, value) => {
+                    setState(prev => {
+                      const newYears = { ...prev.years };
+                      const currentYear = newYears[prev.activeYear];
+                      if (!currentYear.v2) return prev;
+                      
+                      const newMonths = [...currentYear.v2.months];
+                      newMonths[index] = { 
+                        ...newMonths[index], 
+                        values: { ...newMonths[index].values, [colId]: value } 
+                      };
+                      
+                      newYears[prev.activeYear] = {
+                        ...currentYear,
+                        v2: { ...currentYear.v2, months: newMonths }
+                      };
+                      return { ...prev, years: newYears };
+                    });
+                  }}
+                />
+              )}
             </div>
           </div>
         </div>
 
       </div>
+
+      {activeYearData.v2 && (
+        <IncomeTableConfigDialog 
+          isOpen={isV2ConfigOpen}
+          onClose={() => setIsV2ConfigOpen(false)}
+          columns={activeYearData.v2.columns}
+          settings={activeYearData.v2.settings}
+          baseSalary={activeYearData.bonusBase || 0}
+          onSave={(columns, settings, baseSalary, applyBaseToAll) => {
+            setState(prev => {
+              const newYears = { ...prev.years };
+              const currentYear = newYears[prev.activeYear];
+              if (!currentYear.v2) return prev;
+              
+              let newMonths = [...currentYear.months];
+              let newV2Months = [...currentYear.v2.months];
+              
+              if (applyBaseToAll && baseSalary > 0) {
+                newMonths = currentYear.months.map(m => ({ ...m, salary: baseSalary }));
+                newV2Months = currentYear.v2.months.map(m => ({ ...m, salary: baseSalary }));
+              }
+              
+              // Recalculate quarters if bonusBase changed
+              let newQuarters = currentYear.quarters;
+              let newAnnualAmount = settings.showAnnual ? (currentYear.annualBonusAmount || 0) : 0;
+              let newExtraBonusAmount = settings.showExtraAnnual ? (currentYear.extraBonusAmount || 0) : 0;
+              
+              if (baseSalary !== currentYear.bonusBase) {
+                 newQuarters = (currentYear.quarters || Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }))).map((q, qIndex) => {
+                  const qMonths = QUARTERS[qIndex].months.map(mi => newMonths[mi]);
+                  const qNorm = qMonths.reduce((sum, m) => sum + m.normDays, 0);
+                  const qFact = qMonths.reduce((sum, m) => sum + m.factDays, 0);
+                  const krd = qNorm > 0 ? qFact / qNorm : 0;
+                  return {
+                    ...q,
+                    bonusAmount: q.bonusCoef ? Math.round((baseSalary * q.bonusCoef * krd) * 100) / 100 : q.bonusAmount
+                  };
+                });
+                
+                if (settings.showAnnual) {
+                  const yNorm = newMonths.reduce((sum, m) => sum + m.normDays, 0);
+                  const yFact = newMonths.reduce((sum, m) => sum + m.factDays, 0);
+                  const krdg = yNorm > 0 ? yFact / yNorm : 0;
+                  newAnnualAmount = Math.round((baseSalary * (currentYear.annualBonusCoef || 0) * krdg) * 100) / 100;
+                }
+              }
+              
+              newYears[prev.activeYear] = {
+                ...currentYear,
+                bonusBase: baseSalary,
+                months: newMonths,
+                quarters: newQuarters,
+                annualBonusAmount: newAnnualAmount,
+                extraBonusAmount: newExtraBonusAmount,
+                v2: { 
+                  ...currentYear.v2, 
+                  columns,
+                  settings,
+                  months: newV2Months
+                }
+              };
+              return { ...prev, years: newYears };
+            });
+            addToast('Настройки таблицы успешно сохранены');
+          }}
+        />
+      )}
 
       {/* Clear Data Modal */}
       <ClearDataModal 

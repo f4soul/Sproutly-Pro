@@ -214,6 +214,16 @@ export const BANKS: Bank[] = [
     iconOffsetX: 0,
     iconOffsetY: 0,
   },
+  {
+    id: 'finuslugi',
+    name: 'Финуслуги',
+    color: '#FF0203',
+    logoText: 'ФУ',
+    logoUrl: '/logos/finuslugi.svg',
+    iconScale: 1,
+    iconOffsetX: 0,
+    iconOffsetY: 0,
+  },
 ];
 
 export const getAllBanks = async (): Promise<Bank[]> => {

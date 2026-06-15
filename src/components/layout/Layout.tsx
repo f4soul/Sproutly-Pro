@@ -13,8 +13,8 @@ import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar';
-  onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'ndflV2' | 'settings' | 'calendar') => void;
+  activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar';
+  onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => void;
   theme: 'light' | 'dark';
 }
 
@@ -59,10 +59,10 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
     const handleSync = (e: Event) => {
       const customEvent = e as CustomEvent<{ status: 'syncing' | 'success' | 'error'; error?: any }>;
       setSyncStatus(customEvent.detail.status);
-      
+
       clearTimeout(timeoutId);
       clearTimeout(autoClearId);
-      
+
       if (customEvent.detail.status === 'success') {
         timeoutId = setTimeout(() => {
           setSyncStatus('idle');
@@ -70,7 +70,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       } else if (customEvent.detail.status === 'error') {
         const error = customEvent.detail.error;
         let errMsg = 'Ошибка при синхронизации данных';
-        
+
         if (error) {
           const rawMessage = error instanceof Error ? error.message : String(error);
           try {
@@ -91,7 +91,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             errMsg = `Ошибка синхронизации: ${rawMessage}`;
           }
         }
-        
+
         showToast(errMsg, 'error', { duration: 6000 });
       } else if (customEvent.detail.status === 'syncing') {
         // useAppState handles this
@@ -123,7 +123,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
   return (
     <div className={cn(
-      "min-h-[100dvh] flex flex-col md:flex-row transition-colors duration-500", 
+      "min-h-[100dvh] flex flex-col md:flex-row transition-colors duration-500",
       theme === 'dark' ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-950"
     )}>
       {/* Sidebar for Desktop */}
@@ -140,40 +140,32 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         </div>
 
         <nav className="flex flex-col gap-2">
-          <NavItem 
-            active={activeTab === 'dashboard'} 
+          <NavItem
+            active={activeTab === 'dashboard'}
             onClick={() => onTabChange('dashboard')}
             icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
             label="Дашборд"
           />
-          <NavItem 
-            active={activeTab === 'deposits'} 
+          <NavItem
+            active={activeTab === 'deposits'}
             onClick={() => onTabChange('deposits')}
             icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
             label="Активы"
           />
-          <NavItem 
-            active={activeTab === 'calendar'} 
+          <NavItem
+            active={activeTab === 'calendar'}
             onClick={() => onTabChange('calendar')}
             icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />}
             label="График"
           />
-          <NavItem 
-            active={activeTab === 'ndfl'} 
+          <NavItem
+            active={activeTab === 'ndfl'}
             onClick={() => onTabChange('ndfl')}
             icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />}
             label="Доходы"
           />
-          {isAdmin && (
-            <NavItem 
-              active={activeTab === 'ndflV2'} 
-              onClick={() => onTabChange('ndflV2')}
-              icon={<TrendingUp className="w-5 h-5 stroke-[1.5px] text-amber-500" />}
-              label="Доходы V2"
-            />
-          )}
-          <NavItem 
-            active={activeTab === 'settings'} 
+          <NavItem
+            active={activeTab === 'settings'}
             onClick={() => onTabChange('settings')}
             icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />}
             label="Настройки"
@@ -184,21 +176,21 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           {/* New Sync Indicator Desktop */}
           <motion.div
             initial={false}
-            animate={{ 
-              opacity: syncStatus !== 'idle' ? 1 : 0, 
-              height: syncStatus !== 'idle' ? 'auto' : 0, 
+            animate={{
+              opacity: syncStatus !== 'idle' ? 1 : 0,
+              height: syncStatus !== 'idle' ? 'auto' : 0,
               y: syncStatus !== 'idle' ? 0 : 10,
               pointerEvents: syncStatus !== 'idle' ? 'auto' : 'none'
             }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="overflow-hidden"
           >
-            <div 
+            <div
               onClick={handleRetrySync}
               className={cn(
                 "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-all duration-500 relative",
                 syncStatus === 'error' ? "cursor-pointer bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20 hover:bg-rose-100/90 dark:hover:bg-rose-500/20 active:scale-95" :
-                syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" : 
+                  syncStatus === 'syncing' ? "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20" :
                     "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20"
               )}
               title={syncStatus === 'error' ? "Ошибка синхронизации. Нажмите для повторной попытки." : undefined}
@@ -223,11 +215,11 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                 </AnimatePresence>
               </div>
               <span className="md:hidden">
-                {syncStatus === 'syncing' ? 'Синхронизация...' : 
-                 syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
+                {syncStatus === 'syncing' ? 'Синхронизация...' :
+                  syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
               </span>
               {syncStatus === 'error' && (
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setSyncStatus('idle');
@@ -244,20 +236,20 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
             {user ? (
               <Menu as="div" className="relative flex-1">
                 <Menu.Button className="w-full h-10 flex items-center justify-between px-2 bg-transparent hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all cursor-pointer outline-none group">
-                    <div className="relative shrink-0 flex items-center">
-                      <img src={user.photoURL || undefined} alt="" className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+                  <div className="relative shrink-0 flex items-center">
+                    <img src={user.photoURL || undefined} alt="" className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1 ml-3 text-left justify-center">
+                    <div className="truncate text-[12px] font-black leading-tight text-slate-950 dark:text-white">
+                      {user.displayName ? (user.displayName.split(' ').length > 1 ? `${user.displayName.split(' ')[0][0].toUpperCase()}. ${user.displayName.split(' ').slice(1).join(' ')}` : user.displayName) : user.email?.split('@')[0]}
                     </div>
-                    <div className="flex flex-col min-w-0 flex-1 ml-3 text-left justify-center">
-                      <div className="truncate text-[12px] font-black leading-tight text-slate-950 dark:text-white">
-                        {user.displayName ? (user.displayName.split(' ').length > 1 ? `${user.displayName.split(' ')[0][0].toUpperCase()}. ${user.displayName.split(' ').slice(1).join(' ')}` : user.displayName) : user.email?.split('@')[0]}
+                    {user.displayName && (
+                      <div className="text-[8px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                        {user.email}
                       </div>
-                      {user.displayName && (
-                        <div className="text-[8px] font-semibold text-slate-500 dark:text-slate-400 truncate">
-                          {user.email}
-                        </div>
-                      )}
-                    </div>
-                  </Menu.Button>
+                    )}
+                  </div>
+                </Menu.Button>
                 <Transition
                   as={Fragment}
                   enter="transition ease-out duration-100"
@@ -268,60 +260,60 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                   leaveTo="transform opacity-0 scale-95 translate-y-2"
                 >
                   <Menu.Items className="absolute bottom-full mb-2 left-0 min-w-[220px] w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={(e) => { 
-                          e.preventDefault(); 
-                          setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150); 
-                        }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                          active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
-                        )}
-                      >
-                        <Sparkles className="w-5 h-5 shrink-0" />
-                        <span>Что нового?</span>
-                      </button>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={() => setShowLogoutConfirm(true)}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                          active ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600" : "text-rose-500"
-                        )}
-                      >
-                        <LogOut className="w-5 h-5 shrink-0" />
-                        <span>Выйти из аккаунта</span>
-                      </button>
-                    )}
-                  </Menu.Item>
-                </Menu.Items>
-              </Transition>
-            </Menu>
-          ) : (
-            <button 
-              onClick={signInWithGoogle}
-              className="apple-button flex-1 flex items-center justify-center gap-3 px-6 h-10 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500 text-white font-bold text-sm shadow-lg shadow-primary-500/20 rounded-xl"
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150);
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                            active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
+                          )}
+                        >
+                          <Sparkles className="w-5 h-5 shrink-0" />
+                          <span>Что нового?</span>
+                        </button>
+                      )}
+                    </Menu.Item>
+                    <Menu.Item>
+                      {({ active }) => (
+                        <button
+                          onClick={() => setShowLogoutConfirm(true)}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                            active ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600" : "text-rose-500"
+                          )}
+                        >
+                          <LogOut className="w-5 h-5 shrink-0" />
+                          <span>Выйти из аккаунта</span>
+                        </button>
+                      )}
+                    </Menu.Item>
+                  </Menu.Items>
+                </Transition>
+              </Menu>
+            ) : (
+              <button
+                onClick={signInWithGoogle}
+                className="apple-button flex-1 flex items-center justify-center gap-3 px-6 h-10 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500 text-white font-bold text-sm shadow-lg shadow-primary-500/20 rounded-xl"
+              >
+                <User className="w-4 h-4 stroke-[2px]" />
+                Войти
+              </button>
+            )}
+
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-transparent text-slate-500 dark:text-slate-400 transition-all hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 group shrink-0"
+              title={theme === 'light' ? 'Включить темную тему' : 'Включить светлую тему'}
             >
-              <User className="w-4 h-4 stroke-[2px]" />
-              Войти
+              {theme === 'light' ? <Moon className="w-5 h-5 stroke-[1.5px]" /> : <Sun className="w-5 h-5 stroke-[1.5px]" />}
             </button>
-          )}
-
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" />
-
-          <button 
-            onClick={toggleTheme}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-transparent text-slate-500 dark:text-slate-400 transition-all hover:bg-white dark:hover:bg-slate-700 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 group shrink-0"
-            title={theme === 'light' ? 'Включить темную тему' : 'Включить светлую тему'}
-          >
-            {theme === 'light' ? <Moon className="w-5 h-5 stroke-[1.5px]" /> : <Sun className="w-5 h-5 stroke-[1.5px]" />}
-          </button>
-        </div>
+          </div>
         </div>
       </aside>
 
@@ -330,21 +322,21 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         {/* Mobile Sync Indicator */}
         <motion.div
           initial={false}
-          animate={{ 
-            y: syncStatus !== 'idle' ? 0 : -20, 
-            opacity: syncStatus !== 'idle' ? 1 : 0, 
+          animate={{
+            y: syncStatus !== 'idle' ? 0 : -20,
+            opacity: syncStatus !== 'idle' ? 1 : 0,
             scale: syncStatus !== 'idle' ? 1 : 0.95,
             pointerEvents: syncStatus !== 'idle' ? 'auto' : 'none'
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="fixed top-[calc(5rem+12px)] left-1/2 -translate-x-1/2 z-[60]"
         >
-          <div 
+          <div
             onClick={handleRetrySync}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-all duration-500 relative",
-              syncStatus === 'error' ? "cursor-pointer bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20 hover:bg-rose-600/95 active:scale-95 animate-pulse-once" : 
-              syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" : 
+              syncStatus === 'error' ? "cursor-pointer bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20 hover:bg-rose-600/95 active:scale-95 animate-pulse-once" :
+                syncStatus === 'syncing' ? "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20" :
                   "bg-primary-500/90 text-white border-primary-400/50 shadow-primary-500/20"
             )}
           >
@@ -368,11 +360,11 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
               </AnimatePresence>
             </div>
             <span>
-              {syncStatus === 'syncing' ? 'Синхронизация...' : 
-               syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
+              {syncStatus === 'syncing' ? 'Синхронизация...' :
+                syncStatus === 'error' ? 'Ошибка. Повторить?' : 'Синхронизировано'}
             </span>
             {syncStatus === 'error' && (
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setSyncStatus('idle');
@@ -385,11 +377,12 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           </div>
         </motion.div>
 
-        <motion.header 
+        <motion.header
           initial={false}
           animate={{ y: isMobileHeaderHidden ? -100 : 0, opacity: isMobileHeaderHidden ? 0 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed top-4 left-4 right-4 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 z-50 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+          className="md:hidden fixed z-[60] left-4 right-4 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+          style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
         >
           <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => onTabChange('dashboard')}>
             <div className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/50 dark:border-white/10 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary-500/10 shrink-0">
@@ -399,132 +392,151 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
               SPROUTLY<span className="inline-block w-1 h-1 bg-primary-500 rounded-full animate-pulse mx-0.5" />PRO
             </span>
           </div>
-          
+
           <div className="flex items-center shrink-0">
             <Menu as="div" className="relative">
               {({ open }) => (
                 <>
-              <Menu.Button className="w-10 h-10 flex items-center justify-center relative rounded-xl bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-90 shadow-sm shrink-0 outline-none">
-                <div className="w-5 h-5 flex flex-col justify-center items-center relative">
-                  <span className={cn("absolute h-[1.5px] w-4 rounded-full bg-current transition-transform duration-300", open ? "rotate-45" : "-translate-y-1")} />
-                  <span className={cn("absolute h-[1.5px] w-4 rounded-full bg-current transition-transform duration-300", open ? "-rotate-45" : "translate-y-1")} />
-                </div>
-              </Menu.Button>
-            <Transition
-              as={Fragment}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95 translate-y-2"
-              enterTo="transform opacity-100 scale-100 translate-y-0"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100 translate-y-0"
-              leaveTo="transform opacity-0 scale-95 translate-y-2"
-            >
-              <Menu.Items className="absolute right-0 mt-2 min-w-[240px] w-max bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
-                {user ? (
-                  <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100 dark:border-slate-800/50 mb-1.5">
-                    <img src={user.photoURL || undefined} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm" referrerPolicy="no-referrer" />
-                    <div className="flex flex-col min-w-0">
-                      <div className="truncate text-[14px] font-black leading-tight text-slate-950 dark:text-white">
-                        {user.displayName || user.email?.split('@')[0]}
-                      </div>
-                      {user.displayName && (
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-[1px]">
-                          {user.email}
+                  <Menu.Button
+                    className={cn(
+                      "w-10 h-10 flex items-center justify-center relative rounded-xl border shrink-0 outline-none",
+                      "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] active:scale-95",
+                      open
+                        ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-white border-slate-300 dark:border-slate-700 shadow-md"
+                        : "bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800/50 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100 shadow-sm"
+                    )}
+                    aria-label={open ? "Закрыть меню" : "Открыть меню"}
+                  >
+                    <div className="w-5 h-5 flex flex-col justify-center items-center relative text-current select-none pointer-events-none">
+                      <span className={cn(
+                        "absolute h-[1.5px] rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                        open ? "w-5 rotate-45 translate-y-0" : "w-4 -translate-y-1"
+                      )} />
+                      <span className={cn(
+                        "absolute h-[1.5px] rounded-full bg-current transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                        open ? "w-5 -rotate-45 translate-y-0" : "w-4 translate-y-1"
+                      )} />
+                    </div>
+                  </Menu.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95 translate-y-2"
+                    enterTo="transform opacity-100 scale-100 translate-y-0"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100 translate-y-0"
+                    leaveTo="transform opacity-0 scale-95 translate-y-2"
+                  >
+                    <Menu.Items className="absolute right-0 mt-2 min-w-[240px] w-max bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
+                      {user ? (
+                        <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100 dark:border-slate-800/50 mb-1.5">
+                          <img src={user.photoURL || undefined} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm" referrerPolicy="no-referrer" />
+                          <div className="flex flex-col min-w-0">
+                            <div className="truncate text-[14px] font-black leading-tight text-slate-950 dark:text-white">
+                              {user.displayName || user.email?.split('@')[0]}
+                            </div>
+                            {user.displayName && (
+                              <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate mt-[1px]">
+                                {user.email}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="px-1 py-1 mb-1.5 border-b border-slate-100 dark:border-slate-800/50">
+                          <button
+                            onClick={() => { signInWithGoogle(); }}
+                            className="w-full h-10 flex items-center justify-center gap-3 bg-primary-500 hover:bg-primary-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
+                          >
+                            <User className="w-4 h-4 stroke-[2px]" />
+                            Войти
+                          </button>
                         </div>
                       )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="px-1 py-1 mb-1.5 border-b border-slate-100 dark:border-slate-800/50">
-                    <button 
-                      onClick={() => { signInWithGoogle(); }}
-                      className="w-full h-10 flex items-center justify-center gap-3 bg-primary-500 hover:bg-primary-600 text-white font-bold text-sm rounded-xl shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
-                    >
-                      <User className="w-4 h-4 stroke-[2px]" />
-                      Войти
-                    </button>
-                  </div>
-                )}
-                
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={(e) => { e.preventDefault(); toggleTheme(); }}
-                      className={cn(
-                        "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                        active ? "bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white" : "text-slate-600 dark:text-slate-300"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        {theme === 'light' ? <Moon className="w-5 h-5 shrink-0" /> : <Sun className="w-5 h-5 shrink-0" />}
-                        <span>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>
-                      </div>
-                    </button>
-                  )}
-                </Menu.Item>
-                
-                <Menu.Item>
-                  {({ active }) => (
-                    <button
-                      onClick={(e) => { 
-                        e.preventDefault(); 
-                        setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150); 
-                      }}
-                      className={cn(
-                        "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                        active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Sparkles className="w-5 h-5 shrink-0" />
-                        <span>Что нового?</span>
-                      </div>
-                    </button>
-                  )}
-                </Menu.Item>
-                
-                {user && (
-                  <Menu.Item>
-                    {({ active }) => (
-                      <button
-                        onClick={(e) => { e.preventDefault(); setShowLogoutConfirm(true); }}
-                        className={cn(
-                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap mt-1 border-t border-slate-100 dark:border-slate-800/50 pt-2.5",
-                          active ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600" : "text-rose-500"
+
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={(e) => { e.preventDefault(); toggleTheme(); }}
+                            className={cn(
+                              "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                              active ? "bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white" : "text-slate-600 dark:text-slate-300"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              {theme === 'light' ? <Moon className="w-5 h-5 shrink-0" /> : <Sun className="w-5 h-5 shrink-0" />}
+                              <span>{theme === 'light' ? 'Темная тема' : 'Светлая тема'}</span>
+                            </div>
+                          </button>
                         )}
-                      >
-                        <LogOut className="w-5 h-5 shrink-0" />
-                        <span>Выйти из аккаунта</span>
-                      </button>
-                    )}
-                  </Menu.Item>
-                )}
-              </Menu.Items>
-            </Transition>
-              </>
-            )}
-          </Menu>
-        </div>
-      </motion.header>
+                      </Menu.Item>
+
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150);
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                              active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Sparkles className="w-5 h-5 shrink-0" />
+                              <span>Что нового?</span>
+                            </div>
+                          </button>
+                        )}
+                      </Menu.Item>
+
+                      {user && (
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              onClick={(e) => { e.preventDefault(); setShowLogoutConfirm(true); }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap mt-1 border-t border-slate-100 dark:border-slate-800/50 pt-2.5",
+                                active ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600" : "text-rose-500"
+                              )}
+                            >
+                              <LogOut className="w-5 h-5 shrink-0" />
+                              <span>Выйти из аккаунта</span>
+                            </button>
+                          )}
+                        </Menu.Item>
+                      )}
+                    </Menu.Items>
+                  </Transition>
+                </>
+              )}
+            </Menu>
+          </div>
+        </motion.header>
       </div>
 
       {/* Bottom Nav for Mobile */}
-      <nav className="md:hidden fixed bottom-4 inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-50 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
+      <nav
+        className="md:hidden fixed inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[60] rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+      >
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
         <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
-        {isAdmin && <MobileNavItem active={activeTab === 'ndflV2'} onClick={() => onTabChange('ndflV2')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px] text-amber-500" />} label="V2" />}
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
-      <main className={cn(
-        "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
-        "px-2 sm:px-4 md:px-6 lg:px-8",
-        activeTab === 'calendar' 
-          ? "pt-24 md:pt-4 lg:pt-5 pb-[104px] md:pb-6 lg:pb-6 min-h-[100dvh]" 
-          : "pt-24 md:pt-6 lg:pt-8 pb-32 md:pb-12 min-h-[100dvh]"
-      )}>
+      <main
+        className={cn(
+          "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
+          "px-2 sm:px-4 md:px-6 lg:px-8",
+          activeTab === 'calendar'
+            ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-4 lg:pt-5 pb-[104px] md:pb-6 lg:pb-6 min-h-[100dvh]"
+            : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-6 lg:pt-8 pb-32 md:pb-12 min-h-[100dvh]"
+        )}
+      >
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div
             key={activeTab}
@@ -619,17 +631,17 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
 
 function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
-    <button 
+    <button
       onClick={onClick}
       className={cn(
         "flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-semibold text-sm w-full group cursor-pointer border relative overflow-hidden",
-        active 
-          ? "bg-slate-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 shadow-sm border-slate-200 dark:border-primary-500/20" 
+        active
+          ? "bg-slate-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 shadow-sm border-slate-200 dark:border-primary-500/20"
           : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200 border-transparent dark:border-transparent"
       )}
     >
       {active && (
-         <motion.div layoutId="activeNavTabBg" className="absolute inset-0 bg-white dark:bg-primary-500/5" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeNavTabBg" className="absolute inset-0 bg-white dark:bg-primary-500/5" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
       <div className="flex items-center gap-3 mx-0 relative z-10">
         <div className={cn(
@@ -641,7 +653,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
         <span className="block">{label}</span>
       </div>
       {active && (
-         <motion.div layoutId="activeNavTab" className="absolute left-0 w-1.5 h-6 bg-primary-500 rounded-r-full z-10" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeNavTab" className="absolute left-0 w-1.5 h-6 bg-primary-500 rounded-r-full z-10" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
     </button>
   );
@@ -650,11 +662,11 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
 function MobileNavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button onClick={onClick} className={cn(
-      "flex flex-col items-center justify-center relative w-16 h-14 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden z-10", 
+      "flex flex-col items-center justify-center relative w-16 h-14 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden z-10",
       active ? "text-primary-600 dark:text-primary-400" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
     )}>
       {active && (
-         <motion.div layoutId="activeMobileNavBg" className="absolute inset-0 bg-slate-50 dark:bg-primary-500/10 border border-slate-200 dark:border-primary-500/20 rounded-xl" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeMobileNavBg" className="absolute inset-0 bg-slate-50 dark:bg-primary-500/10 border border-slate-200 dark:border-primary-500/20 rounded-xl" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
       <div className={cn(
         "relative z-10 flex flex-col items-center gap-1 transition-transform duration-300",

@@ -359,7 +359,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                     {renderSortIndicator('total')}
                   </span>
                 </th>
-                <th className="pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 w-[84px] xl:w-[100px] sticky right-0 bg-white dark:bg-slate-950 z-10"></th>
+                <th className="pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 w-[84px] xl:w-[100px] sticky right-0 bg-white dark:bg-slate-950 z-10 font-bold uppercase tracking-widest text-[9px]">&nbsp;</th>
               </tr>
             </thead>
             <tbody className="[&>tr>td]:border-b [&>tr:last-child>td]:border-b-0 [&>tr>td]:border-slate-200 dark:[&>tr>td]:border-slate-800">

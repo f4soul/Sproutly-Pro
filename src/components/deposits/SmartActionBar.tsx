@@ -430,8 +430,8 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                                 onClick={() => exportToImage('', filteredDeposits)}
                                 className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                               >
-                                <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                                  <ImageIcon className="w-3.5 h-3.5 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
+                                <div className="w-7 h-7 rounded-lg bg-deposit-50 dark:bg-deposit-500/10 flex items-center justify-center">
+                                  <ImageIcon className="w-3.5 h-3.5 text-deposit-500 group-hover/btn:scale-110 transition-transform" />
                                 </div>
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                               </button>
@@ -651,8 +651,8 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               onClick={() => exportToImage('', filteredDeposits)}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
-                              <div className="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center">
-                                <ImageIcon className="w-3 h-3 text-emerald-500 group-hover/btn:scale-110 transition-transform" />
+                              <div className="w-6 h-6 rounded-lg bg-deposit-50 dark:bg-deposit-500/10 flex items-center justify-center">
+                                <ImageIcon className="w-3 h-3 text-deposit-500 group-hover/btn:scale-110 transition-transform" />
                               </div>
                               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                             </button>

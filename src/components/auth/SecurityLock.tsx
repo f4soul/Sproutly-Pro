@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fingerprint, Lock, Shield, X, Delete, AlertTriangle } from 'lucide-react';
+import { Fingerprint, Lock, ShieldUser, X, Delete, AlertTriangle } from 'lucide-react';
 import { verifyBiometricCredential } from '../../lib/biometrics';
 import { cn } from '../../lib/utils';
 import { showToast } from '../../lib/toast';
@@ -143,17 +143,17 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-        className="flex flex-col items-center w-full max-w-sm px-6 h-[100dvh] justify-center pb-20 relative"
+        className="flex flex-col items-center w-full max-w-sm px-6 h-[100dvh] justify-center pb-20 relative pt-[env(safe-area-inset-top)]"
       >
         <div className="w-16 h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-          <Shield size={32} className="stroke-[1.5px]" />
+          <ShieldUser size={32} className="stroke-[1.5px]" />
         </div>
         
-        <h2 className="text-xl font-black uppercase tracking-widest text-slate-900 dark:text-white mb-2">
-          Приложение защищено
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-1.5 text-center">
+          Введите код-пароль
         </h2>
-        <p className="text-sm text-slate-500 mb-8 text-center font-medium">
-          Введите PIN-код для получения доступа<br/>к вашей финансовой информации
+        <p className="text-[13px] sm:text-sm text-slate-500 mb-8 sm:mb-10 text-center font-medium">
+          Для безопасного доступа к финансам
         </p>
 
         {/* PIN Indicators */}
@@ -183,7 +183,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
             <button
               key={num}
               onClick={() => handleNumberClick(num)}
-              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors active:scale-90 mx-auto"
+              className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-all duration-75 active:scale-90 mx-auto"
             >
               {num}
             </button>
@@ -194,7 +194,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
               <button
                 onClick={handleBiometricAuth}
                 disabled={isAuthenticating}
-                className="w-16 h-16 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-colors active:scale-90"
+                className="w-16 h-16 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 active:bg-primary-100 dark:active:bg-primary-900/50 transition-all duration-75 active:scale-90"
               >
                 <Fingerprint size={28} className={cn("stroke-[1.5px]", isAuthenticating && "animate-pulse")} />
               </button>
@@ -203,7 +203,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
           
           <button
             onClick={() => handleNumberClick(0)}
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors active:scale-90 mx-auto"
+            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-all duration-75 active:scale-90 mx-auto"
           >
             0
           </button>
@@ -211,7 +211,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
           <div className="w-16 h-16 flex items-center justify-center mx-auto">
             <button
               onClick={handleDelete}
-              className="w-16 h-16 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors active:scale-90"
+              className="w-16 h-16 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-all duration-75 active:scale-90"
             >
               <Delete size={24} className="stroke-[1.5px]" />
             </button>
@@ -222,7 +222,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
           onClick={() => setShowForgotPinTheme(true)}
           className="absolute bottom-8 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest"
         >
-          Забыли PIN?
+          Забыли код?
         </button>
       </motion.div>
 
@@ -252,12 +252,12 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
                     </div>
                     <div>
                       <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white leading-none">
-                        Сброс PIN-кода
+                        Сброс код-пароля
                       </h3>
                     </div>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                    Сброс PIN-кода приведет к <strong className="text-rose-500">полному удалению</strong> всех локальных данных приложения.
+                    Сброс код-пароля приведет к <strong className="text-rose-500">полному удалению</strong> всех локальных данных приложения.
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
                     Если вы пользовались облачной синхронизацией, ваши данные остались в облаке, и вы сможете восстановить их при повторном входе в аккаунт. Разрешить сброс?

@@ -46,6 +46,8 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 ## 6. Layouts & Structure
 - **Scrollbars**: Hide default system scrollbars on custom horizontal/vertical scrolling containers using `[&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]`.
 - **Action Blocks**: Group related actions (like close buttons, navigation) consistently in top-right or logical corners with a unified background block.
+- **Selects and Dropdowns**: Never use native `<select>` tags because they cannot be fully styled natively. Always use `@headlessui/react` `Listbox` (with `Transition` and `lucide-react` icons like `ChevronDown` and `Check`) combined with Tailwind glassmorphism/styles to ensure drop-downs match the exact design language of the rest of the application.
+- **Segmented Controls (Toggles)**: Whenever inline tabular choices are needed (e.g. types of calculation, visual tabs), DO NOT use standard select drop-downs. Use a `SegmentedControl` styled similarly to the dashboard tabs: a pill shape container (`rounded-xl` or `rounded-2xl` with `bg-slate-100/80` / `bg-slate-900/80`) and an internal sliding `motion.div` background pill utilizing `layoutId` from Framer Motion. Text should be small, bold, and uppercase with wide tracking.
 
 ## Rule of Thumb for AI Agents:
 When asked to build or modify a new component, **DO NOT** use standard default Tailwind (like basic square buttons or generic flat grey backgrounds). Blend it with the glassmorphism, rounded corners, and deposit-accented design rules defined above so it feels like a native part of the Sproutly.Pro platform.
@@ -54,11 +56,18 @@ When asked to build or modify a new component, **DO NOT** use standard default T
 
 ## 7. Release Notes & Changelog (MANDATORY FOR ALL AGENTS)
 **CRITICAL INSTRUCTION FOR ALL AI MODELS:**
-Whenever you implement a meaningful, non-trivial feature, enhancement, or major bug fix, you **MUST** update the application's Release Notes history. 
+Whenever you implement a meaningful, user-facing feature, enhancement, or major bug fix, you **MUST** update `src/data/changelog.ts` (or the designated changelog file in the project).
 
-- **Where to log:** Update the `src/data/changelog.ts` file (or the designated changelog file in the project).
-- **What to log:** Add a new entry detailing the change in user-friendly language. DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes. ONLY log user-facing features and important updates.
-- **Format:** Use the existing array structure in the changelog file. For new versions, increment the version number appropriately (e.g., from `1.0.0` to `1.1.0` or `1.0.1`).
+- **Log Logically, Not Literally:** DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes. Group minor visual adjustments into single, comprehensive bullet points (e.g., "UI enhancements across dashboard and modals" instead of listing 5 different margin changes).
+- **Version Control:** DO NOT create a new version number for every small prompt. If you are continuing work on an ongoing feature in the current session, **append** your changes to the latest existing version block in the array. Increment the version (e.g., from `1.6.28` to `1.6.29`) ONLY when starting a fresh, logically distinct update cycle.
+- **Format & Tone:** Write in clear, professional Russian. Categorize under `features`, `improvements`, or `fixes`. Keep entries focused on the *value* delivered to the user.
 - **Why:** This project uses an active user base, and showing them a beautifully formatted "What's New" popup after updates is critical for adoption and transparency.
 
 **Never forget to log your major implementations here without the user having to remind you.**
+
+---
+
+## 8. PWA & Mobile Responsiveness
+- **Safe Areas**: Always respect iOS notches and home indicators. Use Tailwind's `pb-safe`, `pt-safe`, or `min-h-screen` combined with proper safe-area-insets for fullscreen modals and bottom sheets.
+- **Dynamic Theme Color**: When implementing theme switchers (Light/Dark), ensure the `<meta name="theme-color">` tag is dynamically updated via JavaScript (e.g., `#090D16` for dark, `#F2F2F7` for light) so the PWA standalone header matches the UI.
+- **Modals on Mobile**: On screens `< sm`, modals should generally behave as Bottom Sheets (anchored to the bottom, 100% width, rounded top corners) to improve thumb reachability.
