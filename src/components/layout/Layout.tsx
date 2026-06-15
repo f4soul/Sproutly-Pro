@@ -533,8 +533,8 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
           "px-2 sm:px-4 md:px-6 lg:px-8",
           activeTab === 'calendar'
-            ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-4 lg:pt-5 pb-[104px] md:pb-6 lg:pb-6 min-h-[100dvh]"
-            : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-6 lg:pt-8 pb-32 md:pb-12 min-h-[100dvh]"
+            ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1rem)] lg:pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[104px] md:pb-6 lg:pb-6 min-h-[100dvh]"
+            : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-32 md:pb-12 min-h-[100dvh]"
         )}
       >
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
