@@ -285,15 +285,23 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
             !isPresent 
               ? "duration-100 opacity-0 scale-75 pointer-events-none" 
               : (isAnalyticsExpanded 
-                ? "bottom-[92px] md:bottom-[140px] opacity-0 scale-50 pointer-events-none translate-y-4 duration-300" 
+                ? "opacity-0 scale-50 pointer-events-none translate-y-4 duration-300" 
                 : cn(
-                    "bottom-[180px] md:bottom-[140px] duration-300",
+                    "duration-300",
                     isScrolling
                       ? "opacity-20 scale-90 pointer-events-none"
                       : "opacity-100 scale-100"
                   )
                 )
           )}
+          style={{
+            bottom: isAnalyticsExpanded
+              ? 'calc(env(safe-area-inset-bottom, 0px) + 94px)'
+              : (filteredDeposits.length > 0
+                ? 'calc(env(safe-area-inset-bottom, 0px) + 162px)'
+                : 'calc(env(safe-area-inset-bottom, 0px) + 94px)'
+              )
+          }}
         >
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -530,18 +538,20 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       {filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
-            "block lg:hidden fixed z-[60] pointer-events-none drop-shadow-xl transition-all mx-auto",
-            "bottom-[92px] inset-x-4 max-w-sm",
-            "md:bottom-8 md:inset-x-auto md:left-[18.5rem] md:right-6 md:max-w-none md:max-w-6xl",
+            "block lg:hidden fixed z-[60] pointer-events-none transition-all mx-auto inset-x-4 max-w-sm",
+            "md:inset-x-auto md:left-[18.5rem] md:right-6 md:max-w-none md:max-w-6xl",
             !isPresent 
               ? "duration-100 opacity-0 scale-95 translate-y-4" 
               : "duration-300"
           )}
+          style={{
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 85px)'
+          }}
         >
           <div
             className={cn(
               "w-full pointer-events-auto overflow-hidden",
-              "border border-slate-200/70 dark:border-white/[0.1] shadow-[0_24px_60px_rgba(0,0,0,0.35)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.75)] backdrop-blur-3xl transition-all duration-300 ease-in-out cursor-pointer",
+              "border border-slate-200/70 dark:border-white/[0.1] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-3xl transition-all duration-300 ease-in-out cursor-pointer",
               isAnalyticsExpanded
                 ? "bg-white/98 dark:bg-slate-950/98 rounded-2xl"
                 : "bg-white/98 dark:bg-slate-900/98 rounded-2xl hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98]"

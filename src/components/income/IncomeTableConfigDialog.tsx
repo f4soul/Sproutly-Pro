@@ -333,7 +333,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90dvh] sm:max-h-[85vh] pointer-events-auto overflow-hidden"
+            className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[94dvh] sm:max-h-[85vh] pointer-events-auto overflow-hidden"
           >
                 {/* Decorative Ambient Lighting */}
                 <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary-500/20 dark:bg-primary-500/10 blur-[80px] rounded-full mt-4 ml-4 mix-blend-screen pointer-events-none" />
@@ -402,7 +402,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
           </div>
 
           {/* Body */}
-          <div className="relative w-full flex-1 shrink min-h-[300px] sm:min-h-[400px] h-[65vh] sm:h-[60vh] max-h-[600px] overflow-hidden">
+          <div className="relative w-full flex-1 shrink min-h-[300px] sm:min-h-[400px] h-[78vh] sm:h-[60vh] max-h-[720px] sm:max-h-[600px] overflow-hidden">
             <AnimatePresence mode="wait">
               {activeTab === 'main' && (
                 <motion.div

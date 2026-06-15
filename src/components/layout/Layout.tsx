@@ -519,7 +519,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       {/* Bottom Nav for Mobile */}
       <nav
         className="md:hidden fixed inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[60] rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 16px)' }}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
       >
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
