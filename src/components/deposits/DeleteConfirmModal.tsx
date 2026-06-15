@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, useEffect, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
 import { Trash2 } from 'lucide-react';
 import { Deposit } from '../../types';
@@ -15,8 +15,9 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   onConfirm,
   onCancel
 }) => {
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
   return (
-    <Dialog as="div" className="relative z-[9999]" open={true} onClose={onCancel} static>
+    <Dialog as="div" className="relative z-[9999]" open={true} onClose={onCancel} initialFocus={cancelButtonRef} static>
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -43,6 +44,7 @@ export const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button
+                ref={cancelButtonRef}
                 onClick={onCancel}
                 className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide flex items-center justify-center"
               >

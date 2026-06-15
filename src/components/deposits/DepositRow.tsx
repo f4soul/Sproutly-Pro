@@ -305,7 +305,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({
                 e.stopPropagation();
                 onEdit();
               }}
-              className="p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
+              onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
               title="Редактировать"
             >
               <Edit2 className="w-3.5 h-3.5 stroke-[1.5px]" />
@@ -315,7 +315,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({
                 e.stopPropagation();
                 onDelete();
               }}
-              className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
+              onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
               title="В архив"
             >
               <Trash2 className="w-3.5 h-3.5 stroke-[1.5px]" />

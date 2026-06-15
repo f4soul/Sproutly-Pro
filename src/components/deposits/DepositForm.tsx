@@ -347,6 +347,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
   const [bankToDelete, setBankToDelete] = useState<string | number | null>(
     null,
   );
+  const cancelDeleteBankRef = useRef<HTMLButtonElement>(null);
 
   const confirmDeleteBank = async () => {
     if (!bankToDelete) return;
@@ -808,6 +809,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                           <>
                                             <button
                                               type="button"
+                                              onPointerDown={(e) => {
+                                                e.stopPropagation();
+                                              }}
+                                              onTouchStart={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                handleEditBank(e as any, bank);
+                                              }}
                                               onClick={(e) =>
                                                 handleEditBank(e, bank)
                                               }
@@ -1408,6 +1417,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             className="relative z-[150]"
             open={true}
             onClose={() => setBankToDelete(null)}
+            initialFocus={cancelDeleteBankRef}
             static
           >
             <motion.div
@@ -1440,6 +1450,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button
                       type="button"
+                      ref={cancelDeleteBankRef}
                       onClick={() => setBankToDelete(null)}
                       className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide flex items-center justify-center"
                     >
