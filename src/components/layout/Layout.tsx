@@ -127,7 +127,13 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
       theme === 'dark' ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-950"
     )}>
       {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex flex-col w-68 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 p-5 lg:p-8 fixed h-full z-40 transition-all duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]">
+      <aside 
+        className="hidden md:flex flex-col w-68 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 px-5 lg:px-8 fixed h-full z-40 transition-all duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]"
+        style={{
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2rem)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)'
+        }}
+      >
         <div className="flex flex-col gap-6 mb-8 lg:mb-12">
           <div className="flex items-center gap-2.5 group cursor-pointer px-0" onClick={() => onTabChange('dashboard')}>
             <div className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/50 dark:border-white/10 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary-500/10 transition-all group-hover:scale-105 active:scale-95 mx-0 shrink-0">
