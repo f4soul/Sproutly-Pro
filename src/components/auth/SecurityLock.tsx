@@ -136,7 +136,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex flex-col items-center justify-center bg-slate-50/95 dark:bg-[#0B0F19]/95 backdrop-blur-2xl"
+      className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0B0F19]"
       style={{ touchAction: 'none' }}
     >
       <motion.div 

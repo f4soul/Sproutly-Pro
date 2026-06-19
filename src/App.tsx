@@ -311,7 +311,7 @@ function AppContent() {
           {isFirstVisit ? (
             <LandingView key="landing" onStart={handleStart} />
           ) : (
-            <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
+            <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
               {activeTab === 'dashboard' && (
                 <UnifiedDashboard 
                   deposits={deposits} 

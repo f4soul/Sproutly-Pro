@@ -243,7 +243,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
              if (tab === 'ndfl') shownThisSession.current.ndfl = false;
           }
         },
-        onPopoverRender: (popover, { state }) => {
+        onPopoverRender: (popover, { state }: any) => {
           const isLastStep = state.isLastStep;
           const isFirstStep = state.activeIndex === 0;
 
@@ -289,7 +289,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
             }
           });
         }
-      });
+      } as any);
 
       document.body.classList.add('overflow-hidden');
       driverInstance.current.drive();

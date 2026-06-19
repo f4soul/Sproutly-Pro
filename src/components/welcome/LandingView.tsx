@@ -17,7 +17,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
         <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[40%] rounded-full bg-teal-500/10 dark:bg-teal-500/10 blur-[100px]" />
       </div>
 
-      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 flex flex-col justify-center min-h-screen">
+      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[calc(3rem+env(safe-area-inset-top,0px))] pb-[calc(2rem+env(safe-area-inset-bottom,0px))] md:py-12 flex flex-col justify-center min-h-screen">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

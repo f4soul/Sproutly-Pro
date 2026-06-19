@@ -16,6 +16,7 @@ interface LayoutProps {
   activeTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar';
   onTabChange: (tab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => void;
   theme: 'light' | 'dark';
+  isLocked?: boolean;
 }
 
 function AnimatedCloudSync({ className }: { className?: string }) {
@@ -34,7 +35,7 @@ function AnimatedCloudSync({ className }: { className?: string }) {
   );
 }
 
-export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps) {
+export function Layout({ children, activeTab, onTabChange, theme, isLocked = false }: LayoutProps) {
   const [user] = useAuthState(auth);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -760,7 +761,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
         </Dialog>
       </Transition>
 
-      <ReleaseNotesDialog />
+      <ReleaseNotesDialog isLocked={isLocked} />
     </div>
   );
 }

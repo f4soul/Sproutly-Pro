@@ -4,21 +4,32 @@ import { Sparkles, CheckCircle2, Star, Bug, X } from 'lucide-react';
 import { changelog } from '../../data/changelog';
 import { cn } from '../../lib/utils';
 import { motion } from 'motion/react';
+import { db } from '../../config/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 
-export function ReleaseNotesDialog() {
+export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isManual, setIsManual] = useState(false);
+  const appSettings = useLiveQuery(() => db.appSettings.get('main'));
 
   const LATEST_VERSION = changelog[0].version;
 
   useEffect(() => {
+    if (isLocked) {
+      setIsOpen(false);
+      return;
+    }
+
     // Check if we need to auto-show it
     const lastSeen = localStorage.getItem('last_seen_version');
     const hasOnboarded = localStorage.getItem('hasOnboarded') === 'true';
 
-    // Only show if user has onboarded AND hasn't seen the latest version
-    if (hasOnboarded && lastSeen !== LATEST_VERSION) {
-      // Delay slightly for dramatic effect
+    // Get current tour completion status
+    const isTourCompleted = appSettings ? appSettings.tourCompleted : false;
+
+    // Only auto-show if user has onboarded AND completed the dashboard tour AND hasn't seen the latest version
+    if (hasOnboarded && isTourCompleted && lastSeen !== LATEST_VERSION) {
+      // Delay slightly for dramatic effect after lock / tour finishes
       const timer = setTimeout(() => {
         setIsOpen(true);
         setIsManual(false);
@@ -33,7 +44,7 @@ export function ReleaseNotesDialog() {
     };
     window.addEventListener('app:show_release_notes', handleOpenNotes);
     return () => window.removeEventListener('app:show_release_notes', handleOpenNotes);
-  }, [LATEST_VERSION]);
+  }, [LATEST_VERSION, isLocked, appSettings]);
 
   const handleClose = () => {
     setIsOpen(false);
