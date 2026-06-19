@@ -61,7 +61,7 @@ export const YearTabs = ({
     <div id="year-tabs-island" className="relative z-30">
       <div className="flex items-center justify-between bg-white dark:bg-slate-950 lg:bg-transparent lg:dark:bg-transparent p-1 lg:p-0 rounded-2xl lg:rounded-none shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] lg:shadow-none border border-slate-200 dark:border-slate-800 lg:border-none w-full">
         {/* Left Elements: Tabs (Desktop) / Dropdown (Mobile) + Add/Del */}
-        <div className="flex items-center gap-1">
+        <div data-tour="income-navigator" className="flex items-center gap-1 rounded-[14px] p-1 -m-1">
           {/* Desktop Tabs: visible only on XL and up */}
           <div className="hidden xl:flex items-center bg-slate-50 dark:bg-slate-900/50 p-0.5 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm gap-0.5 h-9">
             {availableYears.map(year => (
@@ -148,40 +148,20 @@ export const YearTabs = ({
           </div>
         </div>
 
-        {/* Right Elements: Quick Actions + 3 Dots Menu */}
+        {/* Right Elements: 3 Dots Menu */}
         <div className="flex items-center gap-1" ref={mobileMenuRef}>
-          <div className="hidden sm:flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm p-0.5 gap-0.5 h-9">
-            {prevYear !== null && (
-              <button
-                onClick={copyFromPreviousYear}
-                className="flex items-center justify-center h-full px-2 lg:px-3 text-primary-600 dark:text-primary-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none gap-2 text-xs font-bold"
-                title={`Скопировать данные из ${prevYear} года`}
-              >
-                <Copy size={15} />
-                <span className="hidden xl:inline-block">Скопировать из {prevYear}</span>
-                <span className="xl:hidden">Из {prevYear}</span>
-              </button>
-            )}
-            <button
-              onClick={() => setIsClearModalOpen(true)}
-              className="flex items-center justify-center w-[30px] h-full text-rose-600 dark:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none"
-              title="Очистить данные за год"
-            >
-              <BrushCleaning size={15} />
-            </button>
-          </div>
-
-          <div className="w-px h-5 bg-slate-200/50 dark:bg-slate-900 hidden sm:block" />
-
           <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm p-0.5 gap-0.5 h-9">
             <button
               onClick={() => onOpenStructureConfig?.()}
-              className="flex items-center justify-center w-[30px] h-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none"
-              title="Настройки таблицы"
+              data-tour="income-config"
+              className="flex flex-row items-center justify-center px-3 h-full text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none gap-2 font-medium text-xs whitespace-nowrap"
+              title="Настройки"
             >
-              <Bolt size={15} />
+              <Bolt size={14} className="opacity-70" />
+              <span>Настройки</span>
             </button>
             <button
+              data-tour="income-tools"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={cn(
                 "flex items-center justify-center w-[30px] h-full rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative z-20 focus:outline-none active:scale-95",
@@ -244,11 +224,11 @@ export const YearTabs = ({
 
                 <div className="h-px bg-slate-100 dark:bg-white/[0.08] mx-2 my-1"></div>
 
-                {/* Mobile only visible elements like Copy and Clean*/}
+                {/* Actions visible everywhere now */}
                 {prevYear !== null && (
                   <button
                     onClick={() => { copyFromPreviousYear(); setIsMobileMenuOpen(false); }}
-                    className="flex sm:hidden items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-slate-100 transition-colors w-full text-left whitespace-nowrap"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-slate-100 transition-colors w-full text-left whitespace-nowrap"
                   >
                     <div className="p-1.5 rounded-md bg-primary-50 dark:bg-primary-950/10 text-primary-500 dark:text-primary-400"><Copy size={14} /></div>
                     <span>Скопировать из {prevYear}</span>
@@ -257,13 +237,13 @@ export const YearTabs = ({
 
                 <button
                   onClick={() => { setIsClearModalOpen(true); setIsMobileMenuOpen(false); }}
-                  className="flex sm:hidden items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-slate-100 transition-colors w-full text-left whitespace-nowrap"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/10 hover:text-slate-950 dark:hover:text-slate-100 transition-colors w-full text-left whitespace-nowrap"
                 >
                   <div className="p-1.5 rounded-md bg-rose-50 dark:bg-rose-950/10 text-rose-500 dark:text-rose-400"><BrushCleaning size={14} /></div>
                   Очистить таблицу
                 </button>
 
-                <div className="flex sm:hidden h-px bg-slate-100 dark:bg-white/[0.08] mx-2 my-1"></div>
+                <div className="flex h-px bg-slate-100 dark:bg-white/[0.08] mx-2 my-1"></div>
 
                 <button
                   onClick={() => { onExportPDF?.(); setIsMobileMenuOpen(false); }}

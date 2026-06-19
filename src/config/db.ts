@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { Deposit, CashAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord } from '../types';
+import { Deposit, CashAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord, ProductionCalendar } from '../types';
 
 export class MyDepositsDB extends Dexie {
   deposits!: Table<Deposit>;
@@ -8,10 +8,21 @@ export class MyDepositsDB extends Dexie {
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
   incomeState!: Table<any>;
+  calendarData!: Table<ProductionCalendar>;
   deletedQueue!: Table<DeletedRecord>;
 
   constructor() {
     super('MyDepositsDB');
+    this.version(7).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      cashAssets: '++id, userId, name, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      calendarData: 'year',
+      deletedQueue: '++id, collection, docId'
+    });
     this.version(6).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       cashAssets: '++id, userId, name, isArchived',
@@ -229,7 +240,7 @@ export function startRealTimeSync(user: { uid: string }) {
           const remoteData = snapshot.data() as AppSettings;
           const localData = await db.appSettings.get('main');
           if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
-            await db.appSettings.put({ ...remoteData, id: 'main' });
+            await db.appSettings.put({ ...remoteData, id: 'main', userId: user.uid });
           }
         }
       } catch (err) {
@@ -249,7 +260,7 @@ export function startRealTimeSync(user: { uid: string }) {
           const remoteData = snapshot.data();
           const localData = await db.incomeState.get('main');
           if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
-            await db.incomeState.put({ ...remoteData, id: 'main' });
+            await db.incomeState.put({ ...remoteData, id: 'main', userId: user.uid });
           }
         }
       } catch (err) {
@@ -273,7 +284,7 @@ export function startRealTimeSync(user: { uid: string }) {
           } else {
             const localData = await db.taxYearSettings.get(remoteData.year);
             if (!localData || ((remoteData.updatedAt || 0) > (localData.updatedAt || 0))) {
-              await db.taxYearSettings.put(remoteData);
+              await db.taxYearSettings.put({ ...remoteData, userId: user.uid });
             }
           }
         }
@@ -487,15 +498,19 @@ export async function syncWithFirebase() {
     
     const localUpdated = localSettings?.updatedAt || 0;
     const remoteUpdated = remoteSettings?.updatedAt || 1;
+    const isLocalSettingsFromGuest = !localSettings || !localSettings.userId || localSettings.userId === 'guest' || localSettings.userId !== user.uid;
 
-    if (remoteSettings && (!localSettings || localUpdated === 0 || remoteUpdated > localUpdated)) {
-      await db.appSettings.put({ ...remoteSettings, id: 'main' });
+    if (remoteSettings && (isLocalSettingsFromGuest || localUpdated === 0 || remoteUpdated > localUpdated)) {
+      await db.appSettings.put({ ...remoteSettings, id: 'main', userId: user.uid });
     } else if (localSettings && (!remoteSettings || localUpdated > remoteUpdated)) {
       await setDoc(doc(firestore, settingsPath, user.uid), stripUndefined({
         ...localSettings,
         userId: user.uid,
         updatedAt: localUpdated === 0 ? Date.now() : localUpdated
       }));
+      if (isLocalSettingsFromGuest) {
+        await db.appSettings.put({ ...localSettings, id: 'main', userId: user.uid });
+      }
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, settingsPath);
@@ -510,15 +525,19 @@ export async function syncWithFirebase() {
 
     const localUpdated = localIncomeState?.updatedAt || 0;
     const remoteUpdated = remoteIncome?.updatedAt || 1;
+    const isLocalIncomeFromGuest = !localIncomeState || !localIncomeState.userId || localIncomeState.userId === 'guest' || localIncomeState.userId !== user.uid;
 
-    if (remoteIncome && (!localIncomeState || localUpdated === 0 || remoteUpdated > localUpdated)) {
-      await db.incomeState.put({ ...remoteIncome, id: 'main' });
+    if (remoteIncome && (isLocalIncomeFromGuest || localUpdated === 0 || remoteUpdated > localUpdated)) {
+      await db.incomeState.put({ ...remoteIncome, id: 'main', userId: user.uid });
     } else if (localIncomeState && (!remoteIncome || localUpdated > remoteUpdated)) {
       await setDoc(doc(firestore, incomePath, 'income'), stripUndefined({
         ...localIncomeState,
         userId: user.uid,
         updatedAt: localUpdated === 0 ? Date.now() : localUpdated
       }));
+      if (isLocalIncomeFromGuest) {
+        await db.incomeState.put({ ...localIncomeState, id: 'main', userId: user.uid });
+      }
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, incomePath);
@@ -600,9 +619,10 @@ export async function syncWithFirebase() {
       
       const remoteUpdated = remoteData.updatedAt || 1;
       const localUpdated = localData?.updatedAt || 0;
+      const isLocalTaxFromGuest = !localData || !localData.userId || localData.userId === 'guest' || localData.userId !== user.uid;
 
-      if (!localData || remoteUpdated > localUpdated) {
-        await db.taxYearSettings.put(remoteData);
+      if (!localData || isLocalTaxFromGuest || remoteUpdated > localUpdated) {
+        await db.taxYearSettings.put({ ...remoteData, userId: user.uid });
       }
     }
 
@@ -611,14 +631,18 @@ export async function syncWithFirebase() {
       const remoteData = remoteByYear.get(localData.year);
       const localUpdated = localData.updatedAt || 0;
       const remoteUpdated = remoteData?.updatedAt || 1;
+      const isLocalTaxFromGuest = !localData.userId || localData.userId === 'guest' || localData.userId !== user.uid;
 
-      if (!remoteData || localUpdated > remoteUpdated) {
+      if (!remoteData || (!isLocalTaxFromGuest && localUpdated > remoteUpdated)) {
         const firestoreDocId = `${user.uid}_${localData.year}`;
         await setDoc(doc(firestore, taxSettingsPath, firestoreDocId), stripUndefined({
           ...localData,
           userId: user.uid,
           updatedAt: localUpdated === 0 ? Date.now() : localUpdated
         }));
+        if (isLocalTaxFromGuest) {
+          await db.taxYearSettings.put({ ...localData, userId: user.uid });
+        }
       }
     }
   } catch (error) {

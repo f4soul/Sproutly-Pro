@@ -2,7 +2,7 @@ import React, { useState, Fragment, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Trash2, Save, GripVertical, Columns, CalendarDays, CalendarCheck2, Cog } from 'lucide-react';
+import { X, Plus, Trash2, Save, GripVertical, Columns, CalendarDays, CalendarCheck2, Cog, Landmark } from 'lucide-react';
 import { IncomeColumnDef } from '../../types';
 import { cn } from '../../lib/utils';
 import {
@@ -29,8 +29,8 @@ export interface IncomeTableSettings {
   showAnnual?: boolean;
   showMonthly?: boolean;
   showExtraAnnual?: boolean;
-  annualCalcType?: 'rub' | 'percent' | 'coef';
-  extraAnnualCalcType?: 'rub' | 'percent' | 'coef';
+  annualCalcType?: 'rub' | 'percent' | 'coef' | 'percent_annual';
+  extraAnnualCalcType?: 'rub' | 'percent' | 'coef' | 'percent_annual';
   quarterCalcType?: 'rub' | 'percent' | 'coef';
   mainCalcType?: 'rub' | 'percent' | 'coef';
 }
@@ -54,7 +54,7 @@ function SegmentedControl<T extends string>({
             key={opt.value}
             onClick={(e) => { e.preventDefault(); onChange(opt.value); }}
             className={cn(
-              "relative flex-1 flex items-center justify-center text-[9px] sm:text-[10px] font-bold uppercase tracking-wider py-1.5 px-1 sm:px-2 rounded-lg transition-colors duration-200 z-20 outline-none leading-none text-center",
+              "relative flex-1 flex items-center justify-center text-[8px] sm:text-[9px] font-bold uppercase tracking-wider py-1.5 px-1 sm:px-1.5 rounded-lg transition-colors duration-200 z-20 outline-none leading-none text-center",
               isActive 
                 ? "text-slate-900 dark:text-white" 
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -76,12 +76,22 @@ function SegmentedControl<T extends string>({
 }
 
 function PremiumAccordionItem({
-  label, icon, checked, onToggle, calcType, onCalcTypeChange
+  label, icon, checked, onToggle, calcType, onCalcTypeChange, options
 }: {
   label: string; icon: React.ReactNode; checked: boolean; onToggle: (val: boolean) => void;
-  calcType: 'rub' | 'percent' | 'coef'; onCalcTypeChange: (val: 'rub' | 'percent' | 'coef') => void;
+  calcType: string; onCalcTypeChange: (val: any) => void;
+  options?: { label: string, value: string }[];
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const defaultOptions = [
+    { label: 'Сумма (₽)', value: 'rub' },
+    { label: '% от оклада', value: 'percent' },
+    { label: 'Коэф.', value: 'coef' }
+  ];
+  
+  const currentOptions = options || defaultOptions;
+  const currentLabel = currentOptions.find(o => o.value === calcType)?.label || 'Сумма (₽)';
 
   return (
     <div className={cn(
@@ -91,7 +101,7 @@ function PremiumAccordionItem({
         : "border-slate-200 dark:border-white/[0.05] bg-white/50 dark:bg-slate-950/40 hover:border-slate-300 dark:hover:border-white/[0.1]"
     )}>
       <div 
-        className="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer select-none relative"
+        className="flex items-center justify-between p-2 sm:p-2.5 cursor-pointer select-none relative"
         onClick={() => {
            if (checked) {
               setIsExpanded(!isExpanded);
@@ -101,56 +111,52 @@ function PremiumAccordionItem({
            }
         }}
       >
-        <div className="flex items-center gap-3">
-          <button 
-            type="button" 
-            onClick={(e) => { e.stopPropagation(); onToggle(!checked); if (checked) setIsExpanded(false); }}
-            className={cn(
-              "w-5 h-5 ml-1 rounded-[6px] border-2 transition-colors flex items-center justify-center shadow-sm shrink-0",
-              checked ? "bg-primary-500 border-primary-500" : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800"
-            )}
-           >
-            <AnimatePresence>
-              {checked && (
-                 <motion.svg 
-                   initial={{ scale: 0 }}
-                   animate={{ scale: 1 }}
-                   exit={{ scale: 0 }}
-                   className="w-3.5 h-3.5 text-white" 
-                   fill="none" 
-                   viewBox="0 0 24 24" 
-                   stroke="currentColor"
-                 >
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
-                 </motion.svg>
-              )}
-            </AnimatePresence>
-          </button>
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
              <div className={cn(
-               "w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-sm",
-               checked ? "bg-primary-500/20 text-primary-600 dark:text-primary-400" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+               "w-8.5 h-8.5 ml-0.5 rounded-xl flex items-center justify-center transition-colors shadow-sm",
+               checked ? "bg-primary-500 text-white shadow-primary-500/30" : "bg-slate-100 dark:bg-slate-800 text-slate-500"
              )}>
                {icon}
              </div>
-             <div className="flex flex-col">
-               <span className={cn("font-bold text-[13px] tracking-wide uppercase leading-tight", checked ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400")}>
+             <div className="flex flex-col ml-0.5">
+               <span className={cn("font-black text-[11px] sm:text-[12px] tracking-wide uppercase leading-tight", checked ? "text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-400")}>
                  {label}
                </span>
                {checked && (
-                 <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                    {calcType === 'rub' ? 'Сумма (₽)' : calcType === 'percent' ? '% от Оклада' : 'Коэфф'}
+                 <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-primary-500">
+                    {currentLabel}
                  </span>
                )}
              </div>
           </div>
         </div>
         
-        {checked && (
-          <div className={cn("text-slate-400 transition-transform duration-300 mr-2", isExpanded ? "rotate-180" : "")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-          </div>
-        )}
+        <div className="flex items-center gap-3 mr-1">
+          {checked && (
+            <div className={cn("text-slate-400 transition-transform duration-300 bg-slate-100 dark:bg-slate-800 rounded-full p-1", isExpanded ? "rotate-180" : "")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+          )}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={checked}
+            onClick={(e) => { e.stopPropagation(); onToggle(!checked); if (checked) setIsExpanded(false); }}
+            className={cn(
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+              checked ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-700"
+            )}
+          >
+            <span 
+              aria-hidden="true" 
+              className={cn(
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                checked ? "translate-x-2.5" : "-translate-x-2.5"
+              )}
+            />
+          </button>
+        </div>
       </div>
       
       <AnimatePresence>
@@ -161,19 +167,17 @@ function PremiumAccordionItem({
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <div className="px-3 pb-3 pt-1">
-              <div className="p-2 sm:p-3 bg-white/80 dark:bg-slate-950/60 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-800/80 shadow-sm ml-8">
-                <label className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-2 px-1">Тип расчета</label>
-                <div className="h-[34px] sm:h-[38px]">
-                  <SegmentedControl 
-                    options={[
-                      { label: 'Сумма (₽)', value: 'rub' },
-                      { label: '% от оклада', value: 'percent' },
-                      { label: 'Коэфф', value: 'coef' }
-                    ]}
-                    value={calcType}
-                    onChange={onCalcTypeChange}
-                  />
+            <div className="px-3 pb-3">
+              <div className="p-1.5 sm:p-2 bg-white/80 dark:bg-slate-950/60 backdrop-blur-md rounded-xl border border-slate-200/50 dark:border-slate-800/80 shadow-sm">
+                <label className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 block mb-1 px-1">Тип расчета</label>
+                <div className="h-[34px] sm:h-[38px] w-full overflow-x-auto no-scrollbar">
+                  <div className="min-w-max h-full">
+                    <SegmentedControl 
+                      options={currentOptions}
+                      value={calcType}
+                      onChange={onCalcTypeChange}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -271,6 +275,10 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
 
   React.useEffect(() => {
     if (isOpen) {
+      setColumns(initialColumns);
+      setSettings(initialSettings || { showQuarterly: true, showAnnual: true });
+      setBaseSalary(initialBaseSalary);
+      setApplyBaseToAll(false);
       setActiveTab('main');
       document.body.style.overflow = 'hidden';
     } else {
@@ -279,7 +287,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, initialColumns, initialSettings, initialBaseSalary]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -346,8 +354,8 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                 <div className="absolute bottom-[-10%] right-[-10%] w-48 h-48 bg-deposit-500/20 dark:bg-deposit-500/10 blur-[80px] rounded-full pointer-events-none" />
 
                 {/* Header */}
-                <div className="px-5 sm:px-6 top-0 bg-transparent z-20 pt-6 pb-3 shrink-0 relative">
-                  <div className="flex items-center justify-between mb-5">
+                <div className="px-5 sm:px-6 top-0 bg-transparent z-20 pt-5 pb-3 shrink-0 relative">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
                       <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-slate-900 dark:text-white">Настройки</h2>
                       <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium">Сконфигурируйте премии под себя</p>
@@ -419,53 +427,97 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                   transition={{ duration: 0.2, ease: "easeOut" }}
                   className="absolute inset-0 overflow-y-auto px-5 sm:px-6 py-1 sm:py-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 >
-                  <div className="space-y-3 sm:space-y-4">
-                    <div className="p-3 sm:p-4 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 dark:border-white/[0.05] shadow-sm flex flex-col gap-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">Базовый оклад</label>
-                          <div className="text-[11px] text-slate-400 mt-0.5">Для расчетов премий</div>
-                        </div>
-                        <TableInput
-                          value={baseSalary}
-                          onChange={setBaseSalary}
-                          className="w-[124px] sm:w-[140px] bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded-xl px-3 py-1.5 sm:py-2 text-sm sm:text-base outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all font-mono font-bold shadow-inner text-right"
-                        />
-                      </div>
-                      <label className="flex items-center gap-3 cursor-pointer group bg-slate-50/50 dark:bg-slate-950/30 p-2 sm:p-3 rounded-xl border border-transparent hover:border-slate-200/50 dark:hover:border-slate-800/50 transition-colors mt-0.5">
-                        <div className="relative flex items-center justify-center shrink-0">
-                          <input 
-                            type="checkbox" 
-                            checked={applyBaseToAll}
-                            onChange={(e) => setApplyBaseToAll(e.target.checked)}
-                            className="peer sr-only"
-                          />
-                          <div className="w-5 h-5 rounded-[6px] border-2 border-slate-300 dark:border-slate-600 peer-checked:bg-primary-500 peer-checked:border-primary-500 transition-colors flex items-center justify-center shadow-sm bg-white dark:bg-slate-800 peer-checked:dark:bg-primary-500">
-                             <motion.svg 
-                                initial={{ scale: 0 }}
-                                animate={{ scale: applyBaseToAll ? 1 : 0 }}
-                                className="w-3.5 h-3.5 text-white" 
-                                fill="none" 
-                                viewBox="0 0 24 24" 
-                                stroke="currentColor" 
-                                strokeWidth={3.5}
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </motion.svg>
+                  <div className="space-y-2">
+                    <div className={cn(
+                      "relative border transition-all duration-300 rounded-3xl shadow-sm mb-4 overflow-hidden group flex flex-col",
+                      applyBaseToAll
+                        ? "border-teal-500/30 dark:border-teal-400/20 bg-teal-500/[0.04] dark:bg-teal-500/[0.06] shadow-[0_4px_24px_rgba(20,184,166,0.1)]"
+                        : "border-slate-200 dark:border-white/[0.05] bg-white/40 dark:bg-slate-950/40 hover:border-slate-300/80 dark:hover:border-white/[0.1]"
+                    )}>
+                      {/* Subtle decorative glow dot inside card */}
+                      {applyBaseToAll && (
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 dark:bg-teal-400/5 blur-2xl rounded-full -mr-8 -mt-8 pointer-events-none" />
+                      )}
+
+                      <div className="flex px-4 pt-4 pb-2 relative z-10 items-stretch gap-6 md:gap-0">
+                        {/* Left Content Area: Label & Salary Input */}
+                        <div className="flex-1 min-w-0 flex flex-col items-center justify-center gap-2 md:pr-6">
+                          <span className="text-[10px] md:text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 select-none block leading-none">
+                            Базовый оклад
+                          </span>
+                          
+                          <div className="flex items-center bg-slate-500/5 dark:bg-slate-950/60 focus-within:bg-white dark:focus-within:bg-slate-950 rounded-2xl border border-slate-200 dark:border-white/[0.08] focus-within:border-teal-500/30 focus-within:shadow-[0_0_12px_rgba(20,184,166,0.08)] px-3 py-2.5 transition-all w-full">
+                            <TableInput
+                              value={baseSalary}
+                              onChange={setBaseSalary}
+                              className="w-full bg-transparent border-transparent hover:border-transparent focus:border-transparent focus:ring-transparent p-0 text-right pr-1.5 text-xl font-mono font-black text-slate-900 dark:text-white outline-none focus:ring-0 placeholder-slate-300 dark:placeholder-slate-700 h-6 leading-none"
+                              hideDecimals={true}
+                              isInteger={true}
+                            />
+                            <span className="text-sm font-bold text-slate-400 dark:text-slate-500 select-none shrink-0 font-sans pb-0.5">₽</span>
                           </div>
                         </div>
-                        <span className="text-[11px] sm:text-xs font-bold text-slate-600 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors leading-tight">
-                          Заменить оклад во всех месяцах
+
+                        {/* Mid Divider Line (Only on medium screens and up) */}
+                        <div className="hidden md:block w-[1px] bg-slate-250 dark:bg-white/[0.08] self-stretch my-1" />
+
+                        {/* Right Content Area: Toggle Switch */}
+                        <div className="flex flex-col items-center justify-between md:pl-6 text-center shrink-0 min-w-[120px] gap-2">
+                          <span className="text-[10px] md:text-[11px] text-center font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 select-none block leading-none">
+                            Все месяцы
+                          </span>
+
+                          <div className="flex items-center justify-center flex-1">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={applyBaseToAll}
+                              onClick={() => setApplyBaseToAll(!applyBaseToAll)}
+                              className={cn(
+                                "relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none",
+                                applyBaseToAll ? "bg-teal-500 shadow-[0_4px_12px_rgba(20,184,166,0.35)]" : "bg-slate-300 dark:bg-slate-800"
+                              )}
+                            >
+                              <span 
+                                aria-hidden="true" 
+                                className={cn(
+                                  "pointer-events-none inline-block h-5.5 w-5.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                                  applyBaseToAll ? "translate-x-5" : "translate-x-0.5"
+                                )}
+                              />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Dynamic status helper bar */}
+                      <div className={cn(
+                        "px-4 pt-2 pb-4 border-t text-[11px] transition-all duration-300 font-medium relative z-10 flex items-start gap-2",
+                        applyBaseToAll 
+                          ? "bg-teal-500/[0.03] dark:bg-teal-400/[0.01] border-teal-500/10 dark:border-teal-400/5 text-teal-600 dark:text-teal-400" 
+                          : "bg-slate-50/20 dark:bg-slate-950/10 border-slate-100 dark:border-white/[0.02] text-slate-500 dark:text-slate-450"
+                      )}>
+                        <span className="shrink-0 text-sm leading-none">💡</span>
+                        <span>
+                          {applyBaseToAll ? (
+                            <>
+                              Оклады во всех <strong>12 месяцах</strong> года изменятся на <strong>{baseSalary.toLocaleString('ru-RU')} ₽</strong> при сохранении.
+                            </>
+                          ) : (
+                            <>
+                              Оклады в таблице останутся без изменений. Это значение будет шаблоном только для новых месяцев.
+                            </>
+                          )}
                         </span>
-                      </label>
+                      </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
                       <div>
-                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest ml-1">Видимость системных премий</h3>
+                        <h3 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest ml-1 mb-1">Системные премии</h3>
                       </div>
                       
-                      <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-1.5">
                         <PremiumAccordionItem 
                           label="Ежемесячная" 
                           icon={<Columns className="w-4 h-4 stroke-[2.5px]" />}
@@ -489,6 +541,12 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                           onToggle={(val) => setSettings({...settings, showAnnual: val})} 
                           calcType={settings.annualCalcType || 'rub'}
                           onCalcTypeChange={(val) => setSettings({...settings, annualCalcType: val})}
+                          options={[
+                            { label: 'Сумма (₽)', value: 'rub' },
+                            { label: '% оклада', value: 'percent' },
+                            { label: '% годового', value: 'percent_annual' },
+                            { label: 'Коэф.', value: 'coef' }
+                          ]}
                         />
                         <PremiumAccordionItem 
                           label="Дополнительная" 
@@ -497,6 +555,12 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                           onToggle={(val) => setSettings({...settings, showExtraAnnual: val})} 
                           calcType={settings.extraAnnualCalcType || 'rub'}
                           onCalcTypeChange={(val) => setSettings({...settings, extraAnnualCalcType: val})}
+                          options={[
+                            { label: 'Сумма (₽)', value: 'rub' },
+                            { label: '% оклада', value: 'percent' },
+                            { label: '% годового', value: 'percent_annual' },
+                            { label: 'Коэф.', value: 'coef' }
+                          ]}
                         />
                       </div>
                     </div>
@@ -560,16 +624,16 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
           </div>
 
           {/* Footer */}
-          <div className="px-5 sm:px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-4 border-t border-slate-200/50 dark:border-white/[0.05] bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl flex flex-col-reverse sm:flex-row justify-end gap-3 shrink-0 sm:rounded-b-[2.5rem] relative">
+          <div className="px-5 sm:px-6 pt-3 sm:pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] sm:pb-4 border-t border-slate-200/50 dark:border-white/[0.05] bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0 sm:rounded-b-[2.5rem] relative">
             <button
               onClick={onClose}
-              className="px-5 py-3 sm:py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-xl transition-colors w-full sm:w-auto"
+              className="px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-xl transition-colors w-full sm:w-auto"
             >
               Отмена
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center justify-center gap-2 px-6 py-3 sm:py-2.5 text-xs sm:text-sm font-bold uppercase tracking-wide text-white bg-primary-600 hover:bg-primary-500 hover:scale-[1.02] active:scale-95 rounded-xl transition-all shadow-lg shadow-primary-600/20 w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 sm:py-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-white bg-primary-600 hover:bg-primary-500 hover:scale-[1.02] active:scale-95 rounded-xl transition-all shadow-lg shadow-primary-600/20 w-full sm:w-auto"
             >
               <Save className="w-4 h-4" />
               Сохранить

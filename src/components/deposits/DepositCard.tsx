@@ -12,8 +12,8 @@ import { getBankDetails } from "../../lib/banks";
 
 interface DepositCardProps {
   deposit: Deposit;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (deposit: Deposit) => void;
+  onDelete: (deposit: Deposit) => void;
   isPrivate?: boolean;
   isLast?: boolean;
 }
@@ -21,7 +21,7 @@ interface DepositCardProps {
 import { BankLogo } from "./BankLogo";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 
-export const DepositCard: React.FC<DepositCardProps> = ({
+export const DepositCard: React.FC<DepositCardProps> = React.memo(({
   deposit,
   onEdit,
   onDelete,
@@ -260,7 +260,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onEdit();
+                  onEdit(deposit);
                 }}
                 onPointerDown={(e) => e.stopPropagation()} className="apple-button bg-slate-50 dark:bg-slate-800/50 hover:bg-primary-50 dark:hover:bg-deposit-500/10 text-slate-500 hover:text-primary-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
               >
@@ -270,7 +270,7 @@ export const DepositCard: React.FC<DepositCardProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete();
+                  onDelete(deposit);
                 }}
                 onPointerDown={(e) => e.stopPropagation()} className="apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
               >
@@ -282,4 +282,4 @@ export const DepositCard: React.FC<DepositCardProps> = ({
       </div>
     </div>
   );
-};
+});

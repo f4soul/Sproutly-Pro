@@ -7,6 +7,7 @@ import { generateDefaultYear, generateEmptyYear, getDefaultExpandedQuarters } fr
 import { TaxReferenceModal } from './TaxReferenceModal';
 import { ClearDataModal } from '../ui/ClearDataModal';
 import { DeleteYearModal } from './DeleteYearModal';
+import { CopyYearModal } from './CopyYearModal';
 import { ToastContainer } from '../ui/ToastContainer';
 import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
@@ -16,6 +17,7 @@ import { useAppState } from '../../hooks/useAppState';
 import { cn, formatCurrency } from '../../lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../config/db';
+import { CalendarService } from '../../services/CalendarService';
 import { IncomeDesktopTable } from './IncomeDesktopTable';
 import { IncomeMobileView } from './IncomeMobileView';
 import { useIncomeTotals } from '../../hooks/useIncomeTotals';
@@ -40,6 +42,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [expandedQuarters, setExpandedQuarters] = useState<Record<number, boolean>>(() => getDefaultExpandedQuarters(state.activeYear));
   const [isTaxInfoModalOpen, setIsTaxInfoModalOpen] = useState(false);
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
   const [isV2ConfigOpen, setIsV2ConfigOpen] = useState(false);
@@ -63,15 +66,18 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
           newYears[prev.activeYear] = {
             ...currentData,
             v2: {
-              columns: [
-                { id: 'col_bonus', name: 'Ежемесячная премия', type: 'rub', group: 'bonus' },
-                { id: 'col_north', name: 'Северная надбавка', type: 'percent_base', group: 'allowance' },
-              ],
+              columns: [],
+              settings: {
+                showQuarterly: false,
+                showAnnual: false,
+                showMonthly: false,
+                showExtraAnnual: false,
+              },
               months: currentData.months.map(m => ({
                 normDays: m.normDays,
                 factDays: m.factDays,
                 salary: m.salary,
-                values: { 'col_bonus': 0, 'col_north': 0 }
+                values: {}
               }))
             }
           };
@@ -103,7 +109,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   // --- Handlers ---
 
-  const handleMonthChange = (monthIndex: number, field: keyof MonthData, value: number) => {
+  const handleMonthChange = React.useCallback((monthIndex: number, field: keyof MonthData, value: number) => {
     setState(prev => {
       const newYears = { ...prev.years };
       const newMonths = [...newYears[prev.activeYear].months];
@@ -112,14 +118,29 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       newYears[prev.activeYear] = { ...newYears[prev.activeYear], months: newMonths };
       return { ...prev, years: newYears };
     });
-  };
+  }, []);
 
-  const addNewYear = () => {
+  const addNewYear = async () => {
     const newYear = Math.max(...Object.keys(state.years).map(Number)) + 1;
+    
+    // Attempt to fetch correct working days
+    let customNorms: number[] | undefined;
+    try {
+      customNorms = await CalendarService.getWorkingDays(newYear);
+    } catch (e) {
+      console.error(e);
+    }
+
     setState(prev => {
-      const defaultYear = generateDefaultYear(newYear);
+      const defaultYear = generateDefaultYear(newYear, false, customNorms);
       const emptyV2 = {
         columns: [],
+        settings: {
+          showQuarterly: false,
+          showAnnual: false,
+          showMonthly: false,
+          showExtraAnnual: false,
+        },
         months: defaultYear.months.map(m => ({
           normDays: m.normDays,
           factDays: m.factDays,
@@ -144,7 +165,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     addToast(`Добавлен ${newYear} год`);
   };
 
-  const handleQuarterChange = (qIndex: number, field: 'bonusCoef' | 'bonusAmount', value: number) => {
+  const handleQuarterChange = React.useCallback((qIndex: number, field: 'bonusCoef' | 'bonusAmount', value: number) => {
     setState(prev => {
       const newYears = { ...prev.years };
       const currentYearData = newYears[prev.activeYear];
@@ -171,19 +192,21 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       newYears[prev.activeYear] = { ...currentYearData, quarters: newQuarters };
       return { ...prev, years: newYears };
     });
-  };
+  }, []);
 
-  const handleAnnualBonusChange = (field: 'annualBonusCoef' | 'annualBonusAmount' | 'extraBonusAmount' | 'bonusBase' | 'iisContribution' | 'deductions' | 'applyBaseToAll', value: number | { social?: number, property?: number, standard?: number }) => {
+  const handleAnnualBonusChange = React.useCallback((field: 'annualBonusCoef' | 'annualBonusAmount' | 'extraBonusAmount' | 'bonusBase' | 'iisContribution' | 'deductions' | 'applyBaseToAll', value: number | { social?: number, property?: number, standard?: number }) => {
     if (field === 'applyBaseToAll') {
-      const base = state.years[state.activeYear]?.bonusBase || 0;
       setState(prev => {
+        const base = prev.years[prev.activeYear]?.bonusBase || 0;
         const newYears = { ...prev.years };
         const currentYearData = newYears[prev.activeYear];
         const newMonths = currentYearData.months.map(m => ({ ...m, salary: base }));
         newYears[prev.activeYear] = { ...currentYearData, months: newMonths };
+        
+        // Use timeout to avoid calling addToast during render if setState is synchronous
+        setTimeout(() => addToast(`Оклад во всех месяцах установлен равным базе (${formatCurrency(base)})`, 'success'), 0);
         return { ...prev, years: newYears };
       });
-      addToast(`Оклад во всех месяцах установлен равным базе (${formatCurrency(base)})`, 'success');
       return;
     }
 
@@ -255,7 +278,26 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       };
       return { ...prev, years: newYears };
     });
-  };
+  }, [addToast]);
+
+  const handleValueChange = React.useCallback((index: number, colId: string, value: number) => {
+    setState(prev => {
+      const newYears = { ...prev.years };
+      const currentYear = newYears[prev.activeYear];
+      if (!currentYear.v2) return prev;
+      const newMonths = [...currentYear.v2.months];
+      newMonths[index] = { 
+        ...newMonths[index], 
+        values: { ...newMonths[index].values, [colId]: value } 
+      };
+      newYears[prev.activeYear] = { ...currentYear, v2: { ...currentYear.v2, months: newMonths } };
+      return { ...prev, years: newYears };
+    });
+  }, []);
+
+  const handleApplyBaseToAll = React.useCallback(() => {
+    handleAnnualBonusChange('applyBaseToAll', 0);
+  }, [handleAnnualBonusChange]);
 
   const clearActiveYearData = () => {
     setState(prev => ({
@@ -353,13 +395,30 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       if (index % 3 === 2) {
         const qIndex = Math.floor(index / 3);
         const qData = activeYearData.quarters?.[qIndex];
-        bonus = qData?.bonusAmount || 0;
+        const val = qData?.bonusAmount || 0;
+        const qType = activeYearData.v2?.settings?.quarterCalcType || 'rub';
+        const calcBase = activeYearData.bonusBase || 0;
+        if (qType === 'percent') {
+          bonus = calcBase * (val / 100);
+        } else if (qType === 'coef') {
+          bonus = calcBase * val;
+        } else {
+          bonus = val;
+        }
       }
 
       let v2Bonus = 0;
       if (activeYearData.v2 && activeYearData.v2.months[index]) {
         const v2M = activeYearData.v2.months[index];
-        v2Bonus += v2M.values?.['system_main_bonus'] || 0;
+        const mainVal = v2M.values?.['system_main_bonus'] || 0;
+        const mainType = activeYearData.v2.settings?.mainCalcType || 'rub';
+        if (mainType === 'percent') {
+          v2Bonus += base * (mainVal / 100);
+        } else if (mainType === 'coef') {
+          v2Bonus += base * mainVal;
+        } else {
+          v2Bonus += mainVal;
+        }
         
         activeYearData.v2.columns.forEach(col => {
           let val = v2M.values?.[col.id] || 0;
@@ -420,7 +479,15 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         let v2Bonus = 0;
         if (activeYearData.v2 && activeYearData.v2.months[index]) {
           const v2M = activeYearData.v2.months[index];
-          v2Bonus += v2M.values?.['system_main_bonus'] || 0;
+          const mainVal = v2M.values?.['system_main_bonus'] || 0;
+          const mainType = activeYearData.v2.settings?.mainCalcType || 'rub';
+          if (mainType === 'percent') {
+            v2Bonus += displaySalary * (mainVal / 100);
+          } else if (mainType === 'coef') {
+            v2Bonus += displaySalary * mainVal;
+          } else {
+            v2Bonus += mainVal;
+          }
           
           activeYearData.v2.columns.forEach(col => {
             let val = v2M.values?.[col.id] || 0;
@@ -519,33 +586,35 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
             </div>
 
             {/* Tabs & Toolbar */}
-            <YearTabs 
-              availableYears={availableYears}
-              activeYear={state.activeYear}
-              setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
-              addNewYear={addNewYear}
-              setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
-              setIsClearModalOpen={setIsClearModalOpen}
-              prevYear={prevYear}
-              copyFromPreviousYear={copyFromPreviousYear}
-              onExportPDF={async () => {
-                const success = await exportToPDF(null, {
-                  totalGross: yearlyTotals.totalGross,
-                  totalNet: yearlyTotals.finalNet,
-                  totalTax: yearlyTotals.progressiveTax,
-                  effectiveRate: yearlyTotals.effectiveRate
-                }, undefined, {
-                  months: calculatedMonths,
-                  totals: yearlyTotals
-                });
-              }}
-              onExportXLSX={() => {
-                exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
-              }}
-              isSimulationOpen={isSimulationOpen}
-              setIsSimulationOpen={setIsSimulationOpen}
-              onOpenStructureConfig={() => setIsV2ConfigOpen(true)}
-            />
+            <div>
+              <YearTabs 
+                availableYears={availableYears}
+                activeYear={state.activeYear}
+                setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
+                addNewYear={addNewYear}
+                setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
+                setIsClearModalOpen={setIsClearModalOpen}
+                prevYear={prevYear}
+                copyFromPreviousYear={() => setIsCopyModalOpen(true)}
+                onExportPDF={async () => {
+                  const success = await exportToPDF(null, {
+                    totalGross: yearlyTotals.totalGross,
+                    totalNet: yearlyTotals.finalNet,
+                    totalTax: yearlyTotals.progressiveTax,
+                    effectiveRate: yearlyTotals.effectiveRate
+                  }, undefined, {
+                    months: calculatedMonths,
+                    totals: yearlyTotals
+                  });
+                }}
+                onExportXLSX={() => {
+                  exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
+                }}
+                isSimulationOpen={isSimulationOpen}
+                setIsSimulationOpen={setIsSimulationOpen}
+                onOpenStructureConfig={() => setIsV2ConfigOpen(true)}
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-8 md:gap-10">
@@ -561,21 +630,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                   handleAnnualBonusChange={handleAnnualBonusChange}
                   handleQuarterChange={handleQuarterChange}
                   handleMonthChange={handleMonthChange}
-                  onValueChange={(index, colId, value) => {
-                    setState(prev => {
-                      const newYears = { ...prev.years };
-                      const currentYear = newYears[prev.activeYear];
-                      if (!currentYear.v2) return prev;
-                      const newMonths = [...currentYear.v2.months];
-                      newMonths[index] = { 
-                        ...newMonths[index], 
-                        values: { ...newMonths[index].values, [colId]: value } 
-                      };
-                      newYears[prev.activeYear] = { ...currentYear, v2: { ...currentYear.v2, months: newMonths } };
-                      return { ...prev, years: newYears };
-                    });
-                  }}
-                  onApplyBaseToAll={() => handleAnnualBonusChange('applyBaseToAll', 0)}
+                  onValueChange={handleValueChange}
+                  onApplyBaseToAll={handleApplyBaseToAll}
                   isPrivate={isPrivate}
                   isSimulationOpen={isSimulationOpen}
                 />
@@ -595,25 +651,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                   handleAnnualBonusChange={handleAnnualBonusChange}
                   onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
                   isPrivate={isPrivate}
-                  onValueChange={(index, colId, value) => {
-                    setState(prev => {
-                      const newYears = { ...prev.years };
-                      const currentYear = newYears[prev.activeYear];
-                      if (!currentYear.v2) return prev;
-                      
-                      const newMonths = [...currentYear.v2.months];
-                      newMonths[index] = { 
-                        ...newMonths[index], 
-                        values: { ...newMonths[index].values, [colId]: value } 
-                      };
-                      
-                      newYears[prev.activeYear] = {
-                        ...currentYear,
-                        v2: { ...currentYear.v2, months: newMonths }
-                      };
-                      return { ...prev, years: newYears };
-                    });
-                  }}
+                  onValueChange={handleValueChange}
                 />
               )}
             </div>
@@ -704,6 +742,16 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         onConfirm={deleteActiveYear} 
         year={state.activeYear} 
       />
+
+      {/* Copy Year Modal */}
+      {prevYear !== null && (
+        <CopyYearModal
+          isOpen={isCopyModalOpen}
+          onClose={() => setIsCopyModalOpen(false)}
+          onConfirm={copyFromPreviousYear}
+          prevYear={prevYear}
+        />
+      )}
 
       {/* Tax Info Modal */}
       <TaxReferenceModal 

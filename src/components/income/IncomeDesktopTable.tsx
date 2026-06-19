@@ -54,7 +54,7 @@ export function IncomeDesktopTable({
               <thead className="bg-slate-50/90 dark:bg-slate-800/90 backdrop-blur-md sticky top-0 z-20">
                 <tr>
                   <th className="px-2 lg:px-3 py-3 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-left shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Месяц</th>
-                  <th className="px-1 py-3 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle" title="Фактически отработано / Норма">Дни</th>
+                  <th data-tour="working-days-desktop" className="px-1 py-3 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-center shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle" title="Фактически отработано / Норма">Дни</th>
                   <th className="px-1 py-3 text-[11px] lg:text-xs xl:text-sm tracking-widest uppercase text-slate-400 dark:text-slate-500 font-semibold text-right shadow-[0_1px_0_0_#e2e8f0] dark:shadow-[0_1px_0_0_#1e293b] whitespace-nowrap align-middle">Оклад</th>
                   
                   {hasAnyBonusColumn && (

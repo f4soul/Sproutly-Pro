@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
+import { AppTour } from './components/ui/AppTour';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
@@ -16,6 +17,9 @@ import { auth } from './config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { SproutlyLogo } from './components/ui/SproutlyLogo';
+import { LandingView } from './components/welcome/LandingView';
+import { changelog } from './data/changelog';
+import { AnimatePresence } from 'motion/react';
 
 const SplashLoader = ({ theme }: { theme: 'light' | 'dark' }) => (
   <div className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center transition-colors duration-500 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
@@ -51,6 +55,10 @@ function AppContent() {
   const [hasCheckedLock, setHasCheckedLock] = useState(false);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar'>('dashboard');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(() => {
+    return localStorage.getItem('hasOnboarded') !== 'true';
+  });
+
   const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const _deposits = useLiveQuery(() => db.deposits.toArray());
   const _cashAssets = useLiveQuery(() => db.cashAssets.toArray());
@@ -228,6 +236,18 @@ function AppContent() {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    
+    // Dynamically update theme-color for PWA & Safari headers
+    let metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
+    if (!metaThemeColor) {
+      metaThemeColor = document.createElement('meta');
+      metaThemeColor.setAttribute('name', 'theme-color');
+      document.head.appendChild(metaThemeColor);
+    }
+    metaThemeColor.setAttribute('content', theme === 'dark' ? '#0B0F19' : '#f8fafc');
+
+    // Remove media-query based meta tags to prevent system conflicts when manually switching
+    document.querySelectorAll('meta[name="theme-color"][media]').forEach(el => el.remove());
   }, [theme]);
 
   const deposits = _deposits || [];
@@ -246,6 +266,12 @@ function AppContent() {
     } else {
       setActiveTab(newTab);
     }
+  };
+
+  const handleStart = () => {
+    localStorage.setItem('hasOnboarded', 'true');
+    localStorage.setItem('last_seen_version', changelog[0].version);
+    setIsFirstVisit(false);
   };
 
   useEffect(() => {
@@ -281,36 +307,43 @@ function AppContent() {
         />
       )}
       <div className={isLockActive && !isUnlocked ? 'hidden' : 'contents'}>
-        <Layout activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
-          {activeTab === 'dashboard' && (
-            <UnifiedDashboard 
-              deposits={deposits} 
-              cashAssets={cashAssets}
-              taxSettings={taxSettings} 
-              appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
-              isPrivate={isPrivate}
-              setIsPrivate={setIsPrivate}
-            />
+        <AnimatePresence mode="wait">
+          {isFirstVisit ? (
+            <LandingView key="landing" onStart={handleStart} />
+          ) : (
+            <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme}>
+              {activeTab === 'dashboard' && (
+                <UnifiedDashboard 
+                  deposits={deposits} 
+                  cashAssets={cashAssets}
+                  taxSettings={taxSettings} 
+                  appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
+                  isPrivate={isPrivate}
+                  setIsPrivate={setIsPrivate}
+                />
+              )}
+              {activeTab === 'deposits' && (
+                <AssetsView 
+                  deposits={deposits} 
+                  cashAssets={cashAssets}
+                  selectedYear={selectedYear} 
+                  isPrivate={isPrivate}
+                />
+              )}
+              {activeTab === 'calendar' && (
+                <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
+              )}
+              {activeTab === 'ndfl' && (
+                <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+              )}
+              {activeTab === 'settings' && (
+                <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
+              )}
+              <GlobalToasts />
+              <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />
+            </Layout>
           )}
-          {activeTab === 'deposits' && (
-            <AssetsView 
-              deposits={deposits} 
-              cashAssets={cashAssets}
-              selectedYear={selectedYear} 
-              isPrivate={isPrivate}
-            />
-          )}
-          {activeTab === 'calendar' && (
-            <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
-          )}
-          {activeTab === 'ndfl' && (
-            <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
-          )}
-          {activeTab === 'settings' && (
-            <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
-          )}
-          <GlobalToasts />
-        </Layout>
+        </AnimatePresence>
       </div>
     </>
   );

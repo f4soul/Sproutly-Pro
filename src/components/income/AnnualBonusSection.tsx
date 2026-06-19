@@ -1,5 +1,6 @@
 import React from 'react';
 import { TableInput } from '../ui/TableInput';
+import { CalculatedTableInput } from '../ui/CalculatedTableInput';
 import { YearData, YearlyTotals, CalculatedMonth } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
@@ -42,11 +43,28 @@ export const AnnualBonusSection = ({
               {isPrivate ? (
                 <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2"><PrivacyBlur isPrivate={true}>{formatCurrency(activeYearData.annualBonusAmount || 0)}</PrivacyBlur></div>
               ) : (
-                <TableInput 
-                  value={activeYearData.annualBonusAmount || 0} 
-                  onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
-                  className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none font-mono text-right text-sm font-bold text-primary-600 dark:text-primary-400" 
-                />
+                activeYearData.v2?.settings?.annualCalcType === 'rub' || !activeYearData.v2?.settings?.annualCalcType ? (
+                  <TableInput 
+                    value={activeYearData.annualBonusAmount || 0} 
+                    onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none font-mono text-right text-sm font-bold text-primary-600 dark:text-primary-400" 
+                  />
+                ) : (
+                  <CalculatedTableInput 
+                    value={activeYearData.annualBonusAmount || 0} 
+                    computedValue={(() => {
+                      const type = activeYearData.v2?.settings?.annualCalcType;
+                      const val = activeYearData.annualBonusAmount || 0;
+                      const base = type === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) : (activeYearData.bonusBase || 0);
+                      return type === 'coef' ? base * val : base * (val / 100);
+                    })()} 
+                    baseAmount={activeYearData.v2?.settings?.annualCalcType === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) : (activeYearData.bonusBase || 0)}
+                    onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
+                    type={activeYearData.v2?.settings?.annualCalcType as any} 
+                    label="Годовая премия" 
+                    className="px-2 py-1 w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm" 
+                  />
+                )
               )}
             </div>
           </div>
@@ -58,11 +76,46 @@ export const AnnualBonusSection = ({
               {isPrivate ? (
                 <div className="w-full text-right font-mono text-sm font-bold text-primary-600 dark:text-primary-400 py-1.5 px-2"><PrivacyBlur isPrivate={true}>{formatCurrency(activeYearData.extraBonusAmount || 0)}</PrivacyBlur></div>
               ) : (
-                <TableInput 
-                  value={activeYearData.extraBonusAmount || 0} 
-                  onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
-                  className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none font-mono text-right text-sm font-bold text-primary-600 dark:text-primary-400" 
-                />
+                activeYearData.v2?.settings?.extraAnnualCalcType === 'rub' || !activeYearData.v2?.settings?.extraAnnualCalcType ? (
+                  <TableInput 
+                    value={activeYearData.extraBonusAmount || 0} 
+                    onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none font-mono text-right text-sm font-bold text-primary-600 dark:text-primary-400" 
+                  />
+                ) : (
+                  <CalculatedTableInput 
+                    value={activeYearData.extraBonusAmount || 0} 
+                    computedValue={(() => {
+                      const type = activeYearData.v2?.settings?.extraAnnualCalcType;
+                      const val = activeYearData.extraBonusAmount || 0;
+                      const typeAnnual = activeYearData.v2?.settings?.annualCalcType || 'rub';
+                      const valAnnual = activeYearData.annualBonusAmount || 0;
+                      const tbs = activeYearData.bonusBase || 0;
+                      let computedAnnualVal = valAnnual;
+                      if (typeAnnual === 'percent') computedAnnualVal = tbs * (valAnnual / 100);
+                      else if (typeAnnual === 'percent_annual') computedAnnualVal = calculatedMonths.reduce((sum, m) => sum + m.gross, 0) * (valAnnual / 100);
+                      else if (typeAnnual === 'coef') computedAnnualVal = tbs * valAnnual;
+                      
+                      const base = type === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) + computedAnnualVal : tbs;
+                      return type === 'coef' ? base * val : base * (val / 100);
+                    })()}
+                    baseAmount={(() => {
+                      const typeAnnual = activeYearData.v2?.settings?.annualCalcType || 'rub';
+                      const valAnnual = activeYearData.annualBonusAmount || 0;
+                      const tbs = activeYearData.bonusBase || 0;
+                      let computedAnnualVal = valAnnual;
+                      if (typeAnnual === 'percent') computedAnnualVal = tbs * (valAnnual / 100);
+                      else if (typeAnnual === 'percent_annual') computedAnnualVal = calculatedMonths.reduce((sum, m) => sum + m.gross, 0) * (valAnnual / 100);
+                      else if (typeAnnual === 'coef') computedAnnualVal = tbs * valAnnual;
+                      
+                      return activeYearData.v2?.settings?.extraAnnualCalcType === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) + computedAnnualVal : tbs;
+                    })()} 
+                    onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
+                    type={activeYearData.v2?.settings?.extraAnnualCalcType as any} 
+                    label="Доп. премия" 
+                    className="px-2 py-1 w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg text-sm" 
+                  />
+                )
               )}
             </div>
           </div>
@@ -71,7 +124,7 @@ export const AnnualBonusSection = ({
     );
   }
 
-  const totalBaseSalaryForYear = calculatedMonths.reduce((sum, m) => sum + m.salary, 0); // Simplified base for tooltip
+  const totalBaseSalaryForYear = activeYearData.bonusBase || 0; // Simplified base for tooltip
 
   return (
     <React.Fragment>
@@ -82,6 +135,8 @@ export const AnnualBonusSection = ({
           let computedVal = val;
           if (type === 'percent') {
             computedVal = totalBaseSalaryForYear * (val / 100);
+          } else if (type === 'percent_annual') {
+            computedVal = calculatedMonths.reduce((sum, m) => sum + m.gross, 0) * (val / 100);
           } else if (type === 'coef') {
             computedVal = totalBaseSalaryForYear * val;
           }
@@ -92,7 +147,7 @@ export const AnnualBonusSection = ({
               <div className="flex items-center gap-2">
                 <span className="text-gray-700 dark:text-gray-300 text-[11px] lg:text-xs xl:text-sm uppercase tracking-tight">Годовая премия</span>
                 <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[9px] xl:text-[10px] font-bold bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-500/20 leading-none">
-                  {type === 'percent' ? '%' : type === 'coef' ? 'Кф' : '₽'}
+                  {type === 'percent' ? '%' : type === 'percent_annual' ? '% Годового' : type === 'coef' ? 'Кф' : '₽'}
                 </span>
               </div>
             </td>
@@ -102,18 +157,25 @@ export const AnnualBonusSection = ({
                 {isPrivate ? (
                   <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-700 dark:text-primary-400 font-bold"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                 ) : (
-                  <div className="relative flex items-center justify-end">
-                    <TableInput 
+                  type === 'rub' ? (
+                    <div className="relative flex flex-col items-end justify-center w-full">
+                      <TableInput 
+                        value={val} 
+                        onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
+                        className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400"
+                      />
+                    </div>
+                  ) : (
+                    <CalculatedTableInput 
                       value={val} 
+                      computedValue={computedVal} 
+                      baseAmount={type === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) : totalBaseSalaryForYear}
                       onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
-                      className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400"
+                      type={type as any} 
+                      label="Годовая премия" 
+                      className="px-1.5 py-1 text-[11px] lg:text-xs xl:text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md" 
                     />
-                    {type !== 'rub' && val > 0 && (
-                      <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                        ≈{formatCurrency(Math.round(computedVal))}
-                      </div>
-                    )}
-                  </div>
+                  )
                 )}
               </td>
             )}
@@ -131,13 +193,26 @@ export const AnnualBonusSection = ({
           );
         })()}
 
-       {/* Extra Bonus Row */}
+        {/* Extra Bonus Row */}
        {showExtraAnnual && (() => {
+          const typeAnnual = activeYearData.v2?.settings?.annualCalcType || 'rub';
+          const valAnnual = activeYearData.annualBonusAmount || 0;
+          let computedAnnualVal = valAnnual;
+          if (typeAnnual === 'percent') {
+            computedAnnualVal = totalBaseSalaryForYear * (valAnnual / 100);
+          } else if (typeAnnual === 'percent_annual') {
+            computedAnnualVal = calculatedMonths.reduce((sum, m) => sum + m.gross, 0) * (valAnnual / 100);
+          } else if (typeAnnual === 'coef') {
+            computedAnnualVal = totalBaseSalaryForYear * valAnnual;
+          }
+
           const type = activeYearData.v2?.settings?.extraAnnualCalcType || 'rub';
           const val = activeYearData.extraBonusAmount || 0;
           let computedVal = val;
           if (type === 'percent') {
             computedVal = totalBaseSalaryForYear * (val / 100);
+          } else if (type === 'percent_annual') {
+            computedVal = (calculatedMonths.reduce((sum, m) => sum + m.gross, 0) + computedAnnualVal) * (val / 100);
           } else if (type === 'coef') {
             computedVal = totalBaseSalaryForYear * val;
           }
@@ -148,7 +223,7 @@ export const AnnualBonusSection = ({
               <div className="flex items-center gap-2">
                 <span className="text-gray-700 dark:text-gray-300 text-[11px] lg:text-xs xl:text-sm uppercase tracking-tight">Доп. премия</span>
                 <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-md text-[9px] xl:text-[10px] font-bold bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-500/20 leading-none">
-                  {type === 'percent' ? '%' : type === 'coef' ? 'Кф' : '₽'}
+                  {type === 'percent' ? '%' : type === 'percent_annual' ? '% Годового' : type === 'coef' ? 'Кф' : '₽'}
                 </span>
               </div>
             </td>
@@ -158,18 +233,25 @@ export const AnnualBonusSection = ({
                 {isPrivate ? (
                   <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-700 dark:text-primary-400 font-bold"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                 ) : (
-                  <div className="relative flex items-center justify-end">
-                    <TableInput 
+                  type === 'rub' ? (
+                    <div className="relative flex flex-col items-end justify-center w-full">
+                      <TableInput 
+                        value={val} 
+                        onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
+                        className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400"
+                      />
+                    </div>
+                  ) : (
+                    <CalculatedTableInput 
                       value={val} 
+                      computedValue={computedVal} 
+                      baseAmount={type === 'percent_annual' ? (calculatedMonths.reduce((sum, m) => sum + m.gross, 0) + computedAnnualVal) : totalBaseSalaryForYear}
                       onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
-                      className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400"
+                      type={type as any} 
+                      label="Доп. премия" 
+                      className="px-1.5 py-1 text-[11px] lg:text-xs xl:text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md" 
                     />
-                    {type !== 'rub' && val > 0 && (
-                      <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                        ≈{formatCurrency(Math.round(computedVal))}
-                      </div>
-                    )}
-                  </div>
+                  )
                 )}
               </td>
             )}

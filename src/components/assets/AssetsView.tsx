@@ -26,7 +26,7 @@ export function AssetsView({
       {/* Segmented Control formatted exactly key-to-key like the dashboard */}
       <div className="flex flex-col items-center gap-4 -mt-2 mb-4 w-full z-20">
         <div className="flex items-center justify-center w-full md:w-auto relative gap-1 z-30">
-          <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto p-0.5 border border-slate-100 dark:border-white/[0.03]">
+          <div data-tour="assets-tabs" className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto p-0.5 border border-slate-100 dark:border-white/[0.03]">
             <button
               onClick={() => setActiveTab("deposits")}
               className={cn(

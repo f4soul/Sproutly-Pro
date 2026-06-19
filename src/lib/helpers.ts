@@ -28,14 +28,14 @@ export const calculateYearTotals = (yearData: YearData, taxBrackets: Record<numb
   return { totalGross, finalNet };
 };
 
-export const generateEmptyYear = (year: number): YearData => {
-  const norms = DEFAULT_NORMS[year] || DEFAULT_NORMS[2026];
+export const generateEmptyYear = (year: number, customNorms?: number[]): YearData => {
+  const norms = customNorms || DEFAULT_NORMS[year] || DEFAULT_NORMS[2026];
   const defaultQuarters = Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }));
 
   return {
     year,
     additionalIncome: 0,
-    bonusBase: 0, // Default base
+    bonusBase: 0,
     baseSalary: 0,
     iisContribution: 0,
     deductions: { social: 0, property: 0, standard: 0 },
@@ -51,8 +51,8 @@ export const generateEmptyYear = (year: number): YearData => {
   };
 };
 
-export const generateDefaultYear = (year: number, forceEmpty: boolean = false): YearData => {
-  return generateEmptyYear(year);
+export const generateDefaultYear = (year: number, forceEmpty: boolean = false, customNorms?: number[]): YearData => {
+  return generateEmptyYear(year, customNorms);
 };
 
 export const getDefaultExpandedQuarters = (year: number) => {

@@ -13,13 +13,13 @@ import { PrivacyBlur } from "../ui/PrivacyBlur";
 
 interface DepositRowProps {
   deposit: Deposit;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (deposit: Deposit) => void;
+  onDelete: (deposit: Deposit) => void;
   isPrivate?: boolean;
   isLast?: boolean;
 }
 
-export const DepositRow: React.FC<DepositRowProps> = ({
+export const DepositRow: React.FC<DepositRowProps> = React.memo(({
   deposit,
   onEdit,
   onDelete,
@@ -73,7 +73,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({
         >
           {/* Absolute Tags in Top-Left Corner */}
           {(isClosed || isSavingsAccount) && (
-            <div className="absolute top-0 left-0 hidden sm:flex items-start -mt-[1px] z-20 pointer-events-none">
+            <div className="absolute top-0 left-0 hidden sm:flex items-start z-20 pointer-events-none">
               {isSavingsAccount && (
                 <span className={cn(
                   "bg-deposit-500 text-white dark:text-slate-900 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 leading-none opacity-90 shadow-[1px_1px_2px_rgba(0,0,0,0.1)]",
@@ -303,7 +303,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onEdit();
+                onEdit(deposit);
               }}
               onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
               title="Редактировать"
@@ -313,7 +313,7 @@ export const DepositRow: React.FC<DepositRowProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete();
+                onDelete(deposit);
               }}
               onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
               title="В архив"
@@ -435,4 +435,4 @@ export const DepositRow: React.FC<DepositRowProps> = ({
       </tr>
     </>
   );
-};
+});

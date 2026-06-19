@@ -1,5 +1,6 @@
 import React from 'react';
 import { TableInput } from '../ui/TableInput';
+import { CalculatedTableInput } from '../ui/CalculatedTableInput';
 import { MonthData, CalculatedMonth, MonthDataV2, IncomeColumnDef } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { MONTH_NAMES } from '../../lib/constants';
@@ -23,7 +24,7 @@ interface MonthRowProps {
   hasAnyBonusColumn?: boolean;
 }
 
-export const MonthRow = ({
+export const MonthRow = React.memo(({
   monthIndex,
   m,
   v2Month,
@@ -81,18 +82,25 @@ export const MonthRow = ({
               {isPrivate ? (
                 <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-600 dark:text-primary-400 font-semibold"><PrivacyBlur isPrivate={true}>{formatCurrency(actualMainVal)}</PrivacyBlur></div>
               ) : (
-                <div className="relative flex items-center justify-end">
-                  <TableInput 
+                mainType === 'rub' ? (
+                  <div className="relative flex flex-col items-end justify-center w-full">
+                    <TableInput 
+                      value={mainBonusVal} 
+                      onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
+                      className="w-full font-mono font-semibold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                    />
+                  </div>
+                ) : (
+                  <CalculatedTableInput 
                     value={mainBonusVal} 
+                    computedValue={actualMainVal} 
+                    baseAmount={baseForTooltip}
                     onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
-                    className="w-full font-mono font-semibold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                    type={mainType as any} 
+                    label="Ежемесячная премия" 
+                    className="px-1.5 py-1 text-[11px] lg:text-xs xl:text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md" 
                   />
-                  {mainType !== 'rub' && mainBonusVal > 0 && (
-                    <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                      ≈{formatCurrency(Math.round(actualMainVal))}
-                    </div>
-                  )}
-                </div>
+                )
               )}
             </td>
           );
@@ -108,26 +116,34 @@ export const MonthRow = ({
         const val = v2Month?.values?.[col.id] || 0;
         let amount = val;
         // Approximation visual
+        let baseForCol = m.salary > 0 ? (m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary) : 0;
         if (col.type === 'percent_base') {
-           amount = (m.salary > 0 ? (m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary) : 0) * (val / 100);
+           amount = baseForCol * (val / 100);
         }
         return (
           <td key={col.id} className="px-1 py-1.5 align-middle min-w-[65px] lg:min-w-[80px] group/cell relative">
             {isPrivate ? (
               <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm"><PrivacyBlur isPrivate={true}>{formatCurrency(val)}</PrivacyBlur></div>
             ) : (
-              <div className="relative flex items-center justify-end">
-                <TableInput 
+              col.type === 'rub' ? (
+                <div className="relative flex flex-col items-end justify-center w-full">
+                  <TableInput 
+                    value={val} 
+                    onChange={(v) => onValueChange(monthIndex, col.id, v)} 
+                    className="w-full font-mono text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                  />
+                </div>
+              ) : (
+                <CalculatedTableInput 
                   value={val} 
+                  computedValue={amount} 
+                  baseAmount={baseForCol}
                   onChange={(v) => onValueChange(monthIndex, col.id, v)} 
-                  className="w-full font-mono text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                  type={col.type as any} 
+                  label={col.name} 
+                  className="px-1.5 py-1 text-[11px] lg:text-xs xl:text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md font-semibold" 
                 />
-                {col.type === 'percent_base' && val > 0 && (
-                  <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                    ≈{formatCurrency(Math.round(amount))}
-                  </div>
-                )}
-              </div>
+              )
             )}
           </td>
         );
@@ -146,4 +162,4 @@ export const MonthRow = ({
       </td>
     </tr>
   );
-};
+});

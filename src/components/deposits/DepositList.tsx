@@ -200,7 +200,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       });
     }
     return sorted;
-  }, [deposits, searchQuery, filterStatus, sortConfig, selectedBanks]);
+  }, [deposits, searchQuery, filterStatus, sortConfig, selectedBanks, rates]);
 
   const filteredTotals = useMemo(() => {
     const amount = filteredDeposits.reduce((acc, d) => acc + convertToRub(Number(d.amount) || 0, d.currency || 'RUB', rates), 0);
@@ -254,10 +254,14 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
     }
   };
 
-  const handleEdit = (deposit: Deposit) => {
+  const handleEditItem = React.useCallback((deposit: Deposit) => {
     setEditingDeposit(deposit);
     setIsFormOpen(true);
-  };
+  }, []);
+
+  const handleDeleteItem = React.useCallback((deposit: Deposit) => {
+    setDepositToDelete(deposit);
+  }, []);
 
   return (
     <div id="deposits-list-content" className="space-y-6 md:space-y-10 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
@@ -282,6 +286,9 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         <motion.div 
           className={cn(
             "lg:hidden fixed right-4 sm:right-8 z-[60] transition-all", 
+            filteredDeposits.length > 0 
+              ? "floating-fab-bottom-with-analytics" 
+              : "floating-fab-bottom-no-analytics",
             !isPresent 
               ? "duration-100 opacity-0 scale-75 pointer-events-none" 
               : (isAnalyticsExpanded 
@@ -294,14 +301,6 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                   )
                 )
           )}
-          style={{
-            bottom: isAnalyticsExpanded
-              ? 'calc(env(safe-area-inset-bottom, 0px) + 94px)'
-              : (filteredDeposits.length > 0
-                ? 'calc(env(safe-area-inset-bottom, 0px) + 162px)'
-                : 'calc(env(safe-area-inset-bottom, 0px) + 94px)'
-              )
-          }}
         >
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -375,8 +374,8 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                 <DepositRow 
                   key={`deposit-row-${deposit.id || index}-${index}`} 
                   deposit={deposit} 
-                  onEdit={() => handleEdit(deposit)}
-                  onDelete={() => setDepositToDelete(deposit)}
+                  onEdit={handleEditItem}
+                  onDelete={handleDeleteItem}
                   isPrivate={isPrivate}
                   isLast={index === filteredDeposits.length - 1}
                 />
@@ -469,8 +468,8 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
               <DepositCard 
                 key={`deposit-card-${deposit.id || index}-${index}`} 
                 deposit={deposit} 
-                onEdit={() => handleEdit(deposit)} 
-                onDelete={() => setDepositToDelete(deposit)} 
+                onEdit={handleEditItem} 
+                onDelete={handleDeleteItem} 
                 isPrivate={isPrivate}
                 isLast={index === filteredDeposits.length - 1}
               />
@@ -540,13 +539,11 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
           className={cn(
             "block lg:hidden fixed z-[60] pointer-events-none transition-all mx-auto inset-x-4 max-w-sm",
             "md:inset-x-auto md:left-[18.5rem] md:right-6 md:max-w-none md:max-w-6xl",
+            "floating-analytics-bottom",
             !isPresent 
               ? "duration-100 opacity-0 scale-95 translate-y-4" 
               : "duration-300"
           )}
-          style={{
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 85px)'
-          }}
         >
           <div
             className={cn(

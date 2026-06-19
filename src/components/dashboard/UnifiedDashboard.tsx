@@ -84,7 +84,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSe
       <div className="flex flex-col items-center gap-4 mb-2 w-full z-20">
         {/* Navigation Panel */}
         <div className="flex items-center justify-center w-full md:w-auto relative gap-1 z-30">
-          <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto p-0.5 border border-slate-100 dark:border-white/[0.03]">
+          <div data-tour="dashboard-tabs" className="flex items-center bg-slate-50 dark:bg-slate-950/50 rounded-xl gap-1 w-full md:w-auto p-0.5 border border-slate-100 dark:border-white/[0.03]">
             {tabs.map((tab) => (
               <button
                 key={tab.id}

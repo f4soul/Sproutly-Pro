@@ -41,7 +41,7 @@ import {
   convertToRub,
   CurrencyRates,
 } from "../../services/currency";
-import { isDepositClosed } from "../../lib/depositCalculations";
+import { isDepositClosed, calculateIncome } from "../../lib/depositCalculations";
 import { DepositHeatmap } from "../deposits/DepositHeatmap";
 import { HeatmapIcon } from "../ui/HeatmapIcon";
 
@@ -85,6 +85,7 @@ export function BentoDashboard({
       label: string;
       amount?: number;
       currency?: string;
+      income?: number;
     }[] = [];
 
     deposits.forEach((d) => {
@@ -118,6 +119,7 @@ export function BentoDashboard({
             label: `Окончание: ${d.bank}`,
             amount: d.amount,
             currency: d.currency || "RUB",
+            income: calculateIncome(d),
           });
         }
       }
@@ -290,6 +292,7 @@ export function BentoDashboard({
                   onClick={() => setIsPrivate(!isPrivate)}
                   className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
                   title={isPrivate ? "Показать данные" : "Скрыть данные"}
+                  data-tour="privacy-toggle"
                 >
                   {isPrivate ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -738,13 +741,18 @@ export function BentoDashboard({
                       {event.type === "salary" ? "Зарплата" : "Вклад"}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs font-black text-slate-950 dark:text-white">
+                  <div className="text-right flex flex-col items-end justify-center">
+                    <p className="text-xs font-black text-slate-950 dark:text-white leading-tight">
                       {formatValPlain(
                         event.amount || 0,
                         event.currency || "RUB",
                       )}
                     </p>
+                    {event.type === "deposit_end" && event.income !== undefined && (
+                      <p className="text-[10px] font-bold text-deposit-500 dark:text-deposit-400 mt-0.5 leading-none px-1.5 py-0.5 bg-deposit-50 dark:bg-deposit-500/10 rounded-md inline-block">
+                        +{formatValPlain(event.income, event.currency || "RUB")}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))

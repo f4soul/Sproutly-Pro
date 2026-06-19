@@ -164,6 +164,8 @@ export function calculateUnifiedFinance({
       const val = yearData.annualBonusAmount || 0;
       if (type === 'percent') {
         annualBonusFinal = totalBaseSalaryForYear * (val / 100) * bonusMult;
+      } else if (type === 'percent_annual') {
+        annualBonusFinal = calcMonths.reduce((sum, m) => sum + m, 0) * (val / 100) * bonusMult;
       } else if (type === 'coef') {
         annualBonusFinal = totalBaseSalaryForYear * val * bonusMult;
       } else {
@@ -177,6 +179,8 @@ export function calculateUnifiedFinance({
       const val = yearData.extraBonusAmount || 0;
       if (type === 'percent') {
         extraAnnualBonusFinal = totalBaseSalaryForYear * (val / 100) * bonusMult;
+      } else if (type === 'percent_annual') {
+        extraAnnualBonusFinal = (calcMonths.reduce((sum, m) => sum + m, 0) + annualBonusFinal) * (val / 100) * bonusMult;
       } else if (type === 'coef') {
         extraAnnualBonusFinal = totalBaseSalaryForYear * val * bonusMult;
       } else {

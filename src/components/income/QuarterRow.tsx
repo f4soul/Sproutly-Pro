@@ -1,5 +1,6 @@
 import React from 'react';
 import { TableInput } from '../ui/TableInput';
+import { CalculatedTableInput } from '../ui/CalculatedTableInput';
 import { MonthRow } from './MonthRow';
 import { YearData, CalculatedMonth, MonthData, YearDataV2 } from '../../types/index';
 import { formatCurrency } from '../../lib/taxCalculator';
@@ -21,7 +22,7 @@ interface QuarterRowProps {
   hasAnyBonusColumn?: boolean;
 }
 
-export const QuarterRow = ({
+export const QuarterRow = React.memo(({
   q,
   qIndex,
   activeYearData,
@@ -77,18 +78,25 @@ export const QuarterRow = ({
                     {isPrivate ? (
                       <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-700 dark:text-primary-400 font-bold"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                     ) : (
-                      <div className="relative flex items-center justify-end">
-                        <TableInput 
+                      qType === 'rub' ? (
+                        <div className="relative flex flex-col items-end justify-center w-full">
+                          <TableInput 
+                            value={val} 
+                            onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
+                            className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400" 
+                          />
+                        </div>
+                      ) : (
+                        <CalculatedTableInput 
                           value={val} 
+                          computedValue={computedVal}
+                          baseAmount={calcBase}
                           onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-                          className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400" 
+                          type={qType as any} 
+                          label={`Премия за ${q.name}`} 
+                          className="px-1.5 py-1 text-[11px] lg:text-xs xl:text-sm hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md" 
                         />
-                        {qType !== 'rub' && val > 0 && (
-                          <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                            ≈{formatCurrency(Math.round(computedVal))}
-                          </div>
-                        )}
-                      </div>
+                      )
                     )}
                   </div>
                 );
@@ -132,4 +140,4 @@ export const QuarterRow = ({
       ))}
     </React.Fragment>
   );
-};
+});

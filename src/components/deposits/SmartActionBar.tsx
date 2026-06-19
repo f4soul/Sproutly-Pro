@@ -170,6 +170,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
           <div className="flex items-center gap-1.5 pr-1 shrink-0">
             {/* Toggle Filters Button */}
             <button 
+              data-tour="assets-filters"
               onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
               className={cn(
                 "p-3 rounded-2xl transition-all flex items-center justify-center shrink-0 border relative backdrop-blur-md cursor-pointer",

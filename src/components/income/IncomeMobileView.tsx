@@ -6,6 +6,7 @@ import { cn } from '../../lib/utils';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
 import { ChevronDown, ChevronRight, Zap } from 'lucide-react';
 import { TableInput } from '../ui/TableInput';
+import { CalculatedTableInput } from '../ui/CalculatedTableInput';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
@@ -60,7 +61,15 @@ export function IncomeMobileView({
   const settings = activeYearData.v2.settings || { showQuarterly: true, showAnnual: true };
   const showAnnual = settings.showAnnual ?? true;
   const showExtraAnnual = settings.showExtraAnnual ?? true;
-  const totalBaseSalary = calculatedMonths.reduce((sum, m) => sum + m.salary, 0);
+  const totalBaseSalary = activeYearData.bonusBase || 0;
+
+  let firstExpandedMonthIndex = -1;
+  for (let qIndex = 0; qIndex < 4; qIndex++) {
+    if (expandedQuarters[qIndex]) {
+      firstExpandedMonthIndex = QUARTERS[qIndex].months[0];
+      break;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 w-full md:max-w-2xl md:mx-auto pb-36 sm:pb-40 relative">
@@ -85,18 +94,26 @@ export function IncomeMobileView({
                        {isPrivate ? (
                           <div className="font-mono text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                         ) : (
-                          <>
-                            <TableInput 
+                          type === 'rub' ? (
+                            <div className="relative flex flex-col justify-center h-full flex-1 min-w-0 pr-1">
+                              <TableInput 
+                                value={val} 
+                                onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
+                                className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                              />
+                            </div>
+                          ) : (
+                            <CalculatedTableInput 
                               value={val} 
+                              computedValue={computedVal} 
+                              baseAmount={type === 'percent_annual' ? calculatedMonths.reduce((sum, m) => sum + m.gross, 0) : totalBaseSalary}
                               onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
-                              className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                              type={type as any} 
+                              label="Годовая премия" 
+                              className="w-full pr-1 h-full" 
+                              mobileOnly 
                             />
-                            {type !== 'rub' && val > 0 && (
-                              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                                ≈{formatCurrency(Math.round(computedVal))}
-                              </div>
-                            )}
-                          </>
+                          )
                         )}
                      </div>
                    </div>
@@ -117,18 +134,26 @@ export function IncomeMobileView({
                        {isPrivate ? (
                           <div className="font-mono text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                         ) : (
-                          <>
-                            <TableInput 
+                          type === 'rub' ? (
+                            <div className="relative flex flex-col justify-center h-full flex-1 min-w-0 pr-1">
+                              <TableInput 
+                                value={val} 
+                                onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
+                                className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                              />
+                            </div>
+                          ) : (
+                            <CalculatedTableInput 
                               value={val} 
+                              computedValue={computedVal}
+                              baseAmount={type === 'percent_annual' ? (calculatedMonths.reduce((sum, m) => sum + m.gross, 0) + (activeYearData.annualBonusAmount || 0)) : totalBaseSalary}
                               onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
-                              className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                              type={type as any} 
+                              label="Доп. премия" 
+                              className="w-full pr-1 h-full" 
+                              mobileOnly 
                             />
-                            {type !== 'rub' && val > 0 && (
-                              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                                ≈{formatCurrency(Math.round(computedVal))}
-                              </div>
-                            )}
-                          </>
+                          )
                         )}
                      </div>
                    </div>
@@ -171,22 +196,32 @@ export function IncomeMobileView({
                     <span className="text-[9px] text-primary-400 uppercase font-bold tracking-widest mb-1">
                       ПРЕМИЯ {qType === 'percent' ? '(%)' : qType === 'coef' ? '(x)' : '(₽)'}
                     </span>
-                    <div className="w-24 sm:w-28 relative group/cell">
+                    <div className="w-24 sm:w-28 relative flex flex-col justify-center">
                       {isPrivate ? (
                         <div className="h-8 sm:h-9 flex items-center justify-end pr-2 font-bold text-primary-700 dark:text-primary-300 text-xs sm:text-sm"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                       ) : (
-                        <>
-                          <TableInput 
-                            value={val} 
-                            onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-                            className="w-full text-right text-xs sm:text-sm font-bold bg-primary-50/50 dark:bg-[#1A1F2E] border border-primary-200 dark:border-primary-900 h-8 sm:h-9 px-2 rounded-lg text-primary-700 dark:text-primary-300 focus:border-primary-500/50 outline-none"
-                          />
-                          {qType !== 'rub' && val > 0 && (
-                            <div className="absolute right-0 top-full mt-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                              ≈{formatCurrency(Math.round(computedVal))}
-                            </div>
-                          )}
-                        </>
+                        qType === 'rub' ? (
+                          <div className="relative">
+                            <TableInput 
+                              value={val} 
+                              onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
+                              className="w-full text-right text-xs sm:text-sm font-bold bg-primary-50/50 dark:bg-[#1A1F2E] border border-primary-200 dark:border-primary-900 h-8 sm:h-9 px-2 rounded-lg text-primary-700 dark:text-primary-300 focus:border-primary-500/50 outline-none"
+                            />
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <CalculatedTableInput 
+                              value={val} 
+                              computedValue={computedVal} 
+                              baseAmount={calcBase}
+                              onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
+                              type={qType as any} 
+                              label={`Премия за ${q.name}`} 
+                              className="w-full pr-2 pt-1 border border-primary-200 bg-primary-50/50 rounded-lg h-9 dark:bg-[#1A1F2E] dark:border-primary-900" 
+                              mobileOnly 
+                            />
+                          </div>
+                        )
                       )}
                     </div>
                   </div>
@@ -242,7 +277,10 @@ export function IncomeMobileView({
                           <div className="flex flex-col justify-start">
                             <div className="flex flex-col gap-1">
                               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Дни (факт/норма)</span>
-                              <div className="flex items-center bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-1 h-10 focus-within:ring-1 focus-within:border-primary-500/50 transition-colors shadow-inner">
+                              <div 
+                                className="flex items-center bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-1 h-10 focus-within:ring-1 focus-within:border-primary-500/50 transition-colors shadow-inner"
+                                {...(monthIndex === firstExpandedMonthIndex ? { 'data-tour': 'working-days-mobile' } : {})}
+                              >
                                 <TableInput value={m.factDays} onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} isInteger className="w-full h-full bg-transparent text-center font-mono font-bold text-sm border-none p-0 outline-none text-slate-800 dark:text-white" />
                                 <span className="text-slate-300 dark:text-slate-700 px-1 font-mono">/</span>
                                 <TableInput value={m.normDays} onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} isInteger className="w-full h-full bg-transparent text-center font-mono font-bold text-sm text-slate-500 border-none p-0 outline-none" />
@@ -258,8 +296,12 @@ export function IncomeMobileView({
                               const mainType = settings.mainCalcType || 'rub';
                               const mainVal = v2Month?.values?.['system_main_bonus'] || 0;
                               let computedMainVal = mainVal;
-                              if (mainType === 'percent') computedMainVal = calcM.salary * (mainVal / 100);
-                              else if (mainType === 'coef') computedMainVal = calcM.salary * mainVal;
+                              let baseForMobileMain = calcM.salary;
+                              if (mainType === 'percent') {
+                                computedMainVal = (calcM.salary > 0 ? (calcM.factDays < calcM.normDays ? calcM.salary * (calcM.factDays / calcM.normDays) : calcM.salary) : 0) * (mainVal / 100);
+                              } else if (mainType === 'coef') {
+                                computedMainVal = (calcM.salary > 0 ? calcM.salary : 0) * mainVal;
+                              }
 
                               return (
                                 <div className="flex flex-col gap-1 relative group/cell">
@@ -271,18 +313,26 @@ export function IncomeMobileView({
                                   {isPrivate ? (
                                     <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 font-mono text-sm font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(computedMainVal)}</PrivacyBlur></div>
                                   ) : (
-                                    <>
-                                      <TableInput 
+                                    mainType === 'rub' ? (
+                                      <div className="relative flex flex-col justify-center flex-1 min-w-0 pr-1">
+                                        <TableInput 
+                                          value={mainVal} 
+                                          onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
+                                          className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-sm font-bold truncate text-primary-600 dark:text-primary-400 shadow-inner transition-colors" 
+                                        />
+                                      </div>
+                                    ) : (
+                                      <CalculatedTableInput 
                                         value={mainVal} 
+                                        computedValue={computedMainVal} 
+                                        baseAmount={baseForMobileMain}
                                         onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
-                                        className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-sm font-bold truncate text-primary-600 dark:text-primary-400 shadow-inner transition-colors" 
+                                        type={mainType as any} 
+                                        label="Осн. премия" 
+                                        className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 shadow-inner" 
+                                        mobileOnly 
                                       />
-                                      {mainType !== 'rub' && mainVal > 0 && (
-                                         <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                                           ≈{formatCurrency(Math.round(computedMainVal))}
-                                         </div>
-                                      )}
-                                    </>
+                                    )
                                   )}
                                 </div>
                               );
@@ -290,26 +340,33 @@ export function IncomeMobileView({
                             
                             {activeYearData.v2!.columns.map(col => {
                               const val = v2Month?.values?.[col.id] || 0;
-                              const amountComputed = col.type === 'percent_base' ? calcM.salary * (val / 100) : val;
+                              let baseForMobileCol = m.salary > 0 ? (m.factDays < m.normDays ? m.salary * (m.factDays / m.normDays) : m.salary) : 0;
+                              const amountComputed = col.type === 'percent_base' ? baseForMobileCol * (val / 100) : val;
                               return (
                                 <div key={col.id} className="flex flex-col gap-1 group/cell relative">
                                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate" title={col.name}>{col.name}</span>
                                   {isPrivate ? (
                                     <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 font-mono text-xs font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(amountComputed)}</PrivacyBlur></div>
                                   ) : (
-                                    <>
-                                      <div className="relative">
+                                    col.type === 'rub' ? (
+                                      <div className="relative flex flex-col justify-center flex-1 min-w-0 pr-1">
                                         <TableInput value={val} onChange={(v) => onValueChange(monthIndex, col.id, v)} className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-xs font-bold text-primary-600 dark:text-primary-400 truncate pr-5 shadow-inner transition-colors" />
-                                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-slate-400 pointer-events-none">
-                                          {col.type === 'rub' ? '₽' : '%'}
+                                        <span className="absolute right-2 top-2.5 text-[9px] font-bold text-slate-400 pointer-events-none">
+                                          ₽
                                         </span>
                                       </div>
-                                      {col.type === 'percent_base' && val > 0 && (
-                                         <div className="absolute left-1/2 -translate-x-1/2 bottom-[115%] mb-1 opacity-0 group-hover/cell:opacity-100 pointer-events-none text-[9px] text-slate-400 font-mono transition-opacity bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 rounded px-1 z-50">
-                                           ≈{formatCurrency(Math.round(amountComputed))}
-                                         </div>
-                                      )}
-                                    </>
+                                    ) : (
+                                      <CalculatedTableInput 
+                                        value={val} 
+                                        computedValue={amountComputed} 
+                                        baseAmount={baseForMobileCol}
+                                        onChange={(v) => onValueChange(monthIndex, col.id, v)} 
+                                        type={col.type as any} 
+                                        label={col.name} 
+                                        className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 shadow-inner" 
+                                        mobileOnly 
+                                      />
+                                    )
                                   )}
                                 </div>
                               );

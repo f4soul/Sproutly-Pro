@@ -81,7 +81,7 @@ export const useAppState = () => {
   const setState = (newState: AppState | ((prevState: AppState) => AppState)) => {
     setLocalState((prev) => {
       const updatedState = typeof newState === 'function' ? newState(prev) : newState;
-      const updated = { ...updatedState, updatedAt: Date.now() };
+      const updated = { ...updatedState, updatedAt: Date.now(), userId: user?.uid || 'guest' };
       db.incomeState.put({ ...updated, id: 'main' }).then(() => {
         if (user) {
           if (syncTimeoutRef.current) {
@@ -172,7 +172,7 @@ export const useAppState = () => {
           const parsed = JSON.parse(saved);
           const count = await db.incomeState.count();
           if (count === 0) {
-            await db.incomeState.put({ ...parsed, id: 'main', updatedAt: Date.now() });
+            await db.incomeState.put({ ...parsed, id: 'main', updatedAt: Date.now(), userId: user?.uid || 'guest' });
             setLocalState(parsed);
           }
           localStorage.removeItem('incomeCalculatorState_v4');
@@ -182,12 +182,12 @@ export const useAppState = () => {
       } else {
         const count = await db.incomeState.count();
         if (count === 0) {
-          await db.incomeState.put({ ...getInitialState(), id: 'main', updatedAt: 0 });
+          await db.incomeState.put({ ...getInitialState(), id: 'main', updatedAt: 0, userId: 'guest' });
         }
       }
     };
     migrate();
-  }, []);
+  }, [user]);
 
   return {
     state: localState,

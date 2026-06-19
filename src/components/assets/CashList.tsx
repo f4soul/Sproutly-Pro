@@ -98,11 +98,11 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
           {/* Left Column (Content) */}
           <div className="space-y-5 lg:w-[60%]">
             <div>
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-2">
-                <Lock className="w-3.5 h-3.5 text-deposit-500 shrink-0 stroke-[2.5px]" />
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-deposit-400 mb-2 flex items-center gap-2">
+                <Lock className="w-3.5 h-3.5 text-deposit-500 shadow-sm shrink-0 stroke-[2.5px]" />
                 Всего средств
               </h2>
-              <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none flex items-baseline gap-2">
+              <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-deposit-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(20,184,166,0.3)]">
                 <PrivacyBlur isPrivate={isPrivate}>
                   {formatCurrency(totalInRub)}
                 </PrivacyBlur>
@@ -112,14 +112,14 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
             {/* Currency Breakdown Capsule Pills (clean horizonal flow) */}
             {currencyBreakdown.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">Содержимое сейфа по валютам:</p>
+                <p className="text-[9px] font-black uppercase text-slate-500 dark:text-deposit-500/80 tracking-wider">Содержимое сейфа по валютам:</p>
                 <div className="flex flex-wrap gap-2">
                   {currencyBreakdown.map(([currency, amount]) => (
                     <div 
                       key={currency} 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100/80 dark:bg-slate-800/40 border border-slate-200/50 dark:border-white/[0.04] rounded-xl text-xs font-bold font-mono text-slate-800 dark:text-slate-200 shadow-inner"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-deposit-500/20 rounded-xl text-xs font-bold font-mono text-slate-900 dark:text-deposit-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(20,184,166,0.1)]"
                     >
-                      <span className="w-2 h-2 rounded-full bg-deposit-500 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-deposit-500 shadow-[0_0_8px_rgba(20,184,166,0.6)] animate-pulse" />
                       <PrivacyBlur isPrivate={isPrivate}>
                         {formatCurrency(amount, currency)}
                       </PrivacyBlur>

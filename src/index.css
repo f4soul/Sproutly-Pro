@@ -3,6 +3,13 @@
 
 @theme {
   --animate-spin-slow: spin 3s linear infinite;
+  --animate-shimmer: shimmer 2s infinite linear;
+
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
 
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -58,6 +65,11 @@
   :root {
     --rgb-primary: 59, 130, 246; /* blue-500 */
     --rgb-deposit: 20, 184, 166; /* teal-500 */
+    --joyride-beacon-color: #0d9488;
+  }
+
+  .dark {
+    --joyride-beacon-color: #2dd4bf;
   }
 
   html {
@@ -189,9 +201,73 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
   }
+
+  /* Responsive Bottom Positions for Floating Analytics and FAB */
+  .floating-analytics-bottom {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 85px);
+  }
+  @media (min-width: 768px) {
+    .floating-analytics-bottom {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 2rem) !important;
+    }
+  }
+
+  .floating-fab-bottom-with-analytics {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 162px);
+  }
+  @media (min-width: 768px) {
+    .floating-fab-bottom-with-analytics {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 109px) !important;
+    }
+  }
+
+  .floating-fab-bottom-no-analytics {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 94px);
+  }
+  @media (min-width: 768px) {
+    .floating-fab-bottom-no-analytics {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 40px) !important;
+    }
+  }
 }
 
 /* Datepicker Custom Styles */
+/* Driver.js Custom Sproutly Theme */
+.sproutly-tour-theme {
+  @apply !bg-white/95 dark:!bg-slate-900/95 !backdrop-blur-2xl !rounded-[1.5rem] !p-5 md:!p-6 !shadow-2xl !shadow-slate-900/10 dark:!shadow-black/40 !border !border-slate-200/60 dark:!border-white/[0.08] !font-sans;
+}
+
+@media (min-width: 768px) {
+  .sproutly-tour-theme {
+    width: 340px !important;
+    max-width: 340px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .sproutly-tour-theme {
+    width: calc(100vw - 32px) !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    left: 16px !important;
+  }
+}
+
+/* Ensure smooth scrolling accounts for sticky headers */
+[data-tour] {
+  scroll-margin-top: 140px;
+  scroll-margin-bottom: 140px;
+}
+
+.sproutly-tour-theme .driver-popover-title,
+.sproutly-tour-theme .driver-popover-description,
+.sproutly-tour-theme .driver-popover-footer,
+.sproutly-tour-theme .driver-popover-progress-text,
+.sproutly-tour-theme .driver-popover-close-btn,
+.sproutly-tour-theme .driver-popover-arrow {
+  display: none !important;
+}
+
 .react-datepicker-wrapper {
   @apply w-full;
 }

@@ -170,26 +170,38 @@ export function calculateIncome(deposit: Deposit): number {
   
   if (!deposit.startDate) return 0;
   
-  const startDate = new Date(deposit.startDate);
+  const originalStartDate = new Date(deposit.startDate);
+  originalStartDate.setHours(0, 0, 0, 0);
+
+  const calcStartDate = deposit.lastAmountUpdate ? new Date(deposit.lastAmountUpdate) : originalStartDate;
+  calcStartDate.setHours(0, 0, 0, 0);
+
   const endDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
+  endDate.setHours(0, 0, 0, 0);
   
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return 0;
+  const historical = deposit.historicalIncome || 0;
+
+  if (isNaN(calcStartDate.getTime()) || isNaN(endDate.getTime())) return historical;
   
-  const days = differenceInDays(endDate, startDate);
-  if (days <= 0) return 0;
+  const days = differenceInDays(endDate, calcStartDate);
+  if (days <= 0) return historical;
   
+  let currentIncome = 0;
   switch (deposit.formula) {
     case 'simple_days':
     case 'simple_months':
     case 'daily_balance':
     case 'min_balance':
-      return calculateExactSimpleInterest(deposit.amount, deposit.rate, startDate, endDate);
+      currentIncome = calculateExactSimpleInterest(deposit.amount, deposit.rate, calcStartDate, endDate);
+      break;
     case 'compound_monthly':
-      return calculateExactCompoundInterest(deposit.amount, deposit.rate, startDate, endDate);
+      currentIncome = calculateExactCompoundInterest(deposit.amount, deposit.rate, calcStartDate, endDate);
+      break;
     case '':
     default:
-      return 0;
+      currentIncome = 0;
   }
+  return historical + currentIncome;
 }
 
 export interface YearIncome {
@@ -201,7 +213,9 @@ export function calculateIncomeByYears(deposit: Deposit): YearIncome[] {
   if (!deposit.startDate) return [];
   
   const startDate = new Date(deposit.startDate);
+  startDate.setHours(0, 0, 0, 0);
   const endDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
+  endDate.setHours(0, 0, 0, 0);
   
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return [];
   

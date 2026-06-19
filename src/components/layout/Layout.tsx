@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles, Map } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { auth, signInWithGoogle, logout } from '../../config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -239,9 +239,9 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           </motion.div>
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800/50 p-1.5 gap-1 shadow-sm">
-            {user ? (
-              <Menu as="div" className="relative flex-1">
-                <Menu.Button className="w-full h-10 flex items-center justify-between px-2 bg-transparent hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all cursor-pointer outline-none group">
+            <Menu as="div" className="relative flex-1">
+              {user ? (
+                <Menu.Button className="w-full h-10 flex items-center justify-between px-2 bg-transparent hover:bg-white dark:hover:bg-slate-700/60 rounded-xl transition-all cursor-pointer outline-none group">
                   <div className="relative shrink-0 flex items-center">
                     <img src={user.photoURL || undefined} alt="" className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-600 shadow-[0_2px_8px_rgba(0,0,0,0.1)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4)] transition-transform group-hover:scale-105" referrerPolicy="no-referrer" />
                   </div>
@@ -256,39 +256,127 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                     )}
                   </div>
                 </Menu.Button>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95 translate-y-2"
-                  enterTo="transform opacity-100 scale-100 translate-y-0"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100 translate-y-0"
-                  leaveTo="transform opacity-0 scale-95 translate-y-2"
-                >
-                  <Menu.Items className="absolute bottom-full mb-2 left-0 min-w-[220px] w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
-                    <Menu.Item>
-                      {({ active }) => (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150);
-                          }}
-                          className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
-                            active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
-                          )}
-                        >
-                          <Sparkles className="w-5 h-5 shrink-0" />
-                          <span>Что нового?</span>
-                        </button>
-                      )}
-                    </Menu.Item>
+              ) : (
+                <Menu.Button className="w-full h-10 flex items-center justify-between px-2 bg-transparent hover:bg-white dark:hover:bg-slate-700/60 rounded-xl transition-all cursor-pointer outline-none group text-left">
+                  <div className="relative shrink-0 flex items-center">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:scale-105 transition-transform shadow-sm">
+                      <User className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="flex flex-col min-w-0 flex-1 ml-3 justify-center">
+                    <div className="truncate text-[11px] font-black leading-tight text-slate-900 dark:text-white uppercase tracking-wider">
+                      Гость
+                    </div>
+                    <div className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-0.5">
+                      Настройки
+                    </div>
+                  </div>
+                </Menu.Button>
+              )}
+              <Transition
+                as={Fragment}
+                enter="transition ease-out duration-100"
+                enterFrom="transform opacity-0 scale-95 translate-y-2"
+                enterTo="transform opacity-100 scale-100 translate-y-0"
+                leave="transition ease-in duration-75"
+                leaveFrom="transform opacity-100 scale-100 translate-y-0"
+                leaveTo="transform opacity-0 scale-95 translate-y-2"
+              >
+                <Menu.Items className="absolute bottom-full mb-2 left-0 min-w-[220px] w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
+                  {!user && (
+                    <>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={signInWithGoogle}
+                            className={cn(
+                              "w-full flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-white bg-primary-600 hover:bg-primary-500 active:scale-95 shadow-md shadow-primary-500/10 cursor-pointer"
+                            )}
+                          >
+                            <User className="w-4 h-4 shrink-0 text-white" />
+                            <span>Войти в аккаунт</span>
+                          </button>
+                        )}
+                      </Menu.Item>
+                      <div className="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 font-sans" />
+                    </>
+                  )}
+
+                  <Menu.Item>
+                    {({ active }) => (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setTimeout(() => window.dispatchEvent(new Event('app:show_release_notes')), 150);
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
+                          active ? "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-500" : "text-slate-600 dark:text-slate-300"
+                        )}
+                      >
+                        <Sparkles className="w-5 h-5 shrink-0 animate-pulse" />
+                        <span>Что нового?</span>
+                      </button>
+                    )}
+                  </Menu.Item>
+
+                  <Menu.Item>
+                    {({ close }) => {
+                      const showTourHints = appSettings
+                        ? !(appSettings.tourCompleted && appSettings.tourCompletedAssets && appSettings.tourCompletedIncome)
+                        : false;
+                      return (
+                        <div className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300">
+                          <div className="flex items-center gap-3">
+                            <Map className="w-5 h-5 shrink-0" />
+                            <span>Подсказки</span>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              const nextVal = !showTourHints;
+                              try {
+                                const settings = await db.appSettings.get('main');
+                                if (settings) {
+                                  await db.appSettings.put({
+                                    ...settings,
+                                    tourCompleted: !nextVal,
+                                    tourCompletedAssets: !nextVal,
+                                    tourCompletedIncome: !nextVal,
+                                    updatedAt: Date.now(),
+                                    userId: auth.currentUser?.uid || 'guest'
+                                  });
+                                  syncWithFirebase();
+                                  showToast(nextVal ? 'Подсказки включены для всех разделов' : 'Подсказки отключены');
+                                }
+                              } catch (e) {
+                                console.error(e);
+                              }
+                              close();
+                            }}
+                            className={cn(
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                              showTourHints ? "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.3)]" : "bg-slate-200 dark:bg-slate-800"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out",
+                                showTourHints ? "translate-x-4" : "translate-x-0"
+                              )}
+                            />
+                          </button>
+                        </div>
+                      );
+                    }}
+                  </Menu.Item>
+
+                  {user && (
                     <Menu.Item>
                       {({ active }) => (
                         <button
                           onClick={() => setShowLogoutConfirm(true)}
                           className={cn(
-                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap",
+                            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
                             active ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600" : "text-rose-500"
                           )}
                         >
@@ -297,18 +385,10 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                         </button>
                       )}
                     </Menu.Item>
-                  </Menu.Items>
-                </Transition>
-              </Menu>
-            ) : (
-              <button
-                onClick={signInWithGoogle}
-                className="apple-button flex-1 flex items-center justify-center gap-3 px-6 h-10 bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-500 text-white font-bold text-sm shadow-lg shadow-primary-500/20 rounded-xl"
-              >
-                <User className="w-4 h-4 stroke-[2px]" />
-                Войти
-              </button>
-            )}
+                  )}
+                </Menu.Items>
+              </Transition>
+            </Menu>
 
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
@@ -387,7 +467,7 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
           initial={false}
           animate={{ y: isMobileHeaderHidden ? -100 : 0, opacity: isMobileHeaderHidden ? 0 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="md:hidden fixed z-[60] left-4 right-4 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+          className="md:hidden fixed z-[60] left-2 right-2 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
           style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
         >
           <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => onTabChange('dashboard')}>
@@ -495,6 +575,56 @@ export function Layout({ children, activeTab, onTabChange, theme }: LayoutProps)
                             </div>
                           </button>
                         )}
+                      </Menu.Item>
+
+                      <Menu.Item>
+                        {({ close }) => {
+                          const showTourHints = appSettings
+                            ? !(appSettings.tourCompleted && appSettings.tourCompletedAssets && appSettings.tourCompletedIncome)
+                            : false;
+                          return (
+                            <div className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center gap-3">
+                                <Map className="w-5 h-5 shrink-0" />
+                                <span>Подсказки</span>
+                              </div>
+                              <button
+                                onClick={async () => {
+                                  const nextVal = !showTourHints;
+                                  try {
+                                    const settings = await db.appSettings.get('main');
+                                    if (settings) {
+                                      await db.appSettings.put({
+                                        ...settings,
+                                        tourCompleted: !nextVal,
+                                        tourCompletedAssets: !nextVal,
+                                        tourCompletedIncome: !nextVal,
+                                        updatedAt: Date.now(),
+                                        userId: auth.currentUser?.uid || 'guest'
+                                      });
+                                      showToast(nextVal ? 'Подсказки включены для всех разделов' : 'Подсказки отключены');
+                                      syncWithFirebase();
+                                    }
+                                  } catch (e) {
+                                    console.error(e);
+                                  }
+                                  close();
+                                }}
+                                className={cn(
+                                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                  showTourHints ? "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.3)]" : "bg-slate-200 dark:bg-slate-800"
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out",
+                                    showTourHints ? "translate-x-4" : "translate-x-0"
+                                  )}
+                                />
+                              </button>
+                            </div>
+                          );
+                        }}
                       </Menu.Item>
 
                       {user && (

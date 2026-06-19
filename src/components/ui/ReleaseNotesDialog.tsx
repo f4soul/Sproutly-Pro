@@ -14,7 +14,10 @@ export function ReleaseNotesDialog() {
   useEffect(() => {
     // Check if we need to auto-show it
     const lastSeen = localStorage.getItem('last_seen_version');
-    if (lastSeen !== LATEST_VERSION) {
+    const hasOnboarded = localStorage.getItem('hasOnboarded') === 'true';
+
+    // Only show if user has onboarded AND hasn't seen the latest version
+    if (hasOnboarded && lastSeen !== LATEST_VERSION) {
       // Delay slightly for dramatic effect
       const timer = setTimeout(() => {
         setIsOpen(true);

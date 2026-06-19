@@ -396,6 +396,32 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     } as Deposit;
 
     if (deposit?.id) {
+      if (
+        dataToSave.formula === 'daily_balance' && 
+        (deposit.amount !== dataToSave.amount || deposit.rate !== dataToSave.rate)
+      ) {
+        // "Bank style" math: snapshot the accrued income up to today, freeze it,
+        // and start calculating new income from today for the new balance/rate.
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const oldEndDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
+        oldEndDate.setHours(0, 0, 0, 0);
+
+        // Only snap if today is before maturation, otherwise the full income is already earned
+        if (today < oldEndDate && Number(dataToSave.amount) > 0) {
+          // Calculate income earned *exactly* up to today using the old parameters
+          const originalIncomeUpToToday = calculateIncome({
+            ...deposit,
+            endDate: today,
+            factIncome: undefined
+          });
+
+          dataToSave.historicalIncome = originalIncomeUpToToday;
+          dataToSave.lastAmountUpdate = today.getTime();
+        }
+      }
+
       await db.deposits.put({ ...dataToSave, id: deposit.id });
     } else {
       const newId =

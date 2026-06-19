@@ -37,8 +37,8 @@ export interface YearDataV2 {
     showAnnual?: boolean;
     showMonthly?: boolean;
     showExtraAnnual?: boolean;
-    annualCalcType?: 'rub' | 'percent' | 'coef';
-    extraAnnualCalcType?: 'rub' | 'percent' | 'coef';
+    annualCalcType?: 'rub' | 'percent' | 'coef' | 'percent_annual';
+    extraAnnualCalcType?: 'rub' | 'percent' | 'coef' | 'percent_annual';
     quarterCalcType?: 'rub' | 'percent' | 'coef';
     mainCalcType?: 'rub' | 'percent' | 'coef';
   };
@@ -114,6 +114,11 @@ export type YearlyTotals = {
   brackets: TaxBracketDetail[];
 };
 
+export interface ProductionCalendar {
+  year: number;
+  workingDays: number[]; // Array of 12 numbers
+}
+
 export type CalculationFormula = 'simple_days' | 'simple_months' | 'compound_monthly' | 'daily_balance' | 'min_balance' | '';
 
 export interface Bank {
@@ -157,6 +162,8 @@ export interface Deposit {
   formula: CalculationFormula;
   comment?: string;
   factIncome?: number; // Factual exact income defined by user
+  historicalIncome?: number; // Income fixed from past balance changes
+  lastAmountUpdate?: number; // Timestamp of the last balance change
   isClosed: boolean;
   isArchived?: boolean | number; // New field for Archive
   splitIncome?: boolean;
@@ -203,6 +210,9 @@ export interface AppSettings {
   incomeCalculationMode?: 'salary' | 'combined';
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
+  tourCompleted?: boolean;
+  tourCompletedAssets?: boolean;
+  tourCompletedIncome?: boolean;
   privacyLock?: {
     enabled: boolean;
     pin: string | null;
