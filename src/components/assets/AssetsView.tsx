@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Landmark, Vault } from "lucide-react";
-import { Deposit, CashAsset } from "../../types";
+import { Landmark, Vault, ChartNoAxesCombined } from "lucide-react";
+import { Deposit, CashAsset, InvestmentAsset } from "../../types";
 import { DepositList } from "../deposits/DepositList";
 import { CashList } from "./CashList";
+import { InvestmentList } from "./InvestmentList";
 import { cn } from "../../lib/utils";
 
 interface AssetsViewProps {
   deposits: Deposit[];
   cashAssets: CashAsset[];
+  investmentAssets: InvestmentAsset[];
   selectedYear: number;
   isPrivate?: boolean;
 }
@@ -16,10 +18,11 @@ interface AssetsViewProps {
 export function AssetsView({
   deposits,
   cashAssets,
+  investmentAssets,
   selectedYear,
   isPrivate = false,
 }: AssetsViewProps) {
-  const [activeTab, setActiveTab] = useState<"deposits" | "cash">("deposits");
+  const [activeTab, setActiveTab] = useState<"deposits" | "cash" | "investments">("deposits");
 
   return (
     <div className="space-y-4">
@@ -70,12 +73,33 @@ export function AssetsView({
                 />
               )}
             </button>
+            <button
+              onClick={() => setActiveTab("investments")}
+              className={cn(
+                "flex-1 md:flex-none md:px-5 lg:px-7 relative flex items-center justify-center gap-2 py-2 text-[10px] xl:text-xs font-bold rounded-xl transition-all h-9 z-10",
+                activeTab === "investments"
+                  ? "text-primary-600 dark:text-primary-400"
+                  : "text-slate-500 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5"
+              )}
+            >
+              <span className="relative z-20 flex items-center gap-2">
+                <ChartNoAxesCombined size={13} className={cn("transition-colors", activeTab === "investments" ? "opacity-100" : "opacity-60")} />
+                <span className="uppercase tracking-widest truncate">Биржа</span>
+              </span>
+              {activeTab === "investments" && (
+                <motion.div 
+                  layoutId="activeAssetsTabPill"
+                  className="absolute inset-0 bg-white dark:bg-primary-500/10 rounded-xl z-10 shadow-sm ring-1 ring-black/5 dark:ring-primary-400/30"
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                />
+              )}
+            </button>
           </div>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === "deposits" ? (
+        {activeTab === "deposits" && (
           <motion.div
             key="deposits"
             initial={{ opacity: 0, y: 10 }}
@@ -89,7 +113,8 @@ export function AssetsView({
               isPrivate={isPrivate}
             />
           </motion.div>
-        ) : (
+        )}
+        {activeTab === "cash" && (
           <motion.div
             key="cash"
             initial={{ opacity: 0, y: 10 }}
@@ -98,6 +123,17 @@ export function AssetsView({
             transition={{ duration: 0.2 }}
           >
             <CashList cashAssets={cashAssets} isPrivate={isPrivate} />
+          </motion.div>
+        )}
+        {activeTab === "investments" && (
+          <motion.div
+            key="investments"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <InvestmentList investmentAssets={investmentAssets} isPrivate={isPrivate} />
           </motion.div>
         )}
       </AnimatePresence>

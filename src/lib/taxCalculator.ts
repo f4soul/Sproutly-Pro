@@ -32,6 +32,25 @@ export const calculateProgressiveTaxDetailed = (
   return { tax, brackets };
 };
 
+const formatterCache = new Map<string, Intl.NumberFormat>();
+
+function getCurrencyFormatter(currency: string) {
+  if (!formatterCache.has(currency)) {
+    formatterCache.set(currency, new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }));
+  }
+  return formatterCache.get(currency)!;
+}
+
+const numberFormatter = new Intl.NumberFormat('ru-RU', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
 export const formatCurrency = (value: number, currencyCode: string = 'RUB') => {
   let validCurrency = currencyCode;
   
@@ -40,27 +59,14 @@ export const formatCurrency = (value: number, currencyCode: string = 'RUB') => {
   }
 
   try {
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: validCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+    return getCurrencyFormatter(validCurrency).format(value);
   } catch (err) {
     console.error('Invalid currency code:', validCurrency);
     // Fallback if the code is really invalid
-    return new Intl.NumberFormat('ru-RU', {
-      style: 'currency',
-      currency: 'RUB',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
+    return getCurrencyFormatter('RUB').format(value);
   }
 };
 
 export const formatNumber = (value: number) => {
-  return new Intl.NumberFormat('ru-RU', { 
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(value);
+  return numberFormatter.format(value);
 };

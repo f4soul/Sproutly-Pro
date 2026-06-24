@@ -7,7 +7,8 @@ import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { SecuritySettings } from './SecuritySettings';
 import { motion, AnimatePresence } from 'motion/react';
-import { useAppState } from '../../hooks/useAppState';
+import { useAppData } from '../../context/AppDataContext';
+import { showToast } from '../../lib/toast';
 import { DEFAULT_TAX_BRACKETS } from '../../lib/constants';
 import { TableInput } from '../ui/TableInput';
 import { getPlural } from '../../lib/helpers';
@@ -18,7 +19,7 @@ interface SettingsProps {
 }
 
 export function Settings({ taxSettings, appSettings }: SettingsProps) {
-  const { state, setState, addToast } = useAppState();
+  const { state, setState } = useAppData();
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
   const [bracketYearToDelete, setBracketYearToDelete] = useState<number | null>(null);
@@ -35,7 +36,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
     const nextYear = Math.max(newYear, maxYear + 1);
     
     if (taxSettings.find(s => s.year === nextYear)) {
-      addToast('Этот период уже добавлен', 'info');
+      showToast('Этот период уже добавлен', 'info');
       return;
     }
     
@@ -46,7 +47,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       updatedAt: Date.now()
     });
     setNewYear(nextYear + 1);
-    addToast(`Период ${nextYear} добавлен`);
+    showToast(`Период ${nextYear} добавлен`);
     syncWithFirebase();
   };
 
@@ -58,7 +59,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       ndflRate: 13,
       updatedAt: Date.now()
     });
-    addToast('Период 2024 восстановлен');
+    showToast('Период 2024 восстановлен');
     syncWithFirebase();
   };
 
@@ -82,7 +83,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       }
       
       setYearToDelete(null);
-      addToast('Период удален');
+      showToast('Период удален');
       syncWithFirebase();
     }
   };
@@ -124,7 +125,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
     a.download = `finance_backup_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    addToast('Данные экспортированы');
+    showToast('Данные экспортированы');
   };
 
   const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,10 +166,10 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           // setState handles setting updatedAt inside
           setState(data.incomeTracker);
         }
-        addToast('Данные успешно импортированы');
+        showToast('Данные успешно импортированы');
         setTimeout(() => window.location.reload(), 1500);
       } catch {
-        addToast('Ошибка при импорте данных', 'error');
+        showToast('Ошибка при импорте данных', 'error');
       }
     };
     reader.readAsText(file);
@@ -223,12 +224,12 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       }
     }));
     setExpandedBracketYear(nextYear);
-    addToast(`Период ${nextYear} добавлен в шкалу НДФЛ`);
+    showToast(`Период ${nextYear} добавлен в шкалу НДФЛ`);
   };
 
   const removeBracketYear = (year: number) => {
     if (availableBracketYears.length <= 1) {
-      addToast('Должен остаться хотя бы один период', 'info');
+      showToast('Должен остаться хотя бы один период', 'info');
       return;
     }
     setState(prev => {
@@ -236,7 +237,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       delete newBrackets[year];
       return { ...prev, taxBrackets: newBrackets };
     });
-    addToast(`Период ${year} удален из шкалы НДФЛ`);
+    showToast(`Период ${year} удален из шкалы НДФЛ`);
     if (expandedBracketYear === year) {
        setExpandedBracketYear(null);
     }

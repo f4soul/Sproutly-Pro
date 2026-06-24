@@ -113,6 +113,25 @@
         "exchangeRateOnOpen": { "type": "number" }
       },
       "required": ["amount", "currency", "name"]
+    },
+    "InvestmentAsset": {
+      "title": "Investment Asset",
+      "description": "An investment asset record (brokerage accounts, IIS).",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["brokerage", "iis"] },
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "currentValue": { "type": "number" },
+        "currency": { "type": "string" },
+        "startDate": { "type": "string" },
+        "comment": { "type": "string" },
+        "iisType": { "type": "string" },
+        "deductionsReceived": { "type": "number" },
+        "isArchived": { "type": "boolean" }
+      },
+      "required": ["type", "name", "amount", "currentValue", "currency", "startDate"]
     }
   },
   "firestore": {
@@ -135,6 +154,10 @@
     "/cashAssets/{cashAssetId}": {
       "schema": "CashAsset",
       "description": "Individual cash asset records."
+    },
+    "/investmentAssets/{assetId}": {
+      "schema": "InvestmentAsset",
+      "description": "Individual investment asset records."
     }
   }
 }

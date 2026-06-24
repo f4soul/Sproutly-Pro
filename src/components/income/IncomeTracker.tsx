@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Info, TrendingUp, Shield, Eye, EyeOff, Zap } from 'lucide-react';
+import { Info, HandCoins, Shield, Eye, EyeOff, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MonthData, SimulationState, CalculatedMonth, MonthDataV2, IncomeColumnDef } from '../../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../../lib/constants';
@@ -8,12 +8,12 @@ import { TaxReferenceModal } from './TaxReferenceModal';
 import { ClearDataModal } from '../ui/ClearDataModal';
 import { DeleteYearModal } from './DeleteYearModal';
 import { CopyYearModal } from './CopyYearModal';
-import { ToastContainer } from '../ui/ToastContainer';
 import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
 import { ScenarioSimulator } from './ScenarioSimulator';
-import { exportToPDF, exportIncomeToXLSX } from '../../services/ExportService';
-import { useAppState } from '../../hooks/useAppState';
+
+import { useAppData } from '../../context/AppDataContext';
+import { showToast } from '../../lib/toast';
 import { cn, formatCurrency } from '../../lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../config/db';
@@ -30,13 +30,13 @@ interface IncomeTrackerProps {
 }
 
 export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
-  const { state, setState, addToast, toasts, removeToast, isInitialized } = useAppState();
+  const { state, setState, isInitialized } = useAppData();
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
   
   const handleCopy = (value: number, type: 'net' | 'gross' | 'tax') => {
     navigator.clipboard.writeText(value.toString());
-    addToast(`Сумма скопирована в буфер обмена`);
+    showToast(`Сумма скопирована в буфер обмена`);
   };
 
   const [expandedQuarters, setExpandedQuarters] = useState<Record<number, boolean>>(() => getDefaultExpandedQuarters(state.activeYear));
@@ -162,7 +162,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         }
       };
     });
-    addToast(`Добавлен ${newYear} год`);
+    showToast(`Добавлен ${newYear} год`);
   };
 
   const handleQuarterChange = React.useCallback((qIndex: number, field: 'bonusCoef' | 'bonusAmount', value: number) => {
@@ -203,8 +203,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         const newMonths = currentYearData.months.map(m => ({ ...m, salary: base }));
         newYears[prev.activeYear] = { ...currentYearData, months: newMonths };
         
-        // Use timeout to avoid calling addToast during render if setState is synchronous
-        setTimeout(() => addToast(`Оклад во всех месяцах установлен равным базе (${formatCurrency(base)})`, 'success'), 0);
+        // Use timeout to avoid calling showToast during render if setState is synchronous
+        setTimeout(() => showToast(`Оклад во всех месяцах установлен равным базе (${formatCurrency(base)})`, 'success'), 0);
         return { ...prev, years: newYears };
       });
       return;
@@ -278,7 +278,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       };
       return { ...prev, years: newYears };
     });
-  }, [addToast]);
+  }, [showToast]);
 
   const handleValueChange = React.useCallback((index: number, colId: string, value: number) => {
     setState(prev => {
@@ -304,7 +304,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       ...prev,
       years: { ...prev.years, [prev.activeYear]: generateEmptyYear(prev.activeYear) }
     }));
-    addToast(`Данные за ${state.activeYear} год очищены`);
+    showToast(`Данные за ${state.activeYear} год очищены`);
     setIsClearModalOpen(false);
   };
 
@@ -351,7 +351,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   const deleteActiveYear = () => {
     if (availableYears.length <= 1) {
-      addToast("Нельзя удалить единственный год", "info");
+      showToast("Нельзя удалить единственный год", "info");
       return;
     }
 
@@ -370,7 +370,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       return { ...prev, years: newYears, activeYear: newActiveYear, taxBrackets: newTaxBrackets };
     });
     
-    addToast(`${state.activeYear} год удален`);
+    showToast(`${state.activeYear} год удален`);
     setIsDeleteYearModalOpen(false);
   };
 
@@ -597,6 +597,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                 prevYear={prevYear}
                 copyFromPreviousYear={() => setIsCopyModalOpen(true)}
                 onExportPDF={async () => {
+                  const { exportToPDF } = await import('../../services/ExportService');
                   const success = await exportToPDF(null, {
                     totalGross: yearlyTotals.totalGross,
                     totalNet: yearlyTotals.finalNet,
@@ -607,7 +608,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                     totals: yearlyTotals
                   });
                 }}
-                onExportXLSX={() => {
+                onExportXLSX={async () => {
+                  const { exportIncomeToXLSX } = await import('../../services/ExportService');
                   exportIncomeToXLSX(calculatedMonths, state.activeYear, yearlyTotals);
                 }}
                 isSimulationOpen={isSimulationOpen}
@@ -722,7 +724,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
               };
               return { ...prev, years: newYears };
             });
-            addToast('Настройки таблицы успешно сохранены');
+            showToast('Настройки таблицы успешно сохранены');
           }}
         />
       )}
@@ -760,9 +762,6 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
         year={state.activeYear}
         brackets={state.taxBrackets[state.activeYear] || DEFAULT_TAX_BRACKETS[2025] || []}
       />
-
-      {/* Toasts */}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }

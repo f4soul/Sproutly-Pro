@@ -148,6 +148,26 @@ export interface CashAsset {
   updatedAt?: number;
 }
 
+export type InvestmentAccountType = 'brokerage' | 'iis';
+
+export type IISType = 'A' | 'B' | '3'; // A: deduction on deposit, B: tax free profit, 3: both
+
+export interface InvestmentAsset {
+  id?: string | number;
+  userId?: string;
+  name: string; // e.g. "T-Invest", "Sber Broker"
+  type: InvestmentAccountType;
+  iisType?: IISType;
+  startDate: Date | null;
+  amount: number; // Total contributed amount (Пополнения - Выводы)
+  currentValue: number; // Current portfolio value (Текущая стоимость)
+  currency: string;
+  deductionsReceived?: number; // Sum of NDFL returns received (for IIS type A/3)
+  comment?: string;
+  isArchived?: boolean;
+  updatedAt?: number;
+}
+
 export interface Deposit {
   id?: string | number;
   userId?: string; // For Firebase sync
@@ -216,6 +236,7 @@ export interface AppSettings {
   privacyLock?: {
     enabled: boolean;
     pin: string | null;
+    pinHash?: string | null;
     useBiometrics: boolean;
     credentialId?: string | null;
     credentialIds?: string[] | null;

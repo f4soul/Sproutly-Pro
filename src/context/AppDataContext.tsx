@@ -1,10 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { AppState, Toast } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { AppState } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
 import { auth, onAuthStateChanged, User } from '../config/firebase';
 import { db, syncWithFirebase, startRealTimeSync, stopRealTimeSync, clearLocalData } from '../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
+
+interface AppDataContextType {
+  state: AppState;
+  setState: (newState: AppState | ((prevState: AppState) => AppState)) => void;
+  user: User | null;
+  isAuthReady: boolean;
+  isInitialized: boolean;
+  syncStatus: 'synced' | 'syncing' | 'error' | 'offline' | 'idle';
+  appSettings: any; // Using any for now or import AppSettings if needed
+}
+
+const AppDataContext = createContext<AppDataContextType | null>(null);
 
 const getInitialState = (): AppState => {
   const currentYear = new Date().getFullYear();
@@ -15,7 +27,6 @@ const getInitialState = (): AppState => {
     2026: generateDefaultYear(2026),
   };
 
-  // Ensure current year is always generated if not 24, 25, 26
   if (!years[currentYear]) {
     years[currentYear] = generateDefaultYear(currentYear);
   }
@@ -35,29 +46,26 @@ const getInitialState = (): AppState => {
 
 let globalAuthInitialized = false;
 let globalLastUserUid: string | null = null;
-
 let globalIsLoaded = false;
 
-export const useAppState = () => {
+export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [localState, setLocalState] = useState<AppState>(getInitialState());
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline' | 'idle'>('offline');
-  const [toasts, setToasts] = useState<Toast[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
+  const appSettings = useLiveQuery(() => db.appSettings.get('main'));
 
   useEffect(() => {
     if (dbState) {
-      // Avoid redundant updates if local state is already matched or newer
       if (globalIsLoaded && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
         if (!isInitialized) setIsInitialized(true);
         return;
       }
       const dataToSet = { ...dbState as AppState };
       if (!globalIsLoaded) {
-        // Force the app to start with current calendar year only on very first load
         dataToSet.activeYear = new Date().getFullYear();
         if (!dataToSet.years[dataToSet.activeYear]) {
            dataToSet.years[dataToSet.activeYear] = generateDefaultYear(dataToSet.activeYear);
@@ -69,12 +77,10 @@ export const useAppState = () => {
     } else if (dbState === undefined && !globalIsLoaded) {
       // Still loading
     } else if (dbState === null && !globalIsLoaded) {
-      // No data in DB, use initial
       setIsInitialized(true);
       globalIsLoaded = true;
     }
-  }, [dbState]);
-
+  }, [dbState, isInitialized, localState]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -96,17 +102,6 @@ export const useAppState = () => {
     });
   };
 
-  const addToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
-    const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
-  // Auth Listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -138,7 +133,6 @@ export const useAppState = () => {
     return () => unsubscribe();
   }, []);
 
-  // Sync listener
   useEffect(() => {
     const handleSync = (e: Event) => {
       const customEvent = e as CustomEvent<{ status: 'syncing' | 'success' | 'error' }>;
@@ -155,7 +149,6 @@ export const useAppState = () => {
     return () => window.removeEventListener('app:sync', handleSync);
   }, []);
 
-  // Hide sync status after success
   useEffect(() => {
     if (syncStatus === 'synced') {
       const timer = setTimeout(() => setSyncStatus('idle'), 2000);
@@ -163,7 +156,6 @@ export const useAppState = () => {
     }
   }, [syncStatus]);
 
-  // Migrate from localStorage if exists
   useEffect(() => {
     const migrate = async () => {
       const saved = localStorage.getItem('incomeCalculatorState_v4');
@@ -189,15 +181,25 @@ export const useAppState = () => {
     migrate();
   }, [user]);
 
-  return {
-    state: localState,
-    setState,
-    user,
-    isAuthReady,
-    isInitialized,
-    syncStatus,
-    toasts,
-    addToast,
-    removeToast,
-  };
+  return (
+    <AppDataContext.Provider value={{
+      state: localState,
+      setState,
+      user,
+      isAuthReady,
+      isInitialized,
+      syncStatus,
+      appSettings
+    }}>
+      {children}
+    </AppDataContext.Provider>
+  );
+};
+
+export const useAppData = () => {
+  const context = useContext(AppDataContext);
+  if (!context) {
+    throw new Error('useAppData must be used within an AppDataProvider');
+  }
+  return context;
 };

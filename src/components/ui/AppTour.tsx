@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { driver, DriveStep } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { db } from '../../config/db';
-import { useAppState } from '../../hooks/useAppState';
+import { showToast } from '../../lib/toast';
 import { useLiveQuery } from 'dexie-react-hooks';
 import ReactDOMServer from 'react-dom/server';
 import { Map, Zap, Landmark, Bolt, LayoutDashboard } from 'lucide-react';
@@ -13,7 +13,6 @@ interface AppTourProps {
 }
 
 export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false }) => {
-  const { addToast } = useAppState();
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
   const shownThisSession = useRef({ dashboard: false, deposits: false, ndfl: false });
   const driverInstance = useRef<any>(null);
@@ -193,17 +192,17 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
             updated.tourCompleted = true;
             updated.tourCompletedAssets = true;
             updated.tourCompletedIncome = true;
-            addToast('Подсказки полностью отключены', 'success');
+            showToast('Подсказки полностью отключены', 'success');
           } else {
             if (tab === 'dashboard') {
               updated.tourCompleted = true;
-              addToast('Обучение по Дашборду завершено', 'success');
+              showToast('Обучение по Дашборду завершено', 'success');
             } else if (tab === 'deposits') {
               updated.tourCompletedAssets = true;
-              addToast('Обучение по Активам завершено', 'success');
+              showToast('Обучение по Активам завершено', 'success');
             } else if (tab === 'ndfl') {
               updated.tourCompletedIncome = true;
-              addToast('Обучение по Доходам завершено', 'success');
+              showToast('Обучение по Доходам завершено', 'success');
             }
           }
           await db.appSettings.put(updated);

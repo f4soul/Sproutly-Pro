@@ -1,8 +1,8 @@
 import React, { useState, Fragment } from "react";
 import { Dialog, Listbox } from "@headlessui/react";
-import { Banknote, ChevronDown, X } from "lucide-react";
+import { Vault, ChevronDown, X } from "lucide-react";
 import { CashAsset } from "../../types";
-import { db, emitSyncEvent } from "../../config/db";
+import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { cn } from "../../lib/utils";
 import { auth } from "../../config/firebase";
 import { motion, AnimatePresence } from "motion/react";
@@ -53,6 +53,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
         await db.cashAssets.add(dataToSave);
       }
       emitSyncEvent("syncing");
+      syncWithFirebase().catch(console.error);
       onClose();
     } catch (err) {
       console.error("Error saving cash asset:", err);
@@ -67,12 +68,13 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/80 backdrop-blur-sm"
         aria-hidden="true"
       />
-      <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+      <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <Dialog.Panel as={Fragment}>
           <motion.div 
+            layout
             initial={{ opacity: 0, scale: 0.95, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
@@ -83,8 +85,8 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold tracking-tight text-slate-950 dark:text-white flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-deposit-100 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400 shrink-0">
-                      <Banknote className="w-4 h-4 stroke-[2.5px]" />
+                    <div className="w-8 h-8 rounded-lg bg-cash-100 dark:bg-cash-500/20 flex items-center justify-center text-cash-600 dark:text-cash-400 shrink-0">
+                      <Vault className="w-4 h-4 stroke-[2.5px]" />
                     </div>
                     {assetToEdit ? "Редактировать актив" : "Новый актив"}
                   </h3>
@@ -151,7 +153,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                     >
                       {({ open }) => (
                         <div className="relative h-full text-slate-950 dark:text-white">
-                          <Listbox.Button className="relative h-full flex items-center justify-center gap-1.5 px-3 rounded-lg border transition-all duration-200 select-none cursor-pointer border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700 active:scale-95 focus:outline-none">
+                          <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                             <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
                               {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
                                 (formData.currency || "RUB") as
@@ -285,7 +287,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3.5 text-sm font-bold text-white bg-deposit-500 hover:bg-deposit-600 rounded-xl transition-all shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] active:scale-95"
+                  className="flex-1 py-3.5 text-sm font-bold text-white bg-cash-500 hover:bg-cash-600 rounded-xl transition-all shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)] active:scale-95"
                 >
                   Сохранить
                 </button>

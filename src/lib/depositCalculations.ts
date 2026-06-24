@@ -11,17 +11,31 @@ export function calculateDepositDensity(deposits: Deposit[], year: number): Heat
   let globalMax = 0;
   let globalMin = Infinity;
 
-  // Filter deposits that are active or relative to this year
-  const relevantDeposits = deposits.filter(d => {
-    if (d.isArchived) return false;
-    const dStart = new Date(d.startDate);
-    const dEnd = d.endDate ? new Date(d.endDate) : new Date(year + 10, 0, 1);
-    
-    return dStart <= endDate && dEnd >= startDate;
-  });
+  // Pre-parse dates and filter
+  const parsedDeposits = deposits
+    .filter(d => !d.isArchived)
+    .map(d => {
+      const dStart = new Date(d.startDate);
+      dStart.setHours(0, 0, 0, 0);
+      
+      const dEnd = d.endDate ? new Date(d.endDate) : null;
+      if (dEnd) dEnd.setHours(0, 0, 0, 0);
+      
+      const calcEnd = dEnd || new Date(year + 10, 0, 1);
+      
+      return {
+        ...d,
+        startTime: dStart.getTime(),
+        endTime: dEnd ? dEnd.getTime() : null,
+        calcEndTime: calcEnd.getTime()
+      };
+    })
+    .filter(d => d.startTime <= endDate.getTime() && d.calcEndTime >= startDate.getTime());
 
   days.forEach(day => {
-    const dateKey = format(day, 'yyyy-MM-dd');
+    const dateKey = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    const dayTime = day.getTime();
+    
     let totalAmount = 0;
     let activeCount = 0;
     let maturingCount = 0;
@@ -29,26 +43,23 @@ export function calculateDepositDensity(deposits: Deposit[], year: number): Heat
     const maturingNames: { bank: string; amount: number }[] = [];
     const openingNames: { bank: string; amount: number }[] = [];
 
-    relevantDeposits.forEach(d => {
-      const dStart = new Date(d.startDate);
-      const dEnd = d.endDate ? new Date(d.endDate) : null;
-
+    parsedDeposits.forEach(d => {
       // Opening today
-      if (isSameDay(day, dStart)) {
+      if (dayTime === d.startTime) {
         openingCount++;
         openingNames.push({ bank: d.bank, amount: d.amount });
       }
 
       // Maturing today
-      if (dEnd && isSameDay(day, dEnd)) {
+      if (d.endTime && dayTime === d.endTime) {
         maturingCount++;
         maturingNames.push({ bank: d.bank, amount: d.amount });
       }
 
       // Is deposit active today?
-      const isActive = dEnd 
-        ? isWithinInterval(day, { start: dStart, end: dEnd })
-        : day >= dStart;
+      const isActive = d.endTime 
+        ? dayTime >= d.startTime && dayTime <= d.endTime
+        : dayTime >= d.startTime;
 
       if (isActive) {
         totalAmount += d.amount;

@@ -12,7 +12,7 @@ import { DepositHeatmap } from './components/deposits/DepositHeatmap';
 import { Settings } from './components/settings/Settings';
 import { IncomeTracker } from './components/income/IncomeTracker';
 import { SecurityLock } from './components/auth/SecurityLock';
-import { useAppState } from './hooks/useAppState';
+import { useAppData } from './context/AppDataContext';
 import { auth } from './config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -37,6 +37,8 @@ const SplashLoader = ({ theme }: { theme: 'light' | 'dark' }) => (
 
 
 
+import { AppDataProvider } from './context/AppDataContext';
+
 export default function App() {
   useEffect(() => {
     initDB();
@@ -44,7 +46,9 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <AppContent />
+      <AppDataProvider>
+        <AppContent />
+      </AppDataProvider>
     </ErrorBoundary>
   );
 }
@@ -59,17 +63,18 @@ function AppContent() {
     return localStorage.getItem('hasOnboarded') !== 'true';
   });
 
-  const _appSettings = useLiveQuery(() => db.appSettings.get('main'));
+  const { state, appSettings: _appSettings } = useAppData();
   const _deposits = useLiveQuery(() => db.deposits.toArray());
   const _cashAssets = useLiveQuery(() => db.cashAssets.toArray());
+  const _investmentAssets = useLiveQuery(() => db.investmentAssets.toArray());
   const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
   
   const isLockActive = useMemo(() => {
-    return !!(_appSettings && _appSettings.privacyLock?.enabled && _appSettings.privacyLock?.pin);
+    return !!(_appSettings && _appSettings.privacyLock?.enabled && (_appSettings.privacyLock?.pin || _appSettings.privacyLock?.pinHash));
   }, [_appSettings]);
 
   const checkLockStatus = () => {
-    if (!_appSettings || !_appSettings.privacyLock?.enabled || !_appSettings.privacyLock?.pin) {
+    if (!_appSettings || !_appSettings.privacyLock?.enabled || !(_appSettings.privacyLock?.pin || _appSettings.privacyLock?.pinHash)) {
       setIsUnlocked(true);
       setHasCheckedLock(true);
       return;
@@ -244,7 +249,7 @@ function AppContent() {
       metaThemeColor.setAttribute('name', 'theme-color');
       document.head.appendChild(metaThemeColor);
     }
-    metaThemeColor.setAttribute('content', theme === 'dark' ? '#0B0F19' : '#f8fafc');
+    metaThemeColor.setAttribute('content', theme === 'dark' ? '#020617' : '#f8fafc');
 
     // Remove media-query based meta tags to prevent system conflicts when manually switching
     document.querySelectorAll('meta[name="theme-color"][media]').forEach(el => el.remove());
@@ -257,7 +262,6 @@ function AppContent() {
 
   const isLoading = _appSettings === undefined || _deposits === undefined || _taxSettings === undefined || _cashAssets === undefined;
 
-  const { state } = useAppState();
   const selectedYear = state?.activeYear || new Date().getFullYear();
 
   const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => {
@@ -294,15 +298,29 @@ function AppContent() {
     <>
       {isLockActive && !isUnlocked && appSettings?.privacyLock && (
         <SecurityLock
-          pin={appSettings.privacyLock.pin || ''}
+          pin={appSettings.privacyLock.pin}
+          pinHash={appSettings.privacyLock.pinHash}
           useBiometrics={appSettings.privacyLock.useBiometrics}
           credentialId={appSettings.privacyLock.credentialId}
           credentialIds={appSettings.privacyLock.credentialIds}
-          onUnlock={() => {
+          onUnlock={async (migratedPinHash?: string) => {
             sessionStorage.setItem('pinUnlocked', 'true');
             // Refresh activity time when unlocking
             localStorage.setItem('lockLastActive', Date.now().toString());
             setIsUnlocked(true);
+            
+            // Quietly migrate if we got a new hash from legacy pin
+            if (migratedPinHash && appSettings) {
+              await db.appSettings.put({
+                ...appSettings,
+                privacyLock: {
+                  ...appSettings.privacyLock,
+                  pinHash: migratedPinHash,
+                  pin: null
+                },
+                updatedAt: Date.now()
+              });
+            }
           }}
         />
       )}
@@ -316,6 +334,7 @@ function AppContent() {
                 <UnifiedDashboard 
                   deposits={deposits} 
                   cashAssets={cashAssets}
+                  investmentAssets={_investmentAssets}
                   taxSettings={taxSettings} 
                   appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
                   isPrivate={isPrivate}
@@ -326,6 +345,7 @@ function AppContent() {
                 <AssetsView 
                   deposits={deposits} 
                   cashAssets={cashAssets}
+                  investmentAssets={_investmentAssets || []}
                   selectedYear={selectedYear} 
                   isPrivate={isPrivate}
                 />

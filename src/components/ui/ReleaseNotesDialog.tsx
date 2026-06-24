@@ -7,15 +7,19 @@ import { motion } from 'motion/react';
 import { db } from '../../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../../config/firebase';
+
 export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isManual, setIsManual] = useState(false);
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
+  const [user, loading] = useAuthState(auth);
 
   const LATEST_VERSION = changelog[0].version;
 
   useEffect(() => {
-    if (isLocked) {
+    if (isLocked || loading) {
       setIsOpen(false);
       return;
     }
@@ -27,8 +31,8 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
     // Get current tour completion status
     const isTourCompleted = appSettings ? appSettings.tourCompleted : false;
 
-    // Only auto-show if user has onboarded AND completed the dashboard tour AND hasn't seen the latest version
-    if (hasOnboarded && isTourCompleted && lastSeen !== LATEST_VERSION) {
+    // Only auto-show if user has onboarded AND completed the dashboard tour AND hasn't seen the latest version AND they are a registered authorized user (not anonymous).
+    if (user && !user.isAnonymous && hasOnboarded && isTourCompleted && lastSeen !== LATEST_VERSION) {
       // Delay slightly for dramatic effect after lock / tour finishes
       const timer = setTimeout(() => {
         setIsOpen(true);

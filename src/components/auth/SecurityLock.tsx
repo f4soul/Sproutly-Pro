@@ -3,20 +3,22 @@ import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Fingerprint, Lock, ShieldUser, X, Delete, AlertTriangle } from 'lucide-react';
 import { verifyBiometricCredential } from '../../lib/biometrics';
+import { verifyPin, hashPin } from '../../lib/security';
 import { cn } from '../../lib/utils';
 import { showToast } from '../../lib/toast';
 import { db } from '../../config/db';
 import { logout } from '../../config/firebase';
 
 interface SecurityLockProps {
-  pin: string;
+  pin?: string | null;
+  pinHash?: string | null;
   useBiometrics: boolean;
   credentialId?: string | null;
   credentialIds?: string[] | null;
-  onUnlock: () => void;
+  onUnlock: (migratedPinHash?: string) => void;
 }
 
-export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, onUnlock }: SecurityLockProps) {
+export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, credentialIds, onUnlock }: SecurityLockProps) {
   const [enteredPin, setEnteredPin] = useState('');
   const [error, setError] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -53,19 +55,32 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
 
   useEffect(() => {
     if (enteredPin.length === 4) {
-      if (enteredPin === pin) {
-        vibrate(50);
-        onUnlock();
-      } else {
-        vibrate([50, 50, 50]);
-        setError(true);
-        setTimeout(() => {
-          setEnteredPin('');
-          setError(false);
-         }, 500);
-      }
+      const checkPin = async () => {
+        setIsAuthenticating(true);
+        const isValid = await verifyPin(enteredPin, pinHash, pin);
+        
+        if (isValid) {
+          vibrate(50);
+          if (!pinHash) {
+            const newHash = await hashPin(enteredPin);
+            onUnlock(newHash);
+          } else {
+            onUnlock();
+          }
+        } else {
+          vibrate([50, 50, 50]);
+          setError(true);
+          setTimeout(() => {
+            setEnteredPin('');
+            setError(false);
+          }, 500);
+        }
+        setIsAuthenticating(false);
+      };
+      
+      checkPin();
     }
-  }, [enteredPin, pin, onUnlock]);
+  }, [enteredPin, pin, pinHash, onUnlock]);
 
   const handleBiometricAuth = async () => {
     const ids = credentialIds && credentialIds.length > 0
@@ -136,7 +151,7 @@ export function SecurityLock({ pin, useBiometrics, credentialId, credentialIds, 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex flex-col items-center justify-center bg-slate-50 dark:bg-[#0B0F19]"
+      className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
       style={{ touchAction: 'none' }}
     >
       <motion.div 

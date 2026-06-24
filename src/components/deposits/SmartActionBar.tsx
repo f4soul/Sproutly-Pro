@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 import { Deposit } from '../../types';
 import { getBankDetails } from '../../lib/banks';
 import { BankLogo } from './BankLogo';
-import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
+
 
 interface SmartActionBarProps {
   searchQuery: string;
@@ -419,7 +419,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                             <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                             <div className="flex flex-col gap-1">
                               <button 
-                                onClick={() => exportToPDF('', undefined, filteredDeposits)}
+                                onClick={async () => {
+                                  const { exportToPDF } = await import('../../services/ExportService');
+                                  exportToPDF('', undefined, filteredDeposits);
+                                }}
                                 className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                               >
                                 <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
@@ -428,7 +431,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
                               </button>
                               <button 
-                                onClick={() => exportToImage('', filteredDeposits)}
+                                onClick={async () => {
+                                  const { exportToImage } = await import('../../services/ExportService');
+                                  exportToImage('', filteredDeposits);
+                                }}
                                 className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                               >
                                 <div className="w-7 h-7 rounded-lg bg-deposit-50 dark:bg-deposit-500/10 flex items-center justify-center">
@@ -437,7 +443,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                               </button>
                               <button 
-                                onClick={() => exportToXLSX(filteredDeposits)}
+                                onClick={async () => {
+                                  const { exportToXLSX } = await import('../../services/ExportService');
+                                  exportToXLSX(filteredDeposits);
+                                }}
                                 className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                               >
                                 <div className="w-7 h-7 rounded-lg bg-[#21A366]/10 flex items-center justify-center">
@@ -640,7 +649,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                           <div className="flex flex-col gap-1">
                             <button 
-                              onClick={() => exportToPDF('', undefined, filteredDeposits)}
+                              onClick={async () => {
+                                const { exportToPDF } = await import('../../services/ExportService');
+                                exportToPDF('', undefined, filteredDeposits);
+                              }}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
                               <div className="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center">
@@ -649,7 +661,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PDF</span>
                             </button>
                             <button 
-                              onClick={() => exportToImage('', filteredDeposits)}
+                              onClick={async () => {
+                                const { exportToImage } = await import('../../services/ExportService');
+                                exportToImage('', filteredDeposits);
+                              }}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
                               <div className="w-6 h-6 rounded-lg bg-deposit-50 dark:bg-deposit-500/10 flex items-center justify-center">
@@ -658,7 +673,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">PNG</span>
                             </button>
                             <button 
-                              onClick={() => exportToXLSX(filteredDeposits)}
+                              onClick={async () => {
+                                const { exportToXLSX } = await import('../../services/ExportService');
+                                exportToXLSX(filteredDeposits);
+                              }}
                               className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all group/btn cursor-pointer active:scale-95"
                             >
                               <div className="w-6 h-6 rounded-lg bg-[#21A366]/10 flex items-center justify-center">

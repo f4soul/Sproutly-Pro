@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, TrendingUp, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles, Map } from 'lucide-react';
+import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, HandCoins, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles, Map } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { auth, signInWithGoogle, logout } from '../../config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -8,6 +8,7 @@ import { showToast } from '../../lib/toast';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/react';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useAppData } from '../../context/AppDataContext';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
 import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 
@@ -39,7 +40,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
   const [user] = useAuthState(auth);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const appSettings = useLiveQuery(() => db.appSettings.get('main'));
+  const { appSettings } = useAppData();
   const isAdmin = user?.email === 'filimlive@gmail.com';
   const [isMobileHeaderHidden, setIsMobileHeaderHidden] = useState(false);
   const { scrollY } = useScroll();
@@ -168,7 +169,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
           <NavItem
             active={activeTab === 'ndfl'}
             onClick={() => onTabChange('ndfl')}
-            icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />}
+            icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />}
             label="Доходы"
           />
           <NavItem
@@ -661,7 +662,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
         <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
         <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
-        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<TrendingUp className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
+        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
@@ -677,10 +678,10 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               "flex-1 w-full min-w-0 flex flex-col h-full mx-auto",
               activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl",

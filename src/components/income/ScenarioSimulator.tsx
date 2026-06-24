@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SquareStop, Zap, TrendingUp, DollarSign, RussianRuble, Gift, Info, ChevronDown, Check } from 'lucide-react';
+import { SquareStop, Zap, HandCoins, DollarSign, RussianRuble, Gift, Info, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimulationState } from '../../types';
 import { cn } from '../../lib/utils';
@@ -161,7 +161,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
             )}>
               <div className="flex items-start justify-between gap-1.5 flex-nowrap w-full">
                 <div className="flex items-center gap-1.5 min-w-0 pr-1">
-                  <TrendingUp size={14} className={cn("shrink-0", simulation.isActive ? "text-deposit-550 dark:text-deposit-400" : "text-slate-400")} />
+                  <HandCoins size={14} className={cn("shrink-0", simulation.isActive ? "text-deposit-550 dark:text-deposit-400" : "text-slate-400")} />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
                     {simulation.isActive ? "Новый оклад" : "Оклад"}
                   </span>
@@ -367,7 +367,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
               <div className="flex flex-col mt-auto">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <TrendingUp size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
+                    <HandCoins size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Индексация</span>
                   </div>
                   <span className="text-[10px] font-bold font-mono text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded">+{simulation.salaryIncrease}%</span>

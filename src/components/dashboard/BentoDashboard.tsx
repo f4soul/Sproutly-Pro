@@ -2,9 +2,11 @@ import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Wallet,
-  TrendingUp,
+  TrendingDown,
   Receipt,
   Landmark,
+  Vault,
+  ChartNoAxesCombined,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -19,6 +21,7 @@ import {
   X as CloseIcon,
   Calculator,
   Activity,
+  Command
 } from "lucide-react";
 import {
   PieChart,
@@ -32,8 +35,8 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { Deposit, CashAsset, TaxYearSettings, AppSettings } from "../../types";
-import { useAppState } from "../../hooks/useAppState";
+import { Deposit, CashAsset, InvestmentAsset, TaxYearSettings, AppSettings } from "../../types";
+import { useAppData } from "../../context/AppDataContext";
 import { calculateUnifiedFinance } from "../../lib/unifiedFinance";
 import { formatCurrency, cn } from "../../lib/utils";
 import {
@@ -53,6 +56,7 @@ import { PrivacyBlur } from "../ui/PrivacyBlur";
 interface BentoDashboardProps {
   deposits: Deposit[];
   cashAssets?: CashAsset[];
+  investmentAssets?: InvestmentAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate?: boolean;
@@ -62,12 +66,13 @@ interface BentoDashboardProps {
 export function BentoDashboard({
   deposits,
   cashAssets = [],
+  investmentAssets = [],
   taxSettings,
   appSettings,
   isPrivate = false,
   setIsPrivate,
 }: BentoDashboardProps) {
-  const { state } = useAppState();
+  const { state } = useAppData();
   const selectedYear = state.activeYear;
   const [rates, setRates] = React.useState<CurrencyRates | null>(null);
 
@@ -79,6 +84,7 @@ export function BentoDashboard({
     // ... (logic remains same)
     let totalDepositsAmount = 0;
     let totalCashAmount = 0;
+    let totalInvestmentsAmount = 0;
     const upcomingEvents: {
       date: Date;
       type: "deposit_end" | "salary";
@@ -128,6 +134,12 @@ export function BentoDashboard({
     cashAssets.forEach((c) => {
       if (!c.isArchived) {
         totalCashAmount += convertToRub(c.amount, c.currency || "RUB", rates);
+      }
+    });
+
+    investmentAssets.forEach((i) => {
+      if (!i.isArchived) {
+        totalInvestmentsAmount += convertToRub(i.currentValue, i.currency || "RUB", rates);
       }
     });
 
@@ -196,7 +208,8 @@ export function BentoDashboard({
       limit: unified.depositLimit,
       totalDepositsAmount,
       totalCashAmount,
-      totalNetCapital: totalDepositsAmount + totalCashAmount,
+      totalInvestmentsAmount,
+      totalNetCapital: totalDepositsAmount + totalCashAmount + totalInvestmentsAmount,
       upcomingEvents: sortedEvents,
       insights,
       netDiffPercent,
@@ -286,7 +299,6 @@ export function BentoDashboard({
                   </div>
                 </div>
               </div>
-
               {setIsPrivate && (
                 <button
                   onClick={() => setIsPrivate(!isPrivate)}
@@ -294,7 +306,7 @@ export function BentoDashboard({
                   title={isPrivate ? "Показать данные" : "Скрыть данные"}
                   data-tour="privacy-toggle"
                 >
-                  {isPrivate ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {isPrivate ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               )}
             </div>
@@ -352,7 +364,7 @@ export function BentoDashboard({
         {/* Averages Block */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="@container col-span-1 md:col-span-2 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden h-full min-h-[130px] group"
+          className="@container col-span-1 md:col-span-2 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden min-h-[130px] group"
         >
           {/* Subtle Accent Glow */}
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-500/10 via-primary-500/5 to-transparent dark:from-primary-900/20 dark:via-primary-900/5 z-0 pointer-events-none"></div>
@@ -606,7 +618,7 @@ export function BentoDashboard({
           className="@container col-span-1 md:col-span-1 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between items-start min-w-0 h-full relative overflow-hidden"
         >
           <div className="w-full flex justify-between items-start mb-2">
-            <div className="w-8 h-8 rounded-xl bg-deposit-100 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-deposit-100 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400 shrink-0">
               <Landmark size={16} />
             </div>
             {(() => {
@@ -635,21 +647,23 @@ export function BentoDashboard({
 
           <div className="min-w-0 w-full mt-auto flex flex-col items-start gap-0.5">
             <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
-              Всего сбережений
+              Сбережения и инвестиции
             </h3>
             <p className="text-[20px] @[220px]:text-2xl @[280px]:text-[26px] @[320px]:text-[28px] font-black text-slate-950 dark:text-white truncate tracking-tight w-full leading-none">
-              {formatVal(data.totalDepositsAmount + data.totalCashAmount)}
+              {formatVal(data.totalNetCapital)}
             </p>
-            {data.totalCashAmount > 0 &&
+            {data.totalNetCapital > 0 &&
               (() => {
-                const total = data.totalDepositsAmount + data.totalCashAmount;
+                const total = data.totalNetCapital;
                 const depPct =
                   total > 0 ? (data.totalDepositsAmount / total) * 100 : 0;
                 const cashPct =
                   total > 0 ? (data.totalCashAmount / total) * 100 : 0;
+                const invPct =
+                  total > 0 ? (data.totalInvestmentsAmount / total) * 100 : 0;
 
                 return (
-                  <div className="flex flex-col w-full gap-2 mt-3">
+                  <div className="flex flex-col w-full gap-1.5 mt-1.5">
                     {/* Progress Bar */}
                     <div className="w-full h-1.5 bg-slate-200/50 dark:bg-slate-800/50 rounded-full overflow-hidden flex shadow-inner">
                       <div
@@ -657,42 +671,73 @@ export function BentoDashboard({
                         style={{ width: `${depPct}%` }}
                       />
                       <div
-                        className="h-full bg-deposit-500/30 dark:bg-deposit-400/40"
+                        className="h-full bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_10px_rgba(16,185,129,0.6)]"
                         style={{ width: `${cashPct}%` }}
                       />
+                      <div
+                        className="h-full bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]"
+                        style={{ width: `${invPct}%` }}
+                      />
                     </div>
-                    {/* Legend */}
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex flex-col min-w-0 flex-1 border-r border-slate-200/50 dark:border-white/5 pr-2">
-                        <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-between gap-2 mt-1.5 w-full">
+                      
+                      {/* Vklady */}
+                      <div className="flex flex-col items-start min-w-0 flex-1 relative group/tip1">
+                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-deposit-500 dark:hover:text-deposit-400 transition-colors cursor-help">
                           <div className="w-1.5 h-1.5 rounded-full bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_6px_rgba(20,184,166,0.5)] shrink-0" />
-                          <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 truncate">
-                            Вклады
-                          </span>
+                          <Landmark size={14} className="stroke-[2.5px]" />
                         </div>
-                        <span className="text-[11px] sm:text-xs font-black text-deposit-600 dark:text-deposit-400 truncate tracking-tight leading-none">
+                        <span className="text-[10px] sm:text-xs font-black text-deposit-600 dark:text-deposit-400 truncate tracking-tight leading-none mt-1.5">
                           {formatValPlain(
                             Math.round(data.totalDepositsAmount),
                             "RUB",
                             true,
                           )}
                         </span>
-                      </div>
-                      <div className="flex flex-col min-w-0 flex-1 items-end text-right pl-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 truncate">
-                            Наличные
-                          </span>
-                          <div className="w-1.5 h-1.5 rounded-full bg-deposit-500/30 dark:bg-deposit-400/40 shrink-0" />
+                        {/* Tooltip */}
+                        <div className="absolute top-0 left-0 -translate-y-full -translate-x-2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip1:opacity-100 group-hover/tip1:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
+                          Вклады
                         </div>
-                        <span className="text-[11px] sm:text-xs font-black text-deposit-600/70 dark:text-deposit-400/60 truncate tracking-tight leading-none">
+                      </div>
+
+                      {/* Nalichnye */}
+                      <div className="flex flex-col items-center min-w-0 flex-1 relative group/tip2 pl-1">
+                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-cash-500 dark:hover:text-cash-400 transition-colors cursor-help">
+                          <div className="w-1.5 h-1.5 rounded-full bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_6px_rgba(16,185,129,0.5)] shrink-0" />
+                          <Vault size={14} className="stroke-[2.5px]" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-black text-cash-600 dark:text-cash-400 truncate tracking-tight leading-none mt-1.5">
                           {formatValPlain(
                             Math.round(data.totalCashAmount),
                             "RUB",
                             true,
                           )}
                         </span>
+                        {/* Tooltip */}
+                        <div className="absolute top-0 left-1/2 -translate-y-full -translate-x-1/2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip2:opacity-100 group-hover/tip2:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
+                          Наличные
+                        </div>
                       </div>
+
+                      {/* Birzha */}
+                      <div className="flex flex-col items-end min-w-0 flex-1 relative group/tip3">
+                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-invest-500 dark:hover:text-invest-400 transition-colors cursor-help">
+                          <ChartNoAxesCombined size={14} className="stroke-[2.5px]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_6px_rgba(6,182,212,0.5)] shrink-0" />
+                        </div>
+                        <span className="text-[10px] sm:text-xs font-black text-invest-600 dark:text-invest-400 truncate tracking-tight leading-none mt-1.5">
+                          {formatValPlain(
+                            Math.round(data.totalInvestmentsAmount),
+                            "RUB",
+                            true,
+                          )}
+                        </span>
+                        {/* Tooltip */}
+                        <div className="absolute top-0 right-0 -translate-y-full translate-x-2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip3:opacity-100 group-hover/tip3:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
+                          Биржа
+                        </div>
+                      </div>
+                      
                     </div>
                   </div>
                 );

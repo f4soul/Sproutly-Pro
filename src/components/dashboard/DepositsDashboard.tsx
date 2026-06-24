@@ -7,8 +7,8 @@ import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
 import { getExchangeRates, convertToRub, CurrencyRates } from '../../services/currency';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
-import { TrendingUp, ShieldAlert, ReceiptRussianRuble, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
-import { exportToPDF, exportToImage, exportToXLSX } from '../../services/ExportService';
+import { HandCoins, ShieldAlert, ReceiptRussianRuble, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
+
 import { motion, AnimatePresence } from 'motion/react';
 import { db, syncWithFirebase } from '../../config/db';
 import { StatCard } from './StatCard';
@@ -167,7 +167,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             index={0}
             title="Общий доход" 
             value={<PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={stats.totalIncome} /></PrivacyBlur>} 
-            icon={<TrendingUp className="w-4 h-4 text-deposit-600" />}
+            icon={<HandCoins className="w-4 h-4 text-deposit-600" />}
             description="Все проценты"
             tooltip="Включает валютные вклады, конвертированные по курсу ЦБ РФ на сегодня."
           />

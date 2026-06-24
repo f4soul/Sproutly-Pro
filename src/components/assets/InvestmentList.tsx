@@ -1,28 +1,25 @@
 import React, { useState, useMemo, Fragment } from "react";
-import { Plus, Banknote, Edit3, Trash2, Wallet, Lock, ShieldAlert, Vault } from "lucide-react";
+import { Plus, Edit3, Trash2, ChartNoAxesCombined, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog, Transition } from "@headlessui/react";
-import { CashAsset } from "../../types";
+import { InvestmentAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
-import { CashForm } from "./CashForm";
+import { InvestmentForm, getBrokerLogoUrl } from "./InvestmentForm";
 import { cn, formatCurrency } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
-import {
-  getExchangeRates,
-  convertToRub,
-  CurrencyRates,
-} from "../../services/currency";
+import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { BankLogo } from "../deposits/BankLogo";
 
-interface CashListProps {
-  cashAssets: CashAsset[];
+interface InvestmentListProps {
+  investmentAssets: InvestmentAsset[];
   isPrivate?: boolean;
 }
 
-export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
+export function InvestmentList({ investmentAssets, isPrivate = false }: InvestmentListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<CashAsset | undefined>();
-  const [deletingAsset, setDeletingAsset] = useState<CashAsset | undefined>();
+  const [editingAsset, setEditingAsset] = useState<InvestmentAsset | undefined>();
+  const [deletingAsset, setDeletingAsset] = useState<InvestmentAsset | undefined>();
   const [rates, setRates] = useState<CurrencyRates | null>(null);
 
   React.useEffect(() => {
@@ -30,31 +27,35 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   }, []);
 
   const activeAssets = useMemo(() => {
-    return cashAssets.filter((a) => !a.isArchived);
-  }, [cashAssets]);
+    return investmentAssets ? investmentAssets.filter((a) => !a.isArchived) : [];
+  }, [investmentAssets]);
 
-  const totalInRub = useMemo(() => {
-    return activeAssets.reduce((sum, asset) => {
-      return sum + convertToRub(asset.amount, asset.currency, rates);
-    }, 0);
-  }, [activeAssets, rates]);
+  const stats = useMemo(() => {
+    let totalContributed = 0;
+    let totalCurrent = 0;
+    let totalDeductions = 0;
 
-  // Group foreign cash assets by original currency to show breakdown in the Safe
-  const currencyBreakdown = useMemo(() => {
-    const totals: { [key: string]: number } = {};
-    activeAssets.forEach((asset) => {
-      if (asset.currency !== 'RUB') {
-        totals[asset.currency] = (totals[asset.currency] || 0) + asset.amount;
-      }
+    activeAssets.forEach(asset => {
+      const contribRub = convertToRub(asset.amount, asset.currency, rates);
+      const currentRub = convertToRub(asset.currentValue, asset.currency, rates);
+      const deductedRub = convertToRub(asset.deductionsReceived || 0, asset.currency, rates);
+      
+      totalContributed += contribRub;
+      totalCurrent += currentRub;
+      totalDeductions += deductedRub;
     });
-    return Object.entries(totals).sort((a, b) => b[1] - a[1]);
-  }, [activeAssets]);
+
+    const profit = totalCurrent - totalContributed;
+    const profitPercent = totalContributed > 0 ? (profit / totalContributed) * 100 : 0;
+
+    return { totalContributed, totalCurrent, totalDeductions, profit, profitPercent };
+  }, [activeAssets, rates]);
 
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
     try {
-      await db.cashAssets.delete(id as any);
+      await db.investmentAssets.delete(id as any);
       const user = auth.currentUser;
       
       let firestoreDocId = String(id);
@@ -69,7 +70,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
       }
 
       const delRec = {
-        collection: "cashAssets",
+        collection: "investmentAssets",
         docId: firestoreDocId,
         timestamp: Date.now(),
       };
@@ -77,7 +78,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
       emitSyncEvent("syncing");
       syncWithFirebase().catch(console.error);
     } catch (err) {
-      console.error("Failed to delete cash asset", err);
+      console.error("Failed to delete investment asset", err);
     } finally {
       setDeletingAsset(undefined);
     }
@@ -85,65 +86,64 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
 
   return (
     <div className="w-full pb-24">
-      {/* Header Stats / Safe Overview Card Wrapper */}
+      {/* Header Stats */}
       <div className="relative mb-8">
-        {/* Header Stats / Safe Overview Card */}
         <div className="relative overflow-hidden bg-gradient-to-tr from-white/60 to-white/90 dark:from-slate-900/60 dark:to-slate-950/80 backdrop-blur-2xl rounded-[2rem] p-6 lg:p-8 border border-white/20 dark:border-[rgba(255,255,255,0.05)] shadow-[0_12px_40px_rgba(0,0,0,0.04)] z-10">
           
-          {/* Background glow effects according to Sproutly.Pro Guidelines */}
-        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-cash-500/15 dark:bg-cash-500/5 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-invest-500/15 dark:bg-invest-500/5 blur-3xl rounded-full pointer-events-none" />
         <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary-500/10 dark:bg-primary-500/5 blur-2xl rounded-full pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          {/* Left Column (Content) */}
           <div className="space-y-5 lg:w-[60%]">
             <div>
-              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-cash-400 mb-2 flex items-center gap-2">
-                <Lock className="w-3.5 h-3.5 text-cash-500 shadow-sm shrink-0 stroke-[2.5px]" />
-                Всего средств
+              <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-invest-400 mb-2 flex items-center gap-2">
+                <ChartNoAxesCombined className="w-3.5 h-3.5 text-invest-500 shadow-sm shrink-0 stroke-[2.5px]" />
+                Биржевые активы
               </h2>
-              <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-cash-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-invest-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
                 <PrivacyBlur isPrivate={isPrivate}>
-                  {formatCurrency(totalInRub)}
+                  {formatCurrency(stats.totalCurrent)}
                 </PrivacyBlur>
               </div>
             </div>
 
-            {/* Currency Breakdown Capsule Pills (clean horizonal flow) */}
-            {currencyBreakdown.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <p className="text-[9px] font-black uppercase text-slate-500 dark:text-cash-500/80 tracking-wider">Содержимое сейфа по валютам:</p>
-                <div className="flex flex-wrap gap-2">
-                  {currencyBreakdown.map(([currency, amount]) => (
-                    <div 
-                      key={currency} 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-cash-500/20 rounded-xl text-xs font-bold font-mono text-slate-900 dark:text-cash-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(16,185,129,0.1)]"
-                    >
-                      <span className="w-2 h-2 rounded-full bg-cash-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
-                      <PrivacyBlur isPrivate={isPrivate}>
-                        {formatCurrency(amount, currency)}
-                      </PrivacyBlur>
-                    </div>
-                  ))}
+            {activeAssets.length > 0 && (
+              <div className="flex flex-wrap gap-4 pt-1">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-invest-500/20 rounded-xl">
+                  <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Доходность:</span>
+                  <span className={cn("text-xs font-bold font-mono tracking-tight", stats.profit >= 0 ? "text-invest-500" : "text-rose-500")}>
+                    {stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}
+                  </span>
+                  <span className={cn("text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
+                    {stats.profit > 0 ? "+" : ""}{stats.profitPercent.toFixed(2)}%
+                  </span>
                 </div>
+                {stats.totalDeductions > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-invest-500/20 rounded-xl">
+                    <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Вычеты НДФЛ:</span>
+                    <span className="text-xs font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                      <PrivacyBlur isPrivate={isPrivate}>
+                        {formatCurrency(stats.totalDeductions)}
+                      </PrivacyBlur>
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
 
-          {/* Right Column (Actions and Meta) */}
           <div className="flex flex-col items-start lg:items-end justify-center lg:justify-between h-full gap-5 lg:w-[40%]">
-            {/* Top right button with primary glow */}
             <button
               onClick={() => {
                 setEditingAsset(undefined);
                 setIsFormOpen(true);
               }}
-              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-cash-500 hover:bg-cash-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs transition-all shadow-[0_4px_16px_rgba(16,185,129,0.35)] hover:shadow-[0_4px_24px_rgba(16,185,129,0.5)] active:scale-95 group shrink-0 lg:ml-auto w-full sm:w-auto"
+              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-invest-500 hover:bg-invest-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] sm:text-xs transition-all shadow-[0_4px_16px_rgba(6,182,212,0.35)] hover:shadow-[0_4px_24px_rgba(6,182,212,0.5)] active:scale-95 group shrink-0 lg:ml-auto w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 stroke-[3px] group-hover:rotate-90 transition-transform shrink-0" />
-              Добавить в сейф
+              Добавить счет
             </button>
-
+            
             {rates && (
               <p className="text-[9px] text-slate-500/80 dark:text-slate-400/60 font-bold uppercase tracking-widest max-w-[280px] lg:text-right leading-relaxed mt-auto">
                 * Иностранные валюты автоматически пересчитаны по курсу ЦБ РФ
@@ -154,64 +154,60 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
       </div>
       </div>
 
-      {/* Grid of Redesigned Safe Cards resembling Archive and Deposits List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2">
         {activeAssets.map((asset) => {
-          const convertedRub = convertToRub(asset.amount, asset.currency, rates);
+          const contributedRub = convertToRub(asset.amount, asset.currency, rates);
+          const currentRub = convertToRub(asset.currentValue, asset.currency, rates);
           
-          // Calculate FX dynamics if foreign currency
-          let percentageChange = 0;
-          let hasDynamics = false;
-          let isPositive = true;
-          let currentRate = 0;
-          if (asset.currency !== "RUB" && asset.exchangeRateOnOpen && rates) {
-            const valute = rates?.Valute?.[asset.currency];
-            if (valute) {
-              currentRate = valute.Value / valute.Nominal;
-              percentageChange = ((currentRate - asset.exchangeRateOnOpen) / asset.exchangeRateOnOpen) * 100;
-              hasDynamics = true;
-              isPositive = percentageChange >= 0;
-            }
-          }
+          let profitValue = currentRub - contributedRub;
+          let profitPercent = contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
+          let isPositive = profitPercent >= 0;
 
           return (
             <div
               key={asset.id}
-              className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden"
+              className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-invest-500/30 dark:hover:border-invest-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden"
             >
-              {/* Dynamic subtle cash-to-transparent indicator light on hover */}
-              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-              {/* Absolute Top Right Percent Badge */}
-              {hasDynamics && percentageChange !== 0 && (
-                <div className="absolute top-4 right-4 z-20">
-                  <span className={cn(
-                    "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
-                    isPositive 
-                      ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
-                      : "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                  )}>
-                    {isPositive ? "+" : ""}{percentageChange.toFixed(2)}%
-                  </span>
-                </div>
-              )}
+              <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                <span className={cn(
+                  "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                  isPositive 
+                    ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
+                    : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                )}>
+                  {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                </span>
+                <span className={cn(
+                  "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
+                  asset.type === 'iis'
+                    ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
+                    : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                )}>
+                  {asset.type === 'iis' ? `ИИС ${asset.iisType || ''}` : 'Брокерский'}
+                </span>
+              </div>
 
-              {/* Top Section: Icon Area, Title and Large Amount */}
-              <div className="flex items-start gap-3.5 min-w-0 pr-16">
-                {/* Vault-styled Icon container */}
-                <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
-                  <Vault className="w-5 h-5 stroke-[2px]" />
+              <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
+                  {getBrokerLogoUrl(asset.name) ? (
+                    <BankLogo logoUrl={getBrokerLogoUrl(asset.name)} className="w-full h-full object-contain" />
+                  ) : (
+                    <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
-                    {asset.name}
-                  </h4>
+                  <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
+                    <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
+                      {asset.name}
+                    </span>
+                  </div>
                   
-                  {/* Large clean original amount as requested in Step 2 */}
-                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
+                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
                     <PrivacyBlur isPrivate={isPrivate}>
-                      {formatCurrency(asset.amount, asset.currency)}
+                      {formatCurrency(asset.currentValue, asset.currency)}
                     </PrivacyBlur>
                   </div>
 
@@ -223,33 +219,28 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 </div>
               </div>
 
-              {/* Bottom Section: Separated cleaner Ruble equivalent & CBP rate */}
               <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                <div className="flex flex-col">
-                  {/* Semantic Label: "НАЛИЧНЫЕ" text-[9px] font-black uppercase tracking-widest text-slate-500 as requested in Step 1 */}
-                  <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                    НАЛИЧНЫЕ
-                  </span>
-                  
-                  <div className="flex flex-col mt-0.5 gap-1.5">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                    <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                      <PrivacyBlur isPrivate={isPrivate}>
+                        {formatCurrency(asset.amount, asset.currency)}
+                      </PrivacyBlur>
+                    </span>
+                  </div>
+                  {asset.deductionsReceived > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
-                      <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
+                      <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
                         <PrivacyBlur isPrivate={isPrivate}>
-                          {formatCurrency(convertedRub, "RUB")}
+                          {formatCurrency(asset.deductionsReceived, asset.currency)}
                         </PrivacyBlur>
                       </span>
                     </div>
-                    
-                    {asset.currency !== "RUB" && currentRate > 0 && (
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono whitespace-nowrap">
-                        [ЦБ: {currentRate.toFixed(2)} ₽]
-                      </span>
-                    )}
-                  </div>
+                  )}
                 </div>
 
-                {/* Micro Actions Container: Hover interactive only for noise-free experience but visible on touch */}
                 <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
                   <button
                     onClick={(e) => {
@@ -258,7 +249,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       setEditingAsset(asset);
                       setIsFormOpen(true);
                     }}
-                    className="p-1.5 text-slate-400 hover:text-cash-500 dark:hover:text-cash-400 hover:bg-cash-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                    className="p-1.5 text-slate-400 hover:text-invest-500 dark:hover:text-invest-400 hover:bg-invest-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
                     title="Редактировать"
                   >
                     <Edit3 size={13.5} className="stroke-[2.5px]" />
@@ -282,16 +273,15 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
         {activeAssets.length === 0 && (
           <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 bg-white/20 dark:bg-slate-950/20 backdrop-blur-sm rounded-[2rem] border border-dashed border-slate-200 dark:border-slate-800 px-6">
             <ShieldAlert className="w-10 h-10 text-slate-400/60 mx-auto mb-3 stroke-[1.5px]" />
-            <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-1">Сейф пуст</h4>
-            <p className="text-xs text-slate-500">У вас нет активных записей. Нажмите кнопку «Добавить», чтобы зафиксировать валютные или рублевые средства.</p>
+            <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-1">Счета не добавлены</h4>
+            <p className="text-xs text-slate-500">Запишите свои брокерские счета и ИИС для учета полной картины капитала.</p>
           </div>
         )}
       </div>
 
-      {/* Edit Form Modal */}
       <AnimatePresence>
         {isFormOpen && (
-          <CashForm
+          <InvestmentForm
             onClose={() => {
               setIsFormOpen(false);
               setEditingAsset(undefined);
@@ -301,7 +291,6 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
         )}
       </AnimatePresence>
 
-      {/* Modern, High-End Confirmation Dialog Modal (Solves standard confirm blocker inside iframes) */}
       <Transition.Root show={!!deletingAsset} as={Fragment}>
         <Dialog as="div" className="relative z-[9999]" onClose={() => setDeletingAsset(undefined)}>
           <Transition.Child
@@ -334,15 +323,11 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                   
                   <div className="text-center mb-6">
                     <Dialog.Title as="h3" className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                      Удалить из сейфа?
+                      Удалить счет?
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        Вы действительно хотите навсегда удалить "{deletingAsset?.name}" на сумму {" "}
-                        <span className="font-bold text-slate-900 dark:text-white">
-                          {deletingAsset && formatCurrency(deletingAsset.amount, deletingAsset.currency)}
-                        </span>{" "}
-                        из сейфа? Это действие нельзя отменить.
+                        Вы действительно хотите навсегда удалить счет "{deletingAsset?.name}"? Это действие нельзя отменить.
                       </p>
                     </div>
                   </div>

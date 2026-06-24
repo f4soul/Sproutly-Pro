@@ -3,7 +3,8 @@ import { db, syncWithFirebase } from '../../config/db';
 import { AppSettings } from '../../types';
 import { Shield, Fingerprint, Lock, ShieldUser, ChevronDown, Delete, ChevronRight, KeyRound } from 'lucide-react';
 import { registerBiometricCredential, isBiometricsSupported, verifyBiometricCredential } from '../../lib/biometrics';
-import { useAppState } from '../../hooks/useAppState';
+import { verifyPin, hashPin } from '../../lib/security';
+import { showToast } from '../../lib/toast';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@headlessui/react';
@@ -13,7 +14,6 @@ interface SecuritySettingsProps {
 }
 
 export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
-  const { addToast } = useAppState();
   const lockSettings = appSettings.privacyLock;
   const isEnabled = lockSettings?.enabled || false;
 
@@ -72,7 +72,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   }, []);
 
   const updateLockSettings = async (updates: Partial<typeof lockSettings>) => {
-    const current = appSettings.privacyLock || { enabled: false, pin: null, useBiometrics: false, credentialId: null };
+    const current = appSettings.privacyLock || { enabled: false, pin: null, pinHash: null, useBiometrics: false, credentialId: null };
     await db.appSettings.update('main', {
       privacyLock: { ...current, ...updates },
       updatedAt: Date.now()
@@ -103,25 +103,27 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       const currentInput = pinInput;
       if (currentInput.length !== 4) return;
       
-      if (currentInput === lockSettings?.pin) {
+      const isValid = await verifyPin(currentInput, lockSettings?.pinHash, lockSettings?.pin);
+      
+      if (isValid) {
         if (verificationType === 'change') {
           // Success, transition to entering new passcode
           setVerificationType(null);
           setPinInput('');
           setPinConfirm('');
           setStep(1);
-          addToast('Введите новый код-пароль');
+          showToast('Введите новый код-пароль');
           vibrate(40);
         } else if (verificationType === 'disable') {
           // Success, disable passcode
-          await updateLockSettings({ enabled: false, pin: null, useBiometrics: false, credentialId: null });
+          await updateLockSettings({ enabled: false, pin: null, pinHash: null, useBiometrics: false, credentialId: null });
           setShowPinSetup(false);
-          addToast('Защита отключена');
+          showToast('Защита отключена');
           vibrate(40);
         }
       } else {
         triggerErrorShake();
-        addToast('Неверный код-пароль', 'error');
+        showToast('Неверный код-пароль', 'error');
         setPinInput('');
       }
       return;
@@ -138,12 +140,13 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       if (pinInput === pinConfirm) {
         sessionStorage.setItem('pinUnlocked', 'true');
         localStorage.setItem('lockLastActive', Date.now().toString());
-        await updateLockSettings({ enabled: true, pin: pinInput });
-        addToast('Код-пароль установлен');
+        const hash = await hashPin(pinInput);
+        await updateLockSettings({ enabled: true, pin: null, pinHash: hash });
+        showToast('Код-пароль установлен');
         setShowPinSetup(false);
         vibrate(40);
       } else {
-        addToast('Код-пароль не совпадает', 'error');
+        showToast('Код-пароль не совпадает', 'error');
         setPinConfirm('');
         triggerErrorShake();
       }
@@ -183,7 +186,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
         // Re-use already bound local key silently if listed in account
         if (localCredId && ids.includes(localCredId)) {
           await updateLockSettings({ useBiometrics: true, credentialId: localCredId });
-          addToast('Биометрия подключена');
+          showToast('Биометрия подключена');
           return;
         }
 
@@ -192,10 +195,10 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
         await updateLockSettings({ useBiometrics: true, credentialId: cred.id, credentialIds: newIds });
         localStorage.setItem('localBiometricCredId', cred.id);
         localStorage.setItem('isBiometricBound', 'true');
-        addToast('Биометрия подключена');
+        showToast('Биометрия подключена');
       } catch (err) {
         console.error(err);
-        addToast('Ошибка при настройке биометрии', 'error');
+        showToast('Ошибка при настройке биометрии', 'error');
       }
     }
   };
@@ -388,9 +391,9 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                                     credentialId: localId,
                                     credentialIds: [localId]
                                   });
-                                  addToast('Все остальные устройства успешно сброшены');
+                                  showToast('Все остальные устройства успешно сброшены');
                                 } catch (err) {
-                                  addToast('Ошибка сброса устройств', 'error');
+                                  showToast('Ошибка сброса устройств', 'error');
                                 }
                               }}
                               className="text-[8px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
@@ -417,14 +420,14 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                                     localStorage.setItem('localBiometricCredId', ver.id);
                                     localStorage.setItem('isBiometricBound', 'true');
                                     setIsThisDeviceBound(true);
-                                    addToast('Устройство успешно распознано и связано');
+                                    showToast('Устройство успешно распознано и связано');
                                     return;
                                   }
                                 } catch (verErr: any) {
                                   const errMsg = verErr?.message?.toLowerCase() || '';
                                   // User manually pressed "Cancel" during verification prompt, so we abort to respect their choice
                                   if (verErr?.name === 'NotAllowedError' && !errMsg.includes('credential')) {
-                                    addToast('Привязка отклонена');
+                                    showToast('Привязка отклонена');
                                     return;
                                   }
                                   // If they got 'No credential matches' etc, we proceed to create a new key
@@ -438,10 +441,10 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                               localStorage.setItem('localBiometricCredId', cred.id);
                               localStorage.setItem('isBiometricBound', 'true');
                               setIsThisDeviceBound(true);
-                              addToast('Это устройство добавлено в список разрешенных');
+                              showToast('Это устройство добавлено в список разрешенных');
                             } catch (err) {
                               console.error(err);
-                              addToast('Ошибка регистрации ключа устройства', 'error');
+                              showToast('Ошибка регистрации ключа устройства', 'error');
                             }
                           }}
                           className="text-[8px] font-black uppercase tracking-wider text-deposit-500 hover:text-deposit-600 transition-colors bg-deposit-500/10 hover:bg-deposit-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"

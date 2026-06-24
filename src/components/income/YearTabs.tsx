@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, BrushCleaning, Copy, FileText, FileSpreadsheet, TrendingUp, X, ChevronDown, Zap, Check, Bolt } from 'lucide-react';
+import { Plus, Trash2, BrushCleaning, Copy, FileText, FileSpreadsheet, HandCoins, X, ChevronDown, Zap, Check, Bolt } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 

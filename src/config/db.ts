@@ -1,9 +1,10 @@
 import Dexie, { type Table } from 'dexie';
-import { Deposit, CashAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord, ProductionCalendar } from '../types';
+import { Deposit, CashAsset, InvestmentAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord, ProductionCalendar } from '../types';
 
 export class MyDepositsDB extends Dexie {
   deposits!: Table<Deposit>;
   cashAssets!: Table<CashAsset>;
+  investmentAssets!: Table<InvestmentAsset>;
   taxYearSettings!: Table<TaxYearSettings>;
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
@@ -13,6 +14,17 @@ export class MyDepositsDB extends Dexie {
 
   constructor() {
     super('MyDepositsDB');
+    this.version(8).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      cashAssets: '++id, userId, name, isArchived',
+      investmentAssets: '++id, userId, type, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      calendarData: 'year',
+      deletedQueue: '++id, collection, docId'
+    });
     this.version(7).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       cashAssets: '++id, userId, name, isArchived',
@@ -323,7 +335,10 @@ export function startRealTimeSync(user: { uid: string }) {
           if (change.type === 'removed' || remoteData.isDeleted) {
             await db.cashAssets.delete(localId as any);
           } else {
-            await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+            const localData = await db.cashAssets.get(localId as any);
+            if (!localData || (remoteData.updatedAt || 0) > (localData.updatedAt || 0)) {
+              await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+            }
           }
         }
       } catch (err) {
@@ -334,6 +349,50 @@ export function startRealTimeSync(user: { uid: string }) {
     handleFirestoreError(error, OperationType.GET, 'cashAssets');
   });
   activeUnsubscribers.push(unsubCashAssets);
+
+  // Listen to investmentAssets
+  const qInvestmentAssets = query(collection(firestore, 'investmentAssets'), where('userId', '==', user.uid));
+  const unsubInvestmentAssets = onSnapshot(qInvestmentAssets, (snapshot) => {
+    (async () => {
+      try {
+        const pendingDeletes = await db.deletedQueue.toArray();
+        for (const change of snapshot.docChanges()) {
+          const docId = change.doc.id;
+          const remoteData = change.doc.data() as InvestmentAsset & { isDeleted?: boolean };
+          
+          let localId: string | number = docId;
+          if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+            const numPart = localId.replace(`${user.uid}_`, '');
+            if (!isNaN(Number(numPart))) {
+              localId = Number(numPart);
+            }
+          }
+
+          const isPendingDelete = pendingDeletes.some(d => d.collection === 'investmentAssets' && d.docId === docId);
+          if (isPendingDelete) {
+            continue;
+          }
+
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.investmentAssets.delete(localId as any);
+          } else {
+            let startDateVal = remoteData.startDate;
+            if (startDateVal && typeof (startDateVal as any).toDate === 'function') {
+              startDateVal = (startDateVal as any).toDate();
+            } else if (startDateVal && (typeof startDateVal === 'string' || typeof startDateVal === 'number' || startDateVal instanceof Date)) {
+              startDateVal = new Date(startDateVal);
+            }
+            await db.investmentAssets.put({ ...remoteData, id: localId, startDate: startDateVal } as InvestmentAsset);
+          }
+        }
+      } catch (err) {
+        console.error("Real-time investmentAssets sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'investmentAssets');
+  });
+  activeUnsubscribers.push(unsubInvestmentAssets);
 }
 
 export async function clearLocalData() {
@@ -341,6 +400,8 @@ export async function clearLocalData() {
   await db.banks.clear();
   await db.appSettings.clear();
   await db.incomeState.clear();
+  await db.cashAssets.clear();
+  await db.investmentAssets.clear();
   await db.deletedQueue.clear();
   await db.taxYearSettings.clear();
   await initDB();
@@ -400,6 +461,35 @@ export async function syncWithFirebase() {
               userId: user.uid,
               isDeleted: deleteField(),
               updatedAt: localCashUpdate === 0 ? Date.now() : localCashUpdate
+            }), { merge: true });
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
+      }
+
+      let remoteInvMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'investmentAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteInvMap.set(d.id, d.data())); } catch(e) {}
+      
+      const localInv = await db.investmentAssets.toArray();
+      for (const inv of localInv) {
+        if (inv.userId !== user.uid) {
+          inv.userId = user.uid;
+          await db.investmentAssets.put({...inv});
+        }
+        const { id, ...data } = inv;
+        const path = 'investmentAssets';
+        const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
+        try {
+          const remoteInvUpdate = remoteInvMap.get(firestoreDocId)?.updatedAt || 0;
+          const localInvUpdate = inv.updatedAt || 0;
+          if (localInvUpdate > remoteInvUpdate || (localInvUpdate === 0 && !remoteInvMap.has(firestoreDocId))) {
+            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+              ...data,
+              currency: data.currency || 'RUB',
+              userId: user.uid,
+              isDeleted: deleteField(),
+              updatedAt: localInvUpdate === 0 ? Date.now() : localInvUpdate
             }), { merge: true });
           }
         } catch (error) {
@@ -678,7 +768,9 @@ export async function syncWithFirebase() {
       
       // Since Cash Asset doesn't have updatedAt yet, we just overwrite if different, or we can add updatedAt
       // Simple sync: just overwrite it if we don't have updatedAt for cash assets.
-      await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+      if (!localData || (remoteData.updatedAt || 0) > (localData.updatedAt || 0)) {
+        await db.cashAssets.put({ ...remoteData, id: localId } as CashAsset);
+      }
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, cashPath);

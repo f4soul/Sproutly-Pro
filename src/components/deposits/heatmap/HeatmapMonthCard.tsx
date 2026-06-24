@@ -1,21 +1,37 @@
 import React from 'react';
-import { format, eachDayOfInterval, getDay } from 'date-fns';
+import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { motion } from 'motion/react';
-import { SproutlyLogo } from '../../ui/SproutlyLogo';
 import { cn } from '../../../lib/utils';
-import { HeatmapData } from '../../../types';
-import { getIntensity, getColorClass } from './utils';
+
+// Highly optimized, extremely lightweight inline SVG sprout icon to avoid rendering the heavy 4.3KB SproutlyLogo 300+ times
+const SimpleSprout = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C12 2 15 7 15 11C15 14.5 12.5 17 12 17C11.5 17 9 14.5 9 11C9 7 12 2 12 2Z" />
+    <path d="M12 11C12 11 15 13 17 13C19 13 21 11.5 21 11.5C21 11.5 18 10 16 10C14 10 12 11 12 11Z" opacity="0.8" />
+  </svg>
+);
 
 interface HeatmapMonthCardProps {
   month: Date;
-  heatmapData: HeatmapData;
+  days: Array<{
+    dateKey: string;
+    dayNumber: number;
+    intensity: number;
+    isMaturing: boolean;
+    isOpening: boolean;
+    colorClass: string;
+  }>;
+  startDay: number;
   setExpandedMonth: (month: Date) => void;
 }
 
-export function HeatmapMonthCard({ month, heatmapData, setExpandedMonth }: HeatmapMonthCardProps) {
-  const days = eachDayOfInterval({ start: month, end: new Date(month.getFullYear(), month.getMonth() + 1, 0) });
-  const startDay = (getDay(month) + 6) % 7; 
+export const HeatmapMonthCard = React.memo(function HeatmapMonthCard({
+  month,
+  days,
+  startDay,
+  setExpandedMonth
+}: HeatmapMonthCardProps) {
   const emptyDays = Array.from({ length: startDay });
 
   return (
@@ -29,45 +45,37 @@ export function HeatmapMonthCard({ month, heatmapData, setExpandedMonth }: Heatm
         </h4>
       </div>
       
-      {/* Mini heat grid */}
+      {/* Mini heat grid rendering pure pre-calculated primitive metrics with smooth fading */}
       <div className="grid grid-cols-7 grid-rows-6 gap-[2.5px] sm:gap-[3px] lg:gap-[2px] xl:gap-[4px] mt-auto">
         {emptyDays.map((_, i) => (
           <div key={`empty-${i}`} className="aspect-square rounded-[2px] sm:rounded-[3px]" />
         ))}
-        {days.map(day => {
-            const dateKey = format(day, 'yyyy-MM-dd');
-            const density = heatmapData.days[dateKey];
-            const intensity = getIntensity(density?.amount || 0, heatmapData);
-            const isMaturing = density?.maturingCount > 0;
-            const isOpening = density?.openingCount > 0;
+        {days.map((day) => {
+            const isMaturing = day.isMaturing;
+            const isOpening = day.isOpening;
 
             return (
               <div 
-                key={dateKey} 
+                key={day.dateKey} 
                 className={cn(
-                  "aspect-square rounded-[3px] sm:rounded-[4px] lg:rounded-[5px] relative flex items-center justify-center pointer-events-none",
-                  getColorClass(intensity),
-                  isMaturing && "ring-[1.5px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10",
-                  intensity > 0 ? "border border-white/10 shadow-sm" : ""
+                  "aspect-square rounded-[3px] sm:rounded-[4px] lg:rounded-[5px] relative flex items-center justify-center text-[7.5px] sm:text-[8px] md:text-[8.5px] lg:text-[7.5px] xl:text-[11px] font-black leading-none pointer-events-none select-none",
+                  day.colorClass,
+                  day.intensity === 0 ? "text-slate-400/60 dark:text-slate-500/60" : "text-white/90",
+                  isMaturing && "ring-[1.5px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10 text-amber-500 dark:text-amber-400/90 drop-shadow-sm",
+                  day.intensity > 0 ? "border border-white/10 shadow-sm" : ""
                 )}
               >
-                <span className={cn(
-                  "absolute inset-0 flex items-center justify-center text-[7.5px] sm:text-[8px] md:text-[8.5px] lg:text-[7.5px] xl:text-[11px] font-black leading-none pointer-events-none",
-                  intensity === 0 ? "text-slate-400/60 dark:text-slate-500/60" : "text-white/90",
-                  isMaturing && "text-amber-500 dark:text-amber-400/90 drop-shadow-sm"
-                )}>
-                  {format(day, 'd')}
-                </span>
+                {day.dayNumber}
 
                 {isOpening && (
                   <div className="absolute -top-1 -right-1 z-15 flex items-center justify-center">
-                    <SproutlyLogo className="w-2 h-2 sm:w-2 sm:h-2 text-deposit-500 dark:text-deposit-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
+                    <SimpleSprout className="w-2 h-2 sm:w-2 sm:h-2 text-deposit-500 dark:text-deposit-400 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)] dark:drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
                   </div>
                 )}
               </div>
-            )
+            );
         })}
       </div>
     </motion.div>
   );
-}
+});

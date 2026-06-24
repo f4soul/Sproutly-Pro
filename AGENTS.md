@@ -17,6 +17,8 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 
 ## 2. Color Palette
 - **Brand / Primary**: CSS variables `--primary` (primary accent blue/indigo) and `--deposit` (the custom deposit teal, mapped to `teal-500` / `teal-400`). Use `--deposit` for deposit-related operations, accents, select elements, active states, and positive trends.
+- **Investments**: CSS variable `--invest` (the custom investment cyan/sky blue, mapped to `cyan-500` / `cyan-400`). Use `--invest` and its related shades for all elements representing the "Биржа" (investments) section to give it a distinct high-tech cold color.
+- **Cash**: CSS variable `--cash` (the custom cash emerald, mapped to `emerald-500` / `emerald-400`). Use `--cash` and its related shades for all elements representing the "Наличные" (cash operations) section to give it a dedicated organic feeling.
 - **Secondary / Actions**: 
   - Amber (`amber-400`, `amber-500`) for "cash-out", maturity, pending states.
   - Red (`red-500`) for destructive actions (delete, close) or expenses.

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { LayoutDashboard, TrendingUp, Landmark, PieChart as PieChartIcon, BarChart3, ChevronDown, Eye, EyeOff, Shield, Calendar } from 'lucide-react';
+import { LayoutDashboard, HandCoins, Landmark, PieChart as PieChartIcon, BarChart3, ChevronDown, Eye, EyeOff, Shield, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BentoDashboard } from './BentoDashboard';
 import { DepositsDashboard } from './DepositsDashboard';
@@ -9,11 +9,12 @@ import { Deposit, CashAsset, TaxYearSettings, AppSettings, AppState } from '../.
 import { calculateProgressiveTaxDetailed } from '../../lib/taxCalculator';
 import { calculateYearTotals } from '../../lib/helpers';
 import { cn } from '../../lib/utils';
-import { useAppState } from '../../hooks/useAppState';
+import { useAppData } from '../../context/AppDataContext';
 
 interface UnifiedDashboardProps {
   deposits: Deposit[];
   cashAssets?: CashAsset[];
+  investmentAssets?: import('../../types').InvestmentAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate: boolean;
@@ -37,8 +38,8 @@ const DASHBOARD_ITEM_VARIANTS = {
   show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
 } as const;
 
-export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
-  const { state, setState } = useAppState();
+export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
+  const { state, setState } = useAppData();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
   
   const currentYear = new Date().getFullYear();
@@ -74,7 +75,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSe
 
   const tabs = [
     { id: 'dashboard', label: 'Сводка', icon: LayoutDashboard },
-    { id: 'income', label: 'Доходы', icon: TrendingUp },
+    { id: 'income', label: 'Доходы', icon: HandCoins },
     { id: 'deposits', label: 'Вклады', icon: Landmark },
   ];
 
@@ -182,6 +183,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], taxSettings, appSe
               <BentoDashboard 
                 deposits={deposits} 
                 cashAssets={cashAssets}
+                investmentAssets={investmentAssets}
                 taxSettings={taxSettings} 
                 appSettings={appSettings} 
                 isPrivate={isPrivate}
