@@ -666,26 +666,19 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
       </nav>
 
-      <main
-        className={cn(
-          "flex-1 md:ml-68 flex flex-col min-w-0",
-          "px-2 sm:px-4 md:px-6 lg:px-8",
-          activeTab === 'calendar'
-            ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1rem)] lg:pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+128px)] md:pb-6 lg:pb-6 min-h-[100dvh]"
-            : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-32 md:pb-12 min-h-[100dvh]"
-        )}
-      >
-        <AnimatePresence mode="popLayout" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+      <main className="flex-1 md:ml-68 flex flex-col min-w-0 px-2 sm:px-4 md:px-6 lg:px-8 min-h-[100dvh]">
+        <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               "flex-1 w-full min-w-0 flex flex-col h-full mx-auto",
-              activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl",
-              activeTab !== 'calendar' && "space-y-8 md:space-y-12"
+              activeTab === 'calendar'
+                ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1rem)] lg:pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+128px)] md:pb-6 lg:pb-6 max-w-[100vw] xl:max-w-screen-2xl"
+                : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-32 md:pb-12 max-w-6xl space-y-8 md:space-y-12"
             )}
           >
             {children}
