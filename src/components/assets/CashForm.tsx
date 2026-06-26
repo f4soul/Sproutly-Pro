@@ -119,7 +119,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Сумма
                 </label>
                 <div className="relative">
@@ -230,7 +230,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
               {formData.currency && formData.currency !== "RUB" && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Курс ЦБ на дату фиксации (₽)
                   </label>
                   <input

@@ -31,6 +31,14 @@ export function HeatmapExpandedMonth({
   const emptyDays = Array.from({ length: startDay });
 
   React.useEffect(() => {
+    // Prevent background scrolling while expanded
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
+  React.useEffect(() => {
     if (!selectedDay) return;
 
     const handleGlobalClick = (e: MouseEvent) => {
@@ -164,7 +172,7 @@ export function HeatmapExpandedMonth({
                    {/* Maturing Glow Layer Inside */}
                    {isMaturing && (
                      <div className={cn(
-                       "absolute inset-0 z-0 rounded-[10px] sm:rounded-xl ring-[2px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_16px_rgba(251,191,36,0.6)]",
+                       "absolute inset-0 z-0 rounded-[10px] sm:rounded-xl border-[2px] border-amber-400 dark:border-amber-500 shadow-[0_0_16px_rgba(251,191,36,0.6)]",
                        intensity > 0 ? "bg-[#0B0F19]/80" : "bg-white/50 dark:bg-[#0B0F19]/50"
                      )} />
                    )}

@@ -93,7 +93,7 @@ interface FirestoreErrorInfo {
   }
 }
 
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+function handleFirestoreError(error: any, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -116,8 +116,8 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   throw new Error(JSON.stringify(errInfo));
 }
 
-function stripUndefined(obj: any): any {
-  return Object.fromEntries(Object.entries(obj).filter(([_, v]) => v !== undefined));
+function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 }
 
 export const db = new MyDepositsDB();
@@ -396,15 +396,26 @@ export function startRealTimeSync(user: { uid: string }) {
 }
 
 export async function clearLocalData() {
-  await db.deposits.clear();
-  await db.banks.clear();
-  await db.appSettings.clear();
-  await db.incomeState.clear();
-  await db.cashAssets.clear();
-  await db.investmentAssets.clear();
-  await db.deletedQueue.clear();
-  await db.taxYearSettings.clear();
-  await initDB();
+  try {
+    if (!db.isOpen()) {
+      await db.open();
+    }
+    await db.deposits.clear();
+    await db.banks.clear();
+    await db.appSettings.clear();
+    await db.incomeState.clear();
+    await db.cashAssets.clear();
+    await db.investmentAssets.clear();
+    await db.deletedQueue.clear();
+    await db.taxYearSettings.clear();
+    await initDB();
+  } catch (e: any) {
+    if (e.name === 'DatabaseClosedError') {
+      console.warn("Database already closed when trying to clear data.");
+    } else {
+      throw e;
+    }
+  }
 }
 
 let syncPromise: Promise<void> | null = null;
@@ -439,8 +450,8 @@ export async function syncWithFirebase() {
       }
 
       // Upload local changes to Firebase
-      let remoteCashMap = new Map();
-      try { const snap = await getDocs(query(collection(firestore, 'cashAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteCashMap.set(d.id, d.data())); } catch(e) {}
+      const remoteCashMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'cashAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteCashMap.set(d.id, d.data())); } catch {}
       
       const localCash = await db.cashAssets.toArray();
       for (const cash of localCash) {
@@ -468,8 +479,8 @@ export async function syncWithFirebase() {
         }
       }
 
-      let remoteInvMap = new Map();
-      try { const snap = await getDocs(query(collection(firestore, 'investmentAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteInvMap.set(d.id, d.data())); } catch(e) {}
+      const remoteInvMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'investmentAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteInvMap.set(d.id, d.data())); } catch {}
       
       const localInv = await db.investmentAssets.toArray();
       for (const inv of localInv) {
@@ -497,8 +508,8 @@ export async function syncWithFirebase() {
         }
       }
 
-      let remoteDepMap = new Map();
-      try { const snap = await getDocs(query(collection(firestore, 'deposits'), where('userId', '==', user.uid))); snap.forEach((d) => remoteDepMap.set(d.id, d.data())); } catch(e) {}
+      const remoteDepMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'deposits'), where('userId', '==', user.uid))); snap.forEach((d) => remoteDepMap.set(d.id, d.data())); } catch {}
       
       const localDeposits = await db.deposits.toArray();
       for (const deposit of localDeposits) {
@@ -542,8 +553,8 @@ export async function syncWithFirebase() {
       // Download remote changes first
       
       // Upload custom banks
-      let remoteBankMap = new Map();
-      try { const snap = await getDocs(query(collection(firestore, 'banks'), where('userId', '==', user.uid))); snap.forEach((d) => remoteBankMap.set(d.id, d.data())); } catch(e) {}
+      const remoteBankMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'banks'), where('userId', '==', user.uid))); snap.forEach((d) => remoteBankMap.set(d.id, d.data())); } catch {}
       
       const localBanks = await db.banks.toArray();
       for (const bank of localBanks) {

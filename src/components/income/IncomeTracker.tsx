@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import { Info, HandCoins, Shield, Eye, EyeOff, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MonthData, SimulationState, CalculatedMonth, MonthDataV2, IncomeColumnDef } from '../../types';
@@ -47,6 +47,13 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
   const [isV2ConfigOpen, setIsV2ConfigOpen] = useState(false);
   
+  const [isPending, startTransition] = useTransition();
+  const handleSetActiveYear = (year: number) => {
+    startTransition(() => {
+      setState(prev => ({ ...prev, activeYear: year }));
+    });
+  };
+
   const [simulation, setSimulation] = useState<SimulationState>({
     isActive: false,
     salaryIncrease: 0,
@@ -590,7 +597,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
               <YearTabs 
                 availableYears={availableYears}
                 activeYear={state.activeYear}
-                setActiveYear={(year) => setState(prev => ({ ...prev, activeYear: year }))}
+                setActiveYear={handleSetActiveYear}
                 addNewYear={addNewYear}
                 setIsDeleteYearModalOpen={setIsDeleteYearModalOpen}
                 setIsClearModalOpen={setIsClearModalOpen}

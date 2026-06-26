@@ -469,7 +469,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
           initial={false}
           animate={{ y: isMobileHeaderHidden ? -100 : 0, opacity: isMobileHeaderHidden ? 0 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="md:hidden fixed z-[60] left-2 right-2 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+          className="md:hidden fixed z-[60] left-2 right-2 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-panel shadow-panel dark:shadow-panel-dark"
           style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
         >
           <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => onTabChange('dashboard')}>
@@ -515,7 +515,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                     leaveFrom="transform opacity-100 scale-100 translate-y-0"
                     leaveTo="transform opacity-0 scale-95 translate-y-2"
                   >
-                    <Menu.Items className="absolute right-0 mt-2 min-w-[240px] w-max bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
+                    <Menu.Items className="absolute right-0 mt-2 min-w-[240px] w-max bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-panel shadow-panel dark:shadow-panel-dark z-50 overflow-hidden outline-none p-1.5 flex flex-col gap-1">
                       {user ? (
                         <div className="flex items-center gap-3 px-3 py-3 border-b border-slate-100 dark:border-slate-800/50 mb-1.5">
                           <img src={user.photoURL || undefined} alt="" className="w-10 h-10 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm" referrerPolicy="no-referrer" />
@@ -656,7 +656,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
 
       {/* Bottom Nav for Mobile */}
       <nav
-        className="md:hidden fixed inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[60] rounded-[1.25rem] shadow-[0_16px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+        className="md:hidden fixed inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[60] rounded-panel shadow-panel dark:shadow-panel-dark"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
       >
         <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
@@ -668,20 +668,20 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
 
       <main
         className={cn(
-          "flex-1 md:ml-68 flex flex-col transition-all duration-300 min-w-0",
+          "flex-1 md:ml-68 flex flex-col min-w-0",
           "px-2 sm:px-4 md:px-6 lg:px-8",
           activeTab === 'calendar'
             ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1rem)] lg:pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+128px)] md:pb-6 lg:pb-6 min-h-[100dvh]"
             : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-32 md:pb-12 min-h-[100dvh]"
         )}
       >
-        <AnimatePresence mode="wait" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
+        <AnimatePresence mode="popLayout" initial={false} onExitComplete={() => window.scrollTo({ top: 0, behavior: 'instant' })}>
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               "flex-1 w-full min-w-0 flex flex-col h-full mx-auto",
               activeTab === 'calendar' ? "max-w-[100vw] xl:max-w-screen-2xl" : "max-w-6xl",

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { AppState } from '../types';
+import { AppState, YearData } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
 import { auth, onAuthStateChanged, User } from '../config/firebase';
@@ -13,7 +13,7 @@ interface AppDataContextType {
   isAuthReady: boolean;
   isInitialized: boolean;
   syncStatus: 'synced' | 'syncing' | 'error' | 'offline' | 'idle';
-  appSettings: any; // Using any for now or import AppSettings if needed
+  appSettings: any; // Using unknown for now or import AppSettings if needed
 }
 
 const AppDataContext = createContext<AppDataContextType | null>(null);
@@ -21,7 +21,7 @@ const AppDataContext = createContext<AppDataContextType | null>(null);
 const getInitialState = (): AppState => {
   const currentYear = new Date().getFullYear();
   
-  const years: Record<number, any> = {
+  const years: Record<number, YearData> = {
     2024: generateDefaultYear(2024),
     2025: generateDefaultYear(2025),
     2026: generateDefaultYear(2026),
@@ -60,7 +60,10 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (dbState) {
-      if (globalIsLoaded && (dbState as any).updatedAt && (localState as any).updatedAt >= (dbState as any).updatedAt) {
+      const dbStateWithTime = dbState as AppState & { updatedAt?: number };
+      const localStateWithTime = localState as AppState & { updatedAt?: number };
+      if (globalIsLoaded && (!dbStateWithTime.updatedAt || (localStateWithTime.updatedAt && localStateWithTime.updatedAt >= dbStateWithTime.updatedAt))) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         if (!isInitialized) setIsInitialized(true);
         return;
       }
@@ -80,7 +83,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       setIsInitialized(true);
       globalIsLoaded = true;
     }
-  }, [dbState, isInitialized, localState]);
+  }, [dbState]);
 
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 

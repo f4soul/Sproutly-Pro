@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { driver, DriveStep } from 'driver.js';
+import React, { useEffect, useRef } from 'react';
+import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { db } from '../../config/db';
 import { showToast } from '../../lib/toast';
@@ -31,7 +31,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
         shownThisSession.current.ndfl = false;
       }
     }
-  }, [appSettings?.tourCompleted, appSettings?.tourCompletedAssets, appSettings?.tourCompletedIncome]);
+  }, [appSettings]);
 
   const generateHtmlContent = (icon: React.ReactNode, title: string, text: React.ReactNode) => {
     return ReactDOMServer.renderToString(

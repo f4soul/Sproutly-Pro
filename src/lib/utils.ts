@@ -21,7 +21,7 @@ export function formatCurrency(value: number, currencyCode: string = 'RUB'): str
       minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
     }).format(value);
-  } catch (err) {
+  } catch {
     console.error('Invalid currency code:', validCurrency);
     // Fallback
     return new Intl.NumberFormat('ru-RU', {

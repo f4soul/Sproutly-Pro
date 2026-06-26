@@ -12,7 +12,6 @@ import { createSvgIconsPlugin } from 'vite-plugin-svg-icons';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
   return {
     plugins: [
       react(),
@@ -58,28 +57,6 @@ export default defineConfig(({ mode }) => {
         },
         devOptions: {
           enabled: true
-        },
-        manifest: {
-          name: 'Sproutly.Pro',
-          short_name: 'Sproutly',
-          description: 'Умный помощник для отслеживания доходов и вкладов',
-          theme_color: '#0f172a',
-          background_color: '#0f172a',
-          display: 'standalone',
-          orientation: 'portrait',
-          icons: [
-            {
-              src: '/icon-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: '/icon-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable'
-            }
-          ]
         }
       })
     ],

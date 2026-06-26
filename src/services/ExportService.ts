@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import * as htmlToImage from 'html-to-image';
 import * as XLSX from 'xlsx';
-import { Deposit } from '../types';
+import { Deposit, MonthData } from '../types';
 import { format } from 'date-fns';
 import { showToast } from '../lib/toast';
 import { isDepositClosed } from '../lib/depositCalculations';
@@ -64,7 +64,7 @@ export const exportToXLSX = (deposits: Deposit[]) => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Вклады');
     XLSX.writeFile(workbook, `sproutly_deposits_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     showToast('Данные успешно экспортированы в XLSX', 'success', { id: toastId });
-  } catch (err) {
+  } catch {
     showToast('Ошибка при экспорте в XLSX', 'error', { id: toastId });
   }
 };
@@ -93,7 +93,7 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Сводка');
     XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     showToast('Сводка успешно экспортирована в XLSX', 'success', { id: toastId });
-  } catch (err) {
+  } catch {
     showToast('Ошибка при экспорте сводки', 'error', { id: toastId });
   }
 };
@@ -145,7 +145,7 @@ export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => 
     XLSX.utils.book_append_sheet(workbook, worksheet, `Доходы ${year}`);
     XLSX.writeFile(workbook, `income_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
     showToast('Доходы успешно экспортированы в XLSX', 'success', { id: toastId });
-  } catch (err) {
+  } catch {
     showToast('Ошибка при экспорте доходов', 'error', { id: toastId });
   }
 };

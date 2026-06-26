@@ -38,7 +38,7 @@ export function DepositFormBankPicker({
   return (
     <div className="space-y-2">
       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-        <Landmark className="w-3.5 h-3.5 text-primary-500 stroke-[1.5px]" />{" "}
+        <Landmark className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
         Банк
       </label>
 
@@ -71,7 +71,7 @@ export function DepositFormBankPicker({
             <Combobox.Input
               ref={bankInputRef}
               className="w-full border-none py-3 pl-4 pr-16 text-sm font-medium bg-transparent outline-none text-slate-950 dark:text-white"
-              displayValue={(val: unknown) =>
+              displayValue={(val: any) =>
                 typeof val === "string" ? val : ""
               }
               onChange={(event) => setQuery(event.target.value)}
@@ -215,7 +215,7 @@ export function DepositFormBankPicker({
                                   onTouchStart={(e) => {
                                     e.stopPropagation();
                                     e.preventDefault();
-                                    handleEditBank(e as unknown as React.MouseEvent, bank);
+                                    handleEditBank(e as any as React.MouseEvent, bank);
                                   }}
                                   onClick={(e) => handleEditBank(e, bank)}
                                   className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-deposit-500 hover:bg-deposit-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"

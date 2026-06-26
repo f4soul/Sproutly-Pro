@@ -80,7 +80,7 @@ export function calculateUnifiedFinance({
       // Logic for Option A: Actuals + Projections
       // If month has salary entered, use it as Actual. 
       // If it's 0, it's a Projected month.
-      let isActual = m.salary > 0;
+      const isActual = m.salary > 0;
       
       let base: number;
       if (isActual) {
@@ -148,7 +148,7 @@ export function calculateUnifiedFinance({
     
     // Calculate total base salary for the year to apply % or coef for annual bonuses
     const totalBaseSalaryForYear = calcMonths.reduce((sum, m, i) => {
-      let isActual = yearData.months[i].salary > 0;
+      const isActual = yearData.months[i].salary > 0;
       let base = 0;
       if (isActual) {
         base = yearData.months[i].factDays < yearData.months[i].normDays ? yearData.months[i].salary * (yearData.months[i].factDays / yearData.months[i].normDays) : yearData.months[i].salary;

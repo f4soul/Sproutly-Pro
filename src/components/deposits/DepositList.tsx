@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { Landmark, Plus, ChevronUp, ChevronDown, BarChart3, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence, useIsPresent } from 'motion/react';
@@ -18,9 +18,10 @@ interface DepositListProps {
   deposits: Deposit[];
   selectedYear: number;
   isPrivate?: boolean;
+  isOuterPresent?: boolean;
 }
 
-export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
+export function DepositList({ deposits, isPrivate = false, isOuterPresent = true }: DepositListProps) {
   const isPresent = useIsPresent();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeposit, setEditingDeposit] = useState<Deposit | undefined>();
@@ -51,6 +52,13 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const [rates, setRates] = useState<CurrencyRates | null>(null);
+
+  const [isPending, startTransition] = useTransition();
+
+  const handleSetSearchQuery = (val: string | ((prev: string) => string)) => startTransition(() => setSearchQuery(val));
+  const handleSetFilterStatus = (val: 'all' | 'active' | 'closed') => startTransition(() => setFilterStatus(val));
+  const handleSetSelectedBanks = (val: string[] | ((prev: string[]) => string[])) => startTransition(() => setSelectedBanks(val));
+  const setSortConfig = (val: { key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null | ((prev: any) => any)) => startTransition(() => setSortConfigState(val));
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
@@ -219,12 +227,12 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
 
     if (sortConfig && sortConfig.key === key) {
       if (sortConfig.direction === defaultDir) {
-        setSortConfigState({ key, direction: nextDir });
+        setSortConfig({ key, direction: nextDir });
       } else {
-        setSortConfigState(null);
+        setSortConfig(null);
       }
     } else {
-      setSortConfigState({ key, direction: defaultDir });
+      setSortConfig({ key, direction: defaultDir });
     }
   };
 
@@ -244,7 +252,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
     );
   };
 
-  const resetSort = () => setSortConfigState(null);
+  const resetSort = () => setSortConfig(null);
 
   const confirmDelete = async () => {
     if (depositToDelete && depositToDelete.id) {
@@ -267,9 +275,9 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
     <div id="deposits-list-content" className="space-y-6 md:space-y-10 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
       <SmartActionBar 
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={handleSetSearchQuery}
         filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
+        setFilterStatus={handleSetFilterStatus}
         sortConfig={sortConfig}
         requestSort={requestSort}
         resetSort={resetSort}
@@ -277,28 +285,25 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
         onAddClick={() => { setEditingDeposit(undefined); setIsFormOpen(true); }}
         isScrolled={isScrolled}
         selectedBanks={selectedBanks}
-        onSelectedBanksChange={setSelectedBanks}
+        onSelectedBanksChange={handleSetSelectedBanks}
         uniqueBanks={uniqueBanks}
       />
 
       {/* Floating Action Button for Mobile & Tablet */}
-      {isMounted && typeof document !== 'undefined' && createPortal(
+      {isPresent && isOuterPresent && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
-            "lg:hidden fixed right-4 sm:right-8 z-[60] transition-all", 
+            "lg:hidden fixed right-4 sm:right-8 z-[60]", 
             filteredDeposits.length > 0 
               ? "floating-fab-bottom-with-analytics" 
               : "floating-fab-bottom-no-analytics",
-            !isPresent 
-              ? "duration-100 opacity-0 scale-75 pointer-events-none" 
-              : (isAnalyticsExpanded 
-                ? "opacity-0 scale-50 pointer-events-none translate-y-4 duration-300" 
-                : cn(
-                    "duration-300",
-                    isScrolling
-                      ? "opacity-20 scale-90 pointer-events-none"
-                      : "opacity-100 scale-100"
-                  )
+            isAnalyticsExpanded 
+              ? "transition-all opacity-0 scale-50 pointer-events-none translate-y-4 duration-300" 
+              : cn(
+                  "transition-all duration-300",
+                  isScrolling
+                    ? "opacity-20 scale-90 pointer-events-none"
+                    : "opacity-100 scale-100"
                 )
           )}
         >
@@ -390,14 +395,14 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                         </p>
                         {filterStatus !== 'all' && (
                           <button
-                            onClick={() => setFilterStatus('all')}
+                            onClick={() => handleSetFilterStatus('all')}
                             className="px-4 py-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold text-sm rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
                           >
                             Искать во всех вкладах
                           </button>
                         )}
                         <button
-                          onClick={() => { setSearchQuery(''); setSelectedBanks([]); }}
+                          onClick={() => { handleSetSearchQuery(''); handleSetSelectedBanks([]); }}
                           className="text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors mt-2 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-700 hover:decoration-slate-500"
                         >
                           Сбросить поиск
@@ -407,7 +412,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                       <div className="flex flex-col items-center gap-3">
                         <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Для выбранных банков нет записей</p>
                         <button
-                          onClick={() => setSelectedBanks([])}
+                          onClick={() => handleSetSelectedBanks([])}
                           className="text-primary-500 hover:text-primary-600 font-semibold underline underline-offset-4 decoration-primary-500/30 hover:decoration-primary-600 transition-colors"
                         >
                           Сбросить фильтр банков
@@ -483,14 +488,14 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                     </p>
                     {filterStatus !== 'all' && (
                       <button
-                        onClick={() => setFilterStatus('all')}
+                        onClick={() => handleSetFilterStatus('all')}
                         className="px-4 py-2 mt-2 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-bold inline-flex rounded-xl hover:bg-primary-100 dark:hover:bg-primary-900/30 transition-colors"
                       >
                         Искать во всех
                       </button>
                     )}
                     <button
-                      onClick={() => { setSearchQuery(''); setSelectedBanks([]); }}
+                      onClick={() => { handleSetSearchQuery(''); handleSetSelectedBanks([]); }}
                       className="text-slate-400 hover:text-slate-600 font-medium text-sm transition-colors mt-2 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-700 hover:decoration-slate-500"
                     >
                       Сбросить поиск
@@ -500,7 +505,7 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
                   <div className="flex flex-col items-center gap-3">
                     <p className="text-slate-500 dark:text-slate-400 font-bold text-lg">Выбранные банки пусты</p>
                     <button
-                      onClick={() => setSelectedBanks([])}
+                      onClick={() => handleSetSelectedBanks([])}
                       className="text-primary-500 hover:text-primary-600 font-semibold underline underline-offset-4 decoration-primary-500/30 hover:decoration-primary-600 transition-colors"
                     >
                       Сбросить фильтр банков
@@ -534,15 +539,13 @@ export function DepositList({ deposits, isPrivate = false }: DepositListProps) {
       </AnimatePresence>
 
       {/* Floating Holographic Analytics Panel for Mobile/Portrait Tablet */}
-      {filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
+      {isPresent && isOuterPresent && filteredDeposits.length > 0 && isMounted && typeof document !== 'undefined' && createPortal(
         <motion.div 
           className={cn(
-            "block lg:hidden fixed z-[60] pointer-events-none transition-all mx-auto inset-x-4 max-w-sm",
+            "block lg:hidden fixed z-[60] pointer-events-none mx-auto inset-x-4 max-w-sm",
             "md:inset-x-auto md:left-[18.5rem] md:right-6 md:max-w-none md:max-w-6xl",
             "floating-analytics-bottom",
-            !isPresent 
-              ? "duration-100 opacity-0 scale-95 translate-y-4" 
-              : "duration-300"
+            "transition-all duration-300"
           )}
         >
           <div

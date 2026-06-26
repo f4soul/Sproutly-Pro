@@ -1,7 +1,7 @@
-import React, { Fragment, useState, useEffect, useRef } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import React, { Fragment, useState } from 'react';
+import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Calculator, ArrowRight, XCircle } from 'lucide-react';
+import { X, Calculator, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { formatCurrency } from '../../lib/taxCalculator';
 
@@ -28,15 +28,14 @@ export const CalculatedTableInput = ({
 }: CalculatedTableInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [localValue, setLocalValue] = useState('');
-  
-  useEffect(() => {
-    if (isOpen) {
-      setLocalValue(value === 0 ? '' : value.toString().replace('.', ','));
-    }
-  }, [isOpen, value]);
+
+  const handleOpen = () => {
+    setLocalValue(value === 0 ? '' : value.toString().replace('.', ','));
+    setIsOpen(true);
+  };
 
   const handleSave = () => {
-    let valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
+    const valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
     let num = parseFloat(valStr);
     if (isNaN(num)) num = 0;
     
@@ -59,7 +58,7 @@ export const CalculatedTableInput = ({
   return (
     <>
       <div 
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className={cn(
           "w-full flex flex-col justify-center items-end cursor-pointer group relative",
           className

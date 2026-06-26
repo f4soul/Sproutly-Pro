@@ -337,7 +337,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                 </div>
 
                 <div className="space-y-2 relative z-20">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Дата открытия
                   </label>
                   <div className="relative w-full group">
@@ -508,7 +508,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     transition={{ duration: 0.2 }}
                     className="space-y-2"
                   >
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Получено вычетов (НДФЛ возврат)
                     </label>
                     <input

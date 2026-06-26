@@ -77,7 +77,7 @@ export function DepositFormDateFields({
     <>
       <div className="space-y-2">
         <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-primary-500 stroke-[1.5px]" />{" "}
+          <Calendar className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Дата открытия
         </label>
         <div className="relative w-full group">
@@ -124,7 +124,7 @@ export function DepositFormDateFields({
 
       <div className="space-y-2">
         <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5 text-violet-500 stroke-[1.5px]" />{" "}
+          <Clock className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Срок (дней)
         </label>
         <input
@@ -147,7 +147,7 @@ export function DepositFormDateFields({
 
       <div className="space-y-2">
         <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <CalendarX className="w-3.5 h-3.5 text-primary-500 stroke-[1.5px]" />{" "}
+          <CalendarX className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Дата закрытия
         </label>
         <div className="relative w-full group">

@@ -36,7 +36,7 @@ try {
 
 export async function getExchangeRates(): Promise<CurrencyRates | null> {
   const now = Date.now();
-  const isSameDay = new Date(lastFetchTime).toDateString() === new Date(now).toDateString();
+  const isSameDay = new Date(lastFetchTime).toDateString() === new Date().toDateString();
   
   if (cachedRates && isSameDay && now - lastFetchTime < CACHE_DURATION) {
     return cachedRates;

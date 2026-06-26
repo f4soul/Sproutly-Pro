@@ -73,16 +73,34 @@ export function calculateIncomeTotals({
 }
 
 export function useIncomeTotals(input: UseIncomeTotalsInput) {
+  const {
+    activeYear,
+    activeYearData,
+    prevYearData,
+    deposits,
+    taxSettings,
+    taxBrackets,
+    simulation
+  } = input;
+
   return useMemo(
-    () => calculateIncomeTotals(input),
+    () => calculateIncomeTotals({
+      activeYear,
+      activeYearData,
+      prevYearData,
+      deposits,
+      taxSettings,
+      taxBrackets,
+      simulation
+    }),
     [
-      input.activeYear,
-      input.activeYearData,
-      input.prevYearData,
-      input.deposits,
-      input.taxSettings,
-      input.taxBrackets,
-      input.simulation
+      activeYear,
+      activeYearData,
+      prevYearData,
+      deposits,
+      taxSettings,
+      taxBrackets,
+      simulation
     ]
   );
 }

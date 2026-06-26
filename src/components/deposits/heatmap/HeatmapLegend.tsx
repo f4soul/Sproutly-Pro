@@ -28,7 +28,7 @@ export function HeatmapLegend({ className }: HeatmapLegendProps) {
         {/* Action Legend */}
         <div className="flex items-center gap-4 shrink-0 justify-center">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 rounded-[4px] ring-[1.5px] ring-amber-400 dark:ring-amber-500 ring-inset shadow-[0_0_12px_rgba(251,191,36,0.6)] bg-white/50 dark:bg-[#0B0F19]" />
+            <div className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 rounded-[4px] border-[1.5px] border-amber-400 dark:border-amber-500 shadow-[0_0_12px_rgba(251,191,36,0.6)] bg-white/50 dark:bg-[#0B0F19]" />
             <span className="text-[9px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest leading-none mt-[1px]">Выплата</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">

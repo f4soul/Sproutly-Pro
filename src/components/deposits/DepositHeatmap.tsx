@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'motion/react';
 import { Deposit } from '../../types';
@@ -21,6 +21,26 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
   const [expandedMonth, setExpandedMonth] = useState<Date | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [selectedBank, setSelectedBank] = useState<string | 'all'>('all');
+  
+  const [isPending, startTransition] = useTransition();
+
+  const handleSetDisplayYear = (year: number) => {
+    startTransition(() => {
+      setDisplayYear(year);
+    });
+  };
+
+  const handleSetExpandedMonth = (month: Date | null) => {
+    startTransition(() => {
+      setExpandedMonth(month);
+    });
+  };
+
+  const handleSetSelectedBank = (bank: string) => {
+    startTransition(() => {
+      setSelectedBank(bank);
+    });
+  };
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -78,7 +98,11 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
           intensity,
           isMaturing,
           isOpening,
-          colorClass: getColorClass(intensity)
+          colorClass: cn(
+            getColorClass(intensity),
+            intensity === 0 ? "text-slate-400/60 dark:text-slate-500/60" : "text-white/90",
+            isMaturing ? "border-[1.5px] border-amber-400 dark:border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10 text-amber-500 dark:text-amber-400/90 drop-shadow-sm" : (intensity > 0 ? "border border-white/10 shadow-sm" : "")
+          )
         };
       });
 
@@ -96,10 +120,10 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
         
         <HeatmapFilters 
           displayYear={displayYear}
-          setDisplayYear={setDisplayYear}
-          setExpandedMonth={setExpandedMonth}
+          setDisplayYear={handleSetDisplayYear}
+          setExpandedMonth={handleSetExpandedMonth}
           selectedBank={selectedBank}
-          setSelectedBank={setSelectedBank}
+          setSelectedBank={handleSetSelectedBank}
           uniqueBanks={uniqueBanks}
         />
 
@@ -115,7 +139,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
               month={m.monthDate} 
               days={m.days}
               startDay={m.startDay}
-              setExpandedMonth={setExpandedMonth} 
+              setExpandedMonth={handleSetExpandedMonth} 
             />
           ))}
         </div>
@@ -130,7 +154,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
           {expandedMonth && (
             <HeatmapExpandedMonth
               expandedMonth={expandedMonth}
-              setExpandedMonth={setExpandedMonth}
+              setExpandedMonth={handleSetExpandedMonth}
               selectedDay={selectedDay}
               setSelectedDay={setSelectedDay}
               heatmapData={heatmapData}

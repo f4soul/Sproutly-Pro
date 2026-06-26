@@ -825,7 +825,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Percent className="w-3.5 h-3.5 text-amber-500 stroke-[1.5px]" />{" "}
+                    <Percent className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Ставка (%)
                   </label>
                   <input
@@ -858,7 +858,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Info className="w-3.5 h-3.5 text-primary-500 stroke-[1.5px]" />{" "}
+                    <Info className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Примечание
                   </label>
                   <input
@@ -900,7 +900,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                    <Info className="w-3.5 h-3.5 text-primary-500 stroke-[1.5px]" />{" "}
+                    <Info className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Комментарий
                   </label>
                   <textarea

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useTransition } from 'react';
 import { LayoutDashboard, HandCoins, Landmark, PieChart as PieChartIcon, BarChart3, ChevronDown, Eye, EyeOff, Shield, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BentoDashboard } from './BentoDashboard';
@@ -41,6 +41,7 @@ const DASHBOARD_ITEM_VARIANTS = {
 export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
   const { state, setState } = useAppData();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
+  const [isPending, startTransition] = useTransition();
   
   const currentYear = new Date().getFullYear();
   const selectedYear = state.activeYear;
@@ -148,8 +149,10 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
                           key={y}
                           onClick={() => {
                             const newYear = Number(y);
-                            setState(prev => ({ ...prev, activeYear: newYear }));
                             setShowYearDropdown(false);
+                            startTransition(() => {
+                              setState(prev => ({ ...prev, activeYear: newYear }));
+                            });
                           }}
                           className={cn(
                             "w-full px-4 py-2.5 text-left text-xs font-bold rounded-xl transition-colors",
@@ -170,7 +173,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
       </div>
 
       <div className="pt-2 relative">
-        <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={activeSubTab}
             initial={{ opacity: 0, y: 10 }}
@@ -210,7 +213,11 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
                 deposits={deposits} 
                 taxSettings={taxSettings} 
                 selectedYear={selectedYear} 
-                onYearChange={(year) => setState(prev => ({ ...prev, activeYear: year }))} 
+                onYearChange={(year) => {
+                  startTransition(() => {
+                    setState(prev => ({ ...prev, activeYear: year }));
+                  });
+                }} 
                 appSettings={appSettings} 
                 isPrivate={isPrivate}
               />

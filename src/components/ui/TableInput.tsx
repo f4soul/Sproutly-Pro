@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { formatNumber } from '../../lib/taxCalculator';
 
@@ -6,8 +6,6 @@ export const TableInput = ({
   value, 
   onChange, 
   className, 
-  step = "any",
-  isCurrency = true,
   hideDecimals = false,
   isInteger = false
 }: { 
@@ -30,13 +28,13 @@ export const TableInput = ({
             ? Math.round(value).toLocaleString('ru-RU') 
             : formatNumber(value)));
 
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleFocus = () => {
     setFocused(true);
     setLocalValue(value === 0 ? '' : value.toString().replace('.', ','));
   };
 
   const commitValue = () => {
-    let valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
+    const valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
     let num = parseFloat(valStr);
     if (isNaN(num)) num = 0;
     if (isInteger) num = Math.round(num);

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useIsPresent } from "motion/react";
 import { Landmark, Vault, ChartNoAxesCombined } from "lucide-react";
 import { Deposit, CashAsset, InvestmentAsset } from "../../types";
 import { DepositList } from "../deposits/DepositList";
@@ -23,6 +23,7 @@ export function AssetsView({
   isPrivate = false,
 }: AssetsViewProps) {
   const [activeTab, setActiveTab] = useState<"deposits" | "cash" | "investments">("deposits");
+  const isOuterPresent = useIsPresent();
 
   return (
     <div className="space-y-4">
@@ -98,19 +99,20 @@ export function AssetsView({
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout" initial={false}>
         {activeTab === "deposits" && (
           <motion.div
             key="deposits"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             <DepositList
               deposits={deposits}
               selectedYear={selectedYear}
               isPrivate={isPrivate}
+              isOuterPresent={isOuterPresent}
             />
           </motion.div>
         )}
@@ -120,7 +122,7 @@ export function AssetsView({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             <CashList cashAssets={cashAssets} isPrivate={isPrivate} />
           </motion.div>
@@ -131,7 +133,7 @@ export function AssetsView({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             <InvestmentList investmentAssets={investmentAssets} isPrivate={isPrivate} />
           </motion.div>

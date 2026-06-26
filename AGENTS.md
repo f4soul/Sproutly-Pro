@@ -60,8 +60,10 @@ When asked to build or modify a new component, **DO NOT** use standard default T
 **CRITICAL INSTRUCTION FOR ALL AI MODELS:**
 Whenever you implement a meaningful, user-facing feature, enhancement, or major bug fix, you **MUST** update `src/data/changelog.ts` (or the designated changelog file in the project).
 
-- **Log Logically, Not Literally:** DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes. Group minor visual adjustments into single, comprehensive bullet points (e.g., "UI enhancements across dashboard and modals" instead of listing 5 different margin changes).
-- **Version Control:** DO NOT create a new version number for every small prompt. If you are continuing work on an ongoing feature in the current session, **append** your changes to the latest existing version block in the array. Increment the version (e.g., from `1.6.28` to `1.6.29`) ONLY when starting a fresh, logically distinct update cycle.
+- **User-Facing Only:** Only include changes that are genuinely useful and visible to normal users in the public string arrays.
+- **Technical Changes as Comments:** For technical fixes, refactoring, or under-the-hood stability improvements (like resolving `useEffect` infinite loops, internal DB connection errors, etc.), **DO NOT** add them as visible strings. Instead, add them as inline JavaScript comments (`//`) within the current version block in `src/data/changelog.ts`. This keeps them in the historical flow for developers but invisible to users.
+- **Log Logically, Not Literally:** DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes as public features. Group minor visual adjustments into single, comprehensive bullet points.
+- **Version Control:** DO NOT create a new version number for every small prompt. If you are continuing work on an ongoing feature in the current session, **append** your changes to the latest existing version block in the array. Increment the version ONLY when starting a fresh, logically distinct update cycle.
 - **Format & Tone:** Write in clear, professional Russian. Categorize under `features`, `improvements`, or `fixes`. Keep entries focused on the *value* delivered to the user.
 - **Why:** This project uses an active user base, and showing them a beautifully formatted "What's New" popup after updates is critical for adoption and transparency.
 

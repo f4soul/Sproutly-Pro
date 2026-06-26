@@ -16,7 +16,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<Error
     return { hasError: true, errorInfo: error instanceof Error ? error.message : String(error) };
   }
 
-  componentDidCatch(error: any, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught an error", error, errorInfo);
   }
 
@@ -28,7 +28,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<Error
         if (parsed.error && parsed.error.includes("insufficient permissions")) {
           displayMessage = "Ошибка доступа к данным. Пожалуйста, убедитесь, что вы авторизованы.";
         }
-      } catch (e) {
+      } catch {
         // Not a JSON error
       }
 
@@ -53,6 +53,6 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<Error
       );
     }
 
-    return (this as any).props.children;
+    return this.props.children;
   }
 }

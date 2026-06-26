@@ -64,6 +64,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   };
 
   const updateYearSetting = async (year: number, field: keyof TaxYearSettings, value: number) => {
+    // eslint-disable-next-line react-hooks/purity
     await db.taxYearSettings.update(year, { [field]: value, updatedAt: Date.now() });
     syncWithFirebase();
   };
@@ -248,7 +249,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       {/* Backup Section */}
       <section className="apple-card p-4 sm:p-5 xl:p-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 md:gap-4 min-w-0">
-          <div className="w-11 h-11 md:w-12 md:h-12 rounded-[18px] bg-primary-500/10 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 rounded-2xl bg-primary-500/10 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
             <CloudSync className="w-5 h-5 md:w-6 md:h-6 text-primary-500 stroke-[1.8px]" />
           </div>
           <div className="min-w-0">
@@ -261,17 +262,17 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           <button 
             type="button"
             onClick={exportData}
-            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-[14px] cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
+            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all rounded-2xl cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-slate-200/50 dark:border-white/[0.04] shrink-0"
             title="Экспорт"
           >
-            <Download className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
+            <Upload className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
             <span className="hidden lg:inline">Экспорт</span>
           </button>
           <label 
-            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-[14px] cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
+            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-2xl cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
             title="Импорт"
           >
-            <Upload className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
+            <Download className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
             <span className="hidden lg:inline">Импорт</span>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>

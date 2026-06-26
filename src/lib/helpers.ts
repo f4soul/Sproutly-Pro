@@ -51,7 +51,7 @@ export const generateEmptyYear = (year: number, customNorms?: number[]): YearDat
   };
 };
 
-export const generateDefaultYear = (year: number, forceEmpty: boolean = false, customNorms?: number[]): YearData => {
+export const generateDefaultYear = (year: number, _forceEmpty?: boolean, customNorms?: number[]): YearData => {
   return generateEmptyYear(year, customNorms);
 };
 

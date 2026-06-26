@@ -1,5 +1,3 @@
-import { Toast } from '../types';
-
 export const toastEvent = new EventTarget();
 
 export interface ToastOptions {

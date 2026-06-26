@@ -1,5 +1,4 @@
 import React from 'react';
-import { cn } from '../../lib/utils';
 
 interface SproutlyLogoProps extends React.SVGProps<SVGSVGElement> {
   className?: string;

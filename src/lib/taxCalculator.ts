@@ -9,7 +9,7 @@ export const calculateProgressiveTaxDetailed = (
 ) => {
   // gross here should be the total taxable income (e.g. Salary + Taxable Deposit Interest)
   // deduction reduces the taxable base
-  let taxableBase = Math.max(0, gross - deduction);
+  const taxableBase = Math.max(0, gross - deduction);
   let remaining = taxableBase;
   let tax = 0;
   const brackets = [];
@@ -60,7 +60,7 @@ export const formatCurrency = (value: number, currencyCode: string = 'RUB') => {
 
   try {
     return getCurrencyFormatter(validCurrency).format(value);
-  } catch (err) {
+  } catch {
     console.error('Invalid currency code:', validCurrency);
     // Fallback if the code is really invalid
     return getCurrencyFormatter('RUB').format(value);

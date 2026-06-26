@@ -2,39 +2,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Wallet,
-  TrendingDown,
-  Receipt,
   Landmark,
   Vault,
   ChartNoAxesCombined,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
-  ChevronRight,
-  Plus,
-  Settings as SettingsIcon,
-  Download,
   Eye,
   EyeOff,
-  Shield,
   Info,
-  X as CloseIcon,
-  Calculator,
-  Activity,
-  Command
+  Activity
 } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
 import { Deposit, CashAsset, InvestmentAsset, TaxYearSettings, AppSettings } from "../../types";
 import { useAppData } from "../../context/AppDataContext";
 import { calculateUnifiedFinance } from "../../lib/unifiedFinance";
@@ -52,6 +30,7 @@ import { AnimatedCurrency } from "../ui/AnimatedCurrency";
 import { AnimatedPercentage } from "../ui/AnimatedPercentage";
 import { AutoFitText } from "../ui/AutoFitText";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
+import { EmptyState } from "../ui/EmptyState";
 
 interface BentoDashboardProps {
   deposits: Deposit[];
@@ -163,23 +142,6 @@ export function BentoDashboard({
       // Salary events removed per user request
     }
 
-    const insights = [];
-    if (unified.depositsIncome > unified.depositLimit) {
-      insights.push({
-        title: "Лимит вкладов превышен",
-        text: `Вы заплатите ${formatCurrency(unified.depositsTax)} налога с процентов.`,
-        type: "warning",
-      });
-    }
-    if ((yearData?.iisContribution || 0) < 400000) {
-      const remaining = 400000 - (yearData?.iisContribution || 0);
-      insights.push({
-        title: "Налоговый вычет ИИС",
-        text: `Пополнив ИИС на ${formatCurrency(remaining)}, вы вернете ${formatCurrency(remaining * 0.13)}.`,
-        type: "info",
-      });
-    }
-
     const now = new Date();
     const sortedEvents = upcomingEvents
       .filter((e) => e.date >= now)
@@ -211,7 +173,6 @@ export function BentoDashboard({
       totalInvestmentsAmount,
       totalNetCapital: totalDepositsAmount + totalCashAmount + totalInvestmentsAmount,
       upcomingEvents: sortedEvents,
-      insights,
       netDiffPercent,
       totalNormDays,
       totalWorkingHours,
@@ -435,9 +396,7 @@ export function BentoDashboard({
                 );
                 if (total === 0)
                   return (
-                    <div className="flex w-full py-4 items-center justify-center opacity-50 text-slate-400 text-xs font-bold uppercase tracking-widest text-center">
-                      Нет данных
-                    </div>
+                    <EmptyState className="opacity-50 text-xs text-center" />
                   );
 
                 return (
@@ -505,7 +464,9 @@ export function BentoDashboard({
                       (sum, item) => sum + item.value,
                       0,
                     );
-                    if (total === 0) return null;
+                    if (total === 0) return (
+                      <EmptyState className="absolute inset-0 italic" />
+                    );
                     return incomeChartData.map((item, idx) => (
                       <motion.div
                         key={item.name}
@@ -649,10 +610,8 @@ export function BentoDashboard({
             <h3 className="text-[9px] sm:text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
               Сбережения и инвестиции
             </h3>
-            <p className="text-[20px] @[220px]:text-2xl @[280px]:text-[26px] @[320px]:text-[28px] font-black text-slate-950 dark:text-white truncate tracking-tight w-full leading-none">
-              {formatVal(data.totalNetCapital)}
-            </p>
-            {data.totalNetCapital > 0 &&
+
+            {data.totalNetCapital > 0 ? (
               (() => {
                 const total = data.totalNetCapital;
                 const depPct =
@@ -662,86 +621,43 @@ export function BentoDashboard({
                 const invPct =
                   total > 0 ? (data.totalInvestmentsAmount / total) * 100 : 0;
 
+                const items = [
+                  { id: 'dep', amount: data.totalDepositsAmount, pct: depPct, name: 'Вклады', bgClass: 'bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_10px_rgba(20,184,166,0.6)]', iconBgClass: 'bg-deposit-500 dark:bg-deposit-400' },
+                  { id: 'cash', amount: data.totalCashAmount, pct: cashPct, name: 'Наличные', bgClass: 'bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_10px_rgba(16,185,129,0.6)]', iconBgClass: 'bg-cash-500 dark:bg-cash-400' },
+                  { id: 'inv', amount: data.totalInvestmentsAmount, pct: invPct, name: 'Биржа', bgClass: 'bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]', iconBgClass: 'bg-invest-500 dark:bg-invest-400' },
+                ].filter(item => item.amount > 0).sort((a, b) => b.amount - a.amount);
+
                 return (
-                  <div className="flex flex-col w-full gap-1.5 mt-1.5">
-                    {/* Progress Bar */}
+                  <div className="flex flex-col w-full gap-3 mt-2">
                     <div className="w-full h-1.5 bg-slate-200/50 dark:bg-slate-800/50 rounded-full overflow-hidden flex shadow-inner">
-                      <div
-                        className="h-full bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_10px_rgba(20,184,166,0.6)]"
-                        style={{ width: `${depPct}%` }}
-                      />
-                      <div
-                        className="h-full bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_10px_rgba(16,185,129,0.6)]"
-                        style={{ width: `${cashPct}%` }}
-                      />
-                      <div
-                        className="h-full bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]"
-                        style={{ width: `${invPct}%` }}
-                      />
+                      {items.map(item => (
+                        <div
+                          key={item.id}
+                          className={`h-full ${item.bgClass}`}
+                          style={{ width: `${item.pct}%` }}
+                        />
+                      ))}
                     </div>
-                    <div className="flex items-center justify-between gap-2 mt-1.5 w-full">
-                      
-                      {/* Vklady */}
-                      <div className="flex flex-col items-start min-w-0 flex-1 relative group/tip1">
-                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-deposit-500 dark:hover:text-deposit-400 transition-colors cursor-help">
-                          <div className="w-1.5 h-1.5 rounded-full bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_6px_rgba(20,184,166,0.5)] shrink-0" />
-                          <Landmark size={14} className="stroke-[2.5px]" />
+                    <div className="flex flex-col w-full gap-1">
+                      {items.map(item => (
+                        <div key={item.id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className={`w-1.5 h-1.5 rounded-full ${item.iconBgClass} shrink-0`} />
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{item.name}</span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5 shrink-0">
+                            <span className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(Math.round(item.amount), "RUB", true)}</span>
+                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right">{item.pct.toFixed(0)}%</span>
+                          </div>
                         </div>
-                        <span className="text-[10px] sm:text-xs font-black text-deposit-600 dark:text-deposit-400 truncate tracking-tight leading-none mt-1.5">
-                          {formatValPlain(
-                            Math.round(data.totalDepositsAmount),
-                            "RUB",
-                            true,
-                          )}
-                        </span>
-                        {/* Tooltip */}
-                        <div className="absolute top-0 left-0 -translate-y-full -translate-x-2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip1:opacity-100 group-hover/tip1:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
-                          Вклады
-                        </div>
-                      </div>
-
-                      {/* Nalichnye */}
-                      <div className="flex flex-col items-center min-w-0 flex-1 relative group/tip2 pl-1">
-                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-cash-500 dark:hover:text-cash-400 transition-colors cursor-help">
-                          <div className="w-1.5 h-1.5 rounded-full bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_6px_rgba(16,185,129,0.5)] shrink-0" />
-                          <Vault size={14} className="stroke-[2.5px]" />
-                        </div>
-                        <span className="text-[10px] sm:text-xs font-black text-cash-600 dark:text-cash-400 truncate tracking-tight leading-none mt-1.5">
-                          {formatValPlain(
-                            Math.round(data.totalCashAmount),
-                            "RUB",
-                            true,
-                          )}
-                        </span>
-                        {/* Tooltip */}
-                        <div className="absolute top-0 left-1/2 -translate-y-full -translate-x-1/2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip2:opacity-100 group-hover/tip2:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
-                          Наличные
-                        </div>
-                      </div>
-
-                      {/* Birzha */}
-                      <div className="flex flex-col items-end min-w-0 flex-1 relative group/tip3">
-                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 hover:text-invest-500 dark:hover:text-invest-400 transition-colors cursor-help">
-                          <ChartNoAxesCombined size={14} className="stroke-[2.5px]" />
-                          <div className="w-1.5 h-1.5 rounded-full bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_6px_rgba(6,182,212,0.5)] shrink-0" />
-                        </div>
-                        <span className="text-[10px] sm:text-xs font-black text-invest-600 dark:text-invest-400 truncate tracking-tight leading-none mt-1.5">
-                          {formatValPlain(
-                            Math.round(data.totalInvestmentsAmount),
-                            "RUB",
-                            true,
-                          )}
-                        </span>
-                        {/* Tooltip */}
-                        <div className="absolute top-0 right-0 -translate-y-full translate-x-2 -mt-1 px-2 py-1 bg-slate-900/95 dark:bg-white/95 backdrop-blur-md border border-slate-700/50 rounded-lg shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tip3:opacity-100 group-hover/tip3:scale-100 transition-all duration-200 z-50 text-white dark:text-slate-900 text-[10px] font-bold">
-                          Биржа
-                        </div>
-                      </div>
-                      
+                      ))}
                     </div>
                   </div>
                 );
-              })()}
+              })()
+            ) : (
+              <EmptyState className="italic" />
+            )}
           </div>
         </motion.div>
 
@@ -756,7 +672,7 @@ export function BentoDashboard({
             </h3>
             <Calendar size={18} className="text-slate-400" />
           </div>
-          <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 cursor-auto">
+          <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 cursor-auto relative">
             {data.upcomingEvents.length > 0 ? (
               data.upcomingEvents.map((event, idx) => (
                 <div
@@ -802,10 +718,7 @@ export function BentoDashboard({
                 </div>
               ))
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 min-h-[100px]">
-                <Calendar size={32} strokeWidth={1} />
-                <p className="text-sm font-medium">Нет ближайших событий</p>
-              </div>
+              <EmptyState className="absolute inset-0 italic" />
             )}
           </div>
         </motion.div>

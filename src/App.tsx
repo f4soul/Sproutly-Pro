@@ -265,6 +265,16 @@ function AppContent() {
   const selectedYear = state?.activeYear || new Date().getFullYear();
 
   const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => {
+    // Surgical fix: Hide floating panels instantly to prevent 1-frame micro-delay during AnimatePresence exit
+    const floatingEls = document.querySelectorAll('.floating-analytics-bottom, .floating-fab-bottom-with-analytics, .floating-fab-bottom-no-analytics');
+    floatingEls.forEach(el => {
+      if (el instanceof HTMLElement) {
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        el.style.transition = 'none';
+      }
+    });
+
     if (activeTab === newTab) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {

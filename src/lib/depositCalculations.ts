@@ -1,4 +1,4 @@
-import { differenceInDays, startOfYear, endOfYear, getYear, min, max, eachDayOfInterval, format, isWithinInterval, isSameDay } from 'date-fns';
+import { differenceInDays, startOfYear, endOfYear, getYear, min, max, eachDayOfInterval } from 'date-fns';
 import { Deposit, HeatmapData, DayDensity } from '../types';
 
 export function calculateDepositDensity(deposits: Deposit[], year: number): HeatmapData {

@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment } from 'react';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trash2, X } from 'lucide-react';
