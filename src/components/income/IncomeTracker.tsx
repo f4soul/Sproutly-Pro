@@ -30,8 +30,7 @@ interface IncomeTrackerProps {
 }
 
 export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
-  const { state, setState, isInitialized } = useAppData();
-  const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
+  const { state, setState, isInitialized, deposits } = useAppData();
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
   
   const handleCopy = (value: number, type: 'net' | 'gross' | 'tax') => {

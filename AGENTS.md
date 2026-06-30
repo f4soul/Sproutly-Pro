@@ -75,3 +75,10 @@ Whenever you implement a meaningful, user-facing feature, enhancement, or major 
 - **Safe Areas**: Always respect iOS notches and home indicators. Use Tailwind's `pb-safe`, `pt-safe`, or `min-h-screen` combined with proper safe-area-insets for fullscreen modals and bottom sheets.
 - **Dynamic Theme Color**: When implementing theme switchers (Light/Dark), ensure the `<meta name="theme-color">` tag is dynamically updated via JavaScript (e.g., `#090D16` for dark, `#F2F2F7` for light) so the PWA standalone header matches the UI.
 - **Modals on Mobile**: On screens `< sm`, modals should generally behave as Bottom Sheets (anchored to the bottom, 100% width, rounded top corners) to improve thumb reachability.
+
+---
+
+## 9. Animation Mode Decisions (LOCKED — DO NOT CHANGE WITHOUT EXPLICIT REQUEST)
+- Main transitions between top-level sections (Layout.tsx, AnimatePresence wrapping {children} inside <main>): use `mode="wait"`. `popLayout` caused noticeable lag and stuttering on resource-intensive views (Heatmap/Dashboard), especially on mobile devices. This is a deliberate, tested trade-off. Do not change it to `popLayout` unless explicitly requested.
+- Transitions between lightweight subsections within the same section (AssetsView: Deposits/Savings/Exchange; UnifiedDashboard: Overview/Income/Deposits): use `mode="popLayout"`. Since these views contain relatively little content, avoiding the exit/enter delay results in a more responsive experience.
+- Scroll position is reset synchronously when the user switches top-level sections (App.tsx, `handleNavigation`), not in `onExitComplete`. This intentionally prevents race conditions between scroll restoration and page transition animations.

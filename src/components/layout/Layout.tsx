@@ -195,6 +195,14 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
           >
             <div
               onClick={handleRetrySync}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleRetrySync();
+                }
+              }}
               className={cn(
                 "flex items-center justify-center gap-2 md:gap-0 px-3 py-2 md:px-2 md:py-2 md:w-9 md:h-9 md:rounded-full rounded-2xl text-[11px] font-bold border transition-all duration-500 relative",
                 syncStatus === 'error' ? "cursor-pointer bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20 hover:bg-rose-100/90 dark:hover:bg-rose-500/20 active:scale-95" :
@@ -421,6 +429,14 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         >
           <div
             onClick={handleRetrySync}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleRetrySync();
+              }
+            }}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] uppercase tracking-wider font-black shadow-lg backdrop-blur-xl border transition-all duration-500 relative",
               syncStatus === 'error' ? "cursor-pointer bg-rose-500/90 text-white border-rose-400/50 shadow-rose-500/20 hover:bg-rose-600/95 active:scale-95 animate-pulse-once" :

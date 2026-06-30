@@ -56,6 +56,14 @@ export const YearSummary = ({
         </div>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.finalNet, 'net')}
+          role={!isPrivate ? "button" : undefined}
+          tabIndex={!isPrivate ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (!isPrivate && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              handleCopy(yearlyTotals.finalNet, 'net');
+            }
+          }}
           className={cn("relative z-10 group/copy flex flex-col mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
@@ -83,6 +91,14 @@ export const YearSummary = ({
         <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500 dark:text-primary-400 font-extrabold" : "text-slate-400 dark:text-slate-500")}>Gross (грязными)</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.totalGross, 'gross')}
+          role={!isPrivate ? "button" : undefined}
+          tabIndex={!isPrivate ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (!isPrivate && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              handleCopy(yearlyTotals.totalGross, 'gross');
+            }
+          }}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
@@ -125,6 +141,14 @@ export const YearSummary = ({
         <p className={cn("text-[8px] sm:text-[9px] font-bold uppercase tracking-widest mb-0.5 relative z-10 truncate", isSimulated ? "text-primary-500 dark:text-primary-400 font-extrabold" : "text-slate-400 dark:text-slate-500")}>НДФЛ</p>
         <div 
           onClick={() => !isPrivate && handleCopy(yearlyTotals.progressiveTax, 'tax')}
+          role={!isPrivate ? "button" : undefined}
+          tabIndex={!isPrivate ? 0 : undefined}
+          onKeyDown={(e) => {
+            if (!isPrivate && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              handleCopy(yearlyTotals.progressiveTax, 'tax');
+            }
+          }}
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >

@@ -160,6 +160,15 @@ export function HeatmapExpandedMonth({
                      e.stopPropagation(); 
                      hasInfo ? setSelectedDay(day) : setSelectedDay(null); 
                    }}
+                   role="button"
+                   tabIndex={0}
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter' || e.key === ' ') {
+                       e.preventDefault();
+                       e.stopPropagation();
+                       hasInfo ? setSelectedDay(day) : setSelectedDay(null);
+                     }
+                   }}
                    className={cn(
                      "w-full h-full rounded-[10px] sm:rounded-xl flex flex-col items-center justify-center transition-colors duration-150 group/day cursor-default select-none relative day-touch-zone",
                      hasInfo && "cursor-pointer hover:z-50 hover:shadow-xl",

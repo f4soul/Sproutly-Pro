@@ -80,6 +80,14 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
         !isLast && "border-b border-slate-200 dark:border-slate-800",
       )}
       onClick={() => setIsExpanded(!isExpanded)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setIsExpanded(!isExpanded);
+        }
+      }}
     >
       {/* Dynamic Background Tint */}
       <div

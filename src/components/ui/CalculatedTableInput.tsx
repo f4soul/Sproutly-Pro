@@ -59,6 +59,14 @@ export const CalculatedTableInput = ({
     <>
       <div 
         onClick={handleOpen}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleOpen();
+          }
+        }}
         className={cn(
           "w-full flex flex-col justify-center items-end cursor-pointer group relative",
           className

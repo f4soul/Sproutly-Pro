@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
-import { AppTour } from './components/ui/AppTour';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
-import { UnifiedDashboard } from './components/dashboard/UnifiedDashboard';
-import { AssetsView } from './components/assets/AssetsView';
-import { DepositHeatmap } from './components/deposits/DepositHeatmap';
-import { Settings } from './components/settings/Settings';
-import { IncomeTracker } from './components/income/IncomeTracker';
+const UnifiedDashboard = lazy(() => import('./components/dashboard/UnifiedDashboard').then(m => ({ default: m.UnifiedDashboard })));
+const AssetsView = lazy(() => import('./components/assets/AssetsView').then(m => ({ default: m.AssetsView })));
+const DepositHeatmap = lazy(() => import('./components/deposits/DepositHeatmap').then(m => ({ default: m.DepositHeatmap })));
+const Settings = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
+const IncomeTracker = lazy(() => import('./components/income/IncomeTracker').then(m => ({ default: m.IncomeTracker })));
+const AppTour = lazy(() => import('./components/ui/AppTour').then(m => ({ default: m.AppTour })));
+
 import { SecurityLock } from './components/auth/SecurityLock';
 import { useAppData } from './context/AppDataContext';
 import { auth } from './config/firebase';
@@ -63,10 +64,7 @@ function AppContent() {
     return localStorage.getItem('hasOnboarded') !== 'true';
   });
 
-  const { state, appSettings: _appSettings } = useAppData();
-  const _deposits = useLiveQuery(() => db.deposits.toArray());
-  const _cashAssets = useLiveQuery(() => db.cashAssets.toArray());
-  const _investmentAssets = useLiveQuery(() => db.investmentAssets.toArray());
+  const { state, appSettings: _appSettings, deposits: _deposits, cashAssets: _cashAssets, investmentAssets: _investmentAssets } = useAppData();
   const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
   
   const isLockActive = useMemo(() => {
@@ -340,37 +338,41 @@ function AppContent() {
             <LandingView key="landing" onStart={handleStart} />
           ) : (
             <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
-              {activeTab === 'dashboard' && (
-                <UnifiedDashboard 
-                  deposits={deposits} 
-                  cashAssets={cashAssets}
-                  investmentAssets={_investmentAssets}
-                  taxSettings={taxSettings} 
-                  appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
-                  isPrivate={isPrivate}
-                  setIsPrivate={setIsPrivate}
-                />
-              )}
-              {activeTab === 'deposits' && (
-                <AssetsView 
-                  deposits={deposits} 
-                  cashAssets={cashAssets}
-                  investmentAssets={_investmentAssets || []}
-                  selectedYear={selectedYear} 
-                  isPrivate={isPrivate}
-                />
-              )}
-              {activeTab === 'calendar' && (
-                <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
-              )}
-              {activeTab === 'ndfl' && (
-                <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
-              )}
-              {activeTab === 'settings' && (
-                <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
-              )}
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><SproutlyLogo className="w-10 h-10 text-primary-500 drop-shadow-[0_0_12px_rgba(var(--rgb-primary),0.5)] animate-pulse" /></div>}>
+                {activeTab === 'dashboard' && (
+                  <UnifiedDashboard 
+                    deposits={deposits} 
+                    cashAssets={cashAssets}
+                    investmentAssets={_investmentAssets}
+                    taxSettings={taxSettings} 
+                    appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
+                    isPrivate={isPrivate}
+                    setIsPrivate={setIsPrivate}
+                  />
+                )}
+                {activeTab === 'deposits' && (
+                  <AssetsView 
+                    deposits={deposits} 
+                    cashAssets={cashAssets}
+                    investmentAssets={_investmentAssets || []}
+                    selectedYear={selectedYear} 
+                    isPrivate={isPrivate}
+                  />
+                )}
+                {activeTab === 'calendar' && (
+                  <DepositHeatmap deposits={deposits} year={selectedYear} isPrivate={isPrivate} />
+                )}
+                {activeTab === 'ndfl' && (
+                  <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
+                )}
+                {activeTab === 'settings' && (
+                  <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
+                )}
+              </Suspense>
               <GlobalToasts />
-              <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />
+              <Suspense fallback={null}>
+                <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />
+              </Suspense>
             </Layout>
           )}
         </AnimatePresence>

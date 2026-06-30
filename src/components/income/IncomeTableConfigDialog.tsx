@@ -110,6 +110,19 @@ function PremiumAccordionItem({
               setIsExpanded(true);
            }
         }}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (checked) {
+               setIsExpanded(!isExpanded);
+            } else {
+               onToggle(true);
+               setIsExpanded(true);
+            }
+          }
+        }}
       >
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2">

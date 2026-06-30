@@ -28,6 +28,14 @@ export const HeatmapMonthCard = React.memo(function HeatmapMonthCard({
   return (
     <motion.div
       onClick={() => setExpandedMonth(month)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setExpandedMonth(month);
+        }
+      }}
       style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 280px' } as React.CSSProperties}
       className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md rounded-panel sm:rounded-card border border-slate-200/60 dark:border-white/[0.05] p-3.5 sm:p-4 lg:p-3 xl:p-6 pb-3 sm:pb-3.5 lg:pb-2.5 xl:pb-5 flex flex-col cursor-pointer hover:border-deposit-500/40 dark:hover:border-deposit-500/30 hover:shadow-lg hover:-translate-y-0.5 transition-all group relative overflow-hidden"
     >

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '../../lib/utils';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
@@ -14,10 +14,23 @@ interface StatCardProps {
 }
 
 export function StatCard({ title, value, icon, description, highlight, index, tooltip }: StatCardProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
+        setShowTooltip(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div 
       className={cn(
-        "apple-card p-4 sm:p-6 space-y-3 sm:space-y-4 group",
+        "apple-card p-4 sm:p-6 space-y-3 sm:space-y-4 group !overflow-visible",
         highlight && "border-rose-500/30 dark:border-rose-500/20"
       )}
     >
@@ -25,13 +38,32 @@ export function StatCard({ title, value, icon, description, highlight, index, to
         <div className="p-2 sm:p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800 transition-transform group-hover:scale-110 duration-500 shadow-sm border border-slate-100 dark:border-slate-700/50 shrink-0">
           {icon}
         </div>
-        <div className="flex items-center gap-1.5 group/tooltip text-right justify-end ml-auto">
+        <div className="flex items-center gap-1.5 text-right justify-end ml-auto">
           {tooltip && (
-            <div className="relative flex items-center justify-center -mb-0.5">
+            <div 
+              ref={tooltipRef}
+              className="relative flex items-center justify-center -mb-0.5 outline-none"
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              onClick={() => setShowTooltip(!showTooltip)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setShowTooltip(!showTooltip);
+                }
+              }}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 dark:text-slate-500 hover:text-primary-500 transition-colors cursor-help">
                 <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
               </svg>
-              <div className="absolute top-full right-0 mt-2 w-48 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-200 z-50 origin-top-right text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight">
+              <div 
+                className={cn(
+                  "absolute top-full -right-8 sm:right-0 mt-2 w-44 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl transition-all duration-200 z-50 origin-top sm:origin-top-right text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight pointer-events-none",
+                  showTooltip ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                )}
+              >
                 {tooltip}
               </div>
             </div>

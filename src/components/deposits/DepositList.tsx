@@ -557,6 +557,14 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                 : "bg-white/98 dark:bg-slate-900/98 rounded-2xl hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98]"
             )}
             onClick={() => setIsAnalyticsExpanded(!isAnalyticsExpanded)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsAnalyticsExpanded(!isAnalyticsExpanded);
+              }
+            }}
           >
             {/* Soft atmospheric gradient glow behind standard cashflow pattern */}
             <AnimatePresence>

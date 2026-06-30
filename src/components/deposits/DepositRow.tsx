@@ -295,7 +295,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
 
         <td
           className={cn(
-            "p-2.5 text-right border-slate-200 dark:border-slate-800 transition-colors sticky right-0 z-10 bg-inherit",
+            "p-2.5 text-right border-slate-200 dark:border-slate-800 sticky right-0 z-10 bg-inherit",
             !(isLast && !isExpanded) && "border-b",
           )}
         >

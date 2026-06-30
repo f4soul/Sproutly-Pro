@@ -296,6 +296,14 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
               <div 
                 className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all cursor-pointer text-left active:scale-[0.98]"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }
+                }}
               >
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { AppState, YearData } from '../types';
+import { AppState, YearData, Deposit, CashAsset, InvestmentAsset } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
 import { auth, onAuthStateChanged, User } from '../config/firebase';
@@ -14,6 +14,9 @@ interface AppDataContextType {
   isInitialized: boolean;
   syncStatus: 'synced' | 'syncing' | 'error' | 'offline' | 'idle';
   appSettings: any; // Using unknown for now or import AppSettings if needed
+  deposits: Deposit[];
+  cashAssets: CashAsset[];
+  investmentAssets: InvestmentAsset[];
 }
 
 const AppDataContext = createContext<AppDataContextType | null>(null);
@@ -54,6 +57,10 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline' | 'idle'>('offline');
   const [isInitialized, setIsInitialized] = useState(false);
+
+  const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
+  const cashAssets = useLiveQuery(() => db.cashAssets.toArray()) || [];
+  const investmentAssets = useLiveQuery(() => db.investmentAssets.toArray()) || [];
 
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
@@ -192,7 +199,10 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       isAuthReady,
       isInitialized,
       syncStatus,
-      appSettings
+      appSettings,
+      deposits,
+      cashAssets,
+      investmentAssets
     }}>
       {children}
     </AppDataContext.Provider>

@@ -311,6 +311,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                   <div 
                     className="h-16 px-4 flex items-center justify-between cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
                     onClick={() => setExpandedBracketYear(isYearExpanded ? null : year)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedBracketYear(isYearExpanded ? null : year);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <motion.div animate={{ rotate: isYearExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
@@ -360,6 +368,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                               <div 
                                 className="p-3 flex items-center justify-between cursor-pointer"
                                 onClick={() => setExpandedBracketIndex(isBracketExpanded ? null : index)}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setExpandedBracketIndex(isBracketExpanded ? null : index);
+                                  }
+                                }}
                               >
                                 <div className="flex items-center gap-2 min-w-0 pr-2">
                                   <motion.div animate={{ rotate: isBracketExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
@@ -495,6 +511,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                   <div 
                     className="h-16 px-4 flex items-center justify-between cursor-pointer bg-slate-50 dark:bg-slate-800/50 hover:bg-deposit-50 dark:hover:bg-slate-800 transition-colors"
                     onClick={() => setExpandedYear(isExpanded ? null : setting.year)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setExpandedYear(isExpanded ? null : setting.year);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-3">
                       <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
