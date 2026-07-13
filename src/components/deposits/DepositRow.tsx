@@ -56,6 +56,14 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
         ? "bg-[#f4fcfb] dark:bg-[#06141a] hover:bg-[#e4f7f4] dark:hover:bg-[#091e25]"
         : "bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-[#151b2a]";
 
+  const stickyBg = isExpanded
+    ? "bg-slate-50 dark:bg-[#151b2a]"
+    : isClosed
+      ? "bg-[#f8fafc] dark:bg-[#0d121f] group-hover:bg-slate-100 dark:group-hover:bg-[#151b2a]"
+      : isSavingsAccount
+        ? "bg-[#f4fcfb] dark:bg-[#06141a] group-hover:bg-[#e4f7f4] dark:group-hover:bg-[#091e25]"
+        : "bg-white dark:bg-slate-950 group-hover:bg-slate-50 dark:group-hover:bg-[#151b2a]";
+
   return (
     <>
       <tr
@@ -295,7 +303,8 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
 
         <td
           className={cn(
-            "p-2.5 text-right border-slate-200 dark:border-slate-800 sticky right-0 z-10 bg-inherit",
+            "p-2.5 text-right border-slate-200 dark:border-slate-800 transition-colors sticky right-0 z-10",
+            stickyBg,
             !(isLast && !isExpanded) && "border-b",
           )}
         >

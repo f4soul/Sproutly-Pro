@@ -42,6 +42,39 @@
     <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
+    <script>
+      // Automatic recovery from Vite dynamic import / chunk load failures
+      window.addEventListener('vite:preloadError', (event) => {
+        console.warn('Vite preload error detected, reloading page...', event);
+        window.location.reload();
+      });
+
+      // Handle other asset loading and network issues due to stale service worker cache
+      window.addEventListener('error', (event) => {
+        const msg = event.message || '';
+        const target = event.target || {};
+        if (
+          msg.includes('dynamically imported module') || 
+          msg.includes('Failed to fetch') || 
+          msg.includes('ChunkLoadError') ||
+          (target.tagName === 'SCRIPT' && target.src)
+        ) {
+          console.warn('Asset load error, force reloading...', event);
+          // Unregister service workers first to bypass bad cache
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              for (const registration of registrations) {
+                registration.unregister();
+              }
+              window.location.reload();
+            });
+          } else {
+            window.location.reload();
+          }
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

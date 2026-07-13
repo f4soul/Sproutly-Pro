@@ -60,7 +60,10 @@ export function StatCard({ title, value, icon, description, highlight, index, to
               </svg>
               <div 
                 className={cn(
-                  "absolute top-full -right-8 sm:right-0 mt-2 w-44 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl transition-all duration-200 z-50 origin-top sm:origin-top-right text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight pointer-events-none",
+                  "absolute top-full mt-2 w-48 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl transition-all duration-200 z-[60] text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight pointer-events-none",
+                  index % 2 === 0 
+                    ? "-left-12 sm:left-auto sm:right-0 origin-top-left sm:origin-top-right"
+                    : "right-0 origin-top-right",
                   showTooltip ? "opacity-100 scale-100" : "opacity-0 scale-95"
                 )}
               >

@@ -194,13 +194,13 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
             className="overflow-hidden"
           >
             <div
-              onClick={handleRetrySync}
+              onClick={(e) => handleRetrySync(e)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
-                  handleRetrySync();
+                  handleRetrySync(e as any);
                 }
               }}
               className={cn(
@@ -428,13 +428,13 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
           className="fixed top-[calc(5rem+12px)] left-1/2 -translate-x-1/2 z-[60]"
         >
           <div
-            onClick={handleRetrySync}
+            onClick={(e) => handleRetrySync(e)}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                handleRetrySync();
+                handleRetrySync(e as any);
               }
             }}
             className={cn(
