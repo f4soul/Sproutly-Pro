@@ -148,6 +148,21 @@ export interface CashAsset {
   updatedAt?: number;
 }
 
+export type CryptoTicker = 'USDT' | 'BTC' | 'ETH' | 'TON' | 'CUSTOM';
+
+export interface CryptoAsset {
+  id?: string | number;
+  userId?: string;
+  ticker: string; // "USDT", "BTC", либо произвольный тикер, если пользователь ввёл свой
+  quantity: number; // количество монет/токенов в портфеле
+  amount: number; // вложено в рублях (себестоимость), по аналогии с InvestmentAsset.amount
+  currentValue: number; // текущая рублёвая оценка позиции, вводится вручную (курс крипты не публикует ЦБ РФ, авто-конвертации нет)
+  comment?: string;
+  purchaseDate?: string; // Дата приобретения актива, в формате YYYY-MM-DD
+  isArchived?: boolean;
+  updatedAt?: number;
+}
+
 export type InvestmentAccountType = 'brokerage' | 'iis';
 
 export type IISType = 'A' | 'B' | '3'; // A: deduction on deposit, B: tax free profit, 3: both
@@ -230,6 +245,7 @@ export interface AppSettings {
   incomeCalculationMode?: 'salary' | 'combined';
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
+  hiddenAssetTabs?: ('cash' | 'investments' | 'crypto')[];
   tourCompleted?: boolean;
   tourCompletedAssets?: boolean;
   tourCompletedIncome?: boolean;

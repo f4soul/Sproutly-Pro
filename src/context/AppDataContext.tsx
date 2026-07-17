@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { AppState, YearData, Deposit, CashAsset, InvestmentAsset } from '../types';
+import { AppState, YearData, Deposit, CashAsset, InvestmentAsset, CryptoAsset } from '../types';
 import { generateDefaultYear } from '../lib/helpers';
 import { DEFAULT_TAX_BRACKETS } from '../lib/constants';
 import { auth, onAuthStateChanged, User } from '../config/firebase';
@@ -17,6 +17,7 @@ interface AppDataContextType {
   deposits: Deposit[];
   cashAssets: CashAsset[];
   investmentAssets: InvestmentAsset[];
+  cryptoAssets: CryptoAsset[];
 }
 
 const AppDataContext = createContext<AppDataContextType | null>(null);
@@ -61,6 +62,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const deposits = useLiveQuery(() => db.deposits.toArray()) || [];
   const cashAssets = useLiveQuery(() => db.cashAssets.toArray()) || [];
   const investmentAssets = useLiveQuery(() => db.investmentAssets.toArray()) || [];
+  const cryptoAssets = useLiveQuery(() => db.cryptoAssets.toArray()) || [];
 
   const dbState = useLiveQuery(() => db.incomeState.get('main'));
   const appSettings = useLiveQuery(() => db.appSettings.get('main'));
@@ -202,7 +204,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       appSettings,
       deposits,
       cashAssets,
-      investmentAssets
+      investmentAssets,
+      cryptoAssets
     }}>
       {children}
     </AppDataContext.Provider>

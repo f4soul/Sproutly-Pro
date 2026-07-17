@@ -15,6 +15,7 @@ interface UnifiedDashboardProps {
   deposits: Deposit[];
   cashAssets?: CashAsset[];
   investmentAssets?: import('../../types').InvestmentAsset[];
+  cryptoAssets?: import('../../types').CryptoAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate: boolean;
@@ -38,7 +39,7 @@ const DASHBOARD_ITEM_VARIANTS = {
   show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } }
 } as const;
 
-export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
+export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets = [], cryptoAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
   const { state, setState } = useAppData();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
   const [isPending, startTransition] = useTransition();
@@ -187,6 +188,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
                 deposits={deposits} 
                 cashAssets={cashAssets}
                 investmentAssets={investmentAssets}
+                cryptoAssets={cryptoAssets}
                 taxSettings={taxSettings} 
                 appSettings={appSettings} 
                 isPrivate={isPrivate}

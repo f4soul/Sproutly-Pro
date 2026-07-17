@@ -34,8 +34,8 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
     const lastSeen = localStorage.getItem('last_seen_version');
     const hasOnboarded = localStorage.getItem('hasOnboarded') === 'true';
 
-    // Only auto-show if user has onboarded AND hasn't seen the latest version AND they are a registered authorized user (not anonymous).
-    if (user && !user.isAnonymous && hasOnboarded && lastSeen !== LATEST_VERSION) {
+    // Only auto-show if user has onboarded AND hasn't seen the latest version.
+    if (hasOnboarded && lastSeen !== LATEST_VERSION) {
       // Delay slightly for dramatic effect after lock / tour finishes
       const timer = setTimeout(() => {
         setIsOpen(true);
@@ -43,7 +43,7 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [LATEST_VERSION, isLocked, user, loading]);
+  }, [LATEST_VERSION, isLocked, loading]);
 
   const handleClose = () => {
     setIsOpen(false);

@@ -11,9 +11,10 @@ import {
   Eye,
   EyeOff,
   Info,
-  Activity
+  Activity,
+  ChevronDown
 } from "lucide-react";
-import { Deposit, CashAsset, InvestmentAsset, TaxYearSettings, AppSettings } from "../../types";
+import { Deposit, CashAsset, InvestmentAsset, CryptoAsset, TaxYearSettings, AppSettings } from "../../types";
 import { useAppData } from "../../context/AppDataContext";
 import { calculateUnifiedFinance } from "../../lib/unifiedFinance";
 import { formatCurrency, cn } from "../../lib/utils";
@@ -36,6 +37,7 @@ interface BentoDashboardProps {
   deposits: Deposit[];
   cashAssets?: CashAsset[];
   investmentAssets?: InvestmentAsset[];
+  cryptoAssets?: CryptoAsset[];
   taxSettings: TaxYearSettings[];
   appSettings: AppSettings;
   isPrivate?: boolean;
@@ -46,6 +48,7 @@ export function BentoDashboard({
   deposits,
   cashAssets = [],
   investmentAssets = [],
+  cryptoAssets = [],
   taxSettings,
   appSettings,
   isPrivate = false,
@@ -53,7 +56,22 @@ export function BentoDashboard({
 }: BentoDashboardProps) {
   const { state } = useAppData();
   const selectedYear = state.activeYear;
+  
   const [rates, setRates] = React.useState<CurrencyRates | null>(null);
+  const [isInvestBreakdownOpen, setIsInvestBreakdownOpen] = useState(false);
+  const investBreakdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (investBreakdownRef.current && !investBreakdownRef.current.contains(event.target as Node)) {
+        setIsInvestBreakdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
@@ -64,6 +82,7 @@ export function BentoDashboard({
     let totalDepositsAmount = 0;
     let totalCashAmount = 0;
     let totalInvestmentsAmount = 0;
+    let totalCryptoAmount = 0;
     const upcomingEvents: {
       date: Date;
       type: "deposit_end" | "salary";
@@ -122,6 +141,12 @@ export function BentoDashboard({
       }
     });
 
+    cryptoAssets.forEach((c) => {
+      if (!c.isArchived) {
+        totalCryptoAmount += c.currentValue;
+      }
+    });
+
     const yearData = state.years[selectedYear];
     const includeDeposits = true;
     const unified = calculateUnifiedFinance({
@@ -171,7 +196,8 @@ export function BentoDashboard({
       totalDepositsAmount,
       totalCashAmount,
       totalInvestmentsAmount,
-      totalNetCapital: totalDepositsAmount + totalCashAmount + totalInvestmentsAmount,
+      totalCryptoAmount,
+      totalNetCapital: totalDepositsAmount + totalCashAmount + totalInvestmentsAmount + totalCryptoAmount,
       upcomingEvents: sortedEvents,
       netDiffPercent,
       totalNormDays,
@@ -576,7 +602,10 @@ export function BentoDashboard({
         {/* Total in Deposits */}
         <motion.div
           whileHover={{ y: -4 }}
-          className="@container col-span-1 md:col-span-1 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between items-start min-w-0 h-full relative overflow-hidden"
+          className={cn(
+            "@container col-span-1 md:col-span-1 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between items-start min-w-0 h-full relative overflow-hidden !overflow-visible transition-all",
+            isInvestBreakdownOpen ? "z-50" : "z-10"
+          )}
         >
           <div className="w-full flex justify-between items-start mb-2">
             <div className="w-8 h-8 rounded-lg bg-deposit-100 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400 shrink-0">
@@ -620,17 +649,38 @@ export function BentoDashboard({
                   total > 0 ? (data.totalCashAmount / total) * 100 : 0;
                 const invPct =
                   total > 0 ? (data.totalInvestmentsAmount / total) * 100 : 0;
+                const cryptoPct =
+                  total > 0 ? (data.totalCryptoAmount / total) * 100 : 0;
 
-                const items = [
+                const barItems = [
                   { id: 'dep', amount: data.totalDepositsAmount, pct: depPct, name: 'Вклады', bgClass: 'bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_10px_rgba(20,184,166,0.6)]', iconBgClass: 'bg-deposit-500 dark:bg-deposit-400' },
                   { id: 'cash', amount: data.totalCashAmount, pct: cashPct, name: 'Наличные', bgClass: 'bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_10px_rgba(16,185,129,0.6)]', iconBgClass: 'bg-cash-500 dark:bg-cash-400' },
                   { id: 'inv', amount: data.totalInvestmentsAmount, pct: invPct, name: 'Биржа', bgClass: 'bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]', iconBgClass: 'bg-invest-500 dark:bg-invest-400' },
+                  { id: 'crypto', amount: data.totalCryptoAmount, pct: cryptoPct, name: 'Крипта', bgClass: 'bg-crypto-500 dark:bg-crypto-400 dark:shadow-[0_0_10px_rgba(245,158,11,0.6)]', iconBgClass: 'bg-crypto-500 dark:bg-crypto-400' },
                 ].filter(item => item.amount > 0).sort((a, b) => b.amount - a.amount);
+
+                const totalInvestCombinedAmount = data.totalInvestmentsAmount + data.totalCryptoAmount;
+                const investCombinedPct = total > 0 ? (totalInvestCombinedAmount / total) * 100 : 0;
+
+                const investSubItems = [
+                  { id: 'inv', amount: data.totalInvestmentsAmount, pct: invPct, name: 'Биржа', bgClass: 'bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]', iconBgClass: 'bg-invest-500 dark:bg-invest-400' },
+                  { id: 'crypto', amount: data.totalCryptoAmount, pct: cryptoPct, name: 'Крипта', bgClass: 'bg-crypto-500 dark:bg-crypto-400 dark:shadow-[0_0_10px_rgba(245,158,11,0.6)]', iconBgClass: 'bg-crypto-500 dark:bg-crypto-400' },
+                ].filter(item => item.amount > 0).sort((a, b) => b.amount - a.amount);
+
+                const investListEntry = investSubItems.length >= 2
+                  ? { id: 'invest-group', amount: totalInvestCombinedAmount, pct: investCombinedPct, name: 'Инвестиции', bgClass: 'bg-invest-500 dark:bg-invest-400 dark:shadow-[0_0_10px_rgba(6,182,212,0.6)]', iconBgClass: 'bg-invest-500 dark:bg-invest-400' }
+                  : investSubItems[0]; // единственный активный элемент (Биржа ИЛИ Крипта) со своим именем/цветом, либо undefined
+
+                const listItems = [
+                  { id: 'dep', amount: data.totalDepositsAmount, pct: depPct, name: 'Вклады', bgClass: 'bg-deposit-500 dark:bg-deposit-400 dark:shadow-[0_0_10px_rgba(20,184,166,0.6)]', iconBgClass: 'bg-deposit-500 dark:bg-deposit-400' },
+                  { id: 'cash', amount: data.totalCashAmount, pct: cashPct, name: 'Наличные', bgClass: 'bg-cash-500 dark:bg-cash-400 dark:shadow-[0_0_10px_rgba(16,185,129,0.6)]', iconBgClass: 'bg-cash-500 dark:bg-cash-400' },
+                  investListEntry,
+                ].filter((item): item is NonNullable<typeof item> => Boolean(item) && item.amount > 0).sort((a, b) => b.amount - a.amount);
 
                 return (
                   <div className="flex flex-col w-full gap-3 mt-2">
                     <div className="w-full h-1.5 bg-slate-200/50 dark:bg-slate-800/50 rounded-full overflow-hidden flex shadow-inner">
-                      {items.map(item => (
+                      {barItems.map(item => (
                         <div
                           key={item.id}
                           className={`h-full ${item.bgClass}`}
@@ -639,18 +689,71 @@ export function BentoDashboard({
                       ))}
                     </div>
                     <div className="flex flex-col w-full gap-1">
-                      {items.map(item => (
-                        <div key={item.id} className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <div className={`w-1.5 h-1.5 rounded-full ${item.iconBgClass} shrink-0`} />
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{item.name}</span>
+                      {listItems.map(item => {
+                        const isInvestGroup = item.id === 'invest-group';
+                        const hasSubItems = isInvestGroup && investSubItems.length > 0;
+                        return (
+                          <div key={item.id} className="relative flex flex-col" ref={hasSubItems ? investBreakdownRef : null}>
+                            <div 
+                              className={cn(
+                                "flex items-center justify-between gap-2", 
+                                hasSubItems && "cursor-pointer select-none py-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors -mx-1 px-1"
+                              )}
+                              onClick={hasSubItems ? () => setIsInvestBreakdownOpen(v => !v) : undefined}
+                              role={hasSubItems ? "button" : undefined}
+                              tabIndex={hasSubItems ? 0 : undefined}
+                              onKeyDown={hasSubItems ? (e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setIsInvestBreakdownOpen(v => !v);
+                                }
+                              } : undefined}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {hasSubItems ? (
+                                  <ChevronDown size={12} strokeWidth={3} className={cn("text-invest-500 dark:text-invest-400 transition-transform shrink-0", !isInvestBreakdownOpen && "-rotate-90")} />
+                                ) : (
+                                  <div className={`w-1.5 h-1.5 rounded-full ${item.iconBgClass} shrink-0`} />
+                                )}
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+                                  {item.name}
+                                </span>
+                              </div>
+                              <div className="flex items-baseline gap-1.5 shrink-0">
+                                <span className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(Math.round(item.amount), "RUB", true)}</span>
+                                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right">{item.pct.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                            
+                            {hasSubItems && (
+                              <AnimatePresence>
+                                {isInvestBreakdownOpen && (
+                                  <motion.div
+                                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                                    transition={{ duration: 0.15 }}
+                                    className="absolute left-0 right-0 top-full mt-1 z-30 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] p-3 flex flex-col gap-2"
+                                  >
+                                    {investSubItems.map(subItem => (
+                                      <div key={subItem.id} className="flex items-center justify-between gap-2 py-0.5">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                          <div className={`w-1.5 h-1.5 rounded-full ${subItem.iconBgClass} shrink-0`} />
+                                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{subItem.name}</span>
+                                        </div>
+                                        <div className="flex items-baseline gap-1.5 shrink-0">
+                                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{formatValPlain(Math.round(subItem.amount), "RUB", true)}</span>
+                                          <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 w-8 text-right pl-3">{subItem.pct.toFixed(0)}%</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            )}
                           </div>
-                          <div className="flex items-baseline gap-1.5 shrink-0">
-                            <span className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(Math.round(item.amount), "RUB", true)}</span>
-                            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right">{item.pct.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 );

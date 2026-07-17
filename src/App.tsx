@@ -64,7 +64,7 @@ function AppContent() {
     return localStorage.getItem('hasOnboarded') !== 'true';
   });
 
-  const { state, appSettings: _appSettings, deposits: _deposits, cashAssets: _cashAssets, investmentAssets: _investmentAssets } = useAppData();
+  const { state, appSettings: _appSettings, deposits: _deposits, cashAssets: _cashAssets, investmentAssets: _investmentAssets, cryptoAssets: _cryptoAssets } = useAppData();
   const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
   
   const isLockActive = useMemo(() => {
@@ -344,6 +344,7 @@ function AppContent() {
                     deposits={deposits} 
                     cashAssets={cashAssets}
                     investmentAssets={_investmentAssets}
+                    cryptoAssets={_cryptoAssets}
                     taxSettings={taxSettings} 
                     appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} 
                     isPrivate={isPrivate}
@@ -355,6 +356,7 @@ function AppContent() {
                     deposits={deposits} 
                     cashAssets={cashAssets}
                     investmentAssets={_investmentAssets || []}
+                    cryptoAssets={_cryptoAssets || []}
                     selectedYear={selectedYear} 
                     isPrivate={isPrivate}
                   />

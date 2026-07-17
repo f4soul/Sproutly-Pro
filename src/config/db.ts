@@ -1,10 +1,11 @@
 import Dexie, { type Table } from 'dexie';
-import { Deposit, CashAsset, InvestmentAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord, ProductionCalendar } from '../types';
+import { Deposit, CashAsset, InvestmentAsset, CryptoAsset, TaxYearSettings, AppSettings, Bank, DeletedRecord, ProductionCalendar } from '../types';
 
 export class MyDepositsDB extends Dexie {
   deposits!: Table<Deposit>;
   cashAssets!: Table<CashAsset>;
   investmentAssets!: Table<InvestmentAsset>;
+  cryptoAssets!: Table<CryptoAsset>;
   taxYearSettings!: Table<TaxYearSettings>;
   appSettings!: Table<AppSettings>;
   banks!: Table<Bank>;
@@ -14,6 +15,18 @@ export class MyDepositsDB extends Dexie {
 
   constructor() {
     super('MyDepositsDB');
+    this.version(9).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      cashAssets: '++id, userId, name, isArchived',
+      investmentAssets: '++id, userId, type, isArchived',
+      cryptoAssets: '++id, userId, ticker, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      calendarData: 'year',
+      deletedQueue: '++id, collection, docId'
+    });
     this.version(8).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       cashAssets: '++id, userId, name, isArchived',
@@ -376,13 +389,16 @@ export function startRealTimeSync(user: { uid: string }) {
           if (change.type === 'removed' || remoteData.isDeleted) {
             await db.investmentAssets.delete(localId as any);
           } else {
-            let startDateVal = remoteData.startDate;
-            if (startDateVal && typeof (startDateVal as any).toDate === 'function') {
-              startDateVal = (startDateVal as any).toDate();
-            } else if (startDateVal && (typeof startDateVal === 'string' || typeof startDateVal === 'number' || startDateVal instanceof Date)) {
-              startDateVal = new Date(startDateVal);
+            const localData = await db.investmentAssets.get(localId as any);
+            if (!localData || (remoteData.updatedAt || 0) > (localData.updatedAt || 0)) {
+              let startDateVal = remoteData.startDate;
+              if (startDateVal && typeof (startDateVal as any).toDate === 'function') {
+                startDateVal = (startDateVal as any).toDate();
+              } else if (startDateVal && (typeof startDateVal === 'string' || typeof startDateVal === 'number' || startDateVal instanceof Date)) {
+                startDateVal = new Date(startDateVal);
+              }
+              await db.investmentAssets.put({ ...remoteData, id: localId, startDate: startDateVal } as InvestmentAsset);
             }
-            await db.investmentAssets.put({ ...remoteData, id: localId, startDate: startDateVal } as InvestmentAsset);
           }
         }
       } catch (err) {
@@ -393,6 +409,47 @@ export function startRealTimeSync(user: { uid: string }) {
     handleFirestoreError(error, OperationType.GET, 'investmentAssets');
   });
   activeUnsubscribers.push(unsubInvestmentAssets);
+
+  // Listen to cryptoAssets
+  const qCryptoAssets = query(collection(firestore, 'cryptoAssets'), where('userId', '==', user.uid));
+  const unsubCryptoAssets = onSnapshot(qCryptoAssets, (snapshot) => {
+    (async () => {
+      try {
+        const pendingDeletes = await db.deletedQueue.toArray();
+        for (const change of snapshot.docChanges()) {
+          const docId = change.doc.id;
+          const remoteData = change.doc.data() as CryptoAsset & { isDeleted?: boolean };
+          
+          let localId: string | number = docId;
+          if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+            const numPart = localId.replace(`${user.uid}_`, '');
+            if (!isNaN(Number(numPart))) {
+              localId = Number(numPart);
+            }
+          }
+
+          const isPendingDelete = pendingDeletes.some(d => d.collection === 'cryptoAssets' && d.docId === docId);
+          if (isPendingDelete) {
+            continue;
+          }
+
+          if (change.type === 'removed' || remoteData.isDeleted) {
+            await db.cryptoAssets.delete(localId as any);
+          } else {
+            const localData = await db.cryptoAssets.get(localId as any);
+            if (!localData || (remoteData.updatedAt || 0) > (localData.updatedAt || 0)) {
+              await db.cryptoAssets.put({ ...remoteData, id: localId } as CryptoAsset);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Real-time cryptoAssets sync error:", err);
+      }
+    })();
+  }, (error) => {
+    handleFirestoreError(error, OperationType.GET, 'cryptoAssets');
+  });
+  activeUnsubscribers.push(unsubCryptoAssets);
 }
 
 export async function clearLocalData() {
@@ -406,6 +463,7 @@ export async function clearLocalData() {
     await db.incomeState.clear();
     await db.cashAssets.clear();
     await db.investmentAssets.clear();
+    await db.cryptoAssets.clear();
     await db.deletedQueue.clear();
     await db.taxYearSettings.clear();
     await initDB();
@@ -501,6 +559,34 @@ export async function syncWithFirebase() {
               userId: user.uid,
               isDeleted: deleteField(),
               updatedAt: localInvUpdate === 0 ? Date.now() : localInvUpdate
+            }), { merge: true });
+          }
+        } catch (error) {
+          handleFirestoreError(error, OperationType.WRITE, path);
+        }
+      }
+
+      const remoteCryptoMap = new Map();
+      try { const snap = await getDocs(query(collection(firestore, 'cryptoAssets'), where('userId', '==', user.uid))); snap.forEach((d) => remoteCryptoMap.set(d.id, d.data())); } catch {}
+      
+      const localCrypto = await db.cryptoAssets.toArray();
+      for (const crypto of localCrypto) {
+        if (crypto.userId !== user.uid) {
+          crypto.userId = user.uid;
+          await db.cryptoAssets.put({...crypto});
+        }
+        const { id, ...data } = crypto;
+        const path = 'cryptoAssets';
+        const firestoreDocId = typeof id === 'number' ? `${user.uid}_${id}` : String(id || user.uid + '_' + Date.now());
+        try {
+          const remoteCryptoUpdate = remoteCryptoMap.get(firestoreDocId)?.updatedAt || 0;
+          const localCryptoUpdate = crypto.updatedAt || 0;
+          if (localCryptoUpdate > remoteCryptoUpdate || (localCryptoUpdate === 0 && !remoteCryptoMap.has(firestoreDocId))) {
+            await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+              ...data,
+              userId: user.uid,
+              isDeleted: deleteField(),
+              updatedAt: localCryptoUpdate === 0 ? Date.now() : localCryptoUpdate
             }), { merge: true });
           }
         } catch (error) {
@@ -785,6 +871,41 @@ export async function syncWithFirebase() {
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, cashPath);
+  }
+
+  // CryptoAssets
+  const cryptoPath = 'cryptoAssets';
+  try {
+    const qCrypto = query(collection(firestore, cryptoPath), where('userId', '==', user.uid));
+    const cryptoSnapshot = await getDocs(qCrypto);
+    for (const docSnap of cryptoSnapshot.docs) {
+      const isPendingDelete = pendingDeletes.some(d => d.collection === 'cryptoAssets' && d.docId === docSnap.id);
+      if (isPendingDelete) {
+        continue;
+      }
+      const remoteData = docSnap.data();
+      let localId: string | number = docSnap.id;
+      if (typeof localId === 'string' && localId.startsWith(`${user.uid}_`)) {
+        const numPart = localId.replace(`${user.uid}_`, '');
+        if (!isNaN(Number(numPart))) {
+          localId = Number(numPart);
+        }
+      }
+      
+      const localData = await db.cryptoAssets.get(localId);
+      if (remoteData.isDeleted) {
+        if (localData) {
+          await db.cryptoAssets.delete(localId as any);
+        }
+        continue;
+      }
+      
+      if (!localData || (remoteData.updatedAt || 0) > (localData.updatedAt || 0)) {
+        await db.cryptoAssets.put({ ...remoteData, id: localId } as CryptoAsset);
+      }
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.GET, cryptoPath);
   }
 
   // Banks

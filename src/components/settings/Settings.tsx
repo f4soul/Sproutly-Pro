@@ -2,7 +2,7 @@ import React, { useState, useRef, Fragment } from 'react';
 import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
-import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { SecuritySettings } from './SecuritySettings';
@@ -19,7 +19,7 @@ interface SettingsProps {
 }
 
 export function Settings({ taxSettings, appSettings }: SettingsProps) {
-  const { state, setState } = useAppData();
+  const { state, setState, cashAssets, investmentAssets, cryptoAssets } = useAppData();
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
   const [bracketYearToDelete, setBracketYearToDelete] = useState<number | null>(null);
@@ -244,6 +244,31 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
     }
   };
 
+  const hasCash = cashAssets.some(a => !a.isArchived);
+  const hasInvestments = investmentAssets.some(a => !a.isArchived);
+  const hasCrypto = cryptoAssets.some(a => !a.isArchived);
+  const hiddenTabs = appSettings.hiddenAssetTabs || [];
+
+  const handleToggleTab = async (tab: 'cash' | 'investments' | 'crypto') => {
+    if (!hiddenTabs.includes(tab)) {
+      if (tab === 'cash' && hasCash) return;
+      if (tab === 'investments' && hasInvestments) return;
+      if (tab === 'crypto' && hasCrypto) return;
+    }
+
+    let newHidden = [...hiddenTabs];
+    if (newHidden.includes(tab)) {
+      newHidden = newHidden.filter(t => t !== tab);
+    } else {
+      newHidden.push(tab);
+    }
+    
+    const newSettings = { ...appSettings, hiddenAssetTabs: newHidden };
+    setState(prev => ({ ...prev, appSettings: newSettings }));
+    await db.appSettings.put(newSettings);
+    syncWithFirebase();
+  };
+
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-300 relative w-full max-w-6xl mx-auto pb-12">
       {/* Backup Section */}
@@ -276,6 +301,115 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
             <span className="hidden lg:inline">Импорт</span>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>
+        </div>
+      </section>
+
+      {/* Разделы Активов Section */}
+      <section className="apple-card p-4 sm:p-5 xl:p-6 space-y-6 flex flex-col">
+        <div className="flex items-center justify-between h-12 mb-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 flex items-center justify-center shrink-0">
+              <LayoutList className="w-6 h-6 text-cyan-500 stroke-[1.5px]" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Разделы Активов</h3>
+              <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">Управление видимыми вкладками</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] overflow-hidden p-0.5 space-y-0.5">
+          {/* Сейф */}
+          <div
+            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
+            title={hasCash && !hiddenTabs.includes('cash') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                <Vault size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Сейф</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={hasCash && !hiddenTabs.includes('cash')}
+              onClick={() => handleToggleTab('cash')}
+              className={cn(
+                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
+                !hiddenTabs.includes('cash') ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700",
+                hasCash && !hiddenTabs.includes('cash') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
+              )}
+            >
+              <div className={cn(
+                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
+                !hiddenTabs.includes('cash') ? "translate-x-5" : "translate-x-0"
+              )} />
+            </button>
+          </div>
+          <div className="h-px bg-slate-200/50 dark:bg-white/[0.05] mx-3" />
+
+          {/* Биржа */}
+          <div
+            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
+            title={hasInvestments && !hiddenTabs.includes('investments') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 shrink-0">
+                <ChartNoAxesCombined size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Биржа</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={hasInvestments && !hiddenTabs.includes('investments')}
+              onClick={() => handleToggleTab('investments')}
+              className={cn(
+                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
+                !hiddenTabs.includes('investments') ? "bg-cyan-500" : "bg-slate-300 dark:bg-slate-700",
+                hasInvestments && !hiddenTabs.includes('investments') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
+              )}
+            >
+              <div className={cn(
+                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
+                !hiddenTabs.includes('investments') ? "translate-x-5" : "translate-x-0"
+              )} />
+            </button>
+          </div>
+          <div className="h-px bg-slate-200/50 dark:bg-white/[0.05] mx-3" />
+
+          {/* Крипта */}
+          <div
+            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
+            title={hasCrypto && !hiddenTabs.includes('crypto') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                <Bitcoin size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Крипта</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={hasCrypto && !hiddenTabs.includes('crypto')}
+              onClick={() => handleToggleTab('crypto')}
+              className={cn(
+                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
+                !hiddenTabs.includes('crypto') ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-700",
+                hasCrypto && !hiddenTabs.includes('crypto') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
+              )}
+            >
+              <div className={cn(
+                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
+                !hiddenTabs.includes('crypto') ? "translate-x-5" : "translate-x-0"
+              )} />
+            </button>
+          </div>
         </div>
       </section>
       {/* Tax Brackets and Deposits Tax Sections Grid */}

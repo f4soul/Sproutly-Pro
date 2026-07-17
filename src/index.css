@@ -52,6 +52,18 @@
   --color-invest-900: var(--color-cyan-900);
   --color-invest-950: var(--color-cyan-950);
 
+  --color-crypto-50: var(--color-amber-50);
+  --color-crypto-100: var(--color-amber-100);
+  --color-crypto-200: var(--color-amber-200);
+  --color-crypto-300: var(--color-amber-300);
+  --color-crypto-400: var(--color-amber-400);
+  --color-crypto-500: var(--color-amber-500);
+  --color-crypto-600: var(--color-amber-600);
+  --color-crypto-700: var(--color-amber-700);
+  --color-crypto-800: var(--color-amber-800);
+  --color-crypto-900: var(--color-amber-900);
+  --color-crypto-950: var(--color-amber-950);
+
   --color-cash-50: var(--color-emerald-50);
   --color-cash-100: var(--color-emerald-100);
   --color-cash-200: var(--color-emerald-200);
