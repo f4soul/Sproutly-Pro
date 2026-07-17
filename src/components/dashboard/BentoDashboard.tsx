@@ -710,14 +710,13 @@ export function BentoDashboard({
                               } : undefined}
                             >
                               <div className="flex items-center gap-1.5 min-w-0">
-                                {hasSubItems ? (
-                                  <ChevronDown size={12} strokeWidth={3} className={cn("text-invest-500 dark:text-invest-400 transition-transform shrink-0", !isInvestBreakdownOpen && "-rotate-90")} />
-                                ) : (
-                                  <div className={`w-1.5 h-1.5 rounded-full ${item.iconBgClass} shrink-0`} />
-                                )}
+                                <div className={`w-1.5 h-1.5 rounded-full ${item.iconBgClass} shrink-0`} />
                                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
                                   {item.name}
                                 </span>
+                                {hasSubItems && (
+                                  <ChevronDown size={10} strokeWidth={3} className={cn("text-slate-400 dark:text-slate-500 transition-transform shrink-0", !isInvestBreakdownOpen && "-rotate-90")} />
+                                )}
                               </div>
                               <div className="flex items-baseline gap-1.5 shrink-0">
                                 <span className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(Math.round(item.amount), "RUB", true)}</span>
