@@ -263,7 +263,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       newHidden.push(tab);
     }
     
-    const newSettings = { ...appSettings, hiddenAssetTabs: newHidden };
+    const newSettings = { ...appSettings, hiddenAssetTabs: newHidden, updatedAt: Date.now() };
     setState(prev => ({ ...prev, appSettings: newSettings }));
     await db.appSettings.put(newSettings);
     syncWithFirebase();

@@ -187,7 +187,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
       try {
         const settings = await db.appSettings.get('main');
         if (settings) {
-          const updated = { ...settings };
+          const updated = { ...settings, updatedAt: Date.now() };
           if (skippedTour) {
             updated.tourCompleted = true;
             updated.tourCompletedAssets = true;

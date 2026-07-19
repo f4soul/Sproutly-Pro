@@ -1,6 +1,6 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Combobox, Transition } from "@headlessui/react";
-import { Bitcoin, ChevronDown, X, Calculator, Calendar as CalendarIcon } from "lucide-react";
+import { Bitcoin, ChevronDown, X, Calculator, Calendar as CalendarIcon, RefreshCcw } from "lucide-react";
 import { CryptoAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { cn } from "../../lib/utils";
@@ -10,6 +10,7 @@ import { CryptoLogo } from "./CryptoLogo";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
+import { getCryptoRates, CryptoRates } from "../../services/crypto";
 
 registerLocale("ru", ru);
 
@@ -43,7 +44,19 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
     assetToEdit ? assetToEdit.currentValue.toString() : "",
   );
   
-  const [usdCourseStr, setUsdCourseStr] = useState<string>("");
+  const [rateStatus, setRateStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [cryptoRates, setCryptoRates] = useState<CryptoRates | null>(null);
+
+  useEffect(() => {
+    setRateStatus('loading');
+    getCryptoRates()
+      .then((rates) => {
+        setCryptoRates(rates);
+        setRateStatus(rates && Object.keys(rates).length > 0 ? 'success' : 'error');
+      })
+      .catch(() => setRateStatus('error'));
+  }, []);
+
   const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
 
   const handleRawDateInput = (
@@ -89,11 +102,13 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
     }
   };
 
-  const handleApplyCourse = () => {
-    const qty = Number(quantityStr.replace(",", "."));
-    const course = Number(usdCourseStr.replace(",", "."));
-    if (!isNaN(qty) && !isNaN(course) && qty > 0 && course > 0) {
-      const val = Math.round(qty * course);
+  const currentRate = formData.ticker && cryptoRates && cryptoRates[formData.ticker] 
+    ? cryptoRates[formData.ticker].rub 
+    : null;
+
+  const handleApplyAutoCourse = () => {
+    if (currentRate && formData.quantity) {
+      const val = Math.round(formData.quantity * currentRate);
       setCurrentValueStr(val.toString());
       setFormData(prev => ({ ...prev, currentValue: val }));
     }
@@ -274,12 +289,32 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                       className="apple-input w-full font-mono text-sm"
                       placeholder="0"
                     />
-                    <p className="text-[10px] text-slate-500/80 px-1 leading-tight">Курс крипты не публикуется ЦБ РФ — вводится вручную</p>
+                    <p className="text-[10px] text-slate-500/80 px-1 leading-tight">Вводится вручную или по кнопке ниже</p>
                   </div>
                 </div>
 
                 <AnimatePresence>
-                  {formData.ticker === "USDT" && (
+                  {formData.ticker && !currentRate && rateStatus === 'loading' && (
+                    <motion.p 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-[10px] text-slate-400 px-1"
+                    >
+                      Загружаем рыночный курс...
+                    </motion.p>
+                  )}
+                  {formData.ticker && !currentRate && rateStatus !== 'loading' && (
+                    <motion.p 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-[10px] text-amber-500 px-1"
+                    >
+                      Не удалось получить курс автоматически — введите стоимость вручную.
+                    </motion.p>
+                  )}
+                  {currentRate && (
                     <motion.div 
                       initial={{ opacity: 0, height: 0, marginTop: 0 }}
                       animate={{ opacity: 1, height: 'auto', marginTop: -8 }}
@@ -289,30 +324,16 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                       <div className="bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 rounded-xl p-3 flex flex-col gap-2">
                         <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500/80 text-[10px] sm:text-xs font-medium">
                           <Calculator className="w-3.5 h-3.5" />
-                          Быстрый расчёт: количество × курс USD/RUB
+                          Рыночный курс: 1 {formData.ticker} = {currentRate.toLocaleString('ru-RU')} ₽
                         </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={usdCourseStr}
-                            onChange={(e) => {
-                              const val = e.target.value.replace(",", ".");
-                              if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
-                                setUsdCourseStr(val);
-                              }
-                            }}
-                            className="apple-input w-full font-mono text-sm py-2 !bg-white dark:!bg-slate-900 border-amber-200/50 dark:border-amber-500/20"
-                            placeholder="Курс $ (напр. 95.5)"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleApplyCourse}
-                            className="shrink-0 px-4 py-2 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-xl hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors"
-                          >
-                            Подставить
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={handleApplyAutoCourse}
+                          className="w-full px-4 py-2 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-xl hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" />
+                          Рассчитать ({Math.round((formData.quantity || 0) * currentRate).toLocaleString('ru-RU')} ₽)
+                        </button>
                       </div>
                     </motion.div>
                   )}
