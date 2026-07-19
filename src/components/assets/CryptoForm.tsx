@@ -1,6 +1,6 @@
 import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Combobox, Transition } from "@headlessui/react";
-import { Bitcoin, ChevronDown, X, Calculator, Calendar as CalendarIcon, RefreshCcw } from "lucide-react";
+import { Bitcoin, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { CryptoAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { cn } from "../../lib/utils";
@@ -10,7 +10,6 @@ import { CryptoLogo } from "./CryptoLogo";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
-import { getCryptoRates, CryptoRates } from "../../services/crypto";
 
 registerLocale("ru", ru);
 
@@ -27,7 +26,6 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
       ticker: "",
       quantity: 0,
       amount: 0,
-      currentValue: 0,
       comment: "",
       purchaseDate: new Date().toISOString().split('T')[0],
     },
@@ -40,23 +38,6 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   const [amountStr, setAmountStr] = useState<string>(
     assetToEdit ? assetToEdit.amount.toString() : "",
   );
-  const [currentValueStr, setCurrentValueStr] = useState<string>(
-    assetToEdit ? assetToEdit.currentValue.toString() : "",
-  );
-  
-  const [rateStatus, setRateStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [cryptoRates, setCryptoRates] = useState<CryptoRates | null>(null);
-
-  useEffect(() => {
-    setRateStatus('loading');
-    getCryptoRates()
-      .then((rates) => {
-        setCryptoRates(rates);
-        setRateStatus(rates && Object.keys(rates).length > 0 ? 'success' : 'error');
-      })
-      .catch(() => setRateStatus('error'));
-  }, []);
-
   const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
 
   const handleRawDateInput = (
@@ -102,18 +83,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
     }
   };
 
-  const currentRate = formData.ticker && cryptoRates && cryptoRates[formData.ticker] 
-    ? cryptoRates[formData.ticker].rub 
-    : null;
-
-  const handleApplyAutoCourse = () => {
-    if (currentRate && formData.quantity) {
-      const val = Math.round(formData.quantity * currentRate);
-      setCurrentValueStr(val.toString());
-      setFormData(prev => ({ ...prev, currentValue: val }));
-    }
-  };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.ticker) {
@@ -276,114 +246,52 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     <p className="text-[10px] text-slate-500/80 px-1">Себестоимость покупки</p>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative z-20">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      Текущая стоимость, ₽
+                      Дата покупки
                     </label>
-                    <input
-                      required
-                      type="text"
-                      inputMode="decimal"
-                      value={currentValueStr}
-                      onChange={(e) => handleAmountChange(e.target.value, setCurrentValueStr, 'currentValue')}
-                      className="apple-input w-full font-mono text-sm"
-                      placeholder="0"
-                    />
-                    <p className="text-[10px] text-slate-500/80 px-1 leading-tight">Вводится вручную или по кнопке ниже</p>
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {formData.ticker && !currentRate && rateStatus === 'loading' && (
-                    <motion.p 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[10px] text-slate-400 px-1"
-                    >
-                      Загружаем рыночный курс...
-                    </motion.p>
-                  )}
-                  {formData.ticker && !currentRate && rateStatus !== 'loading' && (
-                    <motion.p 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[10px] text-amber-500 px-1"
-                    >
-                      Не удалось получить курс автоматически — введите стоимость вручную.
-                    </motion.p>
-                  )}
-                  {currentRate && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                      animate={{ opacity: 1, height: 'auto', marginTop: -8 }}
-                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="bg-amber-50/50 dark:bg-amber-500/5 border border-amber-200/50 dark:border-amber-500/10 rounded-xl p-3 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-amber-600 dark:text-amber-500/80 text-[10px] sm:text-xs font-medium">
-                          <Calculator className="w-3.5 h-3.5" />
-                          Рыночный курс: 1 {formData.ticker} = {currentRate.toLocaleString('ru-RU')} ₽
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleApplyAutoCourse}
-                          className="w-full px-4 py-2 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 font-bold text-xs rounded-xl hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          <RefreshCcw className="w-3.5 h-3.5" />
-                          Рассчитать ({Math.round((formData.quantity || 0) * currentRate).toLocaleString('ru-RU')} ₽)
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <div className="space-y-2 relative z-20">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                    Дата покупки
-                  </label>
-                  <div className="relative w-full group">
-                    <DatePicker
-                      selected={formData.purchaseDate ? new Date(formData.purchaseDate) : null}
-                      onChange={(date: Date | null) => {
-                        if (date) {
-                          setFormData(p => ({ ...p, purchaseDate: date.toISOString().split('T')[0] }));
-                        } else {
-                          setFormData(p => ({ ...p, purchaseDate: undefined }));
-                        }
-                        setIsPurchaseDateOpen(false);
-                      }}
-                      onKeyDown={(e) => {
-                        handleRawDateInput(e as any);
-                        if (e.key === "Enter") {
+                    <div className="relative w-full group">
+                      <DatePicker
+                        selected={formData.purchaseDate ? new Date(formData.purchaseDate) : null}
+                        onChange={(date: Date | null) => {
+                          if (date) {
+                            setFormData(p => ({ ...p, purchaseDate: date.toISOString().split('T')[0] }));
+                          } else {
+                            setFormData(p => ({ ...p, purchaseDate: undefined }));
+                          }
                           setIsPurchaseDateOpen(false);
-                        }
-                      }}
-                      onClickOutside={(e) => {
-                        const target = e.target as HTMLElement;
-                        if (target.closest(".datepicker-toggle-btn-purchase")) {
-                          return;
-                        }
-                        setIsPurchaseDateOpen(false);
-                      }}
-                      open={isPurchaseDateOpen}
-                      preventOpenOnFocus={true}
-                      locale="ru"
-                      dateFormat="dd.MM.yyyy"
-                      className="apple-input w-full pr-12 cursor-text font-mono text-sm"
-                      placeholderText="Выберите дату"
-                      wrapperClassName="w-full"
-                      portalId="datepicker-portal-container"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setIsPurchaseDateOpen(!isPurchaseDateOpen)}
-                      className="datepicker-toggle-btn-purchase absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-amber-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
-                      title="Выбрать дату"
-                    >
-                      <CalendarIcon className="w-4 h-4 stroke-[1.5px]" />
-                    </button>
+                        }}
+                        onKeyDown={(e) => {
+                          handleRawDateInput(e as any);
+                          if (e.key === "Enter") {
+                            setIsPurchaseDateOpen(false);
+                          }
+                        }}
+                        onClickOutside={(e) => {
+                          const target = e.target as HTMLElement;
+                          if (target.closest(".datepicker-toggle-btn-purchase")) {
+                            return;
+                          }
+                          setIsPurchaseDateOpen(false);
+                        }}
+                        open={isPurchaseDateOpen}
+                        preventOpenOnFocus={true}
+                        locale="ru"
+                        dateFormat="dd.MM.yyyy"
+                        className="apple-input w-full pr-12 cursor-text font-mono text-sm"
+                        placeholderText="Выберите дату"
+                        wrapperClassName="w-full"
+                        portalId="datepicker-portal-container"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsPurchaseDateOpen(!isPurchaseDateOpen)}
+                        className="datepicker-toggle-btn-purchase absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-amber-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+                        title="Выбрать дату"
+                      >
+                        <CalendarIcon className="w-4 h-4 stroke-[1.5px]" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 

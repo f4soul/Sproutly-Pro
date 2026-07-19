@@ -242,9 +242,12 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                     </div>
                     
                     {asset.currency !== "RUB" && currentRate > 0 && (
-                      <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest font-mono whitespace-nowrap">
-                        [ЦБ: {currentRate.toFixed(2)} ₽]
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                          {currentRate.toFixed(2)} ₽
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>

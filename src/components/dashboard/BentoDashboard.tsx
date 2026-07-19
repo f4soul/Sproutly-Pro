@@ -1,3 +1,4 @@
+import { getCryptoRate } from "../../services/crypto";
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -143,7 +144,8 @@ export function BentoDashboard({
 
     cryptoAssets.forEach((c) => {
       if (!c.isArchived) {
-        totalCryptoAmount += c.currentValue;
+        const liveRateRub = getCryptoRate(c.ticker, 'rub', null);
+        totalCryptoAmount += liveRateRub ? c.quantity * liveRateRub : (c.currentValue ?? c.amount);
       }
     });
 

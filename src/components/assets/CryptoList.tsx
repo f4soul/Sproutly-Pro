@@ -9,6 +9,7 @@ import { CryptoForm } from "./CryptoForm";
 import { CryptoLogo } from "./CryptoLogo";
 import { cn, formatCurrency } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
+import { getCryptoRates, getCryptoRate, CryptoRates } from "../../services/crypto";
 
 interface CryptoListProps {
   cryptoAssets: CryptoAsset[];
@@ -19,6 +20,11 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<CryptoAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<CryptoAsset | undefined>();
+  const [rates, setRates] = useState<CryptoRates | null>(null);
+
+  React.useEffect(() => {
+    getCryptoRates().then(setRates);
+  }, []);
 
   const activeAssets = useMemo(() => {
     return cryptoAssets ? cryptoAssets.filter((a) => !a.isArchived) : [];
@@ -29,15 +35,18 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
     let totalCurrent = 0;
 
     activeAssets.forEach(asset => {
+      const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
+      const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
+      
       totalContributed += asset.amount;
-      totalCurrent += asset.currentValue;
+      totalCurrent += currentRub;
     });
 
     const profit = totalCurrent - totalContributed;
     const profitPercent = totalContributed > 0 ? (profit / totalContributed) * 100 : 0;
 
     return { totalContributed, totalCurrent, profit, profitPercent };
-  }, [activeAssets]);
+  }, [activeAssets, rates]);
 
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
@@ -129,10 +138,12 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2">
         {activeAssets.map((asset) => {
           const contributedRub = asset.amount;
-          const currentRub = asset.currentValue;
+          const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
+          const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
+          const hasDynamics = Boolean(liveRateRub);
           
           let profitValue = currentRub - contributedRub;
-          let profitPercent = contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
+          let profitPercent = hasDynamics && contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
           let isPositive = profitPercent >= 0;
 
           return (
@@ -142,19 +153,18 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
             >
               <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
+              {hasDynamics && profitPercent !== 0 && (
               <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
                 <span className={cn(
                   "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
                   isPositive 
-                    ? "text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20" 
+                    ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                     : "text-rose-500 bg-rose-500/10 border-rose-500/20"
                 )}>
                   {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
                 </span>
-                <span className="px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50">
-                  КРИПТА
-                </span>
               </div>
+            )}
 
               <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
                 <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1">
@@ -170,7 +180,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                   
                   <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
                     <PrivacyBlur isPrivate={isPrivate}>
-                      {formatCurrency(asset.currentValue)}
+                      {formatCurrency(currentRub)}
                     </PrivacyBlur>
                   </div>
 
@@ -183,14 +193,28 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
               </div>
 
               <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                    <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
-                      <PrivacyBlur isPrivate={isPrivate}>
-                        {formatCurrency(asset.amount)}
-                      </PrivacyBlur>
-                    </span>
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
+                    КРИПТОАКТИВ
+                  </span>
+                  <div className="flex flex-col mt-0.5 gap-1.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                      <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
+                        <PrivacyBlur isPrivate={isPrivate}>
+                          {formatCurrency(asset.amount)}
+                        </PrivacyBlur>
+                      </span>
+                    </div>
+                    
+                    {liveRateRub ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
+                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                          {formatCurrency(liveRateRub)}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 

@@ -1,4 +1,5 @@
-import { getExchangeRates, convertToRub } from './currency';
+const fs = require('fs');
+const content = `import { getExchangeRates, convertToRub } from './currency';
 
 export interface CryptoRates {
   [ticker: string]: {
@@ -58,23 +59,23 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
   // 1. CoinGecko (Primary) - Fetch all tickers with direct RUB conversion
   try {
     const ids = targetTickers.map(t => TICKER_TO_COINGECKO[t]).join(',');
-    let url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub`;
+    let url = \`https://api.coingecko.com/api/v3/simple/price?ids=\${ids}&vs_currencies=usd,rub\`;
     
     if (COINGECKO_API_KEY) {
-      url += `&x_cg_demo_api_key=${COINGECKO_API_KEY}`;
+      url += \`&x_cg_demo_api_key=\${COINGECKO_API_KEY}\`;
     }
     
     let res = await fetch(url, { cache: 'no-store' });
     
     // Fallback 1: Try without API key if unauthorized
     if (!res.ok && res.status === 401 && COINGECKO_API_KEY) {
-      const fallbackUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub`;
+      const fallbackUrl = \`https://api.coingecko.com/api/v3/simple/price?ids=\${ids}&vs_currencies=usd,rub\`;
       res = await fetch(fallbackUrl, { cache: 'no-store' });
     }
     
     // Fallback 2: Try Pro API if still failing
     if (!res.ok && res.status === 401 && COINGECKO_API_KEY) {
-      const proUrl = `https://pro-api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,rub&x_cg_pro_api_key=${COINGECKO_API_KEY}`;
+      const proUrl = \`https://pro-api.coingecko.com/api/v3/simple/price?ids=\${ids}&vs_currencies=usd,rub&x_cg_pro_api_key=\${COINGECKO_API_KEY}\`;
       res = await fetch(proUrl, { cache: 'no-store' });
     }
     
@@ -117,7 +118,7 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
       const promises = missingBybit.map(async (ticker) => {
         const symbol = TICKER_TO_BYBIT[ticker];
         try {
-          const url = `https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+          const url = \`https://api.bybit.com/v5/market/tickers?category=spot&symbol=\${symbol}\`;
           const res = await fetch(url, { cache: 'no-store' });
           if (!res.ok) return;
           const data = await res.json();
@@ -159,3 +160,7 @@ export function getCryptoRate(ticker: string, currency: 'usd' | 'rub', rates: Cr
   }
   return null;
 }
+`;
+
+fs.writeFileSync('src/services/crypto.ts', content);
+console.log('Done CryptoService!');
