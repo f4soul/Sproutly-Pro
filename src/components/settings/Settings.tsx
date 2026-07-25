@@ -2,14 +2,14 @@ import React, { useState, useRef, Fragment } from 'react';
 import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
-import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin, FileSpreadsheet, Database, RefreshCw, GripVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { SecuritySettings } from './SecuritySettings';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
 import { useAppData } from '../../context/AppDataContext';
 import { showToast } from '../../lib/toast';
-import { DEFAULT_TAX_BRACKETS } from '../../lib/constants';
+import { DEFAULT_TAX_BRACKETS, getAssetTabOrder, AssetTabId } from '../../lib/constants';
 import { TableInput } from '../ui/TableInput';
 import { getPlural } from '../../lib/helpers';
 
@@ -18,12 +18,75 @@ interface SettingsProps {
   appSettings: AppSettings;
 }
 
+const ASSET_TAB_META: Record<AssetTabId, {
+  label: string;
+  Icon: React.ComponentType<{ size?: number; className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  toggleOn: string;
+}> = {
+  cash: { label: 'Сейф', Icon: Vault, iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-500', toggleOn: 'bg-emerald-500' },
+  investments: { label: 'Биржа', Icon: ChartNoAxesCombined, iconBg: 'bg-cyan-500/10', iconColor: 'text-cyan-500', toggleOn: 'bg-cyan-500' },
+  crypto: { label: 'Крипта', Icon: Bitcoin, iconBg: 'bg-amber-500/10', iconColor: 'text-amber-500', toggleOn: 'bg-amber-500' },
+};
+
+interface AssetTabRowProps {
+  tab: AssetTabId;
+  hasAssets: boolean;
+  isHidden: boolean;
+  onToggle: (tab: AssetTabId) => void;
+}
+
+function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
+  const controls = useDragControls();
+  const meta = ASSET_TAB_META[tab];
+  const isLocked = hasAssets && !isHidden;
+
+  return (
+    <Reorder.Item
+      value={tab}
+      dragListener={false}
+      dragControls={controls}
+      className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] rounded-xl select-none relative"
+      whileDrag={{ scale: 1.02, boxShadow: '0 12px 28px rgba(0,0,0,0.35)', zIndex: 20 }}
+    >
+      <div className="flex items-center gap-2.5">
+        <div
+          onPointerDown={(e) => controls.start(e)}
+          className="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-slate-600 cursor-grab active:cursor-grabbing shrink-0"
+          style={{ touchAction: 'none' }}
+        >
+          <GripVertical size={16} />
+        </div>
+        <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", meta.iconBg, meta.iconColor)}>
+          <meta.Icon size={14} className="stroke-[2px]" />
+        </div>
+        <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{meta.label}</span>
+      </div>
+      <button
+        type="button"
+        disabled={isLocked}
+        onClick={() => onToggle(tab)}
+        title={isLocked ? "Нельзя скрыть раздел, в котором есть активы" : ""}
+        className={cn(
+          "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
+          !isHidden ? meta.toggleOn : "bg-slate-300 dark:bg-slate-700",
+          isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
+        )}
+      >
+        <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", !isHidden ? "translate-x-5" : "translate-x-0")} />
+      </button>
+    </Reorder.Item>
+  );
+}
+
 export function Settings({ taxSettings, appSettings }: SettingsProps) {
-  const { state, setState, cashAssets, investmentAssets, cryptoAssets } = useAppData();
+  const { state, setState, deposits, cashAssets, investmentAssets, cryptoAssets } = useAppData();
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
   const [bracketYearToDelete, setBracketYearToDelete] = useState<number | null>(null);
   const [bracketToDelete, setBracketToDelete] = useState<{ year: number, index: number } | null>(null);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
   const [expandedYear, setExpandedYear] = useState<number | null>(null);
   const [expandedBracketYear, setExpandedBracketYear] = useState<number | null>(null);
   const [expandedBracketIndex, setExpandedBracketIndex] = useState<number | null>(null);
@@ -103,6 +166,23 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
     }
   };
 
+  
+  const exportFullBackupXLSX = async () => {
+    try {
+      const { exportFullBackup } = await import('../../services/ExportService');
+      exportFullBackup({ 
+        deposits: deposits || [], 
+        cashAssets: cashAssets || [], 
+        investmentAssets: investmentAssets || [], 
+        cryptoAssets: cryptoAssets || [],
+        years: state.years || {} 
+      });
+    } catch (error) {
+      console.error('Error exporting to XLSX:', error);
+      // fallback if toast not available or something
+    }
+  };
+
   const exportData = async () => {
     const deposits = await db.deposits.toArray();
     const settings = await db.taxYearSettings.toArray();
@@ -132,6 +212,12 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setPendingImportFile(file);
+    e.target.value = '';
+  };
+
+  const confirmImport = () => {
+    if (!pendingImportFile) return;
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
@@ -173,8 +259,8 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
         showToast('Ошибка при импорте данных', 'error');
       }
     };
-    reader.readAsText(file);
-    e.target.value = '';
+    reader.readAsText(pendingImportFile);
+    setPendingImportFile(null);
   };
 
   const handleBracketChange = (year: number, index: number, field: 'limit' | 'rate' | 'label', value: any) => {
@@ -248,6 +334,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const hasInvestments = investmentAssets.some(a => !a.isArchived);
   const hasCrypto = cryptoAssets.some(a => !a.isArchived);
   const hiddenTabs = appSettings.hiddenAssetTabs || [];
+  const assetTabOrder = getAssetTabOrder(appSettings.assetTabOrder);
+
+  const handleReorderTabs = async (newOrder: AssetTabId[]) => {
+    const newSettings = { ...appSettings, assetTabOrder: newOrder, updatedAt: Date.now() };
+    setState(prev => ({ ...prev, appSettings: newSettings }));
+    await db.appSettings.put(newSettings);
+    syncWithFirebase();
+  };
 
   const handleToggleTab = async (tab: 'cash' | 'investments' | 'crypto') => {
     if (!hiddenTabs.includes(tab)) {
@@ -271,34 +365,81 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
 
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-300 relative w-full max-w-6xl mx-auto pb-12">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
       {/* Backup Section */}
-      <section className="apple-card p-4 sm:p-5 xl:p-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 md:gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-2xl bg-primary-500/10 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
-            <CloudSync className="w-5 h-5 md:w-6 md:h-6 text-primary-500 stroke-[1.8px]" />
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Резервная копия</h3>
-            <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">Экспорт и импорт данных</p>
+      <section className="apple-card p-4 sm:p-5 xl:p-6 space-y-6 flex flex-col">
+        <div className="flex items-center justify-between h-12 mb-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-12 h-12 rounded-2xl bg-primary-500/10 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
+              <CloudSync className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Резервная копия</h3>
+              <p className="text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate">Экспорт и импорт данных</p>
+            </div>
           </div>
         </div>
-        
-        <div className="flex gap-2.5 shrink-0 items-center">
+
+        <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] overflow-hidden p-1 space-y-1">
+          {/* EXCEL экспорт */}
+          <button 
+            type="button"
+            onClick={exportFullBackupXLSX}
+            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
+            title="Скачать таблицу Excel"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                <FileSpreadsheet size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Excel</span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Для аналитики в таблицах</span>
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-colors shrink-0">
+              <Upload size={14} className="stroke-[2.5px]" />
+            </div>
+          </button>
+
+          {/* JSON экспорт */}
           <button 
             type="button"
             onClick={exportData}
-            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-all rounded-2xl cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-slate-200/50 dark:border-white/[0.04] shrink-0"
-            title="Экспорт"
+            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
+            title="Скачать резервную копию"
           >
-            <Upload className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
-            <span className="hidden lg:inline">Экспорт</span>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 shrink-0">
+                <Database size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Экспорт данных</span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Сохранить копию в формате JSON</span>
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-primary-500 group-hover:bg-primary-500/10 transition-colors shrink-0">
+              <Upload size={14} className="stroke-[2.5px]" />
+            </div>
           </button>
+
+          {/* JSON импорт */}
           <label 
-            className="apple-button w-11 h-11 lg:w-auto lg:h-11 flex items-center justify-center gap-2 px-0 lg:px-4 py-0 lg:py-2.5 bg-primary-500/10 hover:bg-primary-500/20 text-primary-600 dark:text-primary-400 font-bold text-xs transition-all rounded-2xl cursor-pointer outline-none active:scale-[0.95] shadow-sm border border-primary-500/5 dark:border-white/[0.04] shrink-0"
-            title="Импорт"
+            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all cursor-pointer outline-none group select-none active:scale-[0.98]"
+            title="Восстановить из файла"
           >
-            <Download className="w-5 h-5 lg:w-4 lg:h-4 stroke-[2.2px] shrink-0" />
-            <span className="hidden lg:inline">Импорт</span>
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                <RefreshCw size={14} className="stroke-[2px]" />
+              </div>
+              <div className="flex flex-col items-start text-left">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Импорт данных</span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight pr-2">Восстановить данные из JSON</span>
+              </div>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors shrink-0">
+              <Download size={14} className="stroke-[2.5px]" />
+            </div>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>
         </div>
@@ -318,100 +459,26 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           </div>
         </div>
 
-        <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] overflow-hidden p-0.5 space-y-0.5">
-          {/* Сейф */}
-          <div
-            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
-            title={hasCash && !hiddenTabs.includes('cash') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
+        <div className="flex-1 flex flex-col justify-center">
+          <Reorder.Group
+            axis="y"
+            values={assetTabOrder}
+            onReorder={handleReorderTabs}
+            className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] p-1 space-y-1"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                <Vault size={14} className="stroke-[2px]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Сейф</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={hasCash && !hiddenTabs.includes('cash')}
-              onClick={() => handleToggleTab('cash')}
-              className={cn(
-                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
-                !hiddenTabs.includes('cash') ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700",
-                hasCash && !hiddenTabs.includes('cash') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
-              )}
-            >
-              <div className={cn(
-                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
-                !hiddenTabs.includes('cash') ? "translate-x-5" : "translate-x-0"
-              )} />
-            </button>
-          </div>
-          <div className="h-px bg-slate-200/50 dark:bg-white/[0.05] mx-3" />
-
-          {/* Биржа */}
-          <div
-            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
-            title={hasInvestments && !hiddenTabs.includes('investments') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-500 shrink-0">
-                <ChartNoAxesCombined size={14} className="stroke-[2px]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Биржа</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={hasInvestments && !hiddenTabs.includes('investments')}
-              onClick={() => handleToggleTab('investments')}
-              className={cn(
-                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
-                !hiddenTabs.includes('investments') ? "bg-cyan-500" : "bg-slate-300 dark:bg-slate-700",
-                hasInvestments && !hiddenTabs.includes('investments') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
-              )}
-            >
-              <div className={cn(
-                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
-                !hiddenTabs.includes('investments') ? "translate-x-5" : "translate-x-0"
-              )} />
-            </button>
-          </div>
-          <div className="h-px bg-slate-200/50 dark:bg-white/[0.05] mx-3" />
-
-          {/* Крипта */}
-          <div
-            className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-slate-100/50 dark:hover:bg-white/5 rounded-xl transition-all"
-            title={hasCrypto && !hiddenTabs.includes('crypto') ? "Нельзя скрыть раздел, в котором есть активы" : ""}
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                <Bitcoin size={14} className="stroke-[2px]" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Крипта</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={hasCrypto && !hiddenTabs.includes('crypto')}
-              onClick={() => handleToggleTab('crypto')}
-              className={cn(
-                "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
-                !hiddenTabs.includes('crypto') ? "bg-amber-500" : "bg-slate-300 dark:bg-slate-700",
-                hasCrypto && !hiddenTabs.includes('crypto') ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
-              )}
-            >
-              <div className={cn(
-                "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
-                !hiddenTabs.includes('crypto') ? "translate-x-5" : "translate-x-0"
-              )} />
-            </button>
-          </div>
+            {assetTabOrder.map((tab) => (
+              <AssetTabRow
+                key={tab}
+                tab={tab}
+                hasAssets={tab === 'cash' ? hasCash : tab === 'investments' ? hasInvestments : hasCrypto}
+                isHidden={hiddenTabs.includes(tab)}
+                onToggle={handleToggleTab}
+              />
+            ))}
+          </Reorder.Group>
         </div>
       </section>
+      </div>
       {/* Tax Brackets and Deposits Tax Sections Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-start">
         {/* Шкала НДФЛ Section */}
@@ -762,6 +829,55 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
 
       {/* Delete Confirmation Modals */}
       <AnimatePresence>
+        {pendingImportFile !== null && (
+          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setPendingImportFile(null)} static>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 text-center"
+                >
+                  <div className="flex justify-center mb-4">
+                    <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+                      <AlertTriangle className="w-6 h-6 stroke-[1.5px]" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white mb-2">Подтвердите действие</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
+                    Вы собираетесь восстановить данные из резервной копии.<br/><br/>
+                    <strong className="text-amber-600 dark:text-amber-500 font-bold">Внимание:</strong> Это полностью перезапишет все ваши текущие данные, вклады, активы и настройки. Отменить эту операцию будет невозможно.
+                  </p>
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setPendingImportFile(null)}
+                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      onClick={confirmImport}
+                      className="flex-1 apple-button bg-amber-500 text-white shadow-lg shadow-amber-500/20 text-sm sm:text-base cursor-pointer"
+                    >
+                      Восстановить
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
+        )}
+
         {yearToDelete !== null && (
           <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setYearToDelete(null)} static>
             <motion.div 

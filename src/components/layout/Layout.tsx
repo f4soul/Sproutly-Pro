@@ -137,7 +137,18 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         }}
       >
         <div className="flex flex-col gap-6 mb-8 lg:mb-12">
-          <div className="flex items-center gap-2.5 group cursor-pointer px-0" onClick={() => onTabChange('dashboard')}>
+          <div 
+            className="flex items-center gap-2.5 group cursor-pointer px-0" 
+            onClick={() => onTabChange('dashboard')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onTabChange('dashboard');
+              }
+            }}
+          >
             <div className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/50 dark:border-white/10 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary-500/10 transition-all group-hover:scale-105 active:scale-95 mx-0 shrink-0">
               <SproutlyLogo className="w-6 h-6 text-primary-500 dark:text-primary-400 drop-shadow-[0_0_8px_rgba(var(--rgb-primary),0.4)]" />
             </div>
@@ -488,7 +499,18 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
           className="md:hidden fixed z-[60] left-2 right-2 h-16 px-4 flex items-center justify-between bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-panel shadow-panel dark:shadow-panel-dark"
           style={{ top: 'calc(env(safe-area-inset-top) + 16px)' }}
         >
-          <div className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" onClick={() => onTabChange('dashboard')}>
+          <div 
+            className="flex items-center gap-2 active:scale-95 transition-transform cursor-pointer" 
+            onClick={() => onTabChange('dashboard')}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onTabChange('dashboard');
+              }
+            }}
+          >
             <div className="bg-white/60 dark:bg-slate-950/60 backdrop-blur-md border border-slate-200/50 dark:border-white/10 w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary-500/10 shrink-0">
               <SproutlyLogo className="w-6 h-6 text-primary-500 dark:text-primary-400 drop-shadow-[0_0_8px_rgba(var(--rgb-primary),0.4)]" />
             </div>

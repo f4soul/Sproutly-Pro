@@ -82,3 +82,10 @@ Whenever you implement a meaningful, user-facing feature, enhancement, or major 
 - Main transitions between top-level sections (Layout.tsx, AnimatePresence wrapping {children} inside <main>): use `mode="wait"`. `popLayout` caused noticeable lag and stuttering on resource-intensive views (Heatmap/Dashboard), especially on mobile devices. This is a deliberate, tested trade-off. Do not change it to `popLayout` unless explicitly requested.
 - Transitions between lightweight subsections within the same section (AssetsView: Deposits/Savings/Exchange; UnifiedDashboard: Overview/Income/Deposits): use `mode="popLayout"`. Since these views contain relatively little content, avoiding the exit/enter delay results in a more responsive experience.
 - Scroll position is reset synchronously when the user switches top-level sections (App.tsx, `handleNavigation`), not in `onExitComplete`. This intentionally prevents race conditions between scroll restoration and page transition animations.
+
+---
+
+## 10. Drag-and-Drop для вкладок активов (LOCKED — DO NOT CHANGE)
+- Переупорядочивание вкладок активов (Сейф, Биржа, Крипта) в Настройках реализовано строго через встроенный компонент `Reorder` и хук `useDragControls` из уже используемого пакета `motion/react` (без сторонних библиотек).
+- Драг инициируется **только через выделенный grip-хендл** (иконка слева), а не всей строкой. Это сделано намеренно, чтобы предотвратить конфликты со скроллом страницы на тач-устройствах и случайными нажатиями на тумблеры видимости.
+- Это архитектурное решение зафиксировано и не должно изменяться, заменяться или откатываться при последующих правках в AI Studio.

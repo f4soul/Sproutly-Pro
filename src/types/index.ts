@@ -246,6 +246,7 @@ export interface AppSettings {
   bankSortOrder?: 'asc' | 'desc';
   bankSortBy?: 'amount' | 'date';
   hiddenAssetTabs?: ('cash' | 'investments' | 'crypto')[];
+  assetTabOrder?: ('cash' | 'investments' | 'crypto')[];
   tourCompleted?: boolean;
   tourCompletedAssets?: boolean;
   tourCompletedIncome?: boolean;

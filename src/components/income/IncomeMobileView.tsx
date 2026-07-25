@@ -172,7 +172,18 @@ export function IncomeMobileView({
         return (
           <div key={qIndex} className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] rounded-3xl overflow-hidden shadow-xl transition-all duration-300">
             {/* Header / Toggle */}
-            <div className="p-3 sm:p-4 flex justify-between items-center cursor-pointer transition-colors shadow-sm bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30" onClick={() => onToggleQuarter(qIndex)}>
+            <div 
+              className="p-3 sm:p-4 flex justify-between items-center cursor-pointer transition-colors shadow-sm bg-transparent hover:bg-slate-50/50 dark:hover:bg-slate-800/30" 
+              onClick={() => onToggleQuarter(qIndex)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onToggleQuarter(qIndex);
+                }
+              }}
+            >
               <div className="flex items-center gap-3">
                 <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }} className="text-slate-400">
                    <ChevronDown className="w-5 h-5" />

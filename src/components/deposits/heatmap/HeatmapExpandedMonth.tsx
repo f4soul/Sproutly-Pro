@@ -33,10 +33,20 @@ export function HeatmapExpandedMonth({
   React.useEffect(() => {
     // Prevent background scrolling while expanded
     document.body.style.overflow = 'hidden';
+    
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setExpandedMonth(null);
+        setSelectedDay(null);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
     return () => {
       document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, []);
+  }, [setExpandedMonth, setSelectedDay]);
 
   React.useEffect(() => {
     if (!selectedDay) return;

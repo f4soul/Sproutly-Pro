@@ -38,3 +38,14 @@ export const DEFAULT_TAX_BRACKETS: Record<number, TaxBracket[]> = {
     { limit: Infinity, rate: 0.22, label: 'Свыше 50 млн ₽' }
   ]
 };
+
+export type AssetTabId = 'cash' | 'investments' | 'crypto';
+
+export const DEFAULT_ASSET_TAB_ORDER: AssetTabId[] = ['cash', 'investments', 'crypto'];
+
+export function getAssetTabOrder(stored?: AssetTabId[]): AssetTabId[] {
+  if (!stored || stored.length === 0) return DEFAULT_ASSET_TAB_ORDER;
+  const valid = stored.filter((t): t is AssetTabId => DEFAULT_ASSET_TAB_ORDER.includes(t));
+  const missing = DEFAULT_ASSET_TAB_ORDER.filter(t => !valid.includes(t));
+  return [...valid, ...missing];
+}

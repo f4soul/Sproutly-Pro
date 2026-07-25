@@ -1,7 +1,63 @@
 import { jsPDF } from 'jspdf';
 import * as htmlToImage from 'html-to-image';
-import * as XLSX from 'xlsx';
-import { Deposit, MonthData } from '../types';
+import * as XLSX from 'xlsx-js-style';
+import { Deposit, MonthData, CashAsset, InvestmentAsset, CryptoAsset, YearData } from '../types';
+
+
+function styleHeaderRow(sheet: XLSX.WorkSheet, colCount: number) {
+  for (let c = 0; c < colCount; c++) {
+    const cellRef = XLSX.utils.encode_cell({ r: 0, c });
+    if (!sheet[cellRef]) continue;
+    sheet[cellRef].s = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "10B981" } }, // emerald, брендовый акцент
+      alignment: { vertical: "center", horizontal: "left" },
+      border: { bottom: { style: "thin", color: { rgb: "059669" } } }
+    };
+  }
+}
+
+function styleDataBorders(sheet: XLSX.WorkSheet, range: XLSX.Range) {
+  for (let R = range.s.r + 1; R <= range.e.r; R++) {
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!sheet[cellRef]) continue;
+      sheet[cellRef].s = {
+        ...(sheet[cellRef].s || {}),
+        border: { bottom: { style: "thin", color: { rgb: "E2E8F0" } } }
+      };
+    }
+  }
+}
+
+function autoFitColumns(data: Record<string, any>[]): { wch: number }[] {
+  if (data.length === 0) return [];
+  const headers = Object.keys(data[0]);
+  return headers.map((header) => {
+    const maxContentLength = Math.max(
+      header.length,
+      ...data.map(row => String(row[header] ?? '').length)
+    );
+    return { wch: Math.min(maxContentLength + 2, 60) };
+  });
+}
+
+function applyRubFormat(worksheet: XLSX.WorkSheet, colIndices: number[]) {
+  const ref = worksheet['!ref'];
+  if (!ref) return;
+  const range = XLSX.utils.decode_range(ref);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    if (R === 0) continue; // Skip header
+    for (const C of colIndices) {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = worksheet[cellAddress];
+      if (cell && cell.t === 'n') {
+        cell.z = '#,##0.00 ₽';
+      }
+    }
+  }
+}
+
 import { format } from 'date-fns';
 import { showToast } from '../lib/toast';
 import { isDepositClosed } from '../lib/depositCalculations';
@@ -51,18 +107,12 @@ export const exportToXLSX = (deposits: Deposit[]) => {
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     
-    // Add currency formatting for "Сумма" column (index 1) and freeze first row
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      // Cell B{R} (Сумма)
-      const cellAddress = XLSX.utils.encode_cell({ r: R, c: 1 });
-      const cell = worksheet[cellAddress];
-      if (cell && cell.t === 'n' && R > 0) {
-        cell.z = '#,##0.00 ₽';
-      }
-    }
+    applyRubFormat(worksheet, [1]);
     // Freeze the first row
     worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+    worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
+    styleHeaderRow(worksheet, Object.keys(data[0] || {}).length);
+    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
 
     worksheet['!cols'] = [
       { wch: 25 }, // Банк
@@ -74,6 +124,9 @@ export const exportToXLSX = (deposits: Deposit[]) => {
       { wch: 12 }, // Статус
       { wch: 45 }  // Комментарий
     ];
+    worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
+    styleHeaderRow(worksheet, Object.keys(data[0] || {}).length);
+    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Вклады');
     XLSX.writeFile(workbook, `sproutly_deposits_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
@@ -100,13 +153,12 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
 
     const worksheet = XLSX.utils.json_to_sheet(summaryData);
     
-    // Add currency formatting for "Значение" column (index 1) and freeze first row
+    // Add currency formatting for "Значение" column
     const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:B1');
     for (let R = range.s.r; R <= range.e.r; ++R) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: 1 });
       const cell = worksheet[cellAddress];
       if (cell && cell.t === 'n' && R > 0) {
-        // Only format as currency if it's not the "Year" row (R === 1)
         if (summaryData[R - 1] && summaryData[R - 1]['Показатель'] !== 'Год') {
           cell.z = '#,##0.00 ₽';
         }
@@ -118,6 +170,9 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
       { wch: 25 }, // Показатель
       { wch: 20 }  // Значение
     ];
+    worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
+    styleHeaderRow(worksheet, Object.keys(summaryData[0] || {}).length);
+    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:B1'));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Сводка');
     XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
@@ -161,17 +216,7 @@ export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => 
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     
-    // Add currency formatting for monetary columns and freeze first row
-    const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1');
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = 3; C <= 7; ++C) { // Columns D to H (Оклад to На руки)
-        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-        const cell = worksheet[cellAddress];
-        if (cell && cell.t === 'n' && R > 0) {
-          cell.z = '#,##0.00 ₽';
-        }
-      }
-    }
+    applyRubFormat(worksheet, [3, 4, 5, 6, 7]);
     worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
 
     worksheet['!cols'] = [
@@ -514,6 +559,277 @@ export const exportToImage = async (elementId: string, deposits?: Deposit[]) => 
   } catch (error) {
     console.error('Error exporting to image:', error);
     showToast('Ошибка при формировании изображения', 'error', { id: toastId });
+    return false;
+  }
+};
+
+
+export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAsset[], investmentAssets: InvestmentAsset[], cryptoAssets: CryptoAsset[], years: Record<number, YearData> }) => {
+  const toastId = 'export-full-backup';
+  try {
+    showToast('Формирование полного бэкапа (XLSX)...', 'loading', { id: toastId, duration: Infinity });
+    const workbook = XLSX.utils.book_new();
+    const now = new Date();
+
+    // Вкладка "Сводка"
+    const summaryRows = [
+      { 'Параметр': 'Дата формирования бэкапа', 'Значение': format(now, 'dd.MM.yyyy HH:mm') },
+      { 'Параметр': 'Активных вкладов', 'Значение': data.deposits.filter(d => !d.isArchived).length },
+      { 'Параметр': 'Наличных активов', 'Значение': data.cashAssets.filter(c => !c.isArchived).length },
+      { 'Параметр': 'Биржевых активов', 'Значение': data.investmentAssets.filter(i => !i.isArchived).length },
+      { 'Параметр': 'Криптоактивов', 'Значение': data.cryptoAssets.filter(c => !c.isArchived).length },
+    ];
+    const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
+    summarySheet['!cols'] = autoFitColumns(summaryRows);
+    summarySheet['!autofilter'] = { ref: summarySheet['!ref'] || 'A1:A1' };
+    styleHeaderRow(summarySheet, 2);
+    if (summarySheet['!ref']) styleDataBorders(summarySheet, XLSX.utils.decode_range(summarySheet['!ref']));
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Сводка');
+
+    // Вкладка "Вклады"
+    const activeDeposits = data.deposits.filter(d => !d.isArchived);
+    if (activeDeposits.length > 0) {
+      const depositRows = activeDeposits.map(d => ({
+        'Банк': d.bank,
+        'Сумма': d.amount,
+        'Валюта': d.currency && d.currency !== 'undefined' ? d.currency : '₽',
+        'Ставка (%)': d.rate,
+        'Дата открытия': format(new Date(d.startDate), 'dd.MM.yyyy'),
+        'Дата закрытия': function() {
+            if (!d.endDate) return '...';
+            const endStr = String(d.endDate);
+            if(endStr.includes('1970-01-01') || endStr === '') return '...';
+            return format(new Date(d.endDate), 'dd.MM.yyyy');
+        }(),
+        'Статус': isDepositClosed(d) ? 'Закрыт' : 'Активен',
+        'Комментарий': d.comment || ''
+      }));
+      const sheet = XLSX.utils.json_to_sheet(depositRows);
+      applyRubFormat(sheet, [1]);
+      sheet['!cols'] = autoFitColumns(depositRows);
+      sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+      sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
+      styleHeaderRow(sheet, Object.keys(depositRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Вклады');
+    }
+
+    // Вкладка "Наличные"
+    const activeCash = data.cashAssets.filter(c => !c.isArchived);
+    if (activeCash.length > 0) {
+      const cashRows = activeCash.map(c => ({
+        'Название': c.name,
+        'Сумма': c.amount,
+        'Валюта': c.currency,
+        'Курс на дату фиксации': c.exchangeRateOnOpen || '',
+        'Комментарий': c.comment || ''
+      }));
+      const sheet = XLSX.utils.json_to_sheet(cashRows);
+      applyRubFormat(sheet, [1, 3]);
+      sheet['!cols'] = autoFitColumns(cashRows);
+      sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+      sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
+      styleHeaderRow(sheet, Object.keys(cashRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Наличные');
+    }
+
+    // Вкладка "Биржа"
+    const activeInvestments = data.investmentAssets.filter(i => !i.isArchived);
+    if (activeInvestments.length > 0) {
+      const investRows = activeInvestments.map(i => ({
+        'Название': i.name,
+        'Тип счёта': i.type === 'iis' ? `ИИС (тип ${i.iisType || '-'})` : 'Брокерский',
+        'Вложено': i.amount,
+        'Текущая стоимость': i.currentValue,
+        'Валюта': i.currency,
+        'Дата открытия': i.startDate ? format(new Date(i.startDate), 'dd.MM.yyyy') : '',
+        'Возвраты по вычетам': i.deductionsReceived || '',
+        'Комментарий': i.comment || ''
+      }));
+      const sheet = XLSX.utils.json_to_sheet(investRows);
+      applyRubFormat(sheet, [2, 3, 6]);
+      sheet['!cols'] = autoFitColumns(investRows);
+      sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+      sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
+      styleHeaderRow(sheet, Object.keys(investRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Биржа');
+    }
+
+    // Вкладка "Крипто"
+    const activeCrypto = data.cryptoAssets.filter(c => !c.isArchived);
+    if (activeCrypto.length > 0) {
+      const cryptoRows = activeCrypto.map(c => ({
+        'Тикер': c.ticker,
+        'Количество': c.quantity,
+        'Вложено, ₽': c.amount,
+        'Дата покупки': c.purchaseDate ? format(new Date(c.purchaseDate), 'dd.MM.yyyy') : '',
+        'Комментарий': c.comment || ''
+      }));
+      const sheet = XLSX.utils.json_to_sheet(cryptoRows);
+      applyRubFormat(sheet, [2]);
+      sheet['!cols'] = autoFitColumns(cryptoRows);
+      sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+      sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
+      styleHeaderRow(sheet, Object.keys(cryptoRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Крипто');
+    }
+
+    // Вкладка "Доходы"
+    const yearEntries = Object.values(data.years || {});
+    if (yearEntries.length > 0) {
+      const incomeRows: Record<string, any>[] = [];
+      const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+      
+      let isFirstYear = true;
+
+      for (const yearData of yearEntries) {
+        if (!isFirstYear) {
+          incomeRows.push({}); // Разделитель между годами
+        }
+        isFirstYear = false;
+
+        yearData.months.forEach((m, idx) => {
+          const row: Record<string, any> = {
+            'Год': yearData.year,
+            'Месяц': monthNames[idx] || '',
+            'Норма дней': m.normDays,
+            'Факт. дней': m.factDays,
+            'Оклад': m.salary
+          };
+        
+          if (yearData.v2) {
+            const v2Month = yearData.v2.months[idx];
+            if (v2Month) {
+              const mainBonus = v2Month.values?.['system_main_bonus'] || 0;
+              if (mainBonus !== 0) {
+                row['Основная премия'] = mainBonus;
+              }
+              yearData.v2.columns.forEach(col => {
+                const val = v2Month.values?.[col.id] || 0;
+                if (val !== 0) {
+                  row[col.name] = val;
+                }
+              });
+            }
+          }
+        
+          incomeRows.push(row);
+        });
+
+        // Итоги года
+        const quarterNames = ['I квартал', 'II квартал', 'III квартал', 'IV квартал'];
+        if (yearData.quarters) {
+          yearData.quarters.forEach((q, idx) => {
+            if (q.bonusAmount && q.bonusAmount > 0) {
+              incomeRows.push({
+                'Год': yearData.year,
+                'Месяц': quarterNames[idx],
+                'Оклад': q.bonusAmount
+              });
+            }
+          });
+        }
+
+        if (yearData.annualBonusAmount && yearData.annualBonusAmount > 0) {
+          incomeRows.push({
+            'Год': yearData.year,
+            'Месяц': 'Годовая премия',
+            'Оклад': yearData.annualBonusAmount
+          });
+        }
+
+        if (yearData.extraBonusAmount && yearData.extraBonusAmount > 0) {
+          incomeRows.push({
+            'Год': yearData.year,
+            'Месяц': 'Доп. премия',
+            'Оклад': yearData.extraBonusAmount
+          });
+        }
+
+        if (yearData.additionalIncome && yearData.additionalIncome > 0) {
+          incomeRows.push({
+            'Год': yearData.year,
+            'Месяц': 'Доп. доход за год',
+            'Оклад': yearData.additionalIncome
+          });
+        }
+        
+        if (yearData.deductions) {
+          if (yearData.deductions.social && yearData.deductions.social > 0) {
+            incomeRows.push({ 'Год': yearData.year, 'Месяц': 'Вычет (соц.)', 'Оклад': yearData.deductions.social });
+          }
+          if (yearData.deductions.property && yearData.deductions.property > 0) {
+            incomeRows.push({ 'Год': yearData.year, 'Месяц': 'Вычет (имущ.)', 'Оклад': yearData.deductions.property });
+          }
+          if (yearData.deductions.standard && yearData.deductions.standard > 0) {
+            incomeRows.push({ 'Год': yearData.year, 'Месяц': 'Вычет (станд.)', 'Оклад': yearData.deductions.standard });
+          }
+        }
+
+        let v2Total = 0;
+        if (yearData.v2 && yearData.v2.months) {
+          yearData.v2.months.forEach(m => {
+            if (m && m.values) {
+              Object.values(m.values).forEach(val => {
+                if (typeof val === 'number') {
+                  v2Total += val;
+                }
+              });
+            }
+          });
+        }
+
+        const yearTotal =
+          yearData.months.reduce((sum, m) => sum + (m.salary || 0), 0) +
+          v2Total +
+          (yearData.quarters || []).reduce((sum, q) => sum + (q.bonusAmount || 0), 0) +
+          (yearData.annualBonusAmount || 0) +
+          (yearData.extraBonusAmount || 0) +
+          (yearData.additionalIncome || 0);
+
+        incomeRows.push({
+          'Год': yearData.year,
+          'Месяц': 'ИТОГО ЗА ГОД',
+          'Норма дней': '',
+          'Факт. дней': '',
+          'Оклад': yearTotal
+        });
+      }
+
+      const sheet = XLSX.utils.json_to_sheet(incomeRows);
+      
+      // Formatting
+      // We will just format any numeric column beyond index 4 (and including index 4 which is Оклад, maybe others) as currency.
+      const ref = sheet['!ref'];
+      if (ref) {
+        const range = XLSX.utils.decode_range(ref);
+        const rubCols = [];
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const headerCell = sheet[XLSX.utils.encode_cell({ r: 0, c: C })];
+          if (headerCell && headerCell.v !== 'Год' && headerCell.v !== 'Норма дней' && headerCell.v !== 'Факт. дней' && headerCell.v !== 'Месяц') {
+            rubCols.push(C);
+          }
+        }
+        applyRubFormat(sheet, rubCols);
+      }
+      
+      sheet['!cols'] = autoFitColumns(incomeRows);
+      sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
+      sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
+      styleHeaderRow(sheet, Object.keys(incomeRows.find(r => Object.keys(r).length > 0) || {}).length);
+      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      XLSX.utils.book_append_sheet(workbook, sheet, 'Доходы');
+    }
+
+    XLSX.writeFile(workbook, `sproutly_backup_${format(now, 'yyyy-MM-dd')}.xlsx`);
+    showToast('Бэкап успешно сохранен', 'success', { id: toastId });
+    return true;
+  } catch (error) {
+    console.error('Error exporting full backup:', error);
+    showToast('Ошибка при формировании бэкапа', 'error', { id: toastId });
     return false;
   }
 };

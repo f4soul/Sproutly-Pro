@@ -43,7 +43,18 @@ export async function getExchangeRates(): Promise<CurrencyRates | null> {
   }
 
   try {
-    const res = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' });
+    let res = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' }).catch(() => null);
+    
+    // Fallback to proxy if direct fetch fails (e.g., due to adblockers or CORS)
+    if (!res || !res.ok) {
+      res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.cbr-xml-daily.ru/daily_json.js'), { cache: 'no-store' }).catch(() => null);
+    }
+    
+    // Second fallback
+    if (!res || !res.ok) {
+      res = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://www.cbr-xml-daily.ru/daily_json.js'), { cache: 'no-store' });
+    }
+
     if (!res.ok) throw new Error('Network error');
     const data: CurrencyRates = await res.json();
     cachedRates = data;
