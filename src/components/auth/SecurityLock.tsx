@@ -158,7 +158,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
-        className="flex flex-col items-center w-full max-w-sm px-6 h-[100dvh] justify-center relative pt-[env(safe-area-inset-top)] pb-[calc(env(safe-area-inset-bottom)+5rem)]"
+        className="flex flex-col items-center w-full max-w-sm px-6 h-[100dvh] justify-center pb-20 relative pt-[env(safe-area-inset-top)]"
       >
         <div className="w-16 h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
           <ShieldUser size={32} className="stroke-[1.5px]" />
@@ -235,8 +235,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
 
         <button 
           onClick={() => setShowForgotPinTheme(true)}
-          className="absolute text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest"
-          style={{ bottom: 'max(2rem, calc(env(safe-area-inset-bottom) + 1rem))' }}
+          className="absolute bottom-8 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors uppercase tracking-widest"
         >
           Забыли код?
         </button>
@@ -260,7 +259,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:pb-8"
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8"
                 >
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20">
