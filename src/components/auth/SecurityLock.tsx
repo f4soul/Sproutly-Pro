@@ -260,7 +260,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full sm:max-w-sm rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.25)] border border-b-0 sm:border-b border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] sm:pb-8"
+                  className="bg-white dark:bg-slate-950 w-full sm:max-w-sm rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.25)] border border-b-0 sm:border-b border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8 pb-[max(env(safe-area-inset-bottom,0px),24px)] sm:pb-8"
                 >
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20">
