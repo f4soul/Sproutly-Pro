@@ -419,3 +419,4 @@
 .dark .react-datepicker__close-icon::after {
   background-color: transparent !important;
 }
+@custom-variant short-landscape (@media (max-height: 500px) and (orientation: landscape));
