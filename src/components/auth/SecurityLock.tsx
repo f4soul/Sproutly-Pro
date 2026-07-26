@@ -254,13 +254,13 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
                 aria-hidden="true"
                 onClick={() => setShowForgotPinTheme(false)}
               />
-              <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <div className="fixed inset-x-0 bottom-0 top-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
                 <motion.div 
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8"
+                  className="bg-white dark:bg-slate-950 w-full sm:max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.5)] border border-b-0 sm:border-b border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] sm:pb-8"
                 >
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20">
