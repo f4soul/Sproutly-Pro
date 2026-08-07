@@ -40,3 +40,12 @@ export function formatPercent(value: number): string {
     maximumFractionDigits: 2,
   }).format(value / 100);
 }
+
+export function getPlural(number: number, words: [string, string, string]): string {
+  const n = Math.abs(number) % 100;
+  const n1 = n % 10;
+  if (n > 10 && n < 20) return words[2];
+  if (n1 > 1 && n1 < 5) return words[1];
+  if (n1 === 1) return words[0];
+  return words[2];
+}

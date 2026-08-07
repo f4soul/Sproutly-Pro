@@ -7,9 +7,10 @@ import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
 import { CryptoForm } from "./CryptoForm";
 import { CryptoLogo } from "./CryptoLogo";
-import { cn, formatCurrency } from "../../lib/utils";
+import { cn, formatCurrency, getPlural } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import { getCryptoRates, getCryptoRate, CryptoRates } from "../../services/crypto";
+import { AssetStack } from "./stack/AssetStack";
 
 interface CryptoListProps {
   cryptoAssets: CryptoAsset[];
@@ -21,6 +22,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
   const [editingAsset, setEditingAsset] = useState<CryptoAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<CryptoAsset | undefined>();
   const [rates, setRates] = useState<CryptoRates | null>(null);
+  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   React.useEffect(() => {
     getCryptoRates().then(setRates);
@@ -48,9 +50,61 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
     return { totalContributed, totalCurrent, profit, profitPercent };
   }, [activeAssets, rates]);
 
+  const groupedAssets = useMemo(() => {
+    const groups: Record<string, CryptoAsset[]> = {};
+    activeAssets.forEach(asset => {
+      const key = asset.ticker;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(asset);
+    });
+    
+    return Object.entries(groups).map(([key, group]) => {
+      const sortedGroup = group.sort((a, b) => {
+        const timeA = a.purchaseDate ? new Date(a.purchaseDate).getTime() : 0;
+        const timeB = b.purchaseDate ? new Date(b.purchaseDate).getTime() : 0;
+        return timeB - timeA;
+      });
+      
+      let totalContributed = 0;
+      let totalCurrent = 0;
+      let totalQuantity = 0;
+
+      sortedGroup.forEach(asset => {
+        const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
+        const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
+        
+        totalContributed += asset.amount;
+        totalCurrent += currentRub;
+        totalQuantity += asset.quantity;
+      });
+
+      const profitValue = totalCurrent - totalContributed;
+      const profitPercent = totalContributed > 0 ? (profitValue / totalContributed) * 100 : 0;
+
+      return {
+        key,
+        items: sortedGroup,
+        aggregate: { totalContributed, totalCurrent, totalQuantity, profitValue, profitPercent }
+      };
+    }).sort((a, b) => {
+        const timeA = a.items[0].purchaseDate ? new Date(a.items[0].purchaseDate).getTime() : 0;
+        const timeB = b.items[0].purchaseDate ? new Date(b.items[0].purchaseDate).getTime() : 0;
+        return timeB - timeA;
+    });
+  }, [activeAssets, rates]);
+
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
+    const ticker = deletingAsset.ticker;
+    
+    if (expandedGroupKey === ticker) {
+      const groupData = groupedAssets.find(g => g.key === ticker);
+      if (groupData && groupData.items.length === 2) {
+        setExpandedGroupKey(null);
+      }
+    }
+    
     try {
       await db.cryptoAssets.delete(id as any);
       const user = auth.currentUser;
@@ -135,116 +189,204 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
       </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2">
-        {activeAssets.map((asset) => {
-          const contributedRub = asset.amount;
-          const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
-          const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
-          const hasDynamics = Boolean(liveRateRub);
-          
-          let profitValue = currentRub - contributedRub;
-          let profitPercent = hasDynamics && contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
-          let isPositive = profitPercent >= 0;
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2 items-start">
+        {groupedAssets.map((groupData) => {
+          const { key: groupKey, items: group, aggregate } = groupData;
           return (
-            <div
-              key={asset.id}
-              className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-amber-500/30 dark:hover:border-amber-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden"
-            >
-              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-              {hasDynamics && profitPercent !== 0 && (
-              <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                <span className={cn(
-                  "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
-                  isPositive 
-                    ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
-                    : "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                )}>
-                  {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
-                </span>
-              </div>
-            )}
-
-              <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1">
-                  <CryptoLogo ticker={asset.ticker} className="w-8 h-8" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
-                    <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                      {asset.ticker} <span className="font-medium lowercase ml-1">({asset.quantity} шт)</span>
-                    </span>
-                  </div>
-                  
-                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
-                    <PrivacyBlur isPrivate={isPrivate}>
-                      {formatCurrency(currentRub)}
-                    </PrivacyBlur>
-                  </div>
-
-                  {asset.comment && (
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
-                      {asset.comment}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                    КРИПТОАКТИВ
-                  </span>
-                  <div className="flex flex-col mt-0.5 gap-1.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                      <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
-                        <PrivacyBlur isPrivate={isPrivate}>
-                          {formatCurrency(asset.amount)}
-                        </PrivacyBlur>
+            <AssetStack accentClassName="bg-amber-500"
+              key={groupKey}
+              items={group}
+              groupTitle={groupKey}
+              isExpanded={expandedGroupKey === groupKey}
+              onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
+              getItemKey={(asset) => String(asset.id)}
+              renderAggregate={() => {
+                const ticker = groupKey;
+                const { totalContributed, totalQuantity, totalCurrent, profitValue, profitPercent } = aggregate;
+                const isPositive = profitPercent >= 0;
+                const hasDynamics = Boolean(getCryptoRate(ticker, 'rub', rates));
+                const currentRate = getCryptoRate(ticker, 'rub', rates);
+              
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              
+                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20">
+                        {group.length} {getPlural(group.length, ['позиция', 'позиции', 'позиций'])}
                       </span>
                     </div>
-                    
-                    {liveRateRub ? (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
-                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
-                          {formatCurrency(liveRateRub)}
-                        </span>
+              
+                    <div className="flex items-start gap-3.5 min-w-0 pr-24 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1">
+                        <CryptoLogo ticker={ticker} className="w-8 h-8" />
                       </div>
-                    ) : null}
+              
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
+                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
+                            {ticker} <span className="font-medium lowercase ml-1">({totalQuantity} шт)</span>
+                          </span>
+                        </div>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(totalCurrent)}
+                          </PrivacyBlur>
+                        </div>
+                      </div>
+                    </div>
+              
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
+                          Итого ({ticker})
+                        </span>
+                        <div className="flex flex-col mt-0.5 gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                            <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(totalContributed)}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                          {hasDynamics && currentRate && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                                {formatCurrency(currentRate)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+              
+                      {hasDynamics && profitPercent !== 0 && (
+                        <div className="flex items-center pt-1">
+                          <span className={cn(
+                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                            isPositive 
+                              ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
+                              : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                          )}>
+                            {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                );
+              }}
+              renderItem={(asset) => {
+                const contributedRub = asset.amount;
+                const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
+                const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
+                const hasDynamics = Boolean(liveRateRub);
+                
+                let profitValue = currentRub - contributedRub;
+                let profitPercent = hasDynamics && contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
+                let isPositive = profitPercent >= 0;
 
-                <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setEditingAsset(asset);
-                      setIsFormOpen(true);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Редактировать"
-                  >
-                    <Edit3 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setDeletingAsset(asset);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Удалить"
-                  >
-                    <Trash2 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-amber-500/30 dark:hover:border-amber-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                    {hasDynamics && profitPercent !== 0 && (
+                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                      <span className={cn(
+                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                        isPositive 
+                          ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
+                          : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                      )}>
+                        {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                      </span>
+                    </div>
+                  )}
+
+                    <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1">
+                        <CryptoLogo ticker={asset.ticker} className="w-8 h-8" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
+                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
+                            {asset.ticker} <span className="font-medium lowercase ml-1">({asset.quantity} шт)</span>
+                          </span>
+                        </div>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(currentRub)}
+                          </PrivacyBlur>
+                        </div>
+
+                        {asset.comment && (
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
+                            {asset.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
+                          КРИПТОАКТИВ
+                        </span>
+                        <div className="flex flex-col mt-0.5 gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                            <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(asset.amount)}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                          
+                          {group.length === 1 && liveRateRub ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                                {formatCurrency(liveRateRub)}
+                              </span>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setEditingAsset(asset);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-amber-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Редактировать"
+                        >
+                          <Edit3 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setDeletingAsset(asset);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Удалить"
+                        >
+                          <Trash2 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            />
           );
         })}
         {activeAssets.length === 0 && (

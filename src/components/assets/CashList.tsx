@@ -6,13 +6,14 @@ import { CashAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
 import { CashForm } from "./CashForm";
-import { cn, formatCurrency } from "../../lib/utils";
+import { cn, formatCurrency, getPlural } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import {
   getExchangeRates,
   convertToRub,
   CurrencyRates,
 } from "../../services/currency";
+import { AssetStack } from "./stack/AssetStack";
 
 interface CashListProps {
   cashAssets: CashAsset[];
@@ -24,6 +25,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   const [editingAsset, setEditingAsset] = useState<CashAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<CashAsset | undefined>();
   const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
@@ -37,6 +39,62 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
     return activeAssets.reduce((sum, asset) => {
       return sum + convertToRub(asset.amount, asset.currency, rates);
     }, 0);
+  }, [activeAssets, rates]);
+
+  const groupedAssets = useMemo(() => {
+    const groups: Record<string, CashAsset[]> = {};
+    activeAssets.forEach(asset => {
+      const key = asset.currency;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(asset);
+    });
+    
+    return Object.entries(groups).map(([key, group]) => {
+      const sortedGroup = group.sort((a, b) => {
+        const timeA = a.updatedAt || 0;
+        const timeB = b.updatedAt || 0;
+        return timeB - timeA;
+      });
+      
+      let totalAmount = 0;
+      let totalConvertedRub = 0;
+      let totalContributedRub = 0;
+      let currentRate = 0;
+      let hasDynamics = false;
+
+      if (key !== "RUB" && rates) {
+        const valute = rates?.Valute?.[key];
+        if (valute) {
+          currentRate = valute.Value / valute.Nominal;
+        }
+      }
+
+      sortedGroup.forEach(asset => {
+        totalAmount += asset.amount;
+        const currentRub = convertToRub(asset.amount, asset.currency, rates);
+        totalConvertedRub += currentRub;
+        
+        if (asset.currency !== "RUB" && asset.exchangeRateOnOpen && rates) {
+          totalContributedRub += asset.amount * asset.exchangeRateOnOpen;
+          hasDynamics = true;
+        } else {
+          totalContributedRub += currentRub;
+        }
+      });
+
+      const profitValue = totalConvertedRub - totalContributedRub;
+      const profitPercent = totalContributedRub > 0 ? (profitValue / totalContributedRub) * 100 : 0;
+
+      return {
+        key,
+        items: sortedGroup,
+        aggregate: { totalAmount, totalConvertedRub, totalContributedRub, currentRate, hasDynamics, profitValue, profitPercent }
+      };
+    }).sort((a, b) => {
+        const timeA = a.items[0].updatedAt || 0;
+        const timeB = b.items[0].updatedAt || 0;
+        return timeB - timeA;
+    });
   }, [activeAssets, rates]);
 
   // Group foreign cash assets by original currency to show breakdown in the Safe
@@ -53,6 +111,15 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
+    const currency = deletingAsset.currency;
+    
+    if (expandedGroupKey === currency) {
+      const groupData = groupedAssets.find(g => g.key === currency);
+      if (groupData && groupData.items.length === 2) {
+        setExpandedGroupKey(null);
+      }
+    }
+    
     try {
       await db.cashAssets.delete(id as any);
       const user = auth.currentUser;
@@ -155,131 +222,207 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
       </div>
 
       {/* Grid of Redesigned Safe Cards resembling Archive and Deposits List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2">
-        {activeAssets.map((asset) => {
-          const convertedRub = convertToRub(asset.amount, asset.currency, rates);
-          
-          // Calculate FX dynamics if foreign currency
-          let percentageChange = 0;
-          let hasDynamics = false;
-          let isPositive = true;
-          let currentRate = 0;
-          if (asset.currency !== "RUB" && asset.exchangeRateOnOpen && rates) {
-            const valute = rates?.Valute?.[asset.currency];
-            if (valute) {
-              currentRate = valute.Value / valute.Nominal;
-              percentageChange = ((currentRate - asset.exchangeRateOnOpen) / asset.exchangeRateOnOpen) * 100;
-              hasDynamics = true;
-              isPositive = percentageChange >= 0;
-            }
-          }
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2 items-start">
+        {groupedAssets.map((groupData) => {
+          const { key: groupKey, items: group, aggregate } = groupData;
           return (
-            <div
-              key={asset.id}
-              className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden"
-            >
-              {/* Dynamic subtle cash-to-transparent indicator light on hover */}
-              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <AssetStack accentClassName="bg-cash-500"
+              key={groupKey}
+              items={group}
+              groupTitle={groupKey}
+              isExpanded={expandedGroupKey === groupKey}
+              onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
+              getItemKey={(asset) => String(asset.id)}
+              renderAggregate={() => {
+                const { totalAmount, totalConvertedRub, totalContributedRub, currentRate, hasDynamics, profitValue, profitPercent } = aggregate;
+                const isPositive = profitPercent >= 0;
 
-              {/* Absolute Top Right Percent Badge */}
-              {hasDynamics && percentageChange !== 0 && (
-                <div className="absolute top-4 right-4 z-20">
-                  <span className={cn(
-                    "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
-                    isPositive 
-                      ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
-                      : "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                  )}>
-                    {isPositive ? "+" : ""}{percentageChange.toFixed(2)}%
-                  </span>
-                </div>
-              )}
-
-              {/* Top Section: Icon Area, Title and Large Amount */}
-              <div className="flex items-start gap-3.5 min-w-0 pr-16">
-                {/* Vault-styled Icon container */}
-                <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
-                  <Vault className="w-5 h-5 stroke-[2px]" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
-                    {asset.name}
-                  </h4>
-                  
-                  {/* Large clean original amount as requested in Step 2 */}
-                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
-                    <PrivacyBlur isPrivate={isPrivate}>
-                      {formatCurrency(asset.amount, asset.currency)}
-                    </PrivacyBlur>
-                  </div>
-
-                  {asset.comment && (
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
-                      {asset.comment}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Bottom Section: Separated cleaner Ruble equivalent & CBP rate */}
-              <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                <div className="flex flex-col">
-                  {/* Semantic Label: "НАЛИЧНЫЕ" text-[9px] font-black uppercase tracking-widest text-slate-500 as requested in Step 1 */}
-                  <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                    НАЛИЧНЫЕ
-                  </span>
-                  
-                  <div className="flex flex-col mt-0.5 gap-1.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
-                      <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
-                        <PrivacyBlur isPrivate={isPrivate}>
-                          {formatCurrency(convertedRub, "RUB")}
-                        </PrivacyBlur>
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              
+                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20">
+                        {group.length} {getPlural(group.length, ['счет', 'счета', 'счетов'])}
                       </span>
                     </div>
-                    
-                    {asset.currency !== "RUB" && currentRate > 0 && (
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
-                        <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
-                          {currentRate.toFixed(2)} ₽
+              
+                    <div className="flex items-start gap-3.5 min-w-0 pr-24 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
+                        <Vault className="w-5 h-5 stroke-[2px]" />
+                      </div>
+              
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
+                          Наличные {groupKey}
+                        </h4>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(totalAmount, groupKey)}
+                          </PrivacyBlur>
+                        </div>
+                      </div>
+                    </div>
+              
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
+                          ИТОГО ({groupKey})
+                        </span>
+                        
+                        <div className="flex flex-col mt-0.5 gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
+                            <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(totalConvertedRub, "RUB")}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                          
+                          {groupKey !== "RUB" && currentRate > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                                {currentRate.toFixed(2)} ₽
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+              
+                      {hasDynamics && profitPercent !== 0 && (
+                        <div className="flex items-center pt-1">
+                          <span className={cn(
+                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                            isPositive 
+                              ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
+                              : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                          )}>
+                            {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
+              renderItem={(asset) => {
+                const convertedRub = convertToRub(asset.amount, asset.currency, rates);
+                
+                let percentageChange = 0;
+                let hasDynamics = false;
+                let isPositive = true;
+                let currentRate = 0;
+                if (asset.currency !== "RUB" && asset.exchangeRateOnOpen && rates) {
+                  const valute = rates?.Valute?.[asset.currency];
+                  if (valute) {
+                    currentRate = valute.Value / valute.Nominal;
+                    percentageChange = ((currentRate - asset.exchangeRateOnOpen) / asset.exchangeRateOnOpen) * 100;
+                    hasDynamics = true;
+                    isPositive = percentageChange >= 0;
+                  }
+                }
+
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                    {hasDynamics && percentageChange !== 0 && (
+                      <div className="absolute top-4 right-4 z-20">
+                        <span className={cn(
+                          "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                          isPositive 
+                            ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
+                            : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                        )}>
+                          {isPositive ? "+" : ""}{percentageChange.toFixed(2)}%
                         </span>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Micro Actions Container: Hover interactive only for noise-free experience but visible on touch */}
-                <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setEditingAsset(asset);
-                      setIsFormOpen(true);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-cash-500 dark:hover:text-cash-400 hover:bg-cash-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Редактировать"
-                  >
-                    <Edit3 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setDeletingAsset(asset);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Удалить"
-                  >
-                    <Trash2 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                    <div className="flex items-start gap-3.5 min-w-0 pr-16">
+                      <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
+                        <Vault className="w-5 h-5 stroke-[2px]" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
+                          {asset.name}
+                        </h4>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(asset.amount, asset.currency)}
+                          </PrivacyBlur>
+                        </div>
+
+                        {asset.comment && (
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
+                            {asset.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
+                          НАЛИЧНЫЕ
+                        </span>
+                        
+                        <div className="flex flex-col mt-0.5 gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
+                            <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(convertedRub, "RUB")}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                          
+                          {group.length === 1 && asset.currency !== "RUB" && currentRate > 0 && (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                                {currentRate.toFixed(2)} ₽
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setEditingAsset(asset);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-cash-500 dark:hover:text-cash-400 hover:bg-cash-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Редактировать"
+                        >
+                          <Edit3 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setDeletingAsset(asset);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Удалить"
+                        >
+                          <Trash2 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            />
           );
         })}
         {activeAssets.length === 0 && (

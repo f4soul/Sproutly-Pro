@@ -6,10 +6,11 @@ import { InvestmentAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
 import { InvestmentForm, getBrokerLogoUrl } from "./InvestmentForm";
-import { cn, formatCurrency } from "../../lib/utils";
+import { cn, formatCurrency, getPlural } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
 import { BankLogo } from "../deposits/BankLogo";
+import { AssetStack } from "./stack/AssetStack";
 
 interface InvestmentListProps {
   investmentAssets: InvestmentAsset[];
@@ -21,6 +22,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
   const [editingAsset, setEditingAsset] = useState<InvestmentAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<InvestmentAsset | undefined>();
   const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
@@ -51,9 +53,58 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
     return { totalContributed, totalCurrent, totalDeductions, profit, profitPercent };
   }, [activeAssets, rates]);
 
+  const groupedAssets = useMemo(() => {
+    const groups: Record<string, InvestmentAsset[]> = {};
+    activeAssets.forEach(asset => {
+      const key = `${asset.name}-${asset.type}-${asset.iisType || ''}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(asset);
+    });
+    
+    return Object.entries(groups).map(([key, group]) => {
+      const sortedGroup = group.sort((a, b) => {
+        const timeA = a.startDate ? new Date(a.startDate).getTime() : 0;
+        const timeB = b.startDate ? new Date(b.startDate).getTime() : 0;
+        return timeB - timeA;
+      });
+      
+      let totalContributed = 0;
+      let totalCurrent = 0;
+      let totalDeductions = 0;
+
+      sortedGroup.forEach(asset => {
+        totalContributed += convertToRub(asset.amount, asset.currency, rates);
+        totalCurrent += convertToRub(asset.currentValue, asset.currency, rates);
+        totalDeductions += convertToRub(asset.deductionsReceived || 0, asset.currency, rates);
+      });
+
+      const profitValue = totalCurrent - totalContributed;
+      const profitPercent = totalContributed > 0 ? (profitValue / totalContributed) * 100 : 0;
+
+      return {
+        key,
+        items: sortedGroup,
+        aggregate: { totalContributed, totalCurrent, totalDeductions, profitValue, profitPercent }
+      };
+    }).sort((a, b) => {
+        const timeA = a.items[0].startDate ? new Date(a.items[0].startDate).getTime() : 0;
+        const timeB = b.items[0].startDate ? new Date(b.items[0].startDate).getTime() : 0;
+        return timeB - timeA;
+    });
+  }, [activeAssets, rates]);
+
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
+    const key = `${deletingAsset.name}-${deletingAsset.type}-${deletingAsset.iisType || ''}`;
+    
+    if (expandedGroupKey === key) {
+      const groupData = groupedAssets.find(g => g.key === key);
+      if (groupData && groupData.items.length === 2) {
+        setExpandedGroupKey(null);
+      }
+    }
+    
     try {
       await db.investmentAssets.delete(id as any);
       const user = auth.currentUser;
@@ -154,120 +205,213 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
       </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2">
-        {activeAssets.map((asset) => {
-          const contributedRub = convertToRub(asset.amount, asset.currency, rates);
-          const currentRub = convertToRub(asset.currentValue, asset.currency, rates);
-          
-          let profitValue = currentRub - contributedRub;
-          let profitPercent = contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
-          let isPositive = profitPercent >= 0;
-
+      <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2 items-start">
+        {groupedAssets.map((groupData) => {
+          const { key: groupKey, items: group, aggregate } = groupData;
           return (
-            <div
-              key={asset.id}
-              className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-invest-500/30 dark:hover:border-invest-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden"
-            >
-              <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            <AssetStack accentClassName="bg-invest-500"
+              key={groupKey}
+              items={group}
+              groupTitle={group[0].name}
+              isExpanded={expandedGroupKey === groupKey}
+              onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
+              getItemKey={(asset) => String(asset.id)}
+              renderAggregate={() => {
+                const sampleAsset = group[0];
+                const { totalContributed, totalCurrent, totalDeductions, profitValue, profitPercent } = aggregate;
+                const isPositive = profitPercent >= 0;
 
-              <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                <span className={cn(
-                  "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
-                  isPositive 
-                    ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
-                    : "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                )}>
-                  {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
-                </span>
-                <span className={cn(
-                  "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
-                  asset.type === 'iis'
-                    ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
-                    : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
-                )}>
-                  {asset.type === 'iis' ? `ИИС ${asset.iisType || ''}` : 'Брокерский'}
-                </span>
-              </div>
-
-              <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
-                  {getBrokerLogoUrl(asset.name) ? (
-                    <BankLogo logoUrl={getBrokerLogoUrl(asset.name)} className="w-full h-full object-contain" />
-                  ) : (
-                    <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
-                  )}
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
-                    <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                      {asset.name}
-                    </span>
-                  </div>
-                  
-                  <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
-                    <PrivacyBlur isPrivate={isPrivate}>
-                      {formatCurrency(asset.currentValue, asset.currency)}
-                    </PrivacyBlur>
-                  </div>
-
-                  {asset.comment && (
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
-                      {asset.comment}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                    <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
-                      <PrivacyBlur isPrivate={isPrivate}>
-                        {formatCurrency(asset.amount, asset.currency)}
-                      </PrivacyBlur>
-                    </span>
-                  </div>
-                  {asset.deductionsReceived > 0 && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
-                      <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
-                        <PrivacyBlur isPrivate={isPrivate}>
-                          {formatCurrency(asset.deductionsReceived, asset.currency)}
-                        </PrivacyBlur>
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              
+                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20">
+                        {group.length} {sampleAsset.type === 'iis' ? 'ИИС' : getPlural(group.length, ['счет', 'счета', 'счетов'])}
+                      </span>
+                      <span className={cn(
+                        "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
+                        sampleAsset.type === 'iis'
+                          ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
+                          : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                      )}>
+                        {sampleAsset.type === 'iis' ? `ИИС ${sampleAsset.iisType || ''}` : 'Брокерский'}
                       </span>
                     </div>
-                  )}
-                </div>
+              
+                    <div className="flex items-start gap-3.5 min-w-0 pr-24 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
+                        {getBrokerLogoUrl(sampleAsset.name) ? (
+                          <BankLogo logoUrl={getBrokerLogoUrl(sampleAsset.name)} className="w-full h-full object-contain" />
+                        ) : (
+                          <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
+                        )}
+                      </div>
+              
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
+                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
+                            {sampleAsset.name}
+                          </span>
+                        </div>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(totalCurrent, sampleAsset.currency)}
+                          </PrivacyBlur>
+                        </div>
+                      </div>
+                    </div>
+              
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                            <PrivacyBlur isPrivate={isPrivate}>
+                              {formatCurrency(totalContributed, sampleAsset.currency)}
+                            </PrivacyBlur>
+                          </span>
+                        </div>
+                        {totalDeductions > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
+                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(totalDeductions, sampleAsset.currency)}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+              
+                      <div className="flex items-center">
+                        <span className={cn(
+                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm font-mono border",
+                          isPositive 
+                            ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
+                            : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                        )}>
+                          {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+              renderItem={(asset) => {
+                const contributedRub = convertToRub(asset.amount, asset.currency, rates);
+                const currentRub = convertToRub(asset.currentValue, asset.currency, rates);
+                
+                let profitValue = currentRub - contributedRub;
+                let profitPercent = contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
+                let isPositive = profitPercent >= 0;
 
-                <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setEditingAsset(asset);
-                      setIsFormOpen(true);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-invest-500 dark:hover:text-invest-400 hover:bg-invest-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Редактировать"
-                  >
-                    <Edit3 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      setDeletingAsset(asset);
-                    }}
-                    className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
-                    title="Удалить"
-                  >
-                    <Trash2 size={13.5} className="stroke-[2.5px]" />
-                  </button>
-                </div>
-              </div>
-            </div>
+                return (
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-invest-500/30 dark:hover:border-invest-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
+                      <span className={cn(
+                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                        isPositive 
+                          ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
+                          : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                      )}>
+                        {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                      </span>
+                      <span className={cn(
+                        "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
+                        asset.type === 'iis'
+                          ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
+                          : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                      )}>
+                        {asset.type === 'iis' ? `ИИС ${asset.iisType || ''}` : 'Брокерский'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
+                        {getBrokerLogoUrl(asset.name) ? (
+                          <BankLogo logoUrl={getBrokerLogoUrl(asset.name)} className="w-full h-full object-contain" />
+                        ) : (
+                          <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
+                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
+                            {asset.name}
+                          </span>
+                        </div>
+                        
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                          <PrivacyBlur isPrivate={isPrivate}>
+                            {formatCurrency(asset.currentValue, asset.currency)}
+                          </PrivacyBlur>
+                        </div>
+
+                        {asset.comment && (
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
+                            {asset.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
+                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                            <PrivacyBlur isPrivate={isPrivate}>
+                              {formatCurrency(asset.amount, asset.currency)}
+                            </PrivacyBlur>
+                          </span>
+                        </div>
+                        {asset.deductionsReceived > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
+                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                              <PrivacyBlur isPrivate={isPrivate}>
+                                {formatCurrency(asset.deductionsReceived, asset.currency)}
+                              </PrivacyBlur>
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setEditingAsset(asset);
+                            setIsFormOpen(true);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-invest-500 dark:hover:text-invest-400 hover:bg-invest-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Редактировать"
+                        >
+                          <Edit3 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setDeletingAsset(asset);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          title="Удалить"
+                        >
+                          <Trash2 size={13.5} className="stroke-[2.5px]" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            />
           );
         })}
         {activeAssets.length === 0 && (

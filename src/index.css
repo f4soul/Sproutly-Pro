@@ -420,3 +420,4 @@
   background-color: transparent !important;
 }
 @custom-variant short-landscape (@media (max-height: 500px) and (orientation: landscape));
+@custom-variant pointer-fine (@media (pointer: fine));
