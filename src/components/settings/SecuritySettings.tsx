@@ -23,7 +23,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   useEffect(() => {
     const localId = localStorage.getItem('localBiometricCredId');
     const ids = lockSettings?.credentialIds || (lockSettings?.credentialId ? [lockSettings.credentialId] : []);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setIsThisDeviceBound(!!(localId && ids.includes(localId)));
   }, [lockSettings?.credentialIds, lockSettings?.credentialId]);
 
@@ -158,25 +158,25 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
   useEffect(() => {
     if (pinInput.length === 4) {
       if (verificationType !== null) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
         handlePinSubmit();
       } else if (step === 1) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         setStep(2);
         vibrate(30);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [pinInput, verificationType, step]);
 
   useEffect(() => {
     if (pinConfirm.length === 4) {
       if (verificationType === null && step === 2) {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
         handlePinSubmit();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [pinConfirm, verificationType, step]);
 
   const handleToggleBiometrics = async () => {

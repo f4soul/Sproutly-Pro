@@ -127,7 +127,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
   };
 
   const updateYearSetting = async (year: number, field: keyof TaxYearSettings, value: number) => {
-    // eslint-disable-next-line react-hooks/purity
+     
     await db.taxYearSettings.update(year, { [field]: value, updatedAt: Date.now() });
     syncWithFirebase();
   };

@@ -312,7 +312,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
          driverInstance.current.destroy();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab, appSettings, isLocked]);
 
   return null;

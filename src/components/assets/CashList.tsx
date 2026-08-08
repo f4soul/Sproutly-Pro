@@ -230,6 +230,12 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
               key={groupKey}
               items={group}
               groupTitle={groupKey}
+              groupSubtitle={`${group.length} ${getPlural(group.length, ['счет', 'счета', 'счетов'])}`}
+              groupIcon={
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center shrink-0 text-cash-500">
+                  <Vault className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2px]" />
+                </div>
+              }
               isExpanded={expandedGroupKey === groupKey}
               onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}

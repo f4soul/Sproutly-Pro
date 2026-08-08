@@ -197,6 +197,12 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
               key={groupKey}
               items={group}
               groupTitle={groupKey}
+              groupSubtitle={`${group.length} ${getPlural(group.length, ['позиция', 'позиции', 'позиций'])}`}
+              groupIcon={
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center shrink-0">
+                  <CryptoLogo ticker={groupKey} className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
+              }
               isExpanded={expandedGroupKey === groupKey}
               onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}

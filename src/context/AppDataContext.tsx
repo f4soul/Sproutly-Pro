@@ -72,7 +72,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       const dbStateWithTime = dbState as AppState & { updatedAt?: number };
       const localStateWithTime = localState as AppState & { updatedAt?: number };
       if (globalIsLoaded && (!dbStateWithTime.updatedAt || (localStateWithTime.updatedAt && localStateWithTime.updatedAt >= dbStateWithTime.updatedAt))) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
+         
         if (!isInitialized) setIsInitialized(true);
         return;
       }

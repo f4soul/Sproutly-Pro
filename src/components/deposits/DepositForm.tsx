@@ -219,7 +219,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
         : new Date();
       const endDate = deposit.endDate ? new Date(deposit.endDate) : null;
 
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setFormData({
         ...deposit,
         startDate: isNaN(startDate.getTime()) ? new Date() : startDate,

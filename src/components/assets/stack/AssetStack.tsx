@@ -13,6 +13,8 @@ interface AssetStackProps<T> {
   getItemKey: (item: T) => string;
   accentClassName?: string;
   groupTitle: string;
+  groupSubtitle?: string;
+  groupIcon?: React.ReactNode;
 }
 
 export function AssetStack<T>({
@@ -23,7 +25,9 @@ export function AssetStack<T>({
   renderItem,
   getItemKey,
   accentClassName = "bg-slate-500",
-  groupTitle
+  groupTitle,
+  groupSubtitle,
+  groupIcon
 }: AssetStackProps<T>) {
   if (items.length === 1) {
     return (
@@ -49,12 +53,12 @@ export function AssetStack<T>({
           {/* Peeking cards for stack effect */}
           {items.length > 1 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.14] shadow-sm transition-all duration-300 z-[19] translate-y-2 scale-[0.96] group-hover:translate-y-2.5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[19] translate-y-2 scale-[0.96] group-hover:translate-y-2.5"
             />
           )}
           {items.length > 2 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/30 dark:border-white/[0.10] shadow-sm transition-all duration-300 z-[18] translate-y-4 scale-[0.92] group-hover:translate-y-5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[18] translate-y-4 scale-[0.92] group-hover:translate-y-5"
             />
           )}
         </div>
@@ -79,21 +83,31 @@ export function AssetStack<T>({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 100 }}
                   transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                  className="relative z-10 w-full max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl rounded-t-[2rem] rounded-b-none pointer-fine:rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-fine:max-h-[85vh]"
+                  className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-950 rounded-t-[2rem] rounded-b-none pointer-fine:rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-fine:max-h-[85vh]"
                 >
                   {/* Modal Header */}
-                  <div className="sticky top-0 z-20 px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-200/50 dark:border-white/[0.05] bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl flex justify-between items-center">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest truncate pr-4">{groupTitle}</h3>
+                  <div className="sticky top-0 z-20 px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start shrink-0 bg-inherit">
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold tracking-tight text-slate-950 dark:text-white flex items-center gap-3">
+                        {groupIcon}
+                        {groupTitle}
+                      </h3>
+                      {groupSubtitle && (
+                        <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mt-1">
+                          {groupSubtitle}
+                        </p>
+                      )}
+                    </div>
                     <button 
                       onClick={onToggle}
-                      className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-90 transition-all"
+                      className="w-9 h-9 shrink-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer relative z-20"
                     >
-                      <X size={18} className="stroke-[2.5px]" />
+                      <X className="w-5 h-5 text-slate-500" />
                     </button>
                   </div>
 
                   {/* Modal Body */}
-                  <div className="p-4 sm:p-6 overflow-y-auto flex flex-col gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div className="p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 overflow-y-auto flex flex-col gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {items.map((item, index) => (
                       <div key={getItemKey(item)} className="relative flex items-stretch ml-1 pl-3">
                         <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-full opacity-60", accentClassName)} />

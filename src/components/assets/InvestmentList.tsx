@@ -213,6 +213,16 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
               key={groupKey}
               items={group}
               groupTitle={group[0].name}
+              groupSubtitle={`${group.length} ${group[0].type === 'iis' ? 'ИИС' : getPlural(group.length, ['счет', 'счета', 'счетов'])}`}
+              groupIcon={
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center shrink-0 text-invest-500 overflow-hidden">
+                  {getBrokerLogoUrl(group[0].name) ? (
+                    <BankLogo logoUrl={getBrokerLogoUrl(group[0].name)} className="w-full h-full object-contain p-1.5 sm:p-2" />
+                  ) : (
+                    <ChartNoAxesCombined className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2px]" />
+                  )}
+                </div>
+              }
               isExpanded={expandedGroupKey === groupKey}
               onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}
