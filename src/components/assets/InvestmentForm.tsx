@@ -278,7 +278,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                   </label>
                   <Combobox
                     value={formData.name || ""}
-                    onChange={(val) => setFormData((prev) => ({ ...prev, name: val }))}
+                    onChange={(val) => setFormData((prev) => ({ ...prev, name: val || undefined }))}
                   >
                     <div className="relative">
                       <div className="relative w-full cursor-default overflow-hidden bg-transparent text-left focus:outline-none">

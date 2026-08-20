@@ -380,12 +380,12 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                             </PrivacyBlur>
                           </span>
                         </div>
-                        {asset.deductionsReceived > 0 && (
+                        {(asset.deductionsReceived || 0) > 0 && (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
                             <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
                               <PrivacyBlur isPrivate={isPrivate}>
-                                {formatCurrency(asset.deductionsReceived, asset.currency)}
+                                {formatCurrency(asset.deductionsReceived || 0, asset.currency)}
                               </PrivacyBlur>
                             </span>
                           </div>

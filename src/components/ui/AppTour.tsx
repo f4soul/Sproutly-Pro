@@ -242,7 +242,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
              if (tab === 'ndfl') shownThisSession.current.ndfl = false;
           }
         },
-        onPopoverRender: (popover, { state }: any) => {
+        onPopoverRender: (popover: any, { state }: any) => {
           const isLastStep = state.isLastStep;
           const isFirstStep = state.activeIndex === 0;
 

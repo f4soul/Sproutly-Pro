@@ -24,9 +24,9 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
   
   const [isPending, startTransition] = useTransition();
 
-  const handleSetDisplayYear = (year: number) => {
+  const handleSetDisplayYear = (action: React.SetStateAction<number>) => {
     startTransition(() => {
-      setDisplayYear(year);
+      setDisplayYear(action);
     });
   };
 

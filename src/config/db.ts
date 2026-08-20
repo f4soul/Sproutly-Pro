@@ -264,7 +264,7 @@ export function startRealTimeSync(user: { uid: string }) {
         if (snapshot.exists()) {
           const remoteData = snapshot.data() as AppSettings;
           const localData = await db.appSettings.get('main');
-          if (!localData || (remoteData.updatedAt > (localData.updatedAt || 0))) {
+          if (!localData || ((remoteData.updatedAt || 0) > (localData.updatedAt || 0))) {
             await db.appSettings.put({ ...remoteData, id: 'main', userId: user.uid });
           }
         }

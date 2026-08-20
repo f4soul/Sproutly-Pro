@@ -56,14 +56,12 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    let autoClearId: NodeJS.Timeout;
 
     const handleSync = (e: Event) => {
       const customEvent = e as CustomEvent<{ status: 'syncing' | 'success' | 'error'; error?: any }>;
       setSyncStatus(customEvent.detail.status);
 
       clearTimeout(timeoutId);
-      clearTimeout(autoClearId);
 
       if (customEvent.detail.status === 'success') {
         timeoutId = setTimeout(() => {
@@ -104,7 +102,6 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
     return () => {
       window.removeEventListener('app:sync', handleSync);
       clearTimeout(timeoutId);
-      clearTimeout(autoClearId);
     };
   }, []);
 

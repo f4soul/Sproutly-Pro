@@ -6,7 +6,7 @@ import { BankLogo } from '../BankLogo';
 
 interface HeatmapFiltersProps {
   displayYear: number;
-  setDisplayYear: (year: number | ((prev: number) => number)) => void;
+  setDisplayYear: React.Dispatch<React.SetStateAction<number>>;
   setExpandedMonth: (date: Date | null) => void;
   selectedBank: string;
   setSelectedBank: (bank: string) => void;

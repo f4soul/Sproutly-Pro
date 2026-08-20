@@ -52,7 +52,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
   };
   
   const handleExtraIncomeChange = (val: string) => {
-    if (val === '') onUpdate({ ...simulation, extraIncome: undefined });
+    if (val === '') onUpdate({ ...simulation, extraIncome: 0 });
     else onUpdate({ ...simulation, extraIncome: Number(val) });
   };
 

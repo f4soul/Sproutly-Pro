@@ -83,7 +83,7 @@ export function DepositFormDateFields({
         <div className="relative w-full group">
           <DatePicker
             selected={formData.startDate}
-            onChange={(date) => {
+            onChange={(date: Date | null) => {
               if (date) {
                 handleStartDateChange(date);
               }
@@ -153,7 +153,7 @@ export function DepositFormDateFields({
         <div className="relative w-full group">
           <DatePicker
             selected={formData.endDate}
-            onChange={(date) => {
+            onChange={(date: Date | null) => {
               if (date) {
                 setFormData({ ...formData, endDate: date });
                 if (formData.startDate) {

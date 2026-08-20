@@ -159,7 +159,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     </label>
                     <Combobox
                       value={formData.ticker || ""}
-                      onChange={(val) => setFormData((prev) => ({ ...prev, ticker: val }))}
+                      onChange={(val) => setFormData((prev) => ({ ...prev, ticker: val || undefined }))}
                     >
                       <div className="relative">
                         <div className="relative w-full cursor-default overflow-hidden bg-transparent text-left focus:outline-none">

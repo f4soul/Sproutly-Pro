@@ -13,7 +13,7 @@ interface DepositFormBankPickerProps {
   setQuery: React.Dispatch<React.SetStateAction<string>>;
   bankInputMode: "text" | "none";
   setBankInputMode: React.Dispatch<React.SetStateAction<"text" | "none">>;
-  bankInputRef: React.RefObject<HTMLInputElement>;
+  bankInputRef: React.RefObject<HTMLInputElement | null>;
   filteredBanks: Bank[];
   setNewBank: React.Dispatch<React.SetStateAction<Partial<Bank>>>;
   setShowBankEditor: React.Dispatch<React.SetStateAction<boolean>>;
@@ -58,7 +58,7 @@ export function DepositFormBankPicker({
             });
             setShowBankEditor(true);
           } else {
-            setFormData({ ...formData, bank: val });
+            setFormData({ ...formData, bank: val || undefined });
           }
           if (typeof document !== "undefined" && document.activeElement) {
             (document.activeElement as HTMLElement).blur();

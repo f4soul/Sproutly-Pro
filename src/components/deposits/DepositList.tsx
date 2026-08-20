@@ -149,8 +149,8 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
           matchesSearch = d.bank.toLowerCase().includes(queryLower);
         } else {
           matchesSearch = d.bank.toLowerCase().includes(queryLower) || 
-                          d.comment?.toLowerCase().includes(queryLower) ||
-                          d.sourceNote?.toLowerCase().includes(queryLower);
+                          (d.comment?.toLowerCase().includes(queryLower) ?? false) ||
+                          (d.sourceNote?.toLowerCase().includes(queryLower) ?? false);
         }
       }
       
