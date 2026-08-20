@@ -24,6 +24,38 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showForgotPinTheme, setShowForgotPinTheme] = useState(false);
 
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+
+  const isLockedOut = lockoutUntil !== null && timeRemaining > 0;
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    
+    const tick = () => {
+      const now = Date.now();
+      const remaining = Math.ceil((lockoutUntil - now) / 1000);
+      if (remaining <= 0) {
+        setLockoutUntil(null);
+        setTimeRemaining(0);
+        setEnteredPin('');
+      } else {
+        setTimeRemaining(remaining);
+      }
+    };
+    
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
+
   const vibrate = (pattern: number | number[] = 50) => {
     if (typeof window !== 'undefined' && navigator.vibrate) {
       try {
@@ -61,6 +93,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         
         if (isValid) {
           vibrate(50);
+          setFailedAttempts(0);
           if (!pinHash) {
             const newHash = await hashPin(enteredPin);
             onUnlock(newHash);
@@ -70,6 +103,18 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         } else {
           vibrate([50, 50, 50]);
           setError(true);
+          
+          setFailedAttempts(prev => {
+            const newAttempts = prev + 1;
+            if (newAttempts >= 5) {
+              let lockoutSeconds = 30;
+              if (newAttempts === 6) lockoutSeconds = 60;
+              if (newAttempts >= 7) lockoutSeconds = 300;
+              setLockoutUntil(Date.now() + lockoutSeconds * 1000);
+            }
+            return newAttempts;
+          });
+
           setTimeout(() => {
             setEnteredPin('');
             setError(false);
@@ -83,6 +128,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
   }, [enteredPin, pin, pinHash, onUnlock]);
 
   const handleBiometricAuth = async () => {
+    if (isLockedOut) return;
     const ids = credentialIds && credentialIds.length > 0
       ? credentialIds
       : (credentialId ? [credentialId] : []);
@@ -91,6 +137,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
       setIsAuthenticating(true);
       await verifyBiometricCredential(ids);
       vibrate(50);
+      setFailedAttempts(0);
       onUnlock();
     } catch (err: any) {
       console.error(err);
@@ -115,6 +162,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
   };
 
   const handleNumberClick = (num: number) => {
+    if (isLockedOut) return;
     if (enteredPin.length < 4 && !error) {
       vibrate(30);
       setEnteredPin(prev => prev + num);
@@ -123,6 +171,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
   };
 
   const handleDelete = () => {
+    if (isLockedOut) return;
     if (!error) {
       vibrate(30);
       setEnteredPin(prev => prev.slice(0, -1));
@@ -165,35 +214,60 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         </div>
         
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-1.5 text-center">
-          Введите код-пароль
+          {isLockedOut ? 'Ввод заблокирован' : 'Введите код-пароль'}
         </h2>
         <p className="text-[13px] sm:text-sm text-slate-500 mb-8 sm:mb-10 text-center font-medium short-landscape:hidden">
-          Для безопасного доступа к финансам
+          {isLockedOut ? (
+            <span className="text-rose-500 tabular-nums">Повторите попытку через {formatTime(timeRemaining)}</span>
+          ) : (
+            'Для безопасного доступа к финансам'
+          )}
         </p>
 
         {/* PIN Indicators */}
-        <motion.div 
-          animate={error ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
-          transition={{ duration: 0.4 }}
-          className="flex justify-center gap-4 mb-10 short-landscape:mb-5"
-        >
-          {[0, 1, 2, 3].map((index) => (
-            <div
-              key={index}
-              className={cn(
-                "w-4 h-4 rounded-full transition-all duration-300",
-                error 
-                  ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110"
-                  : enteredPin.length > index
-                    ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110"
-                    : "bg-slate-200 dark:bg-slate-800"
-              )}
-            />
-          ))}
-        </motion.div>
+        <div className="h-4 mb-10 short-landscape:mb-5">
+          <AnimatePresence mode="wait">
+            {!isLockedOut ? (
+              <motion.div 
+                key="pin-dots"
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: 1, 
+                  x: error ? [-10, 10, -10, 10, -5, 5, 0] : 0 
+                }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                transition={{ duration: error ? 0.4 : 0.2 }}
+                className="flex justify-center gap-4 h-full"
+              >
+                {[0, 1, 2, 3].map((index) => (
+                  <div
+                    key={index}
+                    className={cn(
+                      "w-4 h-4 rounded-full transition-all duration-300",
+                      error 
+                        ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110"
+                        : enteredPin.length > index
+                          ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110"
+                          : "bg-slate-200 dark:bg-slate-800"
+                    )}
+                  />
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div 
+                key="locked-placeholder"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                transition={{ duration: 0.2 }}
+                className="flex justify-center h-full" 
+              />
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Numpad */}
-        <div className="grid grid-cols-3 gap-y-4 gap-x-6 w-full max-w-[280px] short-landscape:gap-y-2">
+        <div className={cn("grid grid-cols-3 gap-y-4 gap-x-6 w-full max-w-[280px] short-landscape:gap-y-2 transition-opacity duration-300", isLockedOut && "opacity-30 pointer-events-none")}>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button
               key={num}
