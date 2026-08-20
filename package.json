@@ -4,9 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "predev": "node -e \"const fs=require('fs'); if(!fs.existsSync('firebase-applet-config.json')) fs.copyFileSync('firebase-applet-config.example.json', 'firebase-applet-config.json')\"",
+    "postinstall": "node -e \"const fs=require('fs'); if(!fs.existsSync('firebase-applet-config.json')) fs.copyFileSync('firebase-applet-config.example.json', 'firebase-applet-config.json')\"",
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "prebuild": "node -e \"const fs=require('fs'); if(!fs.existsSync('firebase-applet-config.json')) fs.copyFileSync('firebase-applet-config.example.json', 'firebase-applet-config.json')\"",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
