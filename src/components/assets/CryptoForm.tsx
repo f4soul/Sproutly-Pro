@@ -132,7 +132,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2 relative z-30">
@@ -227,18 +227,23 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     />
                     <div className="flex flex-col gap-0.5">
                       <p className="text-[10px] text-slate-500/80 px-1">Себестоимость покупки</p>
-                      <AnimatePresence>
-                        {formData.ticker && formData.quantity && formData.quantity > 0 && rates && (
-                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                      <div 
+                        className={cn(
+                          "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                          (formData.ticker && (formData.quantity || 0) > 0 && rates) ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                        )}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="pt-0.5">
                             <p className="text-[10px] text-slate-500/80 px-1 font-medium">
                               ≈ {formData.ticker === 'USDT'
-                                  ? formatCurrency(formData.quantity * (getCryptoRate(formData.ticker, 'rub', rates) || 0))
-                                  : ((formData.quantity * (getCryptoRate(formData.ticker, 'usd', rates) || 0)).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT")
+                                  ? formatCurrency((formData.quantity || 0) * (getCryptoRate(formData.ticker || "", 'rub', rates) || 0))
+                                  : (((formData.quantity || 0) * (getCryptoRate(formData.ticker || "", 'usd', rates) || 0)).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT")
                                 } по текущему курсу
                             </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   

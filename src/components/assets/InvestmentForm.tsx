@@ -204,7 +204,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute inset-0 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar"
+                    className="absolute inset-0 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                   >
                     {formData.type === "iis" && (
                       <div className="space-y-2 pb-1">
@@ -366,11 +366,12 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                    Сумма пополнений
-                  </label>
+              <div className="flex flex-col">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-10">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      Сумма пополнений
+                    </label>
                   <input
                     required
                     type="text"
@@ -483,16 +484,14 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                 </div>
               </div>
               
-              <AnimatePresence mode="popLayout">
-                {formData.type === 'iis' && (formData.iisType === 'A' || formData.iisType === '3') && (
-                  <motion.div 
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
-                    className="space-y-2"
-                  >
+              <div 
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                  (formData.type === 'iis' && (formData.iisType === 'A' || formData.iisType === '3')) ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                )}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-2 pt-6">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Получено вычетов (НДФЛ возврат)
                     </label>
@@ -507,9 +506,10 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     <p className="text-[10px] text-slate-500 px-1">
                       Сумма уже возвращенного налога на взнос (тип А).
                     </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </div>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">

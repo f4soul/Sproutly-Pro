@@ -113,8 +113,9 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar flex-1">
-              <div className="space-y-2 relative z-20">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10">
+                <div className="space-y-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Дата
                 </label>
@@ -168,11 +169,12 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                  Сумма
-                </label>
-                <div className="relative">
+              <div className="flex flex-col">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    Сумма
+                  </label>
+                  <div className="relative">
                   <input
                     required
                     type="text"
@@ -278,15 +280,29 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </div>
               </div>
 
-              <AnimatePresence>
-                {formData.currency && formData.currency !== "RUB" && (
-                  <motion.div layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden flex flex-col gap-3">
-                    {formData.amount && formData.amount > 0 && rates && (
-                      <p className="text-[10px] text-slate-500/80 px-1 font-medium mt-0.5">
-                        ≈ {formatCurrency(convertToRub(formData.amount, formData.currency, rates))} по курсу ЦБ
-                      </p>
-                    )}
-                    <div className="space-y-2">
+              <div 
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                  (formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                )}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-col">
+                    <div 
+                      className={cn(
+                        "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                        ((formData.amount || 0) > 0 && rates && formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                      )}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="pt-2">
+                          <p className="text-[10px] text-slate-500/80 px-1 font-medium">
+                            ≈ {formatCurrency(convertToRub(formData.amount || 0, formData.currency || "USD", rates))} по курсу ЦБ
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2 pt-6">
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Курс ЦБ на дату фиксации (₽)
                       </label>
@@ -315,9 +331,10 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                         Для аналитики курсовой разницы в будущем.
                       </p>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </div>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
@@ -336,11 +353,12 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 />
               </div>
 
-              <div className="pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-800">
+              </div>
+              <div className="flex-none px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-transparent dark:border-slate-700/50"
+                  className="flex-1 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 shadow-sm"
                 >
                   Отмена
                 </button>
