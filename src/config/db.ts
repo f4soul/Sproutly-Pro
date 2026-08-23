@@ -15,6 +15,30 @@ export class MyDepositsDB extends Dexie {
 
   constructor() {
     super('MyDepositsDB');
+    this.version(10).stores({
+      deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
+      cashAssets: '++id, userId, name, isArchived',
+      investmentAssets: '++id, userId, type, isArchived',
+      cryptoAssets: '++id, userId, ticker, isArchived',
+      taxYearSettings: 'year',
+      appSettings: 'id',
+      banks: '++id, userId, name',
+      incomeState: 'id',
+      calendarData: 'year',
+      deletedQueue: '++id, collection, docId'
+    }).upgrade(tx => {
+      return tx.table('cashAssets').toCollection().modify(record => {
+        try {
+          record.name = record.currency;
+          if (!record.purchaseDate) {
+            record.purchaseDate = new Date(record.updatedAt || Date.now()).toISOString().split('T')[0];
+          }
+          record.updatedAt = Date.now();
+        } catch (e) {
+          console.error("Migration error in cashAssets v10:", e);
+        }
+      });
+    });
     this.version(9).stores({
       deposits: '++id, userId, bank, startDate, endDate, isClosed, isArchived',
       cashAssets: '++id, userId, name, isArchived',

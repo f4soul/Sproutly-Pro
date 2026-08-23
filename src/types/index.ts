@@ -145,6 +145,7 @@ export interface CashAsset {
   comment?: string;
   isArchived?: boolean;
   exchangeRateOnOpen?: number;
+  purchaseDate?: string;
   updatedAt?: number;
 }
 

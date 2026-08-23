@@ -3,6 +3,7 @@ import { Calendar, CalendarX, Clock } from "lucide-react";
 import DatePicker from "react-datepicker";
 import { addDays, differenceInDays } from "date-fns";
 import { Deposit } from "../../types";
+import { maskDateInput } from "../../lib/utils";
 
 interface DepositFormDateFieldsProps {
   formData: Partial<Deposit>;
@@ -44,35 +45,6 @@ export function DepositFormDateFields({
     }
   };
 
-  const handleRawDateInput = (
-    e: React.KeyboardEvent<HTMLElement>,
-    isStartDate: boolean,
-  ) => {
-    if (e.key === "Enter") {
-      const target = e.target as HTMLInputElement;
-      const val = target.value?.replace(/\D/g, "");
-      if (val && val.length === 8) {
-        const day = parseInt(val.substring(0, 2), 10);
-        const month = parseInt(val.substring(2, 4), 10) - 1;
-        const year = parseInt(val.substring(4, 8), 10);
-        const newDate = new Date(year, month, day);
-        if (!isNaN(newDate.getTime())) {
-          if (isStartDate) {
-            handleStartDateChange(newDate);
-          } else {
-            setFormData((prev) => {
-              const next = { ...prev, endDate: newDate };
-              if (next.startDate) {
-                setDuration(differenceInDays(newDate, next.startDate));
-              }
-              return next;
-            });
-          }
-        }
-      }
-    }
-  };
-
   return (
     <>
       <div className="space-y-2">
@@ -82,16 +54,24 @@ export function DepositFormDateFields({
         </label>
         <div className="relative w-full group">
           <DatePicker
-            selected={formData.startDate}
+            selected={formData.startDate ? (isNaN(new Date(formData.startDate).getTime()) ? null : new Date(formData.startDate)) : null}
             onChange={(date: Date | null) => {
               if (date) {
                 handleStartDateChange(date);
+                setIsStartDateOpen(false);
+              } else {
+                // start date is not clearable, ignore null
               }
-              setIsStartDateOpen(false);
+            }}
+            onChangeRaw={(e) => {
+              if (!e || !e.target || typeof (e.target as any).value !== "string") return;
+              const target = e.target as HTMLInputElement;
+              const { display } = maskDateInput(target.value);
+              target.value = display;
             }}
             onKeyDown={(e) => {
-              handleRawDateInput(e, true);
               if (e.key === "Enter") {
+                e.preventDefault();
                 setIsStartDateOpen(false);
               }
             }}
@@ -152,22 +132,28 @@ export function DepositFormDateFields({
         </label>
         <div className="relative w-full group">
           <DatePicker
-            selected={formData.endDate}
+            selected={formData.endDate ? (isNaN(new Date(formData.endDate).getTime()) ? null : new Date(formData.endDate)) : null}
             onChange={(date: Date | null) => {
               if (date) {
                 setFormData({ ...formData, endDate: date });
                 if (formData.startDate) {
                   setDuration(differenceInDays(date, formData.startDate));
                 }
+                setIsEndDateOpen(false);
               } else {
                 setFormData({ ...formData, endDate: null });
                 setDuration("");
               }
-              setIsEndDateOpen(false);
+            }}
+            onChangeRaw={(e) => {
+              if (!e || !e.target || typeof (e.target as any).value !== "string") return;
+              const target = e.target as HTMLInputElement;
+              const { display } = maskDateInput(target.value);
+              target.value = display;
             }}
             onKeyDown={(e) => {
-              handleRawDateInput(e, false);
               if (e.key === "Enter") {
+                e.preventDefault();
                 setIsEndDateOpen(false);
               }
             }}

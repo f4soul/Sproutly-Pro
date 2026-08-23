@@ -231,7 +231,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
                           <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                            {ticker} <span className="font-medium lowercase ml-1">({totalQuantity} шт)</span>
+                            {ticker} <span className="font-medium lowercase ml-1">({totalQuantity})</span>
                           </span>
                         </div>
                         
@@ -261,7 +261,12 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
                               <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
-                                {formatCurrency(currentRate)}
+                                {ticker === 'USDT' 
+                                  ? formatCurrency(currentRate) 
+                                  : (() => {
+                                      const usdRate = getCryptoRate(ticker, 'usd', rates);
+                                      return usdRate ? usdRate.toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT" : formatCurrency(currentRate);
+                                    })()}
                               </span>
                             </div>
                           )}
@@ -319,7 +324,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
                           <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                            {asset.ticker} <span className="font-medium lowercase ml-1">({asset.quantity} шт)</span>
+                            {asset.ticker} <span className="font-medium lowercase ml-1">({asset.quantity})</span>
                           </span>
                         </div>
                         
@@ -356,7 +361,12 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
                               <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
-                                {formatCurrency(liveRateRub)}
+                                {asset.ticker === 'USDT' 
+                                  ? formatCurrency(liveRateRub) 
+                                  : (() => {
+                                      const usdRate = getCryptoRate(asset.ticker, 'usd', rates);
+                                      return usdRate ? usdRate.toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT" : formatCurrency(liveRateRub);
+                                    })()}
                               </span>
                             </div>
                           ) : null}

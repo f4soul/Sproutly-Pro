@@ -3,13 +3,15 @@ import { Dialog, Combobox, Transition } from "@headlessui/react";
 import { Bitcoin, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { CryptoAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
-import { cn } from "../../lib/utils";
+import { cn, maskDateInput, toISOLocalDate, parseISOLocalDate } from "../../lib/utils";
 import { auth } from "../../config/firebase";
 import { motion, AnimatePresence } from "motion/react";
 import { CryptoLogo } from "./CryptoLogo";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
+import { getCryptoRates, getCryptoRate } from "../../services/crypto";
+import { formatCurrency } from "../../lib/taxCalculator";
 
 registerLocale("ru", ru);
 
@@ -32,6 +34,11 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   );
 
   const [query, setQuery] = useState("");
+  const [rates, setRates] = useState<any>(null);
+
+  useEffect(() => {
+    getCryptoRates().then(setRates);
+  }, []);
   const [quantityStr, setQuantityStr] = useState<string>(
     assetToEdit ? assetToEdit.quantity.toString() : "",
   );
@@ -39,31 +46,6 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
     assetToEdit ? assetToEdit.amount.toString() : "",
   );
   const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
-
-  const handleRawDateInput = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    const value = e.currentTarget.value;
-    const parts = value.split(".");
-    if (parts.length === 3) {
-      const p0 = parseInt(parts[0], 10);
-      const p1 = parseInt(parts[1], 10);
-      let p2 = parseInt(parts[2], 10);
-
-      if (!isNaN(p0) && !isNaN(p1) && !isNaN(p2)) {
-        if (p2 < 100) p2 = 2000 + p2;
-
-        const day = p0;
-        const month = p1 - 1;
-        const year = p2;
-
-        const newDate = new Date(year, month, day);
-        if (!isNaN(newDate.getTime())) {
-          setFormData((prev) => ({ ...prev, purchaseDate: newDate.toISOString().split('T')[0] }));
-        }
-      }
-    }
-  };
 
   const filteredTickers = query === "" 
     ? POPULAR_TICKERS 
@@ -243,7 +225,21 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                       className="apple-input w-full font-mono text-sm"
                       placeholder="0"
                     />
-                    <p className="text-[10px] text-slate-500/80 px-1">Себестоимость покупки</p>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-[10px] text-slate-500/80 px-1">Себестоимость покупки</p>
+                      <AnimatePresence>
+                        {formData.ticker && formData.quantity && formData.quantity > 0 && rates && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                            <p className="text-[10px] text-slate-500/80 px-1 font-medium">
+                              ≈ {formData.ticker === 'USDT'
+                                  ? formatCurrency(formData.quantity * (getCryptoRate(formData.ticker, 'rub', rates) || 0))
+                                  : ((formData.quantity * (getCryptoRate(formData.ticker, 'usd', rates) || 0)).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT")
+                                } по текущему курсу
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                   
                   <div className="space-y-2 relative z-20">
@@ -252,18 +248,24 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     </label>
                     <div className="relative w-full group">
                       <DatePicker
-                        selected={formData.purchaseDate ? new Date(formData.purchaseDate) : null}
+                        selected={parseISOLocalDate(formData.purchaseDate)}
                         onChange={(date: Date | null) => {
                           if (date) {
-                            setFormData(p => ({ ...p, purchaseDate: date.toISOString().split('T')[0] }));
+                            setFormData(p => ({ ...p, purchaseDate: toISOLocalDate(date) }));
+                            setIsPurchaseDateOpen(false);
                           } else {
                             setFormData(p => ({ ...p, purchaseDate: undefined }));
                           }
-                          setIsPurchaseDateOpen(false);
+                        }}
+                        onChangeRaw={(e) => {
+                          if (!e || !e.target || typeof (e.target as any).value !== "string") return;
+                          const target = e.target as HTMLInputElement;
+                          const { display } = maskDateInput(target.value);
+                          target.value = display;
                         }}
                         onKeyDown={(e) => {
-                          handleRawDateInput(e as any);
                           if (e.key === "Enter") {
+                            e.preventDefault();
                             setIsPurchaseDateOpen(false);
                           }
                         }}

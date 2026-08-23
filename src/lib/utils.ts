@@ -49,3 +49,42 @@ export function getPlural(number: number, words: [string, string, string]): stri
   if (n1 === 1) return words[0];
   return words[2];
 }
+
+export function toISOLocalDate(date: Date): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+export function parseISOLocalDate(iso: string | undefined | null): Date | null {
+  if (!iso) return null;
+  const parts = iso.split('-');
+  if (parts.length !== 3) return null;
+  const [yyyy, mm, dd] = parts.map(Number);
+  const date = new Date(yyyy, mm - 1, dd);
+  return isNaN(date.getTime()) ? null : date;
+}
+
+export function maskDateInput(rawValue: string | undefined | null): { display: string; isoDate: string | null } {
+  if (!rawValue) return { display: "", isoDate: null };
+  const digits = rawValue.replace(/\D/g, "").slice(0, 8);
+  let display = digits;
+  if (digits.length > 4) {
+    display = `${digits.slice(0, 2)}.${digits.slice(2, 4)}.${digits.slice(4)}`;
+  } else if (digits.length > 2) {
+    display = `${digits.slice(0, 2)}.${digits.slice(2)}`;
+  }
+
+  let isoDate: string | null = null;
+  if (digits.length === 8) {
+    const day = parseInt(digits.slice(0, 2), 10);
+    const month = parseInt(digits.slice(2, 4), 10) - 1;
+    const year = parseInt(digits.slice(4, 8), 10);
+    const date = new Date(year, month, day);
+    if (!isNaN(date.getTime()) && date.getMonth() === month) {
+      isoDate = toISOLocalDate(date);
+    }
+  }
+  return { display, isoDate };
+}

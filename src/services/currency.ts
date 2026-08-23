@@ -22,8 +22,8 @@ const CACHE_DURATION = 1000 * 60 * 60; // 1 hour
 
 // Try to hydrate cached rates from localStorage immediately on load
 try {
-  const storedRates = localStorage.getItem('cbr_cached_rates');
-  const storedTime = localStorage.getItem('cbr_rates_fetch_time');
+  const storedRates = localStorage.getItem('cbr_cached_rates_v2');
+  const storedTime = localStorage.getItem('cbr_rates_fetch_time_v2');
   if (storedRates) {
     cachedRates = JSON.parse(storedRates);
   }
@@ -45,25 +45,65 @@ export async function getExchangeRates(): Promise<CurrencyRates | null> {
   try {
     let res = await fetch('https://www.cbr-xml-daily.ru/daily_json.js', { cache: 'no-store' }).catch(() => null);
     
-    // Fallback to proxy if direct fetch fails (e.g., due to adblockers or CORS)
+    // Fallback to open.er-api.com if CBR fails (e.g., due to adblockers or CORS)
+    if (!res || !res.ok) {
+      const erRes = await fetch('https://open.er-api.com/v6/latest/RUB', { cache: 'no-store' }).catch(() => null);
+      if (erRes && erRes.ok) {
+        const erData = await erRes.json();
+        const valute: { [key: string]: any } = {};
+        
+        if (erData && erData.rates) {
+          for (const [currency, rate] of Object.entries(erData.rates)) {
+            if (currency === 'RUB') continue;
+            const numRate = rate as number;
+            valute[currency] = {
+              ID: currency,
+              NumCode: '',
+              CharCode: currency,
+              Nominal: 1,
+              Name: currency,
+              Value: numRate > 0 ? 1 / numRate : 0,
+              Previous: numRate > 0 ? 1 / numRate : 0,
+            };
+          }
+        }
+        
+        const data: CurrencyRates = {
+          Date: erData.time_last_update_utc || new Date().toISOString(),
+          PreviousDate: erData.time_last_update_utc || new Date().toISOString(),
+          PreviousURL: '',
+          Timestamp: erData.time_last_update_utc || new Date().toISOString(),
+          Valute: valute
+        };
+        
+        cachedRates = data;
+        lastFetchTime = now;
+        
+        try {
+          localStorage.setItem('cbr_cached_rates_v2', JSON.stringify(data));
+          localStorage.setItem('cbr_rates_fetch_time_v2', String(lastFetchTime));
+        } catch (e) {
+          console.error('Failed to write exchange rates to localStorage:', e);
+        }
+        
+        return data;
+      }
+    }
+    
+    // Second fallback to allorigins proxy if everything else fails
     if (!res || !res.ok) {
       res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://www.cbr-xml-daily.ru/daily_json.js'), { cache: 'no-store' }).catch(() => null);
     }
-    
-    // Second fallback
-    if (!res || !res.ok) {
-      res = await fetch('https://corsproxy.io/?' + encodeURIComponent('https://www.cbr-xml-daily.ru/daily_json.js'), { cache: 'no-store' });
-    }
 
-    if (!res.ok) throw new Error('Network error');
+    if (!res || !res.ok) throw new Error('Network error');
     const data: CurrencyRates = await res.json();
     cachedRates = data;
     lastFetchTime = now;
     
     // Save to localStorage
     try {
-      localStorage.setItem('cbr_cached_rates', JSON.stringify(data));
-      localStorage.setItem('cbr_rates_fetch_time', String(lastFetchTime));
+      localStorage.setItem('cbr_cached_rates_v2', JSON.stringify(data));
+      localStorage.setItem('cbr_rates_fetch_time_v2', String(lastFetchTime));
     } catch (e) {
       console.error('Failed to write exchange rates to localStorage:', e);
     }

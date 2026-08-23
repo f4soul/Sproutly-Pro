@@ -319,7 +319,7 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
       )}
 
       {/* Desktop & Landscape Tablet Table */}
-      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-card border border-slate-200 dark:border-slate-800 shadow-card dark:shadow-card-dark">
         <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-white dark:bg-slate-950">
@@ -468,7 +468,7 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
 
         {/* Mobile & Portrait Tablet Cards */}
         <div className="block lg:hidden">
-          <div className="flex flex-col bg-white dark:bg-slate-950 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="flex flex-col bg-white dark:bg-slate-950 rounded-card border border-slate-200 dark:border-slate-800 shadow-card dark:shadow-card-dark overflow-hidden">
             {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
               <DepositCard 
                 key={`deposit-card-${deposit.id || index}-${index}`} 
@@ -553,8 +553,8 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
               "w-full pointer-events-auto overflow-hidden",
               "border border-slate-200/70 dark:border-white/[0.1] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-3xl transition-all duration-300 ease-in-out cursor-pointer",
               isAnalyticsExpanded
-                ? "bg-white/98 dark:bg-slate-950/98 rounded-2xl"
-                : "bg-white/98 dark:bg-slate-900/98 rounded-2xl hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98]"
+                ? "bg-white/98 dark:bg-slate-950/98 rounded-panel"
+                : "bg-white/98 dark:bg-slate-900/98 rounded-panel hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98]"
             )}
             onClick={() => setIsAnalyticsExpanded(!isAnalyticsExpanded)}
             role="button"

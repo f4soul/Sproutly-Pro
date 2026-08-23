@@ -18,8 +18,6 @@ interface YearSummaryProps {
   isSimulated?: boolean;
 }
 
-
-
 export const YearSummary = ({
   yearlyTotals,
   netDiff,
@@ -38,10 +36,10 @@ export const YearSummary = ({
     >
       {/* Net (Hero) */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px] transition-all duration-500 border border-transparent",
+        "p-3 sm:p-4 rounded-card flex flex-col justify-between relative overflow-hidden group min-h-[100px] sm:min-h-[110px] md:h-[100px] transition-all duration-500 border border-transparent shadow-card dark:shadow-card-dark",
         isSimulated 
-          ? "bg-gradient-to-br from-primary-600 to-primary-800 shadow-[0_20px_50px_rgba(59,130,246,0.3)] text-white" 
-          : "bg-gradient-to-br from-primary-500 to-primary-700 shadow-[0_8px_30px_rgba(59,130,246,0.12)] text-white"
+          ? "bg-gradient-to-br from-primary-600 to-primary-800 text-white" 
+          : "bg-gradient-to-br from-primary-500 to-primary-700 text-white"
       )}>
         <div className="absolute -bottom-2 -right-2 text-white opacity-10 transition-all duration-500 ease-out group-hover:scale-110 pointer-events-none">
           <Calculator className="w-20 h-20" />
@@ -80,10 +78,10 @@ export const YearSummary = ({
 
       {/* Gross */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
+        "p-3 sm:p-4 rounded-card flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
         isSimulated 
-          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-[0_20px_50px_rgba(59,130,246,0.15)]" 
-          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700"
+          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-card dark:shadow-card-dark" 
+          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-card dark:shadow-card-dark hover:border-slate-300 dark:hover:border-slate-700"
       )}>
         <div className="absolute -bottom-2 -right-2 text-black/5 dark:text-white/5 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <Coins className="w-20 h-20" />
@@ -115,10 +113,10 @@ export const YearSummary = ({
 
       {/* Tax */}
       <div className={cn(
-        "p-3 sm:p-4 rounded-2xl flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
+        "p-3 sm:p-4 rounded-card flex flex-col justify-between relative overflow-hidden group transition-all min-h-[100px] sm:min-h-[110px] md:h-[100px] border",
         isSimulated 
-          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-[0_20px_50px_rgba(59,130,246,0.15)]" 
-          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-sm hover:border-slate-300 dark:hover:border-slate-700"
+          ? "bg-primary-50/60 dark:bg-[#0f121b] border-primary-500/35 dark:border-primary-500/40 shadow-card dark:shadow-card-dark" 
+          : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-card dark:shadow-card-dark hover:border-slate-300 dark:hover:border-slate-700"
       )}>
         {onShowTaxInfo && (
           <button

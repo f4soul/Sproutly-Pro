@@ -51,8 +51,8 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
     
     return Object.entries(groups).map(([key, group]) => {
       const sortedGroup = group.sort((a, b) => {
-        const timeA = a.updatedAt || 0;
-        const timeB = b.updatedAt || 0;
+        const timeA = a.purchaseDate ? new Date(a.purchaseDate).getTime() : (a.updatedAt || 0);
+        const timeB = b.purchaseDate ? new Date(b.purchaseDate).getTime() : (b.updatedAt || 0);
         return timeB - timeA;
       });
       
@@ -91,8 +91,8 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
         aggregate: { totalAmount, totalConvertedRub, totalContributedRub, currentRate, hasDynamics, profitValue, profitPercent }
       };
     }).sort((a, b) => {
-        const timeA = a.items[0].updatedAt || 0;
-        const timeB = b.items[0].updatedAt || 0;
+        const timeA = a.items[0]?.purchaseDate ? new Date(a.items[0].purchaseDate).getTime() : (a.items[0]?.updatedAt || 0);
+        const timeB = b.items[0]?.purchaseDate ? new Date(b.items[0].purchaseDate).getTime() : (b.items[0]?.updatedAt || 0);
         return timeB - timeA;
     });
   }, [activeAssets, rates]);

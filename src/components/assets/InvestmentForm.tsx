@@ -4,7 +4,7 @@ import { BankLogo } from "../deposits/BankLogo";
 import { ChartNoAxesCombined, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { InvestmentAsset, InvestmentAccountType, IISType } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
-import { cn } from "../../lib/utils";
+import { cn, maskDateInput, toISOLocalDate } from "../../lib/utils";
 import { auth } from "../../config/firebase";
 import { motion, AnimatePresence } from "motion/react";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -69,31 +69,6 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
   );
 
   const [isStartDateOpen, setIsStartDateOpen] = useState(false);
-
-  const handleRawDateInput = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    const value = e.currentTarget.value;
-    const parts = value.split(".");
-    if (parts.length === 3) {
-      const p0 = parseInt(parts[0], 10);
-      const p1 = parseInt(parts[1], 10);
-      let p2 = parseInt(parts[2], 10);
-
-      if (!isNaN(p0) && !isNaN(p1) && !isNaN(p2)) {
-        if (p2 < 100) p2 = 2000 + p2;
-
-        const day = p0;
-        const month = p1 - 1;
-        const year = p2;
-
-        const newDate = new Date(year, month, day);
-        if (!isNaN(newDate.getTime())) {
-          setFormData((prev) => ({ ...prev, startDate: newDate }));
-        }
-      }
-    }
-  };
 
   const filteredBrokers = query === "" ? POPULAR_BROKERS : POPULAR_BROKERS.filter(b => b.toLowerCase().includes(query.toLowerCase()));
 
@@ -342,14 +317,24 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                   </label>
                   <div className="relative w-full group">
                     <DatePicker
-                      selected={formData.startDate ? new Date(formData.startDate) : null}
+                      selected={formData.startDate ? (isNaN(new Date(formData.startDate).getTime()) ? null : new Date(formData.startDate)) : null}
                       onChange={(date: Date | null) => {
-                        if (date) setFormData(p => ({ ...p, startDate: date }));
-                        setIsStartDateOpen(false);
+                        if (date) {
+                          setFormData(p => ({ ...p, startDate: date }));
+                          setIsStartDateOpen(false);
+                        } else {
+                          setFormData(p => ({ ...p, startDate: null }));
+                        }
+                      }}
+                      onChangeRaw={(e) => {
+                        if (!e || !e.target || typeof (e.target as any).value !== "string") return;
+                        const target = e.target as HTMLInputElement;
+                        const { display } = maskDateInput(target.value);
+                        target.value = display;
                       }}
                       onKeyDown={(e) => {
-                        handleRawDateInput(e as any);
                         if (e.key === "Enter") {
+                          e.preventDefault();
                           setIsStartDateOpen(false);
                         }
                       }}

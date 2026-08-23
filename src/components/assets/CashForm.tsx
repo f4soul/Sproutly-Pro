@@ -1,11 +1,18 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { Dialog, Listbox } from "@headlessui/react";
-import { Vault, ChevronDown, X } from "lucide-react";
+import { Vault, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { CashAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
-import { cn } from "../../lib/utils";
+import { cn, maskDateInput, toISOLocalDate, parseISOLocalDate } from "../../lib/utils";
 import { auth } from "../../config/firebase";
 import { motion, AnimatePresence } from "motion/react";
+import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { formatCurrency } from "../../lib/taxCalculator";
+import DatePicker, { registerLocale } from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { ru } from "date-fns/locale/ru";
+
+registerLocale("ru", ru);
 
 interface CashFormProps {
   onClose: () => void;
@@ -15,13 +22,20 @@ interface CashFormProps {
 export function CashForm({ onClose, assetToEdit }: CashFormProps) {
   const [formData, setFormData] = useState<Partial<CashAsset>>(
     assetToEdit || {
-      name: "",
       amount: 0,
       currency: "RUB",
       comment: "",
       exchangeRateOnOpen: undefined,
+      purchaseDate: new Date().toISOString().split('T')[0],
     },
   );
+
+  const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
 
   const [amountStr, setAmountStr] = useState<string>(
     assetToEdit ? assetToEdit.amount.toString() : "",
@@ -35,14 +49,15 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.amount) {
-      alert("Укажите название и сумму актива");
+    if (!formData.amount) {
+      alert("Укажите сумму актива");
       return;
     }
 
     try {
       const dataToSave = {
         ...formData,
+        name: formData.currency || "RUB",
         userId: auth.currentUser?.uid || "local",
         updatedAt: Date.now()
       } as CashAsset;
@@ -99,23 +114,58 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto custom-scrollbar flex-1">
-              <div className="space-y-2">
+              <div className="space-y-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                  Название
+                  Дата
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name || ""}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
-                  }
-                  className="apple-input w-full"
-                  placeholder="Сейф, Копилка..."
-                />
+                <div className="relative w-full group">
+                  <DatePicker
+                    selected={parseISOLocalDate(formData.purchaseDate)}
+                    onChange={(date: Date | null) => {
+                      if (date) {
+                        setFormData(p => ({ ...p, purchaseDate: toISOLocalDate(date) }));
+                        setIsPurchaseDateOpen(false);
+                      } else {
+                        setFormData(p => ({ ...p, purchaseDate: undefined }));
+                      }
+                    }}
+                    onChangeRaw={(e) => {
+                      if (!e || !e.target || typeof (e.target as any).value !== "string") return;
+                      const target = e.target as HTMLInputElement;
+                      const { display } = maskDateInput(target.value);
+                      target.value = display;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        setIsPurchaseDateOpen(false);
+                      }
+                    }}
+                    onClickOutside={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest(".datepicker-toggle-btn-purchase")) {
+                        return;
+                      }
+                      setIsPurchaseDateOpen(false);
+                    }}
+                    open={isPurchaseDateOpen}
+                    preventOpenOnFocus={true}
+                    locale="ru"
+                    dateFormat="dd.MM.yyyy"
+                    className="apple-input w-full pr-12 cursor-text font-mono text-sm"
+                    placeholderText="Выберите дату"
+                    wrapperClassName="w-full"
+                    portalId="datepicker-portal-container"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setIsPurchaseDateOpen(!isPurchaseDateOpen)}
+                    className="datepicker-toggle-btn-purchase absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-amber-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+                    title="Выбрать дату"
+                  >
+                    <CalendarIcon className="w-4 h-4 stroke-[1.5px]" />
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -228,37 +278,46 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </div>
               </div>
 
-              {formData.currency && formData.currency !== "RUB" && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                    Курс ЦБ на дату фиксации (₽)
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={exchangeRateOnOpenStr}
-                    onChange={(e) => {
-                      const typed = e.target.value;
-                      const normalized = typed.replace(",", ".");
-                      if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === "") {
-                        setExchangeRateOnOpenStr(typed);
-                        const parsed = typed === "" ? undefined : Number(normalized);
-                        if (parsed === undefined || !isNaN(parsed)) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            exchangeRateOnOpen: parsed,
-                          }));
-                        }
-                      }
-                    }}
-                    className="apple-input w-full font-mono text-sm"
-                    placeholder="Например, 95.50"
-                  />
-                  <p className="text-[10px] text-slate-500 px-1">
-                    Для аналитики курсовой разницы в будущем.
-                  </p>
-                </motion.div>
-              )}
+              <AnimatePresence>
+                {formData.currency && formData.currency !== "RUB" && (
+                  <motion.div layout initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden flex flex-col gap-3">
+                    {formData.amount && formData.amount > 0 && rates && (
+                      <p className="text-[10px] text-slate-500/80 px-1 font-medium mt-0.5">
+                        ≈ {formatCurrency(convertToRub(formData.amount, formData.currency, rates))} по курсу ЦБ
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                        Курс ЦБ на дату фиксации (₽)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={exchangeRateOnOpenStr}
+                        onChange={(e) => {
+                          const typed = e.target.value;
+                          const normalized = typed.replace(",", ".");
+                          if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === "") {
+                            setExchangeRateOnOpenStr(typed);
+                            const parsed = typed === "" ? undefined : Number(normalized);
+                            if (parsed === undefined || !isNaN(parsed)) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                exchangeRateOnOpen: parsed,
+                              }));
+                            }
+                          }
+                        }}
+                        className="apple-input w-full font-mono text-sm"
+                        placeholder="Например, 95.50"
+                      />
+                      <p className="text-[10px] text-slate-500 px-1">
+                        Для аналитики курсовой разницы в будущем.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
