@@ -114,7 +114,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] relative z-10">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable] relative z-10">
                 <div className="space-y-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Дата

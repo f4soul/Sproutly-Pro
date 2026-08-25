@@ -249,6 +249,7 @@ export interface AppSettings {
   hiddenAssetTabs?: ('cash' | 'investments' | 'crypto')[];
   assetTabOrder?: ('cash' | 'investments' | 'crypto')[];
   tourCompleted?: boolean;
+  lastTombstoneCleanup?: number;
   tourCompletedAssets?: boolean;
   tourCompletedIncome?: boolean;
   privacyLock?: {

@@ -132,7 +132,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable]">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2 relative z-30">

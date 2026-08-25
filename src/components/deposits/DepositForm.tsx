@@ -429,7 +429,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
             <form
               onSubmit={handleSubmit}
-              className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex-1"
+              className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] flex-1"
             >
               {hasDraft && (
                 <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
@@ -908,7 +908,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     onChange={(e) =>
                       setFormData({ ...formData, comment: e.target.value })
                     }
-                    className="apple-input w-full min-h-[80px] max-h-[160px] resize-none overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    className="apple-input w-full min-h-[80px] max-h-[160px] resize-none overflow-y-auto custom-scrollbar"
                     placeholder="Дополнительные детали..."
                   />
                 </div>

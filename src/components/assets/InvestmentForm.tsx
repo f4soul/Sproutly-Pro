@@ -204,7 +204,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute inset-0 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                    className="absolute inset-0 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable]"
                   >
                     {formData.type === "iis" && (
                       <div className="space-y-2 pb-1">

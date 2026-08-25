@@ -100,7 +100,7 @@ export class MyDepositsDB extends Dexie {
 }
 
 import { auth, db as firestore } from './firebase';
-import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField, onSnapshot } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField, onSnapshot, deleteDoc } from 'firebase/firestore';
 
 enum OperationType {
   CREATE = 'create',
@@ -158,6 +158,40 @@ function stripUndefined(obj: Record<string, unknown>): Record<string, unknown> {
 }
 
 export const db = new MyDepositsDB();
+
+const TOMBSTONE_COLLECTIONS = ['cryptoAssets', 'cashAssets', 'investmentAssets', 'deposits', 'banks'] as const;
+const TOMBSTONE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 дней
+const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // не чаще раза в сутки
+
+async function cleanupDeletedTombstones(userId: string) {
+  const settings = await db.appSettings.get('main');
+  const lastCleanup = settings?.lastTombstoneCleanup || 0;
+  if (Date.now() - lastCleanup < CLEANUP_INTERVAL_MS) return;
+
+  for (const col of TOMBSTONE_COLLECTIONS) {
+    try {
+      const snap = await getDocs(query(
+        collection(firestore, col),
+        where('userId', '==', userId),
+        where('isDeleted', '==', true)
+      ));
+      const staleDocs = snap.docs.filter(d => {
+        const updatedAt = d.data().updatedAt || 0;
+        return Date.now() - updatedAt > TOMBSTONE_MAX_AGE_MS;
+      });
+      for (const d of staleDocs) {
+        await deleteDoc(d.ref);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, col);
+      // Не прерывать очистку остальных коллекций из-за ошибки в одной
+    }
+  }
+
+  if (settings) {
+    await db.appSettings.update('main', { lastTombstoneCleanup: Date.now() });
+  }
+}
 
 export const emitSyncEvent = (status: 'syncing' | 'success' | 'error', error?: any) => {
   window.dispatchEvent(new CustomEvent('app:sync', { detail: { status, error } }));
@@ -968,6 +1002,12 @@ export async function syncWithFirebase() {
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.GET, banksPath);
+  }
+
+  try {
+    await cleanupDeletedTombstones(user.uid);
+  } catch (error) {
+    console.error('Failed to cleanup tombstones:', error);
   }
 
   emitSyncEvent('success');
