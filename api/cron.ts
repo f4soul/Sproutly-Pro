@@ -75,13 +75,11 @@ export default async function handler(req: Request, res: Response) {
       if (tokens.length === 0) continue;
 
       // 3. For each user, query their deposits that are not closed
-      const depositsSnapshot = await db.collection('users').doc(userId).collection('deposits')
-        .where('isClosed', '==', false)
-        .where('isArchived', '==', false)
-        .get();
+      const depositsSnapshot = await db.collection('deposits').where('userId', '==', userId).get();
 
       for (const depositDoc of depositsSnapshot.docs) {
         const deposit = depositDoc.data();
+        if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) continue;
         const endDate = deposit.endDate;
 
         if (!endDate) continue;
