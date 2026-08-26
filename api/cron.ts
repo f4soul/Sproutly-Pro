@@ -11,8 +11,6 @@ if (!getApps().length) {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!serviceAccountJson) {
       console.warn("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
-      // Fallback for development if needed, but usually we just skip initialization
-      // and handle the error during the request.
     } else {
       const serviceAccount = JSON.parse(serviceAccountJson);
       initializeApp({
@@ -22,6 +20,35 @@ if (!getApps().length) {
   } catch (error) {
     console.error("Failed to initialize Firebase Admin SDK:", error);
   }
+}
+
+function parseDateValue(val: any): Date | null {
+  if (!val) return null;
+  if (typeof val.toDate === 'function') {
+    try {
+      return val.toDate();
+    } catch {
+      // Fallback
+    }
+  }
+  if (typeof val === 'number') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof val === 'string') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (val && typeof val.seconds === 'number') {
+    return new Date(val.seconds * 1000);
+  }
+  if (val && typeof val._seconds === 'number') {
+    return new Date(val._seconds * 1000);
+  }
+  if (val instanceof Date) {
+    return isNaN(val.getTime()) ? null : val;
+  }
+  return null;
 }
 
 export default async function handler(req: Request, res: Response) {
@@ -43,14 +70,19 @@ export default async function handler(req: Request, res: Response) {
     console.log("Starting daily cron job to check expiring deposits...");
 
     const today = new Date();
-    const formatter = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const formatter = new Intl.DateTimeFormat('ru-RU', { 
+      timeZone: 'Europe/Moscow', 
+      year: 'numeric', 
+      month: '2-digit', 
+      day: '2-digit' 
+    });
     
     const getFormattedDate = (offsetDays: number) => {
       const date = new Date(today.getTime() + offsetDays * 24 * 60 * 60 * 1000);
       return formatter.format(date);
     };
 
-    // Check for deposits expiring today, tomorrow, and in 3 days.
+    // Check for deposits expiring today, tomorrow, in 2 days, in 3 days, and in 7 days.
     const targetDates = [
       { 
         date: getFormattedDate(0),
@@ -61,8 +93,16 @@ export default async function handler(req: Request, res: Response) {
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается ЗАВТРА.`
       },
       { 
+        date: getFormattedDate(2),
+        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 2 ДНЯ.`
+      },
+      { 
         date: getFormattedDate(3),
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 3 ДНЯ.`
+      },
+      { 
+        date: getFormattedDate(7),
+        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 7 ДНЕЙ.`
       },
     ];
 
@@ -70,6 +110,8 @@ export default async function handler(req: Request, res: Response) {
     
     // Diagnostic object to return in the API response
     const debug = {
+      serverNowUTC: today.toISOString(),
+      moscowToday: formatter.format(today),
       targetDates: targetDates.map(t => t.date),
       usersChecked: 0,
       usersWithTokens: 0,
@@ -89,47 +131,43 @@ export default async function handler(req: Request, res: Response) {
       const userId = userDoc.id;
       
       if (tokens.length === 0) {
-        debug.log.push(`User ${userId} skipped: No FCM tokens.`);
+        debug.log.push(`User ${userId}: 0 FCM tokens (skipped).`);
         continue;
       }
       
       debug.usersWithTokens++;
-      debug.log.push(`User ${userId} has ${tokens.length} FCM tokens.`);
+      debug.log.push(`User ${userId}: has ${tokens.length} FCM token(s).`);
 
       // 3. For each user, query their deposits that are not closed
       const depositsSnapshot = await db.collection('deposits').where('userId', '==', userId).get();
-      debug.log.push(`Queried deposits for ${userId}: found ${depositsSnapshot.docs.length} docs.`);
+      debug.log.push(`User ${userId}: retrieved ${depositsSnapshot.docs.length} deposits from Firestore.`);
 
       for (const depositDoc of depositsSnapshot.docs) {
         debug.totalDepositsChecked++;
         const deposit = depositDoc.data();
         
         if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) {
-           debug.log.push(`Deposit ${depositDoc.id} skipped: isClosed=${deposit.isClosed}, isArchived=${deposit.isArchived}, isDeleted=${deposit.isDeleted}`);
+           debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (isClosed=${deposit.isClosed}, isArchived=${deposit.isArchived}, isDeleted=${deposit.isDeleted})`);
            continue;
         }
         
-        const endDateMs = deposit.endDate;
-        if (!endDateMs) {
-          debug.log.push(`Deposit ${depositDoc.id} skipped: No endDateMs (${endDateMs})`);
-          continue;
-        }
-
-        const endDt = new Date(endDateMs);
-        if (isNaN(endDt.getTime())) {
-          debug.log.push(`Deposit ${depositDoc.id} skipped: Invalid endDateMs (${endDateMs})`);
+        const rawEndDate = deposit.endDate;
+        const endDt = parseDateValue(rawEndDate);
+        
+        if (!endDt) {
+          debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (unparseable endDate: ${JSON.stringify(rawEndDate)})`);
           continue;
         }
 
         const endDateStr = formatter.format(endDt);
-        debug.log.push(`Deposit ${depositDoc.id} (Bank: ${deposit.bank}) ends on ${endDateStr}`);
+        debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'} ${deposit.amount} ₽) ends on ${endDateStr}`);
 
         // Check if the end date matches any of our target dates
         const matchedTarget = targetDates.find(target => target.date === endDateStr);
         
         if (matchedTarget) {
           debug.depositsMatched++;
-          debug.log.push(`-> MATCH! Deposit ${depositDoc.id} matched target date ${endDateStr}`);
+          debug.log.push(`==> MATCH! Deposit ${depositDoc.id} matches target date ${endDateStr}! Sending push...`);
 
           // Format amount for the message
           const amountStr = deposit.amount ? `${deposit.amount.toLocaleString('ru-RU')} ₽` : 'неизвестную сумму';
@@ -149,10 +187,18 @@ export default async function handler(req: Request, res: Response) {
 
           try {
             const response = await messaging.sendEachForMulticast(message);
-            console.log(`Successfully sent ${response.successCount} messages for user ${userId}.`);
+            debug.log.push(`FCM send result for user ${userId}: success=${response.successCount}, failure=${response.failureCount}`);
+            if (response.failureCount > 0) {
+              response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                  debug.log.push(`Token [${idx}] failed with error: ${resp.error?.message || resp.error?.code}`);
+                }
+              });
+            }
+
             notificationsSent += response.successCount;
             
-            // Optional: clean up invalid tokens
+            // Clean up invalid tokens
             if (response.failureCount > 0) {
               const failedTokens: string[] = [];
               response.responses.forEach((resp: SendResponse, idx: number) => {
@@ -162,14 +208,14 @@ export default async function handler(req: Request, res: Response) {
               });
               
               if (failedTokens.length > 0) {
-                // Remove failed tokens from user document
                 await userDoc.ref.update({
                   fcmTokens: FieldValue.arrayRemove(...failedTokens)
                 });
-                console.log(`Removed ${failedTokens.length} invalid tokens for user ${userId}.`);
+                debug.log.push(`Cleaned up ${failedTokens.length} expired FCM token(s) for user ${userId}.`);
               }
             }
-          } catch (error) {
+          } catch (error: any) {
+            debug.log.push(`Error invoking messaging.sendEachForMulticast: ${error.message}`);
             console.error('Error sending message:', error);
           }
         }
@@ -177,7 +223,7 @@ export default async function handler(req: Request, res: Response) {
     }
 
     console.log(`Cron job finished. Sent ${notificationsSent} notifications.`);
-    return res.status(200).json({ success: true, notificationsSent });
+    return res.status(200).json({ success: true, notificationsSent, debug });
   } catch (error: any) {
     console.error('Cron job failed:', error);
     return res.status(500).json({ error: error.message });

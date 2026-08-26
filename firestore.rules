@@ -165,14 +165,12 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
-    // User profile rules (for role-based access)
+    // User profile rules (for role-based access & FCM tokens)
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      // Only admins can create/update roles, users can only create their basic profile
-      allow create: if isOwner(userId) && 
-                      (!('role' in request.resource.data) || request.resource.data.role == 'user');
-      allow update: if isOwner(userId) && 
-                      (request.resource.data.role == resource.data.role) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
     }
   }
 }

@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, BellRing, Info } from 'lucide-react';
-import { requestNotificationPermission } from '../../services/notifications';
+import { Bell, BellRing, Info, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { requestNotificationPermission, syncFcmToken } from '../../services/notifications';
 import { showToast } from '../../lib/toast';
+import { auth } from '../../config/firebase';
 
 export function NotificationsSettings() {
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [tokenSynced, setTokenSynced] = useState(false);
 
   useEffect(() => {
     if ('Notification' in window) {
       setPermissionState(Notification.permission);
+      if (Notification.permission === 'granted' && auth.currentUser) {
+        syncFcmToken().then((success) => {
+          if (success) setTokenSynced(true);
+        }).catch(console.error);
+      }
     }
   }, []);
 
@@ -18,20 +26,42 @@ export function NotificationsSettings() {
       return;
     }
 
+    setIsSyncing(true);
     try {
       const success = await requestNotificationPermission();
       setPermissionState(Notification.permission);
       
       if (success) {
-        showToast('Уведомления успешно включены', 'success');
+        setTokenSynced(true);
+        showToast('Уведомления успешно включены и синхронизированы', 'success');
       } else if (Notification.permission === 'denied') {
         showToast('Вы заблокировали уведомления в браузере', 'error');
       } else {
-        showToast('Не удалось настроить уведомления (проверьте конфигурацию Firebase)', 'error');
+        showToast('Токен получен, но убедитесь, что вы авторизованы в аккаунте', 'info');
       }
     } catch (error) {
       console.error(error);
       showToast('Ошибка при включении уведомлений', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleResyncToken = async () => {
+    setIsSyncing(true);
+    try {
+      const success = await syncFcmToken();
+      if (success) {
+        setTokenSynced(true);
+        showToast('FCM токен обновлен в базе данных', 'success');
+      } else {
+        showToast('Не удалось обновить токен. Проверьте авторизацию.', 'error');
+      }
+    } catch (error) {
+      console.error(error);
+      showToast('Ошибка при синхронизации токена', 'error');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -53,32 +83,48 @@ export function NotificationsSettings() {
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-white/[0.05] space-y-4 text-sm text-slate-700 dark:text-slate-300">
           <p className="flex items-start gap-3">
             <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах и других важных событиях.</span>
+            <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах (в день окончания, за 1, 2, 3 и 7 дней) и других важных событиях.</span>
           </p>
           
-          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between gap-4">
+          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <p className="font-bold text-slate-900 dark:text-white">Статус уведомлений</p>
-              <p className="text-[10px] text-slate-500 mt-1">
-                {permissionState === 'granted' && <span className="text-emerald-500 font-medium">Разрешены</span>}
-                {permissionState === 'denied' && <span className="text-rose-500 font-medium">Заблокированы в браузере</span>}
-                {permissionState === 'default' && <span>Не настроены</span>}
+              <p className="font-bold text-slate-900 dark:text-white">Статус Push-уведомлений</p>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+                {permissionState === 'granted' && (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Разрешены в браузере {tokenSynced && '• Токен в базе'}
+                  </span>
+                )}
+                {permissionState === 'denied' && <span className="text-rose-500 font-medium">Заблокированы в настройках браузера</span>}
+                {permissionState === 'default' && <span>Не включены</span>}
               </p>
             </div>
-            <button
-              onClick={handleEnableNotifications}
-              disabled={permissionState === 'granted'}
-              className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-lg font-medium text-xs transition-colors flex items-center gap-2"
-            >
+
+            <div className="flex items-center gap-2">
               {permissionState === 'granted' ? (
-                <>
-                  <BellRing className="w-4 h-4" />
-                  Включены
-                </>
+                <button
+                  type="button"
+                  onClick={handleResyncToken}
+                  disabled={isSyncing}
+                  className="px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                  title="Обновить регистрацию устройства в Firestore"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? 'Синхронизация...' : 'Обновить токен'}
+                </button>
               ) : (
-                <>Включить</>
+                <button
+                  type="button"
+                  onClick={handleEnableNotifications}
+                  disabled={isSyncing || permissionState === 'denied'}
+                  className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-md shadow-indigo-500/20"
+                >
+                  <BellRing className="w-3.5 h-3.5" />
+                  {isSyncing ? 'Подключение...' : 'Включить Push'}
+                </button>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </div>
