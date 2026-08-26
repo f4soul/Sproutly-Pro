@@ -1,10 +1,12 @@
 import { Request, Response } from 'express';
-import * as admin from 'firebase-admin';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getMessaging, SendResponse } from 'firebase-admin/messaging';
 
 // Initialize Firebase Admin SDK
 // This requires FIREBASE_SERVICE_ACCOUNT environment variable to be set in Vercel.
 // The value should be a JSON string containing your service account credentials.
-if (!admin.apps.length) {
+if (!getApps().length) {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
     if (!serviceAccountJson) {
@@ -13,8 +15,8 @@ if (!admin.apps.length) {
       // and handle the error during the request.
     } else {
       const serviceAccount = JSON.parse(serviceAccountJson);
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
+      initializeApp({
+        credential: cert(serviceAccount)
       });
     }
   } catch (error) {
@@ -31,12 +33,12 @@ export default async function handler(req: Request, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    if (!admin.apps.length) {
+    if (!getApps().length) {
       return res.status(500).json({ error: 'Firebase Admin not initialized.' });
     }
 
-    const db = admin.firestore();
-    const messaging = admin.messaging();
+    const db = getFirestore();
+    const messaging = getMessaging();
 
     console.log("Starting daily cron job to check expiring deposits...");
 
@@ -112,7 +114,7 @@ export default async function handler(req: Request, res: Response) {
             // Optional: clean up invalid tokens
             if (response.failureCount > 0) {
               const failedTokens: string[] = [];
-              response.responses.forEach((resp, idx) => {
+              response.responses.forEach((resp: SendResponse, idx: number) => {
                 if (!resp.success) {
                   failedTokens.push(tokens[idx]);
                 }
@@ -121,7 +123,7 @@ export default async function handler(req: Request, res: Response) {
               if (failedTokens.length > 0) {
                 // Remove failed tokens from user document
                 await userDoc.ref.update({
-                  fcmTokens: admin.firestore.FieldValue.arrayRemove(...failedTokens)
+                  fcmTokens: FieldValue.arrayRemove(...failedTokens)
                 });
                 console.log(`Removed ${failedTokens.length} invalid tokens for user ${userId}.`);
               }

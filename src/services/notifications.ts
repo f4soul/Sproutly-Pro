@@ -1,6 +1,5 @@
 import { getToken, onMessage } from 'firebase/messaging';
-import { getFirebaseMessaging, auth } from '../config/firebase';
-import { db } from '../config/db';
+import { getFirebaseMessaging, auth, db } from '../config/firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 
 export async function requestNotificationPermission(): Promise<boolean> {
