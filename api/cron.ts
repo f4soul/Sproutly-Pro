@@ -42,22 +42,26 @@ export default async function handler(req: Request, res: Response) {
 
     console.log("Starting daily cron job to check expiring deposits...");
 
-    // 1. Get the current date in YYYY-MM-DD format (UTC)
-    // You might want to adjust for specific timezones depending on your users.
     const today = new Date();
+    const formatter = new Intl.DateTimeFormat('ru-RU', { timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit' });
     
+    const getFormattedDate = (offsetDays: number) => {
+      const date = new Date(today.getTime() + offsetDays * 24 * 60 * 60 * 1000);
+      return formatter.format(date);
+    };
+
     // Check for deposits expiring today, tomorrow, and in 3 days.
     const targetDates = [
       { 
-        date: new Date(today.getTime() + 0 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        date: getFormattedDate(0),
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается СЕГОДНЯ.`
       },
       { 
-        date: new Date(today.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        date: getFormattedDate(1),
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается ЗАВТРА.`
       },
       { 
-        date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        date: getFormattedDate(3),
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 3 ДНЯ.`
       },
     ];
@@ -80,12 +84,17 @@ export default async function handler(req: Request, res: Response) {
       for (const depositDoc of depositsSnapshot.docs) {
         const deposit = depositDoc.data();
         if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) continue;
-        const endDate = deposit.endDate;
+        const endDateMs = deposit.endDate;
 
-        if (!endDate) continue;
+        if (!endDateMs) continue;
+
+        const endDt = new Date(endDateMs);
+        if (isNaN(endDt.getTime())) continue;
+
+        const endDateStr = formatter.format(endDt);
 
         // Check if the end date matches any of our target dates
-        const matchedTarget = targetDates.find(target => target.date === endDate);
+        const matchedTarget = targetDates.find(target => target.date === endDateStr);
         
         if (matchedTarget) {
           // Format amount for the message
