@@ -67,36 +67,70 @@ export default async function handler(req: Request, res: Response) {
     ];
 
     let notificationsSent = 0;
+    
+    // Diagnostic object to return in the API response
+    const debug = {
+      targetDates: targetDates.map(t => t.date),
+      usersChecked: 0,
+      usersWithTokens: 0,
+      totalDepositsChecked: 0,
+      depositsMatched: 0,
+      log: [] as string[]
+    };
 
     // 2. Query all users who have FCM tokens
     const usersSnapshot = await db.collection('users').get();
+    debug.log.push(`Found ${usersSnapshot.docs.length} total users in 'users' collection.`);
     
     for (const userDoc of usersSnapshot.docs) {
+      debug.usersChecked++;
       const userData = userDoc.data();
       const tokens = userData.fcmTokens || [];
       const userId = userDoc.id;
       
-      if (tokens.length === 0) continue;
+      if (tokens.length === 0) {
+        debug.log.push(`User ${userId} skipped: No FCM tokens.`);
+        continue;
+      }
+      
+      debug.usersWithTokens++;
+      debug.log.push(`User ${userId} has ${tokens.length} FCM tokens.`);
 
       // 3. For each user, query their deposits that are not closed
       const depositsSnapshot = await db.collection('deposits').where('userId', '==', userId).get();
+      debug.log.push(`Queried deposits for ${userId}: found ${depositsSnapshot.docs.length} docs.`);
 
       for (const depositDoc of depositsSnapshot.docs) {
+        debug.totalDepositsChecked++;
         const deposit = depositDoc.data();
-        if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) continue;
+        
+        if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) {
+           debug.log.push(`Deposit ${depositDoc.id} skipped: isClosed=${deposit.isClosed}, isArchived=${deposit.isArchived}, isDeleted=${deposit.isDeleted}`);
+           continue;
+        }
+        
         const endDateMs = deposit.endDate;
-
-        if (!endDateMs) continue;
+        if (!endDateMs) {
+          debug.log.push(`Deposit ${depositDoc.id} skipped: No endDateMs (${endDateMs})`);
+          continue;
+        }
 
         const endDt = new Date(endDateMs);
-        if (isNaN(endDt.getTime())) continue;
+        if (isNaN(endDt.getTime())) {
+          debug.log.push(`Deposit ${depositDoc.id} skipped: Invalid endDateMs (${endDateMs})`);
+          continue;
+        }
 
         const endDateStr = formatter.format(endDt);
+        debug.log.push(`Deposit ${depositDoc.id} (Bank: ${deposit.bank}) ends on ${endDateStr}`);
 
         // Check if the end date matches any of our target dates
         const matchedTarget = targetDates.find(target => target.date === endDateStr);
         
         if (matchedTarget) {
+          debug.depositsMatched++;
+          debug.log.push(`-> MATCH! Deposit ${depositDoc.id} matched target date ${endDateStr}`);
+
           // Format amount for the message
           const amountStr = deposit.amount ? `${deposit.amount.toLocaleString('ru-RU')} ₽` : 'неизвестную сумму';
           const bankName = deposit.bank || 'вашем банке';
