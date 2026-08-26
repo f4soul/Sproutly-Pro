@@ -82,7 +82,7 @@ export default async function handler(req: Request, res: Response) {
       return formatter.format(date);
     };
 
-    // Check for deposits expiring today, tomorrow, in 2 days, in 3 days, and in 7 days.
+    // Check for deposits expiring today, tomorrow, and in 3 days.
     const targetDates = [
       { 
         date: getFormattedDate(0),
@@ -93,16 +93,8 @@ export default async function handler(req: Request, res: Response) {
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается ЗАВТРА.`
       },
       { 
-        date: getFormattedDate(2),
-        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 2 ДНЯ.`
-      },
-      { 
         date: getFormattedDate(3),
         message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 3 ДНЯ.`
-      },
-      { 
-        date: getFormattedDate(7),
-        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 7 ДНЕЙ.`
       },
     ];
 
@@ -175,7 +167,7 @@ export default async function handler(req: Request, res: Response) {
 
           const message = {
             notification: {
-              title: 'Срок вклада подходит к концу',
+              title: 'Закрытие вклада',
               body: matchedTarget.message(bankName, amountStr),
             },
             data: {

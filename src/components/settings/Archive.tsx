@@ -130,28 +130,38 @@ export const Archive: React.FC = () => {
     syncWithFirebase();
   };
 
-  if (!archivedDeposits || archivedDeposits.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400">
-        <ArchiveIcon className="w-12 h-12 mb-4 opacity-20 stroke-[1px]" />
-        <p className="text-base font-bold tracking-tight">Архив пуст</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3 sm:gap-4 pb-2">
-      <AnimatePresence mode="popLayout">
-        {archivedDeposits.map((deposit) => {
-          return (
-            <motion.div
-              key={deposit.id}
-              layout
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-row items-center px-3.5 py-3.5 rounded-xl bg-white/45 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] gap-3 relative group overflow-hidden hover:border-orange-500/30 transition-all duration-300"
-            >
+    <AnimatePresence mode="wait">
+      {(!archivedDeposits || archivedDeposits.length === 0) ? (
+        <motion.div
+          key="empty"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="flex flex-col items-center justify-center py-12 text-slate-500 dark:text-slate-400"
+        >
+          <ArchiveIcon className="w-12 h-12 mb-4 opacity-20 stroke-[1px]" />
+          <p className="text-base font-bold tracking-tight">Архив пуст</p>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="grid"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3 sm:gap-4 pb-2"
+        >
+          <AnimatePresence mode="popLayout">
+            {archivedDeposits.map((deposit) => {
+              return (
+                <motion.div
+                  key={deposit.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="flex flex-row items-center px-3.5 py-3.5 rounded-xl bg-white/45 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] gap-3 relative group overflow-hidden hover:border-orange-500/30 transition-all duration-300"
+                >
                 {/* Deletion Date Badge in Top Right */}
                 <div className="absolute top-1.5 right-2 text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none select-none">
                   {format(deposit.updatedAt || Date.now(), 'dd.MM.yy')}
@@ -194,6 +204,8 @@ export const Archive: React.FC = () => {
             );
           })}
         </AnimatePresence>
-    </div>
+      </motion.div>
+      )}
+    </AnimatePresence>
   );
 };

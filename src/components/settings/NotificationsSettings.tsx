@@ -83,25 +83,25 @@ export function NotificationsSettings() {
         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-white/[0.05] space-y-4 text-sm text-slate-700 dark:text-slate-300">
           <p className="flex items-start gap-3">
             <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
-            <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах (в день окончания, за 1, 2, 3 и 7 дней) и других важных событиях.</span>
+            <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах (в день окончания, за 1 и 3 дня) и других важных событиях.</span>
           </p>
           
-          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <p className="font-bold text-slate-900 dark:text-white">Статус Push-уведомлений</p>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
+          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900 dark:text-white truncate">Статус Push-уведомлений</p>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
                 {permissionState === 'granted' && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Разрешены в браузере {tokenSynced && '• Токен в базе'}
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 truncate">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Разрешены {tokenSynced && '• В базе'}</span>
                   </span>
                 )}
-                {permissionState === 'denied' && <span className="text-rose-500 font-medium">Заблокированы в настройках браузера</span>}
-                {permissionState === 'default' && <span>Не включены</span>}
+                {permissionState === 'denied' && <span className="text-rose-500 font-medium truncate">Заблокированы</span>}
+                {permissionState === 'default' && <span className="truncate">Не включены</span>}
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               {permissionState === 'granted' ? (
                 <button
                   type="button"
@@ -111,7 +111,7 @@ export function NotificationsSettings() {
                   title="Обновить регистрацию устройства в Firestore"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                  {isSyncing ? 'Синхронизация...' : 'Обновить токен'}
+                  {isSyncing ? '...' : 'Обновить'}
                 </button>
               ) : (
                 <button
@@ -121,7 +121,7 @@ export function NotificationsSettings() {
                   className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-md shadow-indigo-500/20"
                 >
                   <BellRing className="w-3.5 h-3.5" />
-                  {isSyncing ? 'Подключение...' : 'Включить Push'}
+                  {isSyncing ? '...' : 'Включить'}
                 </button>
               )}
             </div>
