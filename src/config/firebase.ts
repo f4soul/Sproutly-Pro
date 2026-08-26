@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { initializeFirestore, doc, getDoc, setDoc, onSnapshot, getDocFromServer } from 'firebase/firestore';
+import { getMessaging, isSupported } from 'firebase/messaging';
 import defaultPlatformConfig from '../../firebase-applet-config.json';
 
 const customConfig = {
@@ -40,6 +41,13 @@ async function testConnection() {
 }
 
 testConnection();
+
+export const getFirebaseMessaging = async () => {
+  if (await isSupported()) {
+    return getMessaging(app);
+  }
+  return null;
+};
 
 export { onAuthStateChanged, doc, getDoc, setDoc, onSnapshot };
 export type { User };

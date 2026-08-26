@@ -1,10 +1,11 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useRef } from "react";
 import { Combobox, Transition } from "@headlessui/react";
 import { Landmark, X, ChevronDown, Check, Edit2, Trash2, Plus } from "lucide-react";
 import { Bank, Deposit } from "../../types";
 import { DEFAULT_BANK_ICON } from "../../lib/banks";
 import { BankLogo } from "./BankLogo";
 import { cn } from "../../lib/utils";
+import { DropdownPortal } from "../ui/DropdownPortal";
 
 interface DepositFormBankPickerProps {
   formData: Partial<Deposit>;
@@ -35,6 +36,8 @@ export function DepositFormBankPicker({
   handleEditBank,
   handleDeleteBank,
 }: DepositFormBankPickerProps) {
+  const comboboxRef = useRef<HTMLDivElement>(null);
+  
   return (
     <div className="space-y-2">
       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -66,7 +69,8 @@ export function DepositFormBankPicker({
           setBankInputMode("text");
         }}
       >
-        <div className="relative">
+        {({ open }) => (
+        <div ref={comboboxRef} className={cn("relative", open ? "z-[60]" : "z-30")}>
           <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-left border border-transparent focus-within:border-deposit-500/30 transition-all">
             <Combobox.Input
               ref={bankInputRef}
@@ -152,6 +156,7 @@ export function DepositFormBankPicker({
               />
             </Combobox.Button>
           </div>
+          <DropdownPortal targetRef={comboboxRef} matchWidth>
           <Transition
             as={Fragment}
             leave="transition ease-in duration-100"
@@ -159,7 +164,7 @@ export function DepositFormBankPicker({
             leaveTo="opacity-0"
             afterLeave={() => setQuery("")}
           >
-            <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
+            <Combobox.Options className="max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
               {filteredBanks.length === 0 && query !== "" ? (
                 <div className="relative cursor-default select-none py-2 px-4 text-slate-500">
                   Ничего не найдено.
@@ -266,7 +271,9 @@ export function DepositFormBankPicker({
               </Combobox.Option>
             </Combobox.Options>
           </Transition>
+          </DropdownPortal>
         </div>
+        )}
       </Combobox>
     </div>
   );

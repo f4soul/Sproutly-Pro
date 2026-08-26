@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useRef } from "react";
 import { Dialog, Listbox } from "@headlessui/react";
 import { Vault, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { CashAsset } from "../../types";
@@ -11,6 +11,7 @@ import { formatCurrency } from "../../lib/taxCalculator";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
+import { DropdownPortal } from "../ui/DropdownPortal";
 
 registerLocale("ru", ru);
 
@@ -20,6 +21,7 @@ interface CashFormProps {
 }
 
 export function CashForm({ onClose, assetToEdit }: CashFormProps) {
+  const currencyButtonRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<Partial<CashAsset>>(
     assetToEdit || {
       amount: 0,
@@ -113,8 +115,8 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable] relative z-10">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 <div className="space-y-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Дата
@@ -170,7 +172,14 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
 
               <div className="flex flex-col">
-                <div className="space-y-2">
+                <Listbox
+                  value={formData.currency || "RUB"}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, currency: val }))
+                  }
+                >
+                {({ open }) => (
+                <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Сумма
                   </label>
@@ -196,15 +205,8 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                     className="apple-input w-full font-mono text-sm pr-20"
                     placeholder="0"
                   />
-                  <div className="absolute inset-y-1.5 right-1.5 z-10">
-                    <Listbox
-                      value={formData.currency || "RUB"}
-                      onChange={(val) =>
-                        setFormData((prev) => ({ ...prev, currency: val }))
-                      }
-                    >
-                      {({ open }) => (
-                        <div className="relative h-full text-slate-950 dark:text-white">
+                  <div className="absolute inset-y-1.5 right-1.5">
+                        <div ref={currencyButtonRef} className="relative h-full text-slate-950 dark:text-white">
                           <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                             <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
                               {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
@@ -224,6 +226,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                           </Listbox.Button>
                           <AnimatePresence>
                             {open && (
+                              <DropdownPortal targetRef={currencyButtonRef} align="right">
                               <Listbox.Options 
                                 as={motion.ul as any}
                                 static
@@ -231,7 +234,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
                                 transition={{ duration: 0.15 } as any}
-                                className="absolute right-0 mt-2 w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-900 p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none"
+                                className="w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-900 p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-800 focus:outline-none"
                               >
                                 {[
                                   { id: "RUB", symbol: "₽", label: "RUB" },
@@ -271,38 +274,37 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                                   </Listbox.Option>
                                 ))}
                               </Listbox.Options>
+                              </DropdownPortal>
                             )}
                           </AnimatePresence>
                         </div>
-                      )}
-                    </Listbox>
                   </div>
                 </div>
-              </div>
-
-              <div 
-                className={cn(
-                  "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
-                  (formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                </div>
                 )}
-              >
-                <div className="overflow-hidden">
-                  <div className="flex flex-col">
-                    <div 
-                      className={cn(
-                        "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
-                        ((formData.amount || 0) > 0 && rates && formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-                      )}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="pt-2">
-                          <p className="text-[10px] text-slate-500/80 px-1 font-medium">
-                            ≈ {formatCurrency(convertToRub(formData.amount || 0, formData.currency || "USD", rates))} по курсу ЦБ
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-2 pt-6">
+                </Listbox>
+
+                <div 
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    ((formData.amount || 0) > 0 && rates && formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 mt-2 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <p className="text-[10px] text-slate-500/80 px-1 font-medium">
+                      ≈ {formatCurrency(convertToRub(formData.amount || 0, formData.currency || "USD", rates))} по курсу ЦБ
+                    </p>
+                  </div>
+                </div>
+
+                <div 
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    (formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 mt-6 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-2">
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Курс ЦБ на дату фиксации (₽)
                       </label>
@@ -334,8 +336,6 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                   </div>
                 </div>
               </div>
-            </div>
-
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Комментарий (Опционально)
@@ -354,7 +354,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
 
               </div>
-              <div className="flex-none px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <div className="sticky bottom-0 z-50 mt-auto px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={onClose}
@@ -370,6 +370,11 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </button>
               </div>
             </form>
+            {/* Embedded datepicker portal container so clicking dates doesn't close Headless UI Dialog */}
+            <div
+              id="datepicker-portal-container"
+              className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
+            />
           </motion.div>
         </Dialog.Panel>
       </div>

@@ -402,9 +402,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white/90 dark:bg-[#0B0F19]/95 backdrop-blur-3xl w-full max-w-xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.05] flex flex-col max-h-[90vh] pointer-events-auto"
+            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col max-h-[90vh] pointer-events-auto"
           >
-            <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-200/50 dark:border-white/[0.05] flex flex-col gap-3">
+            <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold tracking-tight text-slate-950 dark:text-white flex items-center gap-3">
@@ -429,8 +429,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
             <form
               onSubmit={handleSubmit}
-              className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] flex-1"
+              className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative"
             >
+              <div className="p-4 sm:p-5 flex flex-col gap-4 flex-shrink-0">
               {hasDraft && (
                 <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
                   <div className="flex flex-col gap-0.5">
@@ -613,7 +614,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   handleDeleteBank={handleDeleteBank}
                 />
 
-                <div className="space-y-2">
+                <Listbox
+                  value={formData.currency || "RUB"}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, currency: val }))
+                  }
+                >
+                {({ open }) => (
+                <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Wallet className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Сумма
@@ -641,14 +649,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                       className="apple-input w-full font-mono text-sm pr-16"
                       placeholder="0.00"
                     />
-                    <div className="absolute inset-y-1 right-1 z-[25]">
-                      <Listbox
-                        value={formData.currency || "RUB"}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, currency: val }))
-                        }
-                      >
-                        {({ open }) => (
+                    <div className="absolute inset-y-1 right-1">
                           <div className="relative h-full text-slate-950 dark:text-white">
                             <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center w-4 text-center">
@@ -714,11 +715,11 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                               </Listbox.Options>
                             </Transition>
                           </div>
-                        )}
-                      </Listbox>
                     </div>
                   </div>
                 </div>
+                )}
+                </Listbox>
 
                 {formData.currency && formData.currency !== "RUB" && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
@@ -913,9 +914,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   />
                 </div>
               </div>
-            </form>
-
-            <div className="px-6 py-5 sm:px-8 sm:py-6 border-t border-slate-200/50 dark:border-white/[0.05] bg-slate-50/50 dark:bg-slate-900/20 flex gap-3 sm:gap-4 sm:justify-end shrink-0 sm:rounded-b-[2.5rem]">
+              </div>
+              <div className="sticky bottom-0 z-50 mt-auto px-6 py-5 sm:px-8 sm:py-6 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl flex gap-3 sm:gap-4 sm:justify-end shrink-0">
               <button
                 type="button"
                 onClick={onClose}
@@ -937,10 +937,11 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 Сохранить
               </button>
             </div>
+            </form>
             {/* Embedded datepicker portal container so clicking dates doesn't close Headless UI Dialog */}
             <div
               id="datepicker-portal-container"
-              className="relative z-[200] pointer-events-auto"
+              className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
             />
           </motion.div>
         </Dialog.Panel>
@@ -972,7 +973,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="bg-white/90 dark:bg-[#0B0F19]/95 backdrop-blur-3xl w-full max-w-sm rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.05] flex flex-col pointer-events-auto p-6 sm:p-8"
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />

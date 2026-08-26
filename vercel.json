@@ -1,6 +1,12 @@
 {
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/((?!assets/|logos/|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|webmanifest|txt)).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|logos/|.*\\.(?:png|jpg|jpeg|gif|svg|ico|json|js|css|webmanifest|txt)).*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 6 * * *"
+    }
   ]
 }

@@ -140,19 +140,18 @@ export const Archive: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <AnimatePresence mode="popLayout">
-          {archivedDeposits.map((deposit) => {
-            return (
-              <motion.div
-                key={deposit.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex flex-row items-center px-3.5 py-3.5 rounded-xl bg-white/45 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] gap-3 relative group overflow-hidden hover:border-orange-500/30 transition-all duration-300"
-              >
+    <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3 sm:gap-4 pb-2">
+      <AnimatePresence mode="popLayout">
+        {archivedDeposits.map((deposit) => {
+          return (
+            <motion.div
+              key={deposit.id}
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-row items-center px-3.5 py-3.5 rounded-xl bg-white/45 dark:bg-slate-950/40 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] gap-3 relative group overflow-hidden hover:border-orange-500/30 transition-all duration-300"
+            >
                 {/* Deletion Date Badge in Top Right */}
                 <div className="absolute top-1.5 right-2 text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest pointer-events-none select-none">
                   {format(deposit.updatedAt || Date.now(), 'dd.MM.yy')}
@@ -195,7 +194,6 @@ export const Archive: React.FC = () => {
             );
           })}
         </AnimatePresence>
-      </div>
     </div>
   );
 };

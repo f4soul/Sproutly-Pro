@@ -1,4 +1,4 @@
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useRef } from "react";
 import { Dialog, Listbox, Combobox, Transition } from "@headlessui/react";
 import { BankLogo } from "../deposits/BankLogo";
 import { ChartNoAxesCombined, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "motion/react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
+import { DropdownPortal } from "../ui/DropdownPortal";
 
 const POPULAR_BROKERS = [
   "ВТБ Мои Инвестиции",
@@ -41,6 +42,7 @@ interface InvestmentFormProps {
 }
 
 export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
+  const comboboxRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<Partial<InvestmentAsset>>(
     assetToEdit || {
       name: "",
@@ -193,10 +195,9 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div id="datepicker-portal-container" />
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
               
-              <div className="relative w-full flex-1 shrink min-h-0 mt-0">
+              <div className="relative w-full flex flex-col flex-shrink-0">
                 <AnimatePresence mode="wait">
                   <motion.div 
                     key={formData.type}
@@ -204,7 +205,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -15 }}
                     transition={{ duration: 0.2, ease: "easeOut" }}
-                    className="absolute inset-0 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable]"
+                    className="p-6 sm:p-8 flex flex-col gap-6"
                   >
                     {formData.type === "iis" && (
                       <div className="space-y-2 pb-1">
@@ -255,7 +256,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     value={formData.name || ""}
                     onChange={(val) => setFormData((prev) => ({ ...prev, name: val || undefined }))}
                   >
-                    <div className="relative">
+                    <div ref={comboboxRef} className="relative">
                       <div className="relative w-full cursor-default overflow-hidden bg-transparent text-left focus:outline-none">
                         <Combobox.Input
                           required
@@ -270,6 +271,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                           <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
                         </Combobox.Button>
                       </div>
+                      <DropdownPortal targetRef={comboboxRef} matchWidth>
                       <Transition
                         as={Fragment}
                         leave="transition ease-in duration-100"
@@ -277,7 +279,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                         leaveTo="opacity-0"
                         afterLeave={() => setQuery("")}
                       >
-                        <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
+                        <Combobox.Options className="max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
                           {filteredBrokers.length === 0 && query !== "" ? (
                             <div className="relative cursor-default select-none py-2 px-4 text-slate-500 dark:text-slate-400">
                               Нажмите Enter, чтобы добавить "{query}"
@@ -307,6 +309,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                           )}
                         </Combobox.Options>
                       </Transition>
+                      </DropdownPortal>
                     </div>
                   </Combobox>
                 </div>
@@ -388,7 +391,14 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Текущая стоимость
                   </label>
-                  <div className="relative">
+                  <Listbox
+                    value={formData.currency || "RUB"}
+                    onChange={(val) =>
+                      setFormData((prev) => ({ ...prev, currency: val }))
+                    }
+                  >
+                  {({ open }) => (
+                  <div className={cn("relative", open ? "z-[60]" : "z-30")}>
                     <input
                       required
                       type="text"
@@ -398,114 +408,107 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                       className="apple-input w-full font-mono text-sm pr-20"
                       placeholder="0"
                     />
-                    <div className="absolute inset-y-1.5 right-1.5 z-10">
-                      <Listbox
-                        value={formData.currency || "RUB"}
-                        onChange={(val) =>
-                          setFormData((prev) => ({ ...prev, currency: val }))
-                        }
-                      >
-                        {({ open }) => (
-                          <div className="relative h-full text-slate-950 dark:text-white">
-                            <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
-                              <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
-                                {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
-                                  (formData.currency || "RUB") as
-                                    | "RUB"
-                                    | "USD"
-                                    | "EUR"
-                                    | "CNY"
-                                ] || "₽"}
-                              </span>
-                              <ChevronDown
-                                className={cn(
-                                  "w-3.5 h-3.5 text-slate-400 stroke-[2.5px] transition-transform",
-                                  open && "rotate-180",
-                                )}
-                              />
-                            </Listbox.Button>
-                            <AnimatePresence>
-                              {open && (
-                                <Listbox.Options 
-                                  as={motion.ul as any}
-                                  static
-                                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                                  transition={{ duration: 0.15 } as any}
-                                  className="absolute right-0 mt-2 w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-900 p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none"
-                                >
-                                  {[
-                                    { id: "RUB", symbol: "₽", label: "RUB" },
-                                    { id: "USD", symbol: "$", label: "USD" },
-                                    { id: "EUR", symbol: "€", label: "EUR" },
-                                    { id: "CNY", symbol: "¥", label: "CNY" },
-                                  ].map((c) => (
-                                    <Listbox.Option
-                                      key={c.id}
-                                      value={c.id}
-                                      className={({ active, selected }) =>
-                                        cn(
-                                          "flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer outline-none",
-                                          active || selected
-                                            ? "bg-invest-50 dark:bg-invest-500/20 text-invest-600 dark:text-invest-400"
-                                            : "text-slate-600 dark:text-slate-300",
-                                        )
-                                      }
-                                    >
-                                      {({ selected }) => (
-                                        <>
-                                          <span
-                                            className={cn(
-                                              "w-4 text-center shrink-0",
-                                              selected
-                                                ? "text-invest-500"
-                                                : "text-slate-400",
-                                            )}
-                                          >
-                                            {c.symbol}
-                                          </span>
-                                          <span className="flex-1 truncate">
-                                            {c.label}
-                                          </span>
-                                        </>
-                                      )}
-                                    </Listbox.Option>
-                                  ))}
-                                </Listbox.Options>
+                    <div className="absolute inset-y-1.5 right-1.5">
+                        <div className="relative h-full text-slate-950 dark:text-white">
+                          <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
+                            <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
+                              {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
+                                (formData.currency || "RUB") as
+                                  | "RUB"
+                                  | "USD"
+                                  | "EUR"
+                                  | "CNY"
+                              ] || "₽"}
+                            </span>
+                            <ChevronDown
+                              className={cn(
+                                "w-3.5 h-3.5 text-slate-400 stroke-[2.5px] transition-transform",
+                                open && "rotate-180",
                               )}
-                            </AnimatePresence>
-                          </div>
-                        )}
-                      </Listbox>
+                            />
+                          </Listbox.Button>
+                          <AnimatePresence>
+                            {open && (
+                              <Listbox.Options 
+                                as={motion.ul as any}
+                                static
+                                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                                transition={{ duration: 0.15 } as any}
+                                className="absolute right-0 mt-2 w-28 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white dark:bg-slate-900 p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] z-[110] border border-slate-200 dark:border-slate-800 focus:outline-none"
+                              >
+                                {[
+                                  { id: "RUB", symbol: "₽", label: "RUB" },
+                                  { id: "USD", symbol: "$", label: "USD" },
+                                  { id: "EUR", symbol: "€", label: "EUR" },
+                                  { id: "CNY", symbol: "¥", label: "CNY" },
+                                ].map((c) => (
+                                  <Listbox.Option
+                                    key={c.id}
+                                    value={c.id}
+                                    className={({ active, selected }) =>
+                                      cn(
+                                        "flex items-center gap-2.5 py-2.5 px-3 rounded-xl font-bold transition-all duration-200 cursor-pointer outline-none",
+                                        active || selected
+                                          ? "bg-invest-50 dark:bg-invest-500/20 text-invest-600 dark:text-invest-400"
+                                          : "text-slate-600 dark:text-slate-300",
+                                      )
+                                    }
+                                  >
+                                    {({ selected }) => (
+                                      <>
+                                        <span
+                                          className={cn(
+                                            "w-4 text-center shrink-0",
+                                            selected
+                                              ? "text-invest-500"
+                                              : "text-slate-400",
+                                          )}
+                                        >
+                                          {c.symbol}
+                                        </span>
+                                        <span className="flex-1 truncate">
+                                          {c.label}
+                                        </span>
+                                      </>
+                                    )}
+                                  </Listbox.Option>
+                                ))}
+                              </Listbox.Options>
+                            )}
+                          </AnimatePresence>
+                        </div>
                     </div>
                   </div>
+                  )}
+                  </Listbox>
                   <p className="text-[10px] text-slate-500/80 px-1">Фактическая оценка портфеля</p>
                 </div>
-              </div>
-              
-              <div 
-                className={cn(
-                  "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
-                  (formData.type === 'iis' && (formData.iisType === 'A' || formData.iisType === '3')) ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-                )}
-              >
-                <div className="overflow-hidden">
-                  <div className="space-y-2 pt-6">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      Получено вычетов (НДФЛ возврат)
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={deductionsStr}
-                      onChange={(e) => handleAmountChange(e.target.value, setDeductionsStr, 'deductionsReceived')}
-                      className="apple-input w-full font-mono text-sm"
-                      placeholder="0"
-                    />
-                    <p className="text-[10px] text-slate-500 px-1">
-                      Сумма уже возвращенного налога на взнос (тип А).
-                    </p>
+                
+                <div 
+                  className={cn(
+                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    (formData.type === 'iis' && (formData.iisType === 'A' || formData.iisType === '3')) ? "grid-rows-[1fr] opacity-100 mt-4 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
+                  )}
+                >
+                  <div className="overflow-hidden">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                        Получено вычетов (НДФЛ возврат)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={deductionsStr}
+                        onChange={(e) => handleAmountChange(e.target.value, setDeductionsStr, 'deductionsReceived')}
+                        className="apple-input w-full font-mono text-sm"
+                        placeholder="0"
+                      />
+                      <p className="text-[10px] text-slate-500 px-1">
+                        Сумма уже возвращенного налога на взнос (тип А).
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -531,7 +534,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                 </AnimatePresence>
               </div>
 
-            <div className="flex-none px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+            <div className="sticky bottom-0 z-50 mt-auto px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl">
               <button
                 type="button"
                 onClick={onClose}
@@ -547,6 +550,11 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
               </button>
             </div>
             </form>
+            {/* Embedded datepicker portal container so clicking dates doesn't close Headless UI Dialog */}
+            <div
+              id="datepicker-portal-container"
+              className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
+            />
           </motion.div>
         </Dialog.Panel>
       </div>

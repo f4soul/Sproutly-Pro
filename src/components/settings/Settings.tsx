@@ -2,10 +2,12 @@ import React, { useState, useRef, Fragment } from 'react';
 import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin, FileSpreadsheet, Database, RefreshCw, GripVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { SecuritySettings } from './SecuritySettings';
+import { NotificationsSettings } from './NotificationsSettings';
 import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
 import { useAppData } from '../../context/AppDataContext';
 import { showToast } from '../../lib/toast';
@@ -82,6 +84,10 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
 
 export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const { state, setState, deposits, cashAssets, investmentAssets, cryptoAssets } = useAppData();
+  
+  const archivedCount = useLiveQuery(async () => {
+    return await db.deposits.where('isArchived').equals(1).count();
+  }) || 0;
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
   const [bracketYearToDelete, setBracketYearToDelete] = useState<number | null>(null);
@@ -795,37 +801,45 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       </div>
 
       {/* Security & Archive Section side by side grid layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch mb-6 lg:gap-8">
         {/* Security Section */}
         <div className="w-full">
           <SecuritySettings appSettings={appSettings} />
         </div>
 
-        {/* Archive Section */}
-        <div className="relative w-full min-h-[350px] lg:min-h-0">
-          <div className="lg:absolute lg:inset-0 w-full h-full">
-            <section className="apple-card p-4 sm:p-5 xl:p-6 h-full flex flex-col">
-              <div className="flex items-center gap-4 mb-4 sm:mb-6 justify-between shrink-0">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                    <ArchiveIcon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 stroke-[1.5px]" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив</h3>
-                    <p className="text-[10px] sm:text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Удаленные вклады</p>
-                  </div>
-                </div>
-                <div className="shrink-0">
-                   <ArchiveHeaderActions />
-                </div>
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 pb-2">
-                <Archive />
-              </div>
-            </section>
-          </div>
+        {/* Notifications Section */}
+        <div className="w-full">
+          <NotificationsSettings />
         </div>
       </div>
+
+      {/* Archive Section (Full Width or Grid) */}
+      {archivedCount > 0 && (
+        <div className="grid grid-cols-1 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8">
+          {/* Archive Section */}
+          <div className="w-full">
+              <section className="apple-card p-4 sm:p-5 xl:p-6 flex flex-col max-h-[400px] lg:max-h-[450px]">
+                <div className="flex items-center gap-4 mb-4 sm:mb-6 justify-between shrink-0">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                      <ArchiveIcon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 stroke-[1.5px]" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив</h3>
+                      <p className="text-[10px] sm:text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Удаленные вклады</p>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                     <ArchiveHeaderActions />
+                  </div>
+                </div>
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 pb-2">
+                  <Archive />
+                </div>
+              </section>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modals */}
       <AnimatePresence>

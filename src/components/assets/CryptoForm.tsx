@@ -1,4 +1,4 @@
-import React, { useState, Fragment, useEffect } from "react";
+import React, { useState, Fragment, useEffect, useRef } from "react";
 import { Dialog, Combobox, Transition } from "@headlessui/react";
 import { Bitcoin, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
 import { CryptoAsset } from "../../types";
@@ -10,6 +10,7 @@ import { CryptoLogo } from "./CryptoLogo";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
+import { DropdownPortal } from "../ui/DropdownPortal";
 import { getCryptoRates, getCryptoRate } from "../../services/crypto";
 import { formatCurrency } from "../../lib/taxCalculator";
 
@@ -23,6 +24,7 @@ interface CryptoFormProps {
 }
 
 export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
+  const comboboxRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<Partial<CryptoAsset>>(
     assetToEdit || {
       ticker: "",
@@ -131,19 +133,20 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 overflow-y-auto p-6 sm:p-8 flex flex-col gap-6 custom-scrollbar [scrollbar-gutter:stable]">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2 relative z-30">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                      Тикер
-                    </label>
                     <Combobox
                       value={formData.ticker || ""}
                       onChange={(val) => setFormData((prev) => ({ ...prev, ticker: val || undefined }))}
                     >
-                      <div className="relative">
+                    {({ open }) => (
+                  <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
+                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      Тикер
+                    </label>
+                      <div ref={comboboxRef} className="relative">
                         <div className="relative w-full cursor-default overflow-hidden bg-transparent text-left focus:outline-none">
                           <Combobox.Input
                             required
@@ -159,6 +162,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                             <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
                           </Combobox.Button>
                         </div>
+                        <DropdownPortal targetRef={comboboxRef} matchWidth>
                         <Transition
                           as={Fragment}
                           leave="transition ease-in duration-100"
@@ -166,7 +170,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                           leaveTo="opacity-0"
                           afterLeave={() => setQuery("")}
                         >
-                          <Combobox.Options className="absolute mt-2 max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-2xl z-[110] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
+                          <Combobox.Options className="max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
                             {filteredTickers.length === 0 && query !== "" ? (
                               <div className="relative cursor-default select-none py-2 px-4 text-slate-500 dark:text-slate-400">
                                 Нажмите Enter, чтобы добавить "{query}"
@@ -190,9 +194,11 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                             )}
                           </Combobox.Options>
                         </Transition>
+                        </DropdownPortal>
                       </div>
-                    </Combobox>
                   </div>
+                    )}
+                    </Combobox>
 
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
@@ -320,7 +326,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                 </div>
               </div>
 
-              <div className="flex-none px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <div className="sticky bottom-0 z-50 mt-auto px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl">
                 <button
                   type="button"
                   onClick={onClose}
@@ -336,6 +342,11 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                 </button>
               </div>
             </form>
+            {/* Embedded datepicker portal container so clicking dates doesn't close Headless UI Dialog */}
+            <div
+              id="datepicker-portal-container"
+              className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
+            />
           </motion.div>
         </Dialog.Panel>
       </div>
