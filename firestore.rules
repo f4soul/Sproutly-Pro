@@ -169,7 +169,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      allow update: if isAdmin() || (isOwner(userId) && request.resource.data.role == resource.data.role);
       allow delete: if isOwner(userId) || isAdmin();
     }
   }

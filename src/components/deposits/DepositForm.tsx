@@ -200,6 +200,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
           duration,
         };
         localStorage.setItem("new_deposit_draft", JSON.stringify(draftData));
+      } else {
+        localStorage.removeItem("new_deposit_draft");
       }
     }
   }, [formData, duration, deposit, hasDraft]);
@@ -402,7 +404,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col max-h-[90vh] pointer-events-auto"
+            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-[86dvh] sm:h-[auto] max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
               <div className="flex items-center justify-between">
@@ -429,143 +431,75 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
             <form
               onSubmit={handleSubmit}
-              className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative"
+              className="flex flex-col flex-1 min-h-0 relative"
             >
-              <div className="p-4 sm:p-5 flex flex-col gap-4 flex-shrink-0">
-              {hasDraft && (
-                <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-bold uppercase tracking-wider text-[9px] text-amber-600 dark:text-amber-400">
-                      Незавершенный черновик
-                    </span>
-                    <span>
-                      У вас остался незаполненный ранее вклад. Продолжить с того
-                      же места?
-                    </span>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          const stored =
-                            localStorage.getItem("new_deposit_draft");
-                          if (stored) {
-                            const parsed = JSON.parse(stored);
-                            setFormData({
-                              ...parsed.formData,
-                              startDate: parsed.formData.startDate
-                                ? new Date(parsed.formData.startDate)
-                                : new Date(),
-                              endDate: parsed.formData.endDate
-                                ? new Date(parsed.formData.endDate)
-                                : null,
-                            });
-                            setDuration(parsed.duration || "");
-                          }
-                        } catch (e) {
-                          console.error("Failed to restore draft:", e);
-                        }
-                        setHasDraft(false);
-                      }}
-                      className="px-2.5 py-1.5 bg-deposit-600 hover:bg-deposit-700 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[10px] uppercase tracking-wider"
-                    >
-                      Да
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        localStorage.removeItem("new_deposit_draft");
-                        setHasDraft(false);
-                      }}
-                      className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[10px] uppercase tracking-wider"
-                    >
-                      Сбросить
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+                <div className="p-4 sm:p-5 flex flex-col gap-4 flex-shrink-0">
+              <AnimatePresence>
+                {hasDraft && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, height: "auto", scale: 1 }}
+                    exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold uppercase tracking-wider text-[9px] text-amber-600 dark:text-amber-400">
+                          Незавершенный черновик
+                        </span>
+                        <span>
+                          У вас остался незаполненный ранее вклад. Продолжить с того
+                          же места?
+                        </span>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              const stored =
+                                localStorage.getItem("new_deposit_draft");
+                              if (stored) {
+                                const parsed = JSON.parse(stored);
+                                setFormData({
+                                  ...parsed.formData,
+                                  startDate: parsed.formData.startDate
+                                    ? new Date(parsed.formData.startDate)
+                                    : new Date(),
+                                  endDate: parsed.formData.endDate
+                                    ? new Date(parsed.formData.endDate)
+                                    : null,
+                                });
+                                setDuration(parsed.duration || "");
+                              }
+                            } catch (e) {
+                              console.error("Failed to restore draft:", e);
+                            }
+                            setHasDraft(false);
+                          }}
+                          className="px-2.5 py-1.5 bg-deposit-600 hover:bg-deposit-700 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[10px] uppercase tracking-wider"
+                        >
+                          Да
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            localStorage.removeItem("new_deposit_draft");
+                            setHasDraft(false);
+                          }}
+                          className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[10px] uppercase tracking-wider"
+                        >
+                          Сбросить
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              <div className="flex bg-slate-100/80 dark:bg-slate-900/80 p-1 rounded-[14px] w-full border border-slate-200/50 dark:border-white/[0.02] shadow-inner relative mx-auto">
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 relative flex items-center justify-center text-[10px] xl:text-xs uppercase tracking-widest font-bold h-7 sm:h-8 rounded-[10px] transition-all z-20 outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
-                    !formData.isClosed
-                      ? "text-deposit-600 dark:text-deposit-400"
-                      : "text-slate-500 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5",
-                  )}
-                  onClick={() => {
-                    const isSavings =
-                      formData.formula === "daily_balance" ||
-                      formData.formula === "min_balance";
-                      
-                    let nextEndDate = formData.endDate;
-                    if (nextEndDate) {
-                      const end = new Date(nextEndDate);
-                      end.setHours(0, 0, 0, 0);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      if (today >= end) {
-                        nextEndDate = null;
-                      }
-                    }
 
-                    setFormData({
-                      ...formData,
-                      isClosed: false,
-                      endDate: isSavings ? null : nextEndDate
-                    });
-                    
-                    if (!isSavings && nextEndDate === null) {
-                      setDuration("");
-                    }
-                  }}
-                >
-                  <span className="relative z-20 leading-none">Действует</span>
-                  {!formData.isClosed && (
-                    <motion.div
-                      layoutId="deposit-status-indicator"
-                      className="absolute inset-0 bg-white dark:bg-deposit-500/10 rounded-[10px] z-10 shadow-sm ring-1 ring-black/5 dark:ring-deposit-400/30"
-                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-                    />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  className={cn(
-                    "flex-1 relative flex items-center justify-center text-[10px] xl:text-xs uppercase tracking-widest font-bold h-7 sm:h-8 rounded-[10px] transition-all z-20 outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
-                    formData.isClosed
-                      ? "text-slate-900 dark:text-white"
-                      : "text-slate-500 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-white/5",
-                  )}
-                  onClick={() => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const isSavings =
-                      formData.formula === "daily_balance" ||
-                      formData.formula === "min_balance";
-                    const newEndDate = isSavings
-                      ? today
-                      : formData.endDate || today;
-
-                    setFormData({
-                      ...formData,
-                      isClosed: true,
-                      endDate: newEndDate,
-                    });
-                  }}
-                >
-                  <span className="relative z-20 leading-none">Закрыт</span>
-                  {formData.isClosed && (
-                    <motion.div
-                      layoutId="deposit-status-indicator"
-                      className="absolute inset-0 bg-white dark:bg-slate-700/50 rounded-[10px] z-10 shadow-sm ring-1 ring-black/5 dark:ring-white/[0.08]"
-                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
-                    />
-                  )}
-                </button>
-              </div>
 
               <div className="flex flex-wrap gap-2 w-full">
                 <ToggleChip
@@ -914,12 +848,13 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   />
                 </div>
               </div>
-              </div>
-              <div className="sticky bottom-0 z-50 mt-auto px-6 py-5 sm:px-8 sm:py-6 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl flex gap-3 sm:gap-4 sm:justify-end shrink-0">
+            </div>
+          </div>
+          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide"
+                className="flex-1 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 shadow-sm uppercase tracking-wide"
               >
                 Отмена
               </button>
@@ -931,7 +866,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   !formData.rate ||
                   !formData.startDate
                 }
-                className="flex-1 sm:flex-none px-6 py-2.5 sm:py-3 rounded-2xl bg-deposit-500 hover:bg-deposit-600 active:scale-95 text-white font-bold transition-all shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] flex items-center justify-center gap-2 text-sm uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
+                className="flex-1 py-3.5 text-sm font-bold text-white bg-deposit-500 hover:bg-deposit-600 rounded-xl transition-all shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] active:scale-95 flex items-center justify-center gap-2 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100"
               >
                 <Save className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5px]" />
                 Сохранить
@@ -973,7 +908,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 100 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8"
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] sm:p-8"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />

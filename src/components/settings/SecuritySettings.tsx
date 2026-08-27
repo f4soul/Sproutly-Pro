@@ -375,13 +375,21 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                     type="button"
                     onClick={handleToggleBiometrics}
                     className={cn(
-                      "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 cursor-pointer outline-none active:scale-95",
-                      lockSettings?.useBiometrics ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-700"
+                      "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+                      lockSettings?.useBiometrics ? "bg-primary-500" : "bg-[#E9E9EA] dark:bg-[#39393D]"
                     )}
                   >
+                    {/* iOS On-indicator bar | */}
+                    <div
+                      className={cn(
+                        "absolute left-[8px] top-1/2 -translate-y-1/2 w-[1.5px] h-[7px] bg-white rounded-full transition-opacity duration-200 pointer-events-none",
+                        lockSettings?.useBiometrics ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    {/* iOS Thumb / Knob */}
                     <div className={cn(
-                      "w-4 h-4 bg-white rounded-full shadow-sm transition-transform",
-                      lockSettings?.useBiometrics ? "translate-x-5" : "translate-x-0"
+                      "w-[18px] h-[18px] bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.1)] transition-transform duration-200 ease-out z-10",
+                      lockSettings?.useBiometrics ? "translate-x-[18px]" : "translate-x-0"
                     )} />
                   </button>
                 </div>

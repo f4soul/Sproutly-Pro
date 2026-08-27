@@ -133,8 +133,9 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
-              <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
+            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+                <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Combobox
@@ -324,9 +325,9 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     placeholder="Дополнительные детали..."
                   />
                 </div>
+                </div>
               </div>
-
-              <div className="sticky bottom-0 z-50 mt-auto px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl">
+              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
                 <button
                   type="button"
                   onClick={onClose}

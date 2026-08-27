@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, CheckCircle2, Settings2 as Settings2Icon, ChevronDown, TrendingUp, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin, FileSpreadsheet, Database, RefreshCw, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, Settings2 as Settings2Icon, ChevronDown, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin, FileSpreadsheet, Database, RefreshCw, GripVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Archive, ArchiveHeaderActions } from './Archive';
 import { SecuritySettings } from './SecuritySettings';
@@ -49,19 +49,19 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
       value={tab}
       dragListener={false}
       dragControls={controls}
-      className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] rounded-xl select-none relative"
-      whileDrag={{ scale: 1.02, boxShadow: '0 12px 28px rgba(0,0,0,0.35)', zIndex: 20 }}
+      className="w-full min-h-[65.5px] flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white/60 dark:bg-white/[0.02] rounded-xl select-none relative"
+      whileDrag={{ scale: 1, boxShadow: '0 12px 28px rgba(0,0,0,0.15)', zIndex: 20 }}
     >
-      <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3 sm:gap-4">
         <div
           onPointerDown={(e) => controls.start(e)}
-          className="w-5 h-5 flex items-center justify-center text-slate-400 dark:text-slate-600 cursor-grab active:cursor-grabbing shrink-0"
+          className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing shrink-0"
           style={{ touchAction: 'none' }}
         >
-          <GripVertical size={16} />
+          <GripVertical size={20} />
         </div>
-        <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", meta.iconBg, meta.iconColor)}>
-          <meta.Icon size={14} className="stroke-[2px]" />
+        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", meta.iconBg, meta.iconColor)}>
+          <meta.Icon size={16} className="stroke-[2px]" />
         </div>
         <span className="text-sm font-bold text-slate-800 dark:text-slate-100">{meta.label}</span>
       </div>
@@ -71,12 +71,25 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
         onClick={() => onToggle(tab)}
         title={isLocked ? "Нельзя скрыть раздел, в котором есть активы" : ""}
         className={cn(
-          "w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 outline-none",
-          !isHidden ? meta.toggleOn : "bg-slate-300 dark:bg-slate-700",
+          "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0",
+          !isHidden ? meta.toggleOn : "bg-[#E9E9EA] dark:bg-[#39393D]",
           isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
         )}
       >
-        <div className={cn("w-4 h-4 bg-white rounded-full shadow-sm transition-transform", !isHidden ? "translate-x-5" : "translate-x-0")} />
+        {/* iOS On-indicator bar | */}
+        <div
+          className={cn(
+            "absolute left-[8px] top-1/2 -translate-y-1/2 w-[1.5px] h-[7px] bg-white rounded-full transition-opacity duration-200 pointer-events-none",
+            !isHidden ? "opacity-100" : "opacity-0"
+          )}
+        />
+        {/* iOS Thumb / Knob */}
+        <div
+          className={cn(
+            "w-[18px] h-[18px] bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.1)] transition-transform duration-200 ease-out z-10",
+            !isHidden ? "translate-x-[18px]" : "translate-x-0"
+          )}
+        />
       </button>
     </Reorder.Item>
   );
@@ -85,9 +98,11 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
 export function Settings({ taxSettings, appSettings }: SettingsProps) {
   const { state, setState, deposits, cashAssets, investmentAssets, cryptoAssets } = useAppData();
   
-  const archivedCount = useLiveQuery(async () => {
-    return await db.deposits.where('isArchived').equals(1).count();
-  }) || 0;
+  const archivedDeposits = useLiveQuery(async () => {
+    const deposits = await db.deposits.where('isArchived').equals(1).toArray();
+    return deposits.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  });
+  const archivedCount = archivedDeposits?.length || 0;
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
   const [bracketYearToDelete, setBracketYearToDelete] = useState<number | null>(null);
@@ -391,20 +406,20 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           <button 
             type="button"
             onClick={exportFullBackupXLSX}
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
+            className="w-full min-h-[65.5px] flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
             title="Скачать таблицу Excel"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
-                <FileSpreadsheet size={14} className="stroke-[2px]" />
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                <FileSpreadsheet size={16} className="stroke-[2px]" />
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Excel</span>
+                <span className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Excel</span>
                 <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Для аналитики в таблицах</span>
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:bg-emerald-500/10 transition-colors shrink-0">
-              <Upload size={14} className="stroke-[2.5px]" />
+              <Upload size={16} className="stroke-[2.5px]" />
             </div>
           </button>
 
@@ -412,39 +427,39 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           <button 
             type="button"
             onClick={exportData}
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
+            className="w-full min-h-[65.5px] flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all outline-none group select-none active:scale-[0.98]"
             title="Скачать резервную копию"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 shrink-0">
-                <Database size={14} className="stroke-[2px]" />
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500 shrink-0">
+                <Database size={16} className="stroke-[2px]" />
               </div>
               <div className="flex flex-col items-start">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Экспорт данных</span>
-                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Сохранить копию в формате JSON</span>
+                <span className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Экспорт данных</span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">Сохранить в формате JSON</span>
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-primary-500 group-hover:bg-primary-500/10 transition-colors shrink-0">
-              <Upload size={14} className="stroke-[2.5px]" />
+              <Upload size={16} className="stroke-[2.5px]" />
             </div>
           </button>
 
           {/* JSON импорт */}
           <label 
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all cursor-pointer outline-none group select-none active:scale-[0.98]"
+            className="w-full min-h-[65.5px] flex items-center justify-between px-4 py-3 sm:py-3.5 bg-white/60 dark:bg-white/[0.02] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] rounded-xl transition-all cursor-pointer outline-none group select-none active:scale-[0.98]"
             title="Восстановить из файла"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
-                <RefreshCw size={14} className="stroke-[2px]" />
+            <div className="flex items-center gap-4">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 shrink-0">
+                <RefreshCw size={16} className="stroke-[2px]" />
               </div>
               <div className="flex flex-col items-start text-left">
-                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">Импорт данных</span>
+                <span className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Импорт данных</span>
                 <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 leading-tight pr-2">Восстановить данные из JSON</span>
               </div>
             </div>
             <div className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/5 flex items-center justify-center text-slate-400 group-hover:text-amber-500 group-hover:bg-amber-500/10 transition-colors shrink-0">
-              <Download size={14} className="stroke-[2.5px]" />
+              <Download size={16} className="stroke-[2.5px]" />
             </div>
             <input type="file" className="sr-only" accept=".json" onChange={importData} />
           </label>
@@ -465,12 +480,12 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col justify-center bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] p-1">
           <Reorder.Group
             axis="y"
             values={assetTabOrder}
             onReorder={handleReorderTabs}
-            className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-200/50 dark:border-white/[0.05] p-1 space-y-1"
+            className="space-y-1 relative"
           >
             {assetTabOrder.map((tab) => (
               <AssetTabRow
@@ -814,32 +829,42 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       </div>
 
       {/* Archive Section (Full Width or Grid) */}
-      {archivedCount > 0 && (
-        <div className="grid grid-cols-1 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8">
-          {/* Archive Section */}
-          <div className="w-full">
-              <section className="apple-card p-4 sm:p-5 xl:p-6 flex flex-col max-h-[400px] lg:max-h-[450px]">
-                <div className="flex items-center gap-4 mb-4 sm:mb-6 justify-between shrink-0">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
-                      <ArchiveIcon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 stroke-[1.5px]" />
+      <AnimatePresence initial={false}>
+        {archivedCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="grid grid-cols-1 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8 pt-1">
+              {/* Archive Section */}
+              <div className="w-full">
+                <section className="apple-card p-4 sm:p-5 xl:p-6 flex flex-col max-h-[400px] lg:max-h-[450px]">
+                  <div className="flex items-center gap-4 mb-4 sm:mb-6 justify-between shrink-0">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                        <ArchiveIcon className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600 stroke-[1.5px]" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив</h3>
+                        <p className="text-[10px] sm:text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Удаленные вклады</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Архив</h3>
-                      <p className="text-[10px] sm:text-[11px] lg:text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5 truncate pr-2">Удаленные вклады</p>
+                    <div className="shrink-0">
+                       <ArchiveHeaderActions />
                     </div>
                   </div>
-                  <div className="shrink-0">
-                     <ArchiveHeaderActions />
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 pb-2">
+                    <Archive items={archivedDeposits || []} />
                   </div>
-                </div>
-                <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 pb-2">
-                  <Archive />
-                </div>
-              </section>
-          </div>
-        </div>
-      )}
+                </section>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Modals */}
       <AnimatePresence>

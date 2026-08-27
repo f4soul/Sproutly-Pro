@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { Calendar, CalendarX, Clock } from "lucide-react";
+import { Calendar, CalendarX, Clock, Lock } from "lucide-react";
 import DatePicker from "react-datepicker";
 import { addDays, differenceInDays } from "date-fns";
 import { Deposit } from "../../types";
-import { maskDateInput } from "../../lib/utils";
+import { maskDateInput, cn } from "../../lib/utils";
 
 interface DepositFormDateFieldsProps {
   formData: Partial<Deposit>;
@@ -126,9 +126,52 @@ export function DepositFormDateFields({
       </div>
 
       <div className="space-y-2">
-        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-          <CalendarX className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
-          Дата закрытия
+        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <CalendarX className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />
+            Дата закрытия
+          </span>
+          <button
+            type="button"
+            title={formData.isClosed ? "Закрыт досрочно — нажмите, чтобы отменить" : "Отметить как закрытый досрочно"}
+            onClick={() => {
+              if (formData.isClosed) {
+                const isSavings = formData.formula === "daily_balance" || formData.formula === "min_balance";
+                
+                let nextEndDate = formData.endDate;
+                if (nextEndDate) {
+                  const end = new Date(nextEndDate);
+                  end.setHours(0, 0, 0, 0);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  if (today >= end) {
+                    nextEndDate = null;
+                  }
+                }
+
+                setFormData({
+                  ...formData,
+                  isClosed: false,
+                  endDate: isSavings ? null : nextEndDate
+                });
+                
+                if (!isSavings && nextEndDate === null) {
+                  setDuration("");
+                }
+              } else {
+                const isSavings = formData.formula === "daily_balance" || formData.formula === "min_balance";
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                setFormData({ ...formData, isClosed: true, endDate: isSavings ? today : (formData.endDate || today) });
+              }
+            }}
+            className={cn(
+              "w-5 h-5 rounded-md flex items-center justify-center transition-all shrink-0",
+              formData.isClosed ? "bg-slate-700 text-white" : "bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+            )}
+          >
+            <Lock className="w-3 h-3" />
+          </button>
         </label>
         <div className="relative w-full group">
           <DatePicker

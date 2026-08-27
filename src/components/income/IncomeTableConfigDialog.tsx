@@ -1,27 +1,10 @@
 import React, { useState, Fragment, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Dialog } from '@headlessui/react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Plus, Trash2, Save, GripVertical, Columns, CalendarDays, CalendarCheck2, Cog, Landmark } from 'lucide-react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
+import { X, Plus, Trash2, Save, GripVertical, Columns, CalendarDays, CalendarCheck2, Cog } from 'lucide-react';
 import { IncomeColumnDef } from '../../types';
 import { cn } from '../../lib/utils';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { TableInput } from '../ui/TableInput';
 
 export interface IncomeTableSettings {
@@ -157,17 +140,22 @@ function PremiumAccordionItem({
             aria-checked={checked}
             onClick={(e) => { e.stopPropagation(); onToggle(!checked); if (checked) setIsExpanded(false); }}
             className={cn(
-              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-              checked ? "bg-primary-500" : "bg-slate-300 dark:bg-slate-700"
+              "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+              checked ? "bg-primary-500" : "bg-[#E9E9EA] dark:bg-[#39393D]"
             )}
           >
-            <span 
-              aria-hidden="true" 
+            {/* iOS On-indicator bar | */}
+            <div
               className={cn(
-                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                checked ? "translate-x-2.5" : "-translate-x-2.5"
+                "absolute left-[8px] top-1/2 -translate-y-1/2 w-[1.5px] h-[7px] bg-white rounded-full transition-opacity duration-200 pointer-events-none",
+                checked ? "opacity-100" : "opacity-0"
               )}
             />
+            {/* iOS Thumb / Knob */}
+            <div className={cn(
+              "w-[18px] h-[18px] bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.1)] transition-transform duration-200 ease-out z-10",
+              checked ? "translate-x-[18px]" : "translate-x-0"
+            )} />
           </button>
         </div>
       </div>
@@ -217,29 +205,22 @@ interface SortableColumnProps {
 }
 
 function SortableColumn({ col, onUpdate, onRemove }: SortableColumnProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: col.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 10 : 1,
-    opacity: isDragging ? 0.8 : 1,
-  };
+  const controls = useDragControls();
 
   return (
-    <div 
-      ref={setNodeRef} 
-      style={style} 
-      className={`group flex gap-2 sm:gap-3 items-end bg-white/60 dark:bg-[#111315]/60 backdrop-blur-md border ${isDragging ? 'border-primary-500 shadow-xl' : 'border-slate-200 dark:border-white/[0.05]'} rounded-[1.25rem] p-3 sm:p-4 transition-colors hover:border-primary-500/30 touch-none w-full max-w-full overflow-hidden`}
+    <Reorder.Item 
+      value={col}
+      dragListener={false}
+      dragControls={controls}
+      className="group flex gap-2 sm:gap-3 items-end bg-white/60 dark:bg-[#111315]/60 backdrop-blur-md border border-slate-200 dark:border-white/[0.05] rounded-[1.25rem] p-3 sm:p-4 transition-colors hover:border-primary-500/30 touch-none w-full max-w-full overflow-hidden"
     >
-      <div {...attributes} {...listeners} className="text-slate-400 cursor-grab px-0.5 sm:px-1 active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 pb-[9px] lg:pb-[10px] shrink-0">
+      <div 
+        onPointerDown={(e) => {
+          e.preventDefault();
+          controls.start(e);
+        }}
+        className="text-slate-400 cursor-grab px-0.5 sm:px-1 active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 pb-[9px] lg:pb-[10px] shrink-0 select-none touch-none"
+      >
         <GripVertical className="w-5 h-5" />
       </div>
       
@@ -275,7 +256,7 @@ function SortableColumn({ col, onUpdate, onRemove }: SortableColumnProps) {
       >
         <Trash2 className="w-5 h-5" />
       </button>
-    </div>
+    </Reorder.Item>
   );
 }
 
@@ -301,22 +282,6 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
       document.body.style.overflow = '';
     };
   }, [isOpen, initialColumns, initialSettings, initialBaseSalary]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setColumns((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
 
   const handleAdd = () => {
     setColumns([...columns, {
@@ -487,17 +452,22 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                               aria-checked={applyBaseToAll}
                               onClick={() => setApplyBaseToAll(!applyBaseToAll)}
                               className={cn(
-                                "relative inline-flex h-6.5 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-250 ease-in-out focus:outline-none",
-                                applyBaseToAll ? "bg-teal-500 shadow-[0_4px_12px_rgba(20,184,166,0.35)]" : "bg-slate-300 dark:bg-slate-800"
+                                "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+                                applyBaseToAll ? "bg-teal-500 shadow-[0_4px_12px_rgba(20,184,166,0.35)]" : "bg-[#E9E9EA] dark:bg-[#39393D]"
                               )}
                             >
-                              <span 
-                                aria-hidden="true" 
+                              {/* iOS On-indicator bar | */}
+                              <div
                                 className={cn(
-                                  "pointer-events-none inline-block h-5.5 w-5.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                                  applyBaseToAll ? "translate-x-5" : "translate-x-0.5"
+                                  "absolute left-[8px] top-1/2 -translate-y-1/2 w-[1.5px] h-[7px] bg-white rounded-full transition-opacity duration-200 pointer-events-none",
+                                  applyBaseToAll ? "opacity-100" : "opacity-0"
                                 )}
                               />
+                              {/* iOS Thumb / Knob */}
+                              <div className={cn(
+                                "w-[18px] h-[18px] bg-white rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.1)] transition-transform duration-200 ease-out z-10",
+                                applyBaseToAll ? "translate-x-[18px]" : "translate-x-0"
+                              )} />
                             </button>
                           </div>
                         </div>
@@ -600,27 +570,21 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                         Нет добавленных столбцов
                       </div>
                     ) : (
-                      <DndContext 
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
+                      <Reorder.Group 
+                        axis="y" 
+                        values={columns} 
+                        onReorder={setColumns} 
+                        className="space-y-3 pb-2"
                       >
-                        <SortableContext 
-                          items={columns.map(c => c.id)}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          <div className="space-y-3 pb-2">
-                            {columns.map((col) => (
-                              <SortableColumn 
-                                key={col.id} 
-                                col={col} 
-                                onUpdate={handleUpdate} 
-                                onRemove={handleRemove} 
-                              />
-                            ))}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
+                        {columns.map((col) => (
+                          <SortableColumn 
+                            key={col.id} 
+                            col={col} 
+                            onUpdate={handleUpdate} 
+                            onRemove={handleRemove} 
+                          />
+                        ))}
+                      </Reorder.Group>
                     )}
                     
                     <button

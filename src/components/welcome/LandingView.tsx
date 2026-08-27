@@ -9,16 +9,16 @@ interface LandingViewProps {
 
 export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
   return (
-    <div className="fixed inset-0 z-[100] bg-slate-50 dark:bg-[#0B0F19] overflow-y-auto overflow-x-hidden selection:bg-deposit-500/30">
+    <div className="relative min-h-[100dvh] w-full bg-slate-50 dark:bg-[#0B0F19] overflow-x-hidden selection:bg-deposit-500/30">
       {/* Background Gradients */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 blur-[120px]" />
         <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-primary-500/10 dark:bg-primary-500/20 blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[40%] rounded-full bg-teal-500/10 dark:bg-teal-500/10 blur-[100px]" />
       </div>
 
-      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[calc(3rem+env(safe-area-inset-top,0px))] pb-[calc(2rem+env(safe-area-inset-bottom,0px))] md:py-12 flex flex-col min-h-[100dvh] [justify-content:safe_center]">
-        <div className="flex flex-col w-full">
+      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[calc(3rem+env(safe-area-inset-top,0px))] pb-[calc(2rem+env(safe-area-inset-bottom,0px))] md:py-12 flex flex-col min-h-[100dvh] justify-start">
+        <div className="flex flex-col w-full h-full flex-1">
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -90,7 +90,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
-            className="flex justify-center empty:hidden"
+            className="flex justify-center empty:hidden mt-auto pt-8"
           >
             <button
               onClick={onStart}

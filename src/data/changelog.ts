@@ -9,16 +9,11 @@ export interface ReleaseNote {
 
 export const changelog: ReleaseNote[] = [
   {
-    version: "1.7.8",
-    date: "2026-08-26",
-    title: "Умные уведомления, точные котировки и обновление интерфейса",
-    features: [
-      "В Настройках добавлен раздел «Уведомления»: теперь вы можете получать Push-напоминания о скором окончании вкладов, чтобы вовремя реинвестировать активы (требуется настройка ключей Firebase).",
-      "Интеллектуальная маска для ввода дат во всех формах: теперь можно быстро печатать дату сплошным текстом (например, 01012026), а точки расставятся автоматически.",
-      "Упрощено добавление наличных сбережений: больше не нужно придумывать название, актив автоматически именуется по коду валюты, добавлено поле даты пополнения.",
-      "Рыночная стоимость всех альткоинов (BTC, ETH, TON и др.) при добавлении теперь справочно отображается в USDT, а не в рублях."
-    ],
+    version: "1.7.9",
+    date: "2026-08-27",
+    title: "Полировка интерфейса, бесшовные анимации и компактные формы",
     improvements: [
+      // UI/UX fixes: Fixed Drag-and-Drop item alignment jumping, unified AssetTabRow and Backup container padding/sizes to match, adjusted mobile safe-area paddings across DepositForm and CashForm sticky footers, enforced max-h-[90dvh]. Also removed p-1 from Reorder.Group and added min-h-[60px] to rows. Adjusted safe area in Delete bank modal. Fixed draft banner jump with AnimatePresence, cleaned up bank combobox clear logic and draft sync. Fixed DropdownPortal modal animation position desync via continuous coordinate tracking. Aligned LandingView content to top and button to bottom. Redesigned all toggles to compact modern proportions (w-10 h-[22px] track, w-[18px] h-[18px] thumb, translate-x-[18px]). Fixed sharp layout jump when Archive section appears/disappears by wrapping it in AnimatePresence with height auto animation and removing internal Archive empty state. Fixed layout snap animation glitch when deleting/restoring items in Archive. Fixed text selection glitch when dragging income settings items. Fixed bottom navigation active tab pill jumping during Archive deletions by wrapping navs in LayoutGroup, isolating Archive with dedicated LayoutGroup, and setting layoutDependency={active}. Confined scrollbar strictly to fields container above action buttons footer in DepositForm, CashForm, CryptoForm, and InvestmentForm. Replaced segmented 'Действует/Закрыт' control in DepositForm with a compact icon toggle inline with 'Дата закрытия' label.
       "Обновлен дизайн раздела Настройки: блоки сгруппированы по высоте, а удаленные активы теперь аккуратно отображаются в виде умной адаптивной сетки (появляется только при наличии записей).",
       "Исправлены избыточные отступы между полями ввода и справочной информацией в формах Сейфа и Инвестиций, интерфейс стал более плотным и аккуратным.",
       "Сделана плавная, бесшовная анимация появления дополнительных полей при выборе иностранной валюты в форме наличных, устранено ступенчатое подтормаживание.",
@@ -27,16 +22,29 @@ export const changelog: ReleaseNote[] = [
       "Устранены неприятные 'скачки' интерфейса при появлении дополнительных полей в формах активов: для полосы прокрутки резервируется стабильное место, что исключает сдвиг контента.",
       "Улучшено оформление Настроек: статус Push-уведомлений и кнопка обновления токена теперь отображаются более компактно.",
       "Устранено резкое исчезновение («скачок») блока Архива в настройках: теперь при удалении последней карточки пустой блок плавно анимируется.",
-      "Скорректирована частота Push-уведомлений: теперь напоминания о закрытии вкладов приходят строго в день закрытия, а также за 1 и 3 дня.",
       "Исправлена анимация появления формы «Добавить вклад» (Сейф) на мобильных устройствах — теперь она плавно выезжает снизу, в точности как окна остальных активов."
     ],
     fixes: [
       "Исправлено перекрытие выпадающих списков (например, выбора валюты) кнопками сохранения в формах добавления активов.",
       "Исправлена ошибка сброса введенной вручную даты при клике вне окна или нажатии Enter."
     ]
-    // Техническое исправление: парсинг Firestore Timestamp при проверке cron (parseDateValue)
     // Техническое исправление: полное переопределение логики рендеринга выпадающих списков (Combobox/Listbox) через ReactDOM.createPortal и getBoundingClientRect(). DropdownPortal.tsx устраняет фундаментальный конфликт overflow-y-auto внутри <form> и гарантирует идеальное позиционирование списков на всех мобильных устройствах.
     // Техническое исправление: реорганизация z-index, исправление портала datepicker-portal-container и добавление overflow-hidden в DepositForm для устранения визуальных багов с наслоением выпадающих списков.
+  },
+  {
+    version: "1.7.8",
+    date: "2026-08-26",
+    title: "Умные уведомления и точные котировки",
+    features: [
+      "В Настройках добавлен раздел «Уведомления»: теперь вы можете получать Push-напоминания о скором окончании вкладов, чтобы вовремя реинвестировать активы (требуется настройка ключей Firebase).",
+      "Интеллектуальная маска для ввода дат во всех формах: теперь можно быстро печатать дату сплошным текстом (например, 01012026), а точки расставятся автоматически.",
+      "Упрощено добавление наличных сбережений: больше не нужно придумывать название, актив автоматически именуется по коду валюты, добавлено поле даты пополнения.",
+      "Рыночная стоимость всех альткоинов (BTC, ETH, TON и др.) при добавлении теперь справочно отображается в USDT, а не в рублях."
+    ],
+    improvements: [
+      "Скорректирована частота Push-уведомлений: теперь напоминания о закрытии вкладов приходят строго в день закрытия, а также за 1 и 3 дня."
+    ]
+    // Техническое исправление: парсинг Firestore Timestamp при проверке cron (parseDateValue)
     // Техническое исправление: убран вызов toISOString() для локальных дат в DatePicker, чтобы избежать сдвига даты на -1 день в часовых поясах >= UTC+3. Добавлен e.preventDefault() для нажатия Enter, чтобы предотвратить выбор предыдущей даты из preSelection календаря.
     // Техническое исправление 2: устранена ошибка "Maximum update depth exceeded" в react-datepicker, возникавшая при передаче невалидных Date-объектов (Invalid Date) через проп selected.
     // Миграция существующих записей CashAsset на версию 10 схемы Dexie (добавление обязательного поля purchaseDate).

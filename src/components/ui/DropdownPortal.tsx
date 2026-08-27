@@ -21,7 +21,14 @@ export function DropdownPortal({
 
   useEffect(() => {
     setIsMounted(true);
-    let rafId: number;
+    let animationFrameId: number;
+    let isRunning = true;
+
+    let lastTop: number | 'auto' = -9999;
+    let lastBottom: number | 'auto' = 'auto';
+    let lastLeft = -9999;
+    let lastRight = -9999;
+    let lastWidth = 0;
 
     const updatePosition = () => {
       if (targetRef.current) {
@@ -40,33 +47,50 @@ export function DropdownPortal({
           finalBottom = window.innerHeight - rect.top + offset;
         }
 
-        setCoords({
-          top: finalTop,
-          bottom: finalBottom,
-          left: rect.left,
-          right: window.innerWidth - rect.right,
-          width: rect.width
-        });
+        const newLeft = rect.left;
+        const newRight = window.innerWidth - rect.right;
+        const newWidth = rect.width;
+
+        if (
+          finalTop !== lastTop ||
+          finalBottom !== lastBottom ||
+          newLeft !== lastLeft ||
+          newRight !== lastRight ||
+          newWidth !== lastWidth
+        ) {
+          lastTop = finalTop;
+          lastBottom = finalBottom;
+          lastLeft = newLeft;
+          lastRight = newRight;
+          lastWidth = newWidth;
+
+          setCoords({
+            top: finalTop,
+            bottom: finalBottom,
+            left: newLeft,
+            right: newRight,
+            width: newWidth
+          });
+        }
       }
     };
 
-    const handleScroll = (e: Event) => {
-      if (e.target instanceof Node && document.body.lastChild?.contains(e.target)) {
-        return;
-      }
-      cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(updatePosition);
+    const loop = () => {
+      if (!isRunning) return;
+      updatePosition();
+      animationFrameId = requestAnimationFrame(loop);
     };
 
-    updatePosition();
-    
+    animationFrameId = requestAnimationFrame(loop);
+
     window.addEventListener('resize', updatePosition, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true, capture: true });
+    window.addEventListener('scroll', updatePosition, { passive: true, capture: true });
 
     return () => {
+      isRunning = false;
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', handleScroll, { capture: true });
-      cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', updatePosition, { capture: true });
     };
   }, [targetRef, offset]);
 

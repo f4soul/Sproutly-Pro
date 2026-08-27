@@ -87,49 +87,15 @@ export function DepositFormBankPicker({
             {formData.bank || query ? (
               <button
                 type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (bankInputRef.current) {
-                    const nativeInputValueSetter =
-                      Object.getOwnPropertyDescriptor(
-                        window.HTMLInputElement.prototype,
-                        "value",
-                      )?.set;
-                    if (nativeInputValueSetter) {
-                      nativeInputValueSetter.call(bankInputRef.current, "");
-                    }
-                    bankInputRef.current.dispatchEvent(
-                      new Event("input", { bubbles: true }),
-                    );
-                    bankInputRef.current.dispatchEvent(
-                      new Event("change", { bubbles: true }),
-                    );
-                  }
-                  setFormData((prev) => ({ ...prev, bank: "" }));
-                  setQuery("");
-                }}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (bankInputRef.current) {
-                    const nativeInputValueSetter =
-                      Object.getOwnPropertyDescriptor(
-                        window.HTMLInputElement.prototype,
-                        "value",
-                      )?.set;
-                    if (nativeInputValueSetter) {
-                      nativeInputValueSetter.call(bankInputRef.current, "");
-                    }
-                    bankInputRef.current.dispatchEvent(
-                      new Event("input", { bubbles: true }),
-                    );
-                    bankInputRef.current.dispatchEvent(
-                      new Event("change", { bubbles: true }),
-                    );
-                  }
                   setFormData((prev) => ({ ...prev, bank: "" }));
                   setQuery("");
+                  if (bankInputRef.current) {
+                    bankInputRef.current.value = "";
+                    bankInputRef.current.focus();
+                  }
                 }}
                 className="absolute inset-y-0 right-10 flex items-center px-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer z-20"
                 title="Очистить"

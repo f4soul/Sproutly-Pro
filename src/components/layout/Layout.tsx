@@ -5,7 +5,7 @@ import { auth, signInWithGoogle, logout } from '../../config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { db, syncWithFirebase } from '../../config/db';
 import { showToast } from '../../lib/toast';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, LayoutGroup } from 'motion/react';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useAppData } from '../../context/AppDataContext';
@@ -156,36 +156,38 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         </div>
 
         <nav className="flex flex-col gap-2">
-          <NavItem
-            active={activeTab === 'dashboard'}
-            onClick={() => onTabChange('dashboard')}
-            icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
-            label="Дашборд"
-          />
-          <NavItem
-            active={activeTab === 'deposits'}
-            onClick={() => onTabChange('deposits')}
-            icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
-            label="Активы"
-          />
-          <NavItem
-            active={activeTab === 'calendar'}
-            onClick={() => onTabChange('calendar')}
-            icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />}
-            label="График"
-          />
-          <NavItem
-            active={activeTab === 'ndfl'}
-            onClick={() => onTabChange('ndfl')}
-            icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />}
-            label="Доходы"
-          />
-          <NavItem
-            active={activeTab === 'settings'}
-            onClick={() => onTabChange('settings')}
-            icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />}
-            label="Настройки"
-          />
+          <LayoutGroup id="desktop-nav">
+            <NavItem
+              active={activeTab === 'dashboard'}
+              onClick={() => onTabChange('dashboard')}
+              icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />}
+              label="Дашборд"
+            />
+            <NavItem
+              active={activeTab === 'deposits'}
+              onClick={() => onTabChange('deposits')}
+              icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />}
+              label="Активы"
+            />
+            <NavItem
+              active={activeTab === 'calendar'}
+              onClick={() => onTabChange('calendar')}
+              icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />}
+              label="График"
+            />
+            <NavItem
+              active={activeTab === 'ndfl'}
+              onClick={() => onTabChange('ndfl')}
+              icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />}
+              label="Доходы"
+            />
+            <NavItem
+              active={activeTab === 'settings'}
+              onClick={() => onTabChange('settings')}
+              icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />}
+              label="Настройки"
+            />
+          </LayoutGroup>
         </nav>
 
         <div className="mt-auto flex flex-col gap-2">
@@ -694,11 +696,13 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         className="md:hidden fixed inset-x-4 max-w-sm mx-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex justify-around p-2 z-[60] rounded-panel shadow-panel dark:shadow-panel-dark"
         style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
       >
-        <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
-        <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
-        <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
-        <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
-        <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
+        <LayoutGroup id="mobile-nav">
+          <MobileNavItem active={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} icon={<LayoutDashboard className="w-5 h-5 stroke-[1.5px]" />} label="Обзор" />
+          <MobileNavItem active={activeTab === 'deposits'} onClick={() => onTabChange('deposits')} icon={<Landmark className="w-5 h-5 stroke-[1.5px]" />} label="Активы" />
+          <MobileNavItem active={activeTab === 'calendar'} onClick={() => onTabChange('calendar')} icon={<CalendarDays className="w-5 h-5 stroke-[1.5px]" />} label="График" />
+          <MobileNavItem active={activeTab === 'ndfl'} onClick={() => onTabChange('ndfl')} icon={<HandCoins className="w-5 h-5 stroke-[1.5px]" />} label="Доходы" />
+          <MobileNavItem active={activeTab === 'settings'} onClick={() => onTabChange('settings')} icon={<SettingsIcon className="w-5 h-5 stroke-[1.5px]" />} label="Опции" />
+        </LayoutGroup>
       </nav>
 
       <main className="flex-1 md:ml-68 flex flex-col min-w-0 px-2 sm:px-4 md:px-6 lg:px-8 min-h-[100dvh]">
@@ -807,7 +811,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
       )}
     >
       {active && (
-        <motion.div layoutId="activeNavTabBg" className="absolute inset-0 bg-white dark:bg-primary-500/5" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeNavTabBg" layoutDependency={active} className="absolute inset-0 bg-white dark:bg-primary-500/5" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
       <div className="flex items-center gap-3 mx-0 relative z-10">
         <div className={cn(
@@ -819,7 +823,7 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
         <span className="block">{label}</span>
       </div>
       {active && (
-        <motion.div layoutId="activeNavTab" className="absolute left-0 w-1.5 h-6 bg-primary-500 rounded-r-full z-10" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeNavTab" layoutDependency={active} className="absolute left-0 w-1.5 h-6 bg-primary-500 rounded-r-full z-10" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
     </button>
   );
@@ -832,7 +836,7 @@ function MobileNavItem({ active, onClick, icon, label }: { active: boolean; onCl
       active ? "text-primary-600 dark:text-primary-400" : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200"
     )}>
       {active && (
-        <motion.div layoutId="activeMobileNavBg" className="absolute inset-0 bg-slate-50 dark:bg-primary-500/10 border border-slate-200 dark:border-primary-500/20 rounded-xl" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
+        <motion.div layoutId="activeMobileNavBg" layoutDependency={active} className="absolute inset-0 bg-slate-50 dark:bg-primary-500/10 border border-slate-200 dark:border-primary-500/20 rounded-xl" transition={{ type: "spring", bounce: 0.15, duration: 0.5 }} />
       )}
       <div className={cn(
         "relative z-10 flex flex-col items-center gap-1 transition-transform duration-300",
