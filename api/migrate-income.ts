@@ -21,10 +21,10 @@ export default async function handler(req: Request, res: Response) {
     }
     
     const db = getFirestore();
-    const usersSnap = await db.collection('users').get();
+    const userRefs = await db.collection('users').listDocuments();
     
     const result = {
-      totalUsers: usersSnap.docs.length,
+      totalUsers: userRefs.length,
       migratedCount: 0,
       skippedExistCount: 0,
       skippedNoDataCount: 0,
@@ -35,9 +35,9 @@ export default async function handler(req: Request, res: Response) {
 
     const staleFields = ['appSettings', 'assetTabOrder', 'hiddenAssetTabs', 'privacyLock'];
 
-    for (const userDoc of usersSnap.docs) {
+    for (const userRef of userRefs) {
+      const userId = userRef.id;
       try {
-        const userId = userDoc.id;
         const newRef = db.collection('income').doc(userId);
         
         if ((await newRef.get()).exists) {
@@ -62,7 +62,7 @@ export default async function handler(req: Request, res: Response) {
         result.migratedCount++;
         result.migratedIds.push(userId);
       } catch (err: any) {
-        console.error(`Error migrating user ${userDoc.id}:`, err);
+        console.error(`Error migrating user ${userId}:`, err);
       }
     }
 
