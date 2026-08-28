@@ -263,6 +263,11 @@ function AppContent() {
   const selectedYear = state?.activeYear || new Date().getFullYear();
 
   const handleNavigation = (newTab: 'dashboard' | 'deposits' | 'ndfl' | 'settings' | 'calendar') => {
+    if (activeTab === newTab) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     // Surgical fix: Hide floating panels instantly to prevent 1-frame micro-delay during AnimatePresence exit
     const floatingEls = document.querySelectorAll('.floating-analytics-bottom, .floating-fab-bottom-with-analytics, .floating-fab-bottom-no-analytics');
     floatingEls.forEach(el => {
@@ -273,11 +278,7 @@ function AppContent() {
       }
     });
 
-    if (activeTab === newTab) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      setActiveTab(newTab);
-    }
+    setActiveTab(newTab);
   };
 
   const handleStart = () => {

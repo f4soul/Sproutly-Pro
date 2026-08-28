@@ -6,21 +6,18 @@ import { format } from 'date-fns';
 import { motion, AnimatePresence, LayoutGroup } from 'motion/react';
 import { Dialog } from '@headlessui/react';
 
-export const ArchiveHeaderActions = () => {
+export const ArchiveHeaderActions = ({ items }: { items: any[] }) => {
   const [isClearModalOpen, setIsClearModalOpen] = useState(false);
-  const archivedDeposits = useLiveQuery(async () => {
-    return await db.deposits.where('isArchived').equals(1).toArray();
-  });
 
   const handleClearArchive = async () => {
-    if (!archivedDeposits) return;
-    const ids = archivedDeposits.map(d => d.id as any);
+    if (!items) return;
+    const ids = items.map(d => d.id as any);
     await db.deposits.bulkDelete(ids);
     
     const { auth } = await import('../../config/firebase');
     const user = auth.currentUser;
     if (user) {
-      for (const deposit of archivedDeposits) {
+      for (const deposit of items) {
         if (deposit.id) {
           const firestoreDocId = typeof deposit.id === 'number' ? `${user.uid}_${deposit.id}` : String(deposit.id);
           await db.deletedQueue.put({ collection: 'deposits', docId: firestoreDocId, timestamp: Date.now() });
@@ -32,7 +29,7 @@ export const ArchiveHeaderActions = () => {
     setIsClearModalOpen(false);
   };
 
-  if (!archivedDeposits || archivedDeposits.length === 0) return null;
+  if (!items || items.length === 0) return null;
 
   return (
     <>
@@ -105,7 +102,7 @@ export const ArchiveHeaderActions = () => {
   );
 };
 
-export const Archive: React.FC<{ items: any[] }> = ({ items: archivedDeposits }) => {
+export const Archive: React.FC<{ items: any[] }> = ({ items: items }) => {
   const handleRestore = async (id: string | number) => {
     await db.deposits.update(id as any, { isArchived: 0, updatedAt: Date.now() });
     syncWithFirebase();
@@ -128,8 +125,8 @@ export const Archive: React.FC<{ items: any[] }> = ({ items: archivedDeposits })
   return (
     <LayoutGroup id="archive-items-group">
       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-3 sm:gap-4 pb-2">
-        <AnimatePresence mode="popLayout">
-          {archivedDeposits?.map((deposit) => {
+        <AnimatePresence>
+          {items?.map((deposit) => {
             return (
               <motion.div
                 key={deposit.id}

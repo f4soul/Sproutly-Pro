@@ -96,7 +96,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-[86dvh] sm:h-[auto] max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto"
+            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -115,8 +115,8 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 relative">
-              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+            <form onSubmit={handleSubmit} className="flex flex-col shrink min-h-0 relative">
+              <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 <div className="space-y-2 relative z-20">
                 <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">

@@ -336,7 +336,7 @@ export function startRealTimeSync(user: { uid: string }) {
   activeUnsubscribers.push(unsubSettings);
 
   // Listen to incomeState
-  const unsubIncome = onSnapshot(doc(firestore, `users/${user.uid}/data`, 'income'), (snapshot) => {
+  const unsubIncome = onSnapshot(doc(firestore, 'income', user.uid), (snapshot) => {
     (async () => {
       try {
         if (snapshot.exists()) {
@@ -351,7 +351,7 @@ export function startRealTimeSync(user: { uid: string }) {
       }
     })();
   }, (error) => {
-    handleFirestoreError(error, OperationType.GET, `users/${user.uid}/data`);
+    handleFirestoreError(error, OperationType.GET, 'income');
   });
   activeUnsubscribers.push(unsubIncome);
 
@@ -762,11 +762,20 @@ export async function syncWithFirebase() {
   }
 
   // Income State
-  const incomePath = `users/${user.uid}/data`;
+  const incomePath = 'income';
   try {
-    const incomeSnap = await getDoc(doc(firestore, incomePath, 'income'));
+    const incomeSnap = await getDoc(doc(firestore, incomePath, user.uid));
     const localIncomeState = await db.incomeState.get('main');
-    const remoteIncome = incomeSnap.exists() ? incomeSnap.data() : null;
+    let remoteIncome = incomeSnap.exists() ? incomeSnap.data() : null;
+
+    const staleFields = ['appSettings', 'assetTabOrder', 'hiddenAssetTabs', 'privacyLock'];
+    const hasStaleFields = staleFields.some(f => remoteIncome && f in remoteIncome);
+    if (hasStaleFields && remoteIncome) {
+      const cleaned = { ...remoteIncome };
+      staleFields.forEach(f => delete cleaned[f]);
+      await setDoc(doc(firestore, 'income', user.uid), cleaned);
+      remoteIncome = cleaned;
+    }
 
     const localUpdated = localIncomeState?.updatedAt || 0;
     const remoteUpdated = remoteIncome?.updatedAt || 1;
@@ -775,7 +784,7 @@ export async function syncWithFirebase() {
     if (remoteIncome && (isLocalIncomeFromGuest || localUpdated === 0 || remoteUpdated > localUpdated)) {
       await db.incomeState.put({ ...remoteIncome, id: 'main', userId: user.uid });
     } else if (localIncomeState && (!remoteIncome || localUpdated > remoteUpdated)) {
-      await setDoc(doc(firestore, incomePath, 'income'), stripUndefined({
+      await setDoc(doc(firestore, incomePath, user.uid), stripUndefined({
         ...localIncomeState,
         userId: user.uid,
         updatedAt: localUpdated === 0 ? Date.now() : localUpdated

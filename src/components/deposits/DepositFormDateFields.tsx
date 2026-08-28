@@ -134,7 +134,9 @@ export function DepositFormDateFields({
           <button
             type="button"
             title={formData.isClosed ? "Закрыт досрочно — нажмите, чтобы отменить" : "Отметить как закрытый досрочно"}
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (formData.isClosed) {
                 const isSavings = formData.formula === "daily_balance" || formData.formula === "min_balance";
                 
@@ -166,11 +168,21 @@ export function DepositFormDateFields({
               }
             }}
             className={cn(
-              "w-5 h-5 rounded-md flex items-center justify-center transition-all shrink-0",
-              formData.isClosed ? "bg-slate-700 text-white" : "bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              "flex items-center justify-center gap-1.5 h-6 px-2.5 md:w-6 md:h-6 md:px-0 lg:w-auto lg:h-auto lg:px-2.5 lg:py-1 rounded-lg border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 active:scale-95 shrink-0",
+              formData.isClosed
+                ? "border-deposit-500/30 bg-deposit-500/10 dark:bg-deposit-500/15 text-deposit-700 dark:text-deposit-300 shadow-[0_2px_12px_rgba(20,184,166,0.15)]"
+                : "border-slate-200/60 dark:border-white/[0.08] bg-white/40 dark:bg-slate-900/60 backdrop-blur-md text-slate-500 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/5 shadow-sm"
             )}
           >
-            <Lock className="w-3 h-3" />
+            <div
+              className={cn(
+                "w-3 h-3 flex items-center justify-center transition-transform shrink-0",
+                formData.isClosed ? "scale-110 text-deposit-500" : ""
+              )}
+            >
+              <Lock className="w-3 h-3 stroke-[1.5px]" />
+            </div>
+            <span className="inline md:hidden lg:inline truncate leading-none mt-[1px]">Досрочно</span>
           </button>
         </label>
         <div className="relative w-full group">

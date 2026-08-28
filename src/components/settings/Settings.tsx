@@ -1,4 +1,4 @@
-import React, { useState, useRef, Fragment } from 'react';
+import React, { useState, useRef, Fragment, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
@@ -102,6 +102,15 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
     const deposits = await db.deposits.where('isArchived').equals(1).toArray();
     return deposits.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   });
+  
+  const prevArchivedRef = useRef<any[] | undefined>(undefined);
+  useEffect(() => {
+    if (archivedDeposits && archivedDeposits.length > 0) {
+      prevArchivedRef.current = archivedDeposits;
+    }
+  }, [archivedDeposits]);
+  
+  const displayArchivedDeposits = archivedDeposits?.length ? archivedDeposits : (prevArchivedRef.current || []);
   const archivedCount = archivedDeposits?.length || 0;
   const [newYear, setNewYear] = useState(new Date().getFullYear() + 1);
   const [yearToDelete, setYearToDelete] = useState<number | null>(null);
@@ -575,7 +584,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       isYearExpanded ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden transform-gpu origin-top">
                       <div className="p-4 bg-transparent space-y-3 border-t border-slate-200/30 dark:border-slate-800/30">
                         {yearBrackets.map((bracket, index) => {
                           const isBracketExpanded = expandedBracketIndex === index;
@@ -629,7 +638,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                                   isBracketExpanded ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
                                 )}
                               >
-                                <div className="overflow-hidden">
+                                <div className="overflow-hidden transform-gpu origin-top">
                                   <div className="p-3 pt-0 grid gap-3">
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                       <div className="space-y-1">
@@ -771,7 +780,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       isExpanded ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
                     )}
                   >
-                    <div className="overflow-hidden">
+                    <div className="overflow-hidden transform-gpu origin-top">
                       <div className="p-4 grid grid-cols-1 gap-4 border-t border-slate-200/50 dark:border-slate-800/50">
                         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-2">
                           <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest shrink-0">Лимит</label>
@@ -832,11 +841,11 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
       <AnimatePresence initial={false}>
         {archivedCount > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
+            animate={{ opacity: 1, height: "auto", scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.95 }}
             transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
-            className="overflow-hidden"
+            className="overflow-hidden transform-gpu origin-top"
           >
             <div className="grid grid-cols-1 gap-6 lg:gap-8 items-stretch mb-6 lg:mb-8 pt-1">
               {/* Archive Section */}
@@ -853,11 +862,11 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       </div>
                     </div>
                     <div className="shrink-0">
-                       <ArchiveHeaderActions />
+                       <ArchiveHeaderActions items={displayArchivedDeposits || []} />
                     </div>
                   </div>
                   <div className="flex-1 min-h-0 overflow-y-auto pr-1 sm:pr-2 -mr-1 sm:-mr-2 pb-2">
-                    <Archive items={archivedDeposits || []} />
+                    <Archive items={displayArchivedDeposits || []} />
                   </div>
                 </section>
               </div>
