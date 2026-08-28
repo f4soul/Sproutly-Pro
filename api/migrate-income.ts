@@ -55,7 +55,7 @@ export default async function handler(req: Request, res: Response) {
           continue;
         }
 
-        const data = { ...oldSnap.data(), userId };
+        const data: Record<string, any> = { ...oldSnap.data(), userId };
         staleFields.forEach(f => delete data[f]);
         
         await newRef.set(data);
