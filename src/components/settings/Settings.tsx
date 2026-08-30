@@ -555,14 +555,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       <motion.div animate={{ rotate: isYearExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
                         <ChevronDown size={20} className="text-slate-500" />
                       </motion.div>
-                      <span className="text-base font-bold text-slate-950 dark:text-white font-mono">{year}</span>
+                      <span className="text-base font-bold text-slate-950 dark:text-white tabular-nums">{year}</span>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       {!isYearExpanded && (
                         <div className="text-right">
                           <span className="block text-[9px] uppercase text-slate-500 font-bold tracking-wider">Структура</span>
-                          <span className="text-sm font-bold text-primary-600 dark:text-primary-400 font-mono whitespace-nowrap">
+                          <span className="text-sm font-bold text-primary-600 dark:text-primary-400 tabular-nums whitespace-nowrap">
                             {yearBrackets.length} {getPlural(yearBrackets.length, 'ступень', 'ступени', 'ступеней')}
                           </span>
                         </div>
@@ -616,7 +616,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   {!isBracketExpanded && (
-                                    <span className="text-xs font-bold text-primary-600 font-mono">
+                                    <span className="text-xs font-bold text-primary-600 tabular-nums">
                                       {Math.round(bracket.rate * 100)}%
                                     </span>
                                   )}
@@ -653,13 +653,13 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                                       <div className="space-y-1">
                                         <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Лимит (₽)</label>
                                         {bracket.limit === Infinity ? (
-                                          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-400 text-center border border-transparent">Максимум</div>
+                                          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg px-2.5 py-1.5 text-lg leading-[18px] font-black text-slate-400 text-center border border-transparent">∞</div>
                                         ) : (
                                           <input 
                                             type="number"
                                             value={bracket.limit ?? 0} 
                                             onChange={(e) => handleBracketChange(year, index, 'limit', Number(e.target.value))}
-                                            className="apple-input w-full px-2.5 py-1.5 text-xs font-mono font-semibold"
+                                            className="apple-input w-full px-2.5 py-1.5 text-xs tabular-nums font-semibold"
                                           />
                                         )}
                                       </div>
@@ -670,7 +670,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                                             type="number" 
                                             value={Math.round(bracket.rate * 100)} 
                                             onChange={(e) => handleBracketChange(year, index, 'rate', (parseFloat(e.target.value) || 0) / 100)}
-                                            className="apple-input w-full px-2.5 py-1.5 text-xs font-mono font-semibold"
+                                            className="apple-input w-full px-2.5 py-1.5 text-xs tabular-nums font-semibold"
                                           />
                                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">%</span>
                                         </div>
@@ -755,14 +755,14 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       <motion.div animate={{ rotate: isExpanded ? 0 : -90 }} transition={{ type: "spring", stiffness: 350, damping: 30 }}>
                         <ChevronDown size={20} className="text-slate-500" />
                       </motion.div>
-                      <span className="text-base font-bold text-slate-950 dark:text-white font-mono">{setting.year}</span>
+                      <span className="text-base font-bold text-slate-950 dark:text-white tabular-nums">{setting.year}</span>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       {!isExpanded && (
                         <div className="text-right">
                           <span className="block text-[9px] uppercase text-slate-500 font-bold tracking-wider">Лимит</span>
-                          <span className="text-sm font-mono font-semibold text-deposit-600 dark:text-deposit-400">{setting.limit.toLocaleString('ru-RU')} ₽</span>
+                          <span className="text-sm tabular-nums font-semibold text-deposit-600 dark:text-deposit-400">{setting.limit.toLocaleString('ru-RU')} ₽</span>
                         </div>
                       )}
                       <button 
@@ -789,7 +789,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                               type="number" 
                               value={setting.limit}
                               onChange={(e) => updateYearSetting(setting.year, 'limit', Number(e.target.value))}
-                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
+                              className="apple-input w-full px-3 py-2 text-sm tabular-nums text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
                             />
                             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">₽</span>
                           </div>
@@ -801,7 +801,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                               type="number" 
                               value={setting.ndflRate}
                               onChange={(e) => updateYearSetting(setting.year, 'ndflRate', Number(e.target.value))}
-                              className="apple-input w-full px-3 py-2 text-sm font-mono text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
+                              className="apple-input w-full px-3 py-2 text-sm tabular-nums text-left xl:text-right !pr-12 bg-slate-50 dark:bg-slate-800"
                             />
                             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">%</span>
                           </div>
@@ -884,7 +884,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -934,7 +934,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -983,7 +983,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -1032,7 +1032,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">

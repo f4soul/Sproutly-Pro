@@ -18,7 +18,7 @@ export const DaysCellPopover = ({ m, monthIndex, handleMonthChange, isPrivate }:
   if (isPrivate) {
     return (
       <div className={cn(
-        "flex items-center justify-center gap-0.5 px-2 py-1 rounded-md text-[11px] lg:text-xs xl:text-sm font-mono font-bold mx-auto border transition-colors",
+        "flex items-center justify-center gap-0.5 px-2 py-1 rounded-md text-[11px] lg:text-xs xl:text-sm font-bold mx-auto border transition-colors",
         isDefault
           ? "bg-slate-50/50 dark:bg-slate-900/50 border-slate-200/50 dark:border-slate-800/50 text-slate-600 dark:text-slate-400"
           : "bg-amber-50/50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-800/30 text-amber-700 dark:text-amber-400"
@@ -34,7 +34,7 @@ export const DaysCellPopover = ({ m, monthIndex, handleMonthChange, isPrivate }:
         <>
           <Popover.Button
             className={cn(
-              "flex items-center justify-center px-1.5 md:px-2 py-1 rounded-md text-[11px] lg:text-xs xl:text-sm font-mono font-bold mx-auto border outline-none transition-all",
+              "flex items-center justify-center px-1.5 md:px-2 py-1 rounded-md text-[11px] lg:text-xs xl:text-sm font-bold mx-auto border outline-none transition-all",
               open ? "ring-2 ring-primary-500/50 border-primary-500" : isDefault
                 ? "bg-slate-50/50 hover:bg-slate-100/50 dark:bg-slate-900/50 dark:hover:bg-slate-800/50 border-slate-200/50 dark:border-slate-800/50 text-slate-600 dark:text-slate-400"
                 : "bg-amber-50/50 hover:bg-amber-100/50 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 border-amber-200/50 dark:border-amber-800/30 text-amber-700 dark:text-amber-400",
@@ -61,7 +61,7 @@ export const DaysCellPopover = ({ m, monthIndex, handleMonthChange, isPrivate }:
                   <TableInput
                     value={m.factDays}
                     onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)}
-                    className="w-16 h-7 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-center font-mono font-bold focus:ring-2 focus:ring-primary-500 focus:border-primary-500 px-1"
+                    className="w-16 h-7 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-center font-bold focus:ring-2 focus:ring-primary-500 focus:border-primary-500 px-1"
                     isInteger={true}
                   />
                 </div>
@@ -70,7 +70,7 @@ export const DaysCellPopover = ({ m, monthIndex, handleMonthChange, isPrivate }:
                   <TableInput
                     value={m.normDays}
                     onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)}
-                    className="w-16 h-7 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-center font-mono font-bold focus:ring-2 focus:ring-primary-500 focus:border-primary-500 px-1"
+                    className="w-16 h-7 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 text-center font-bold focus:ring-2 focus:ring-primary-500 focus:border-primary-500 px-1"
                     isInteger={true}
                   />
                 </div>

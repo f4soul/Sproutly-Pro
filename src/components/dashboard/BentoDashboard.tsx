@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import {
   Wallet,
   Landmark,
-  Vault,
-  ChartNoAxesCombined,
   Calendar,
   ArrowUpRight,
   ArrowDownRight,
@@ -43,6 +41,59 @@ interface BentoDashboardProps {
   appSettings: AppSettings;
   isPrivate?: boolean;
   setIsPrivate?: (val: boolean) => void;
+}
+
+
+function BentoTooltipIcon({ text }: { text: string }) {
+  const [show, setShow] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setShow(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    }
+  }, []);
+  
+  return (
+    <div 
+      ref={ref}
+      className="relative flex items-center justify-center outline-none"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShow((prev) => !prev);
+      }}
+      onTouchStart={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setShow((prev) => !prev);
+      }}
+      role="button"
+      tabIndex={0}
+    >
+      <Info
+        size={14}
+        className={cn("text-slate-400 dark:text-slate-500 transition-colors cursor-help", show ? "text-primary-500" : "hover:text-primary-500")}
+      />
+      <div 
+        className={cn(
+          "absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl transition-all duration-200 z-50 origin-top text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight pointer-events-none",
+          show ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        )}
+      >
+        {text}
+      </div>
+    </div>
+  );
 }
 
 export function BentoDashboard({
@@ -232,7 +283,7 @@ export function BentoDashboard({
   ) => {
     let formatted = formatCurrency(val, cur);
     if (hideSymbol) formatted = formatted.replace(/[^\d\s.,-]/g, "").trim();
-    return <PrivacyBlur isPrivate={isPrivate}>{formatted}</PrivacyBlur>;
+    return <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatted}</PrivacyBlur></span>;
   };
   const limitProgress = Math.min(100, (data.depositsIncome / data.limit) * 100);
 
@@ -276,16 +327,7 @@ export function BentoDashboard({
                   <span className="text-sm font-bold uppercase tracking-wider">
                     Чистый капитал (Net)
                   </span>
-                  <div className="relative flex items-center justify-center">
-                    <Info
-                      size={14}
-                      className="text-slate-400 dark:text-slate-500 hover:text-primary-500 transition-colors cursor-help"
-                    />
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 sm:w-56 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl opacity-0 scale-95 pointer-events-none group-hover/tooltip:opacity-100 group-hover/tooltip:scale-100 transition-all duration-200 z-50 origin-top text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight">
-                      Включает валютные активы, конвертированные по курсу ЦБ РФ
-                      на сегодня.
-                    </div>
-                  </div>
+                  <BentoTooltipIcon text="Включает валютные активы, конвертированные по курсу ЦБ РФ на сегодня." />
                 </div>
               </div>
               {setIsPrivate && (
@@ -542,7 +584,7 @@ export function BentoDashboard({
                   </span>
                 </div>
                 <span
-                  className="text-xs font-black text-slate-950 dark:text-white"
+                  className="text-xs font-black text-slate-950 dark:text-white tabular-nums"
                   title={isPrivate ? undefined : formatCurrency(item.value)}
                 >
                   {formatVal(item.value)}
@@ -722,7 +764,7 @@ export function BentoDashboard({
                               </div>
                               <div className="flex items-baseline gap-1.5 shrink-0">
                                 <span className="text-xs font-black text-slate-950 dark:text-white">{formatValPlain(Math.round(item.amount), "RUB", true)}</span>
-                                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right">{item.pct.toFixed(0)}%</span>
+                                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 w-8 text-right"><span className="tabular-nums">{item.pct.toFixed(0)}%</span></span>
                               </div>
                             </div>
                             
@@ -743,8 +785,8 @@ export function BentoDashboard({
                                           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">{subItem.name}</span>
                                         </div>
                                         <div className="flex items-baseline gap-1.5 shrink-0">
-                                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">{formatValPlain(Math.round(subItem.amount), "RUB", true)}</span>
-                                          <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 w-8 text-right pl-3">{subItem.pct.toFixed(0)}%</span>
+                                          <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 tabular-nums">{formatValPlain(Math.round(subItem.amount), "RUB", true)}</span>
+                                          <span className="text-[9px] font-medium text-slate-400 dark:text-slate-500 w-8 text-right pl-3"><span className="tabular-nums">{subItem.pct.toFixed(0)}%</span></span>
                                         </div>
                                       </div>
                                     ))}
@@ -794,7 +836,7 @@ export function BentoDashboard({
                     <span className="text-[8px] font-black uppercase leading-none">
                       {event.date.toLocaleString("ru", { month: "short" })}
                     </span>
-                    <span className="text-base font-black leading-none">
+                    <span className="text-base font-black leading-none tabular-nums">
                       {event.date.getDate()}
                     </span>
                   </div>

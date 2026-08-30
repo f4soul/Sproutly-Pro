@@ -17,16 +17,18 @@ export const calculateProgressiveTaxDetailed = (
 
   let previousLimit = 0;
 
-  for (const bracket of scale) {
+  for (let index = 0; index < scale.length; index++) {
+    const bracket = scale[index];
+    const actualLimit = bracket.limit === null ? Infinity : bracket.limit;
     if (remaining > 0) {
-      const bracketSize = bracket.limit - previousLimit;
+      const bracketSize = actualLimit - previousLimit;
       const amountInBracket = Math.min(remaining, bracketSize);
       const t = amountInBracket * bracket.rate;
       tax += t;
       brackets.push({ rate: bracket.rate * 100, amount: amountInBracket, tax: t, label: bracket.label });
       remaining -= amountInBracket;
     }
-    previousLimit = bracket.limit;
+    previousLimit = actualLimit;
   }
 
   return { tax, brackets };

@@ -9,23 +9,40 @@ export interface ReleaseNote {
 
 export const changelog: ReleaseNote[] = [
   {
-    version: "1.7.9",
-    date: "2026-08-27",
-    title: "Полировка интерфейса, бесшовные анимации и компактные формы",
+    version: "1.7.10",
+    date: "2026-08-30",
+    title: "Умный календарь и полировка интерфейса",
+    features: [
+      "В разделе «График» (календарь вкладов) текущий день и карточка текущего месяца теперь выделяются мягким неоновым свечением для мгновенной ориентации.",
+      "Добавлена умная фокусировка: при открытии графика на мобильном телефоне или планшете, экран автоматически плавно прокручивается к текущему месяцу."
+    ],
     improvements: [
-      // UI/UX fixes: Fixed Drag-and-Drop item alignment jumping, unified AssetTabRow and Backup container padding/sizes to match, adjusted mobile safe-area paddings across DepositForm and CashForm sticky footers, enforced max-h-[90dvh]. Also removed p-1 from Reorder.Group and added min-h-[60px] to rows. Adjusted safe area in Delete bank modal. Fixed draft banner jump with AnimatePresence, cleaned up bank combobox clear logic and draft sync. Fixed DropdownPortal modal animation position desync via continuous coordinate tracking. Aligned LandingView content to top and button to bottom. Redesigned all toggles to compact modern proportions (w-10 h-[22px] track, w-[18px] h-[18px] thumb, translate-x-[18px]). Fixed sharp layout jump when Archive section appears/disappears by wrapping it in AnimatePresence with height auto animation and removing internal Archive empty state. Fixed layout snap animation glitch when deleting/restoring items in Archive. Fixed text selection glitch when dragging income settings items. Fixed bottom navigation active tab pill jumping during Archive deletions by wrapping navs in LayoutGroup, isolating Archive with dedicated LayoutGroup, and setting layoutDependency={active}. Confined scrollbar strictly to fields container above action buttons footer in DepositForm, CashForm, CryptoForm, and InvestmentForm. Replaced segmented 'Действует/Закрыт' control in DepositForm with a compact icon toggle inline with 'Дата закрытия' label.
-      "Обновлен дизайн раздела Настройки: блоки сгруппированы по высоте, а удаленные активы теперь аккуратно отображаются в виде умной адаптивной сетки (появляется только при наличии записей).",
-      "Исправлены избыточные отступы между полями ввода и справочной информацией в формах Сейфа и Инвестиций, интерфейс стал более плотным и аккуратным.",
-      "Сделана плавная, бесшовная анимация появления дополнительных полей при выборе иностранной валюты в форме наличных, устранено ступенчатое подтормаживание.",
-      "Оптимизирована отрисовка появления полей (анимации на базе CSS Grid) в формах Крипты и Инвестиций: теперь элементы разворачиваются абсолютно плавно, без визуального эффекта 'желе'.",
-      "Унифицированы отступы, сетки и поведение кнопок сохранения во всех формах добавления активов (Сейф, Биржа, Крипта) — теперь всё выглядит абсолютно симметрично и аккуратно.",
-      "Устранены неприятные 'скачки' интерфейса при появлении дополнительных полей в формах активов: для полосы прокрутки резервируется стабильное место, что исключает сдвиг контента.",
-      "Улучшено оформление Настроек: статус Push-уведомлений и кнопка обновления токена теперь отображаются более компактно.",
-      "Устранено резкое исчезновение («скачок») блока Архива в настройках: теперь при удалении последней карточки пустой блок плавно анимируется.",
-      "Исправлена анимация появления формы «Добавить вклад» (Сейф) на мобильных устройствах — теперь она плавно выезжает снизу, в точности как окна остальных активов.",
-      "Улучшена адаптивность кнопки досрочного закрытия вкладов: на мобильных и ПК отображается информативная плашка с текстом и иконкой, а на планшетах в портретной ориентации — компактная иконка замочка."
+      "Доведена до идеала плавность стартового экрана: возвращен эффект мягкого, последовательного «наплыва» карточек с правильным визуальным акцентом.",
+      "Информационные подсказки на дашборде и карточках дохода теперь корректно отображаются по касанию на мобильных устройствах.",
+      "Оптимизировано визуальное отображение всех модальных окон в светлой теме: затемнение заднего фона стало более мягким и лаконичным.",
+      "Унифицирован дизайн кнопок «Отмена» и «Сохранить» во всех формах и настройках: на ПК и планшетах они выглядят аккуратно и компактно в правой части окна, а на мобильных устройствах — удобно растягиваются на всю ширину для легкого нажатия пальцем (все надписи на кнопках теперь выполнены в едином заглавном регистре)."
     ],
     fixes: [
+      "Обновлена Справка НДФЛ: убраны лишние нули после запятой, дизайн окна приведен к единому премиальному стилю с эффектами матового стекла.",
+      "Исправлена проблема, из-за которой невозможно было редактировать лимиты налоговых ступеней при их добавлении в Настройках."
+    ]
+    // Технический фикс: устранено схлопывание высоты (min-h-0) в IncomeTableConfigDialog на мобильных устройствах, скорректирована типографика заголовков на стартовом экране, унифицирован стиль легенды графиков в ChartsSection, переработано визуальное отображение текущего дня в календаре (выделение самого числа фирменным синим цветом без изменения фона ячейки).
+    // Технический фикс: Информационные тултипы на Dashboard (StatCard, BentoDashboard) и в Income (YearSummary) переведены с CSS group-hover на управляемый стейт с preventDefault() для onTouchStart, что решает проблему их мгновенного закрытия на iOS/Android.
+  },
+  {
+    version: "1.7.9",
+    date: "2026-08-27",
+    title: "Бесшовные анимации и компактные формы",
+    improvements: [
+      // UI/UX fixes: Fixed Drag-and-Drop item alignment jumping, unified AssetTabRow and Backup container padding/sizes to match, adjusted mobile safe-area paddings across DepositForm and CashForm sticky footers, enforced max-h-[90dvh]. Also removed p-1 from Reorder.Group and added min-h-[60px] to rows. Adjusted safe area in Delete bank modal. Fixed draft banner jump with AnimatePresence, cleaned up bank combobox clear logic and draft sync. Fixed DropdownPortal modal animation position desync via continuous coordinate tracking. Aligned LandingView content to top and button to bottom. Redesigned all toggles to compact modern proportions (w-10 h-[22px] track, w-[18px] h-[18px] thumb, translate-x-[18px]). Fixed sharp layout jump when Archive section appears/disappears by wrapping it in AnimatePresence with height auto animation and removing internal Archive empty state. Fixed layout snap animation glitch when deleting/restoring items in Archive. Fixed text selection glitch when dragging income settings items. Fixed bottom navigation active tab pill jumping during Archive deletions by wrapping navs in LayoutGroup, isolating Archive with dedicated LayoutGroup, and setting layoutDependency={active}. Confined scrollbar strictly to fields container above action buttons footer in DepositForm, CashForm, CryptoForm, and InvestmentForm. Replaced segmented 'Действует/Закрыт' control in DepositForm with a compact icon toggle inline with 'Дата закрытия' label.
+      "Масштабная оптимизация форм добавления активов: интерфейс стал плотнее, унифицированы отступы, добавлены плавные бесшовные анимации появления дополнительных полей и выпадающих списков.",
+      "Обновлен дизайн раздела Настройки: блоки сгруппированы компактнее, а удаленные активы теперь элегантно отображаются в виде умной адаптивной сетки.",
+      "Устранены визуальные «скачки» интерфейса и полос прокрутки при добавлении активов и взаимодействии с Архивом.",
+      "Адаптирована форма «Добавить вклад» для мобильных устройств — теперь она плавно выезжает снизу, в едином стиле со всеми активами.",
+      "Улучшена отзывчивость кнопок (например, досрочного закрытия) и элементов управления (тумблеров, переключателей) на смартфонах."
+    ],
+    fixes: [
+      // Fix: Исправлено отображение текущего дня в календаре на светлой теме при пустых данных
       "Исправлено перекрытие выпадающих списков (например, выбора валюты) кнопками сохранения в формах добавления активов.",
       "Исправлена ошибка сброса введенной вручную даты при клике вне окна или нажатии Enter."
     ]
@@ -317,8 +334,11 @@ export const changelog: ReleaseNote[] = [
       "Реализована плавающая (sticky) колонка чистой прибыли (Net), активирующаяся при наличии дополнительных кастомных столбцов.",
       "Интерактивная плашка отработанных дней (Норма/Факт) с всплывающим окном для мгновенного изменения.",
       "Наглядные бейджи типов расчета премий (суммой ₽, % от оклада, или коэффициент) во избежание лишних надписей.",
-      "Переработан блок персональных настроек: внедрена узкоформатная одноколоночная карточка фиксированной высоты."
+      "Переработан блок персональных настроек: внедрена узкоформатная одноколоночная карточка фиксированной высоты.",
+      "Внедрен премиальный неоморфный дизайн (вдавленная кнопка с фирменным синим свечением) для индикации текущего дня в календаре.",
+      "Унифицирована типографика: строгий моноширинный шрифт JetBrains Mono теперь применяется ко всем финансовым показателям, суммам и процентам для идеального выравнивания цифр.",
     ]
+    // fix: Устранены зависания dev-сервера за счет отключения фонового строгого линтера при хот-релоаде
   },
   {
     version: "1.5.0",

@@ -39,8 +39,8 @@ export const QuarterRow = React.memo(({
   const qGross = qMonths.reduce((sum, m) => sum + m.gross, 0);
   const qNet13 = qMonths.reduce((sum, m) => sum + m.net13, 0);
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
-  const formatValNoSymbol = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val).replace(/\s?[₽|RUB]$/i, '')}</PrivacyBlur>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur></span>;
+  const formatValNoSymbol = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val).replace(/\s?[₽|RUB]$/i, '')}</PrivacyBlur></span>;
 
   return (
     <React.Fragment>
@@ -76,14 +76,14 @@ export const QuarterRow = React.memo(({
                 return (
                   <div className="group/cell relative">
                     {isPrivate ? (
-                      <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-700 dark:text-primary-400 font-bold"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
+                      <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-700 dark:text-primary-400 font-bold tabular-nums"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                     ) : (
                       qType === 'rub' ? (
                         <div className="relative flex flex-col items-end justify-center w-full">
                           <TableInput 
                             value={val} 
                             onChange={(v) => handleQuarterChange(qIndex, 'bonusAmount', v)} 
-                            className="w-full font-mono font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400" 
+                            className="w-full font-bold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-700 dark:text-primary-400" 
                           />
                         </div>
                       ) : (
@@ -101,7 +101,7 @@ export const QuarterRow = React.memo(({
                   </div>
                 );
               })() : (
-                <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm font-mono font-bold text-slate-300 dark:text-slate-700 select-none pr-4">
+                <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm font-bold text-slate-300 dark:text-slate-700 select-none pr-4">
                   —
                 </div>
               )}
@@ -113,9 +113,9 @@ export const QuarterRow = React.memo(({
             <td key={col.id} className="px-1 py-1.5 lg:py-2 align-middle border-none">
             </td>
           ))}
-          <td className="px-1 py-1.5 lg:py-2 text-right font-mono text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]">{formatValNoSymbol(qGross)}</td>
+          <td className="px-1 py-1.5 lg:py-2 text-right text-primary-700 dark:text-primary-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]">{formatValNoSymbol(qGross)}</td>
           <td className={cn(
-            "pl-1 pr-3 lg:pr-4 py-1.5 lg:py-2 text-right font-mono text-deposit-600 dark:text-deposit-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]",
+            "pl-1 pr-3 lg:pr-4 py-1.5 lg:py-2 text-right text-deposit-600 dark:text-deposit-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]",
             v2Data.columns.length > 0 && "sticky right-0 bg-[#f8fafc]/90 dark:bg-slate-900/90 backdrop-blur-sm z-10 shadow-[-12px_0_15px_-10px_rgba(0,0,0,0.05)] dark:shadow-[-12px_0_15px_-10px_rgba(0,0,0,0.2)] border-l border-slate-100 dark:border-slate-800"
           )}>{formatValNoSymbol(qNet13)}</td>
         </tr>

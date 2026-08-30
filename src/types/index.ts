@@ -66,7 +66,7 @@ export type YearData = {
 };
 
 export type TaxBracket = {
-  limit: number;
+  limit: number | null;
   rate: number;
   label: string;
 };

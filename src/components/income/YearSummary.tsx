@@ -28,6 +28,23 @@ export const YearSummary = ({
   isPrivate = false,
   isSimulated = false
 }: YearSummaryProps) => {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
+        setShowTooltip(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    }
+  }, []);
+
   const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}><AnimatedCurrency value={val} /></PrivacyBlur>;
 
   return (
@@ -65,12 +82,12 @@ export const YearSummary = ({
           className={cn("relative z-10 group/copy flex flex-col mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
-          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold font-mono tracking-tighter flex items-center transition-opacity group-hover/copy:opacity-80 truncate">
+          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold tracking-tighter flex items-center transition-opacity group-hover/copy:opacity-80 truncate">
             {formatVal(yearlyTotals.finalNet)}
           </h3>
           {netDiff !== null && !isPrivate && (
             <div className="mt-0.5 text-[8px] sm:text-[9px] font-medium text-primary-100/80 truncate">
-              {netDiff >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(netDiff))} к {prevYear}
+              {netDiff >= 0 ? '↑' : '↓'} <span className="tabular-nums">{formatCurrency(Math.abs(netDiff))}</span> к {prevYear}
             </div>
           )}
         </div>
@@ -100,12 +117,12 @@ export const YearSummary = ({
           className={cn("relative z-10 group/copy mt-auto min-w-0", !isPrivate && "cursor-pointer")}
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
-          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-slate-950 dark:text-white font-mono tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
+          <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-slate-950 dark:text-white tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
             {formatVal(yearlyTotals.totalGross)}
           </h3>
           {grossDiff !== null && !isPrivate && !isSimulated && (
              <div className={cn("mt-0.5 text-[8px] sm:text-[9px] font-medium truncate", grossDiff >= 0 ? "text-primary-500" : "text-rose-500")}>
-               {grossDiff >= 0 ? '↑' : '↓'} {formatCurrency(Math.abs(grossDiff))}
+               {grossDiff >= 0 ? '↑' : '↓'} <span className="tabular-nums">{formatCurrency(Math.abs(grossDiff))}</span>
              </div>
           )}
         </div>
@@ -119,19 +136,48 @@ export const YearSummary = ({
           : "bg-white dark:bg-slate-950/50 border-slate-200/60 dark:border-slate-800/60 shadow-card dark:shadow-card-dark hover:border-slate-300 dark:hover:border-slate-700"
       )}>
         {onShowTaxInfo && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onShowTaxInfo();
-            }}
-            className="absolute top-2 right-2 z-20 flex items-center justify-center p-1.5 rounded-lg transition-all duration-300 hover:bg-rose-500/10 group/info focus:outline-none"
-            title="Справочник налоговых ставок"
+          <div 
+            ref={tooltipRef}
+            className="absolute top-2 right-2 z-20 flex items-center justify-center outline-none"
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
           >
-            <Info 
-              size={12} 
-              className="text-rose-500/50 group-hover/info:text-rose-500 transition-colors" 
-            />
-          </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // On desktop, click opens modal directly. On mobile, we might just toggle tooltip if they tapped it, or open modal.
+                // Let's just open the modal on click, since the text says "Справочник налоговых ставок".
+                onShowTaxInfo();
+              }}
+              onTouchStart={(e) => {
+                // For touch devices, first tap shows tooltip, second tap (or tap on tooltip) could open modal.
+                // Or just show tooltip and let them read it.
+                e.preventDefault();
+                e.stopPropagation();
+                if (!showTooltip) {
+                  setShowTooltip(true);
+                } else {
+                  onShowTaxInfo();
+                  setShowTooltip(false);
+                }
+              }}
+              className="flex items-center justify-center p-1.5 rounded-lg transition-all duration-300 hover:bg-rose-500/10 focus:outline-none"
+            >
+              <Info 
+                size={12} 
+                className={cn("transition-colors", showTooltip ? "text-rose-500" : "text-rose-500/50 hover:text-rose-500")} 
+              />
+            </button>
+            <div 
+              className={cn(
+                "absolute top-full right-0 mt-1 w-32 p-2 bg-slate-900/95 dark:bg-white/95 backdrop-blur-xl rounded-xl shadow-xl transition-all duration-200 z-50 origin-top-right text-center text-white dark:text-slate-900 text-[10px] font-bold leading-tight pointer-events-none",
+                showTooltip ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              )}
+            >
+              Справочник налоговых ставок
+            </div>
+          </div>
         )}
         <div className="absolute -bottom-2 -right-2 text-rose-500 opacity-10 transition-all duration-500 pointer-events-none group-hover:scale-110">
           <ReceiptRussianRuble className="w-20 h-20" />
@@ -151,13 +197,13 @@ export const YearSummary = ({
           title={isPrivate ? "" : "Нажмите, чтобы скопировать"}
         >
           <div className="flex items-center gap-2">
-            <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-rose-500 dark:text-rose-400 font-mono tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
+            <h3 className="text-xl sm:text-lg md:text-sm lg:text-2xl xl:text-3xl font-bold text-rose-500 dark:text-rose-400 tracking-tighter transition-opacity group-hover/copy:opacity-70 truncate">
               {formatVal(yearlyTotals.progressiveTax)}
             </h3>
           </div>
           <div className="mt-0.5 flex items-center gap-1.5 min-w-0">
             <span className="text-[8px] sm:text-[9px] font-bold text-rose-600 dark:text-rose-400 opacity-80 truncate">
-              {yearlyTotals.effectiveRate.toFixed(1)}% ставка
+              <span className="tabular-nums">{yearlyTotals.effectiveRate.toFixed(1)}%</span> ставка
             </span>
           </div>
         </div>

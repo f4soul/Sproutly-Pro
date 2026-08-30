@@ -121,7 +121,7 @@ export function DepositFormDateFields({
             setDurationStr(val);
             handleDurationChange(val === "" ? "" : Number(val));
           }}
-          className="apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
+          className="apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed tabular-nums text-sm"
         />
       </div>
 

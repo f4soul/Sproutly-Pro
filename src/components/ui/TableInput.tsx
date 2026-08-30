@@ -65,7 +65,7 @@ export const TableInput = ({
       onChange={(e) => setLocalValue(e.target.value)}
       onKeyDown={handleKeyDown}
       className={cn(
-        "w-full min-w-0 px-1.5 py-1 text-right font-mono tabular-nums text-xs md:text-sm bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded transition-all outline-none",
+        "w-full min-w-0 px-1.5 py-1 text-right tabular-nums text-xs md:text-sm bg-transparent border border-transparent hover:border-slate-300 dark:hover:border-slate-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 rounded transition-all outline-none",
         className
       )}
     />

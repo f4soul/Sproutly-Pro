@@ -8,7 +8,7 @@ import { InvestmentList } from "./InvestmentList";
 import { CryptoList } from "./CryptoList";
 import { cn } from "../../lib/utils";
 import { useAppData } from "../../context/AppDataContext";
-import { getAssetTabOrder, AssetTabId } from "../../lib/constants";
+import { getAssetTabOrder } from "../../lib/constants";
 
 interface AssetsViewProps {
   deposits: Deposit[];

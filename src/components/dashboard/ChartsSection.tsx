@@ -12,7 +12,7 @@ interface ChartsSectionProps {
 
 
 export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSectionProps) => {
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur></span>;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1">
@@ -27,9 +27,9 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
                   <span className="text-xs font-medium text-slate-950 dark:text-white">{b.label}</span>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 bg-slate-50 dark:bg-slate-800/50 rounded-md text-slate-500 dark:text-slate-400">{b.rate}%</span>
                 </div>
-                <span className="font-mono opacity-50 text-[10px] text-slate-500 dark:text-slate-400">База: {formatVal(b.amount)}</span>
+                <span className="opacity-50 text-[10px] text-slate-500 dark:text-slate-400">База: {formatVal(b.amount)}</span>
               </div>
-              <span className="font-mono font-medium text-sm text-slate-950 dark:text-white">{formatVal(b.tax)}</span>
+              <span className="font-medium text-sm text-slate-950 dark:text-white">{formatVal(b.tax)}</span>
             </div>
           ))}
         </div>
@@ -61,16 +61,16 @@ export const ChartsSection = ({ yearlyTotals, isPrivate = false }: ChartsSection
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-primary-500"></div>
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">На руки</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">На руки</span>
               </div>
-              <span className="text-sm font-bold text-slate-950 dark:text-white font-mono">{formatVal(yearlyTotals.finalNet)}</span>
+              <span className="text-sm font-bold text-slate-950 dark:text-white tabular-nums">{formatVal(yearlyTotals.finalNet)}</span>
             </div>
             <div className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Налог (НДФЛ)</span>
+                <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Налог (НДФЛ)</span>
               </div>
-              <span className="text-sm font-bold text-slate-950 dark:text-white font-mono">{formatVal(yearlyTotals.progressiveTax)}</span>
+              <span className="text-sm font-bold text-slate-950 dark:text-white tabular-nums">{formatVal(yearlyTotals.progressiveTax)}</span>
             </div>
           </div>
         </div>

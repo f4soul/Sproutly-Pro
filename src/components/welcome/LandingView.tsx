@@ -1,108 +1,305 @@
 import React from 'react';
-import { motion } from 'motion/react';
-import { ShieldCheck, BarChart3, TrendingUp, ChevronRight } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
+import {
+  ShieldCheck,
+  BarChart3,
+  TrendingUp,
+  ChevronRight,
+} from 'lucide-react';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
 
 interface LandingViewProps {
   onStart: () => void;
 }
 
+const features = [
+  {
+    icon: ShieldCheck,
+    iconClass: 'text-deposit-500',
+    glowClass: 'group-hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]',
+    title: 'Полная анонимность',
+    desc: 'Данные хранятся локально и полностью под вашим контролем.',
+  },
+  {
+    icon: BarChart3,
+    iconClass: 'text-primary-500',
+    glowClass: 'group-hover:shadow-[0_0_20px_rgba(59,130,246,0.25)]',
+    title: 'Единый обзор',
+    desc: 'Все банковские продукты и аналитика в одном месте.',
+  },
+  {
+    icon: TrendingUp,
+    iconClass: 'text-teal-500',
+    glowClass: 'group-hover:shadow-[0_0_20px_rgba(20,184,166,0.25)]',
+    title: 'Расчет доходностей',
+    desc: 'Налоги, НДФЛ и сложные проценты в режиме реального времени.',
+  },
+];
+
 export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
+  const shouldReduceMotion = useReducedMotion();
+
+  // Precision cubic-bezier for silky, natural, non-linear deceleration (Apple iOS style)
+  const easeOutSmooth = [0.22, 1, 0.36, 1] as const;
+
+  // Staggered Container Orchestration - allows distinctive cascade while keeping flow connected
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: shouldReduceMotion ? 0 : 0.12,
+        delayChildren: shouldReduceMotion ? 0 : 0.05,
+      },
+    },
+  };
+
+  // Hero Section Elements - crisp, clean fade-in
+  const heroItemVariants = {
+    hidden: {
+      opacity: 0,
+      y: shouldReduceMotion ? 0 : 18,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.65,
+        ease: easeOutSmooth,
+      },
+    },
+  };
+
+  // Features Cards Stagger & Cascading Floating Entrance
+  const cardItemVariants = {
+    hidden: {
+      opacity: 0,
+      y: shouldReduceMotion ? 0 : 28,
+      scale: shouldReduceMotion ? 1 : 0.98,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.7,
+        ease: easeOutSmooth,
+      },
+    },
+  };
+
+  // CTA Button Entry
+  const ctaVariants = {
+    hidden: {
+      opacity: 0,
+      y: shouldReduceMotion ? 0 : 18,
+      scale: shouldReduceMotion ? 1 : 0.98,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: easeOutSmooth,
+      },
+    },
+  };
+
   return (
-    <div className="relative min-h-[100dvh] w-full bg-slate-50 dark:bg-[#0B0F19] overflow-x-hidden selection:bg-deposit-500/30">
-      {/* Background Gradients */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 blur-[120px]" />
-        <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-primary-500/10 dark:bg-primary-500/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[20%] w-[60%] h-[40%] rounded-full bg-teal-500/10 dark:bg-teal-500/10 blur-[100px]" />
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } }}
+      exit={{ opacity: 0, y: -12, transition: { duration: 0.25, ease: easeOutSmooth } }}
+      className="relative min-h-[100dvh] w-full overflow-hidden bg-slate-50 selection:bg-deposit-500/30 dark:bg-[#0B0F19]"
+    >
+      {/* ================================================================
+          Ambient Background (Hardware-accelerated glows)
+          ================================================================ */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
+        {/* Deposit Green Glow */}
+        <motion.div
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  x: [0, 24, 0],
+                  y: [0, -18, 0],
+                }
+          }
+          transition={{
+            duration: 18,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -left-[15%] -top-[15%] h-[55%] w-[55%] rounded-full bg-deposit-500/10 blur-[120px] transform-gpu dark:bg-deposit-500/15"
+        />
+
+        {/* Primary Blue Glow */}
+        <motion.div
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  x: [0, -20, 0],
+                  y: [0, 22, 0],
+                }
+          }
+          transition={{
+            duration: 22,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -right-[15%] top-[10%] h-[60%] w-[45%] rounded-full bg-primary-500/10 blur-[120px] transform-gpu dark:bg-primary-500/15"
+        />
+
+        {/* Teal Accent Glow */}
+        <motion.div
+          animate={
+            shouldReduceMotion
+              ? undefined
+              : {
+                  x: [0, 18, 0],
+                }
+          }
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+          className="absolute -bottom-[20%] left-[15%] h-[45%] w-[70%] rounded-full bg-teal-500/10 blur-[110px] transform-gpu"
+        />
       </div>
 
-      <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[calc(3rem+env(safe-area-inset-top,0px))] pb-[calc(2rem+env(safe-area-inset-bottom,0px))] md:py-12 flex flex-col min-h-[100dvh] justify-start">
-        <div className="flex flex-col w-full h-full flex-1">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex justify-center mb-5 md:mb-6"
-          >
-            <div className="w-16 h-16 bg-white/80 dark:bg-slate-900/80 shadow-2xl border border-slate-200/50 dark:border-white/10 rounded-[1.5rem] flex items-center justify-center backdrop-blur-xl">
-              <SproutlyLogo className="w-8 h-8 text-primary-500 drop-shadow-[0_0_12px_rgba(var(--rgb-primary),0.5)]" />
+      {/* ================================================================
+          Main Content Orchestration
+          ================================================================ */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-center px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+      >
+        {/* ================================================================
+            Hero Section
+            ================================================================ */}
+        <section className="flex flex-col items-center text-center">
+          {/* Logo */}
+          <motion.div variants={heroItemVariants} className="mb-5 sm:mb-6">
+            <div className="flex h-14 w-14 items-center justify-center rounded-[1.25rem] border border-slate-200/60 bg-white/80 shadow-xl backdrop-blur-xl transition-transform duration-300 hover:scale-105 dark:border-white/10 dark:bg-slate-900/80 sm:h-16 sm:w-16">
+              <SproutlyLogo className="h-7 w-7 text-primary-500 drop-shadow-[0_0_12px_rgba(var(--rgb-primary),0.5)] sm:h-8 sm:w-8" />
             </div>
           </motion.div>
 
-          <div className="flex flex-col items-center text-center max-w-3xl mx-auto mb-8 md:mb-10">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight mb-3 sm:mb-5 leading-tight"
-            >
-              Управляйте капиталом<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-deposit-500 to-primary-500">
-                с элегантностью
-              </span>
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-              className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-400 font-medium max-w-2xl"
-            >
-              Ваши доходы и вклады под полным контролем. Инструмент премиального уровня для персональной финансовой аналитики.
-            </motion.p>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-4 lg:gap-6 mb-8 md:mb-12">
-            {[
-              {
-                icon: <ShieldCheck className="w-6 h-6 text-deposit-500" />,
-                title: 'Полная анонимность',
-                desc: 'Данные хранятся локально. Синхронизация защищена и полностью под вашим контролем.'
-              },
-              {
-                icon: <BarChart3 className="w-6 h-6 text-primary-500" />,
-                title: 'Единый обзор',
-                desc: 'Консолидированный дашборд с точной аналитикой по всем вашим банковским продуктам.'
-              },
-              {
-                icon: <TrendingUp className="w-6 h-6 text-teal-500" />,
-                title: 'Расчет доходностей',
-                desc: 'Умные калькуляторы налогов, НДФЛ и сложных процентов в режиме реального времени.'
-              }
-            ].map((feature, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 + idx * 0.1, ease: "easeOut" }}
-                className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] shadow-xl p-5 lg:p-6 rounded-[1.5rem] lg:rounded-[2rem] flex flex-col items-center text-center h-full"
-              >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-sm mb-3 sm:mb-4 border border-slate-100 dark:border-slate-700">
-                  {feature.icon}
-                </div>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
-            className="flex justify-center empty:hidden mt-auto pt-8"
+          {/* Heading */}
+          <motion.h1
+            variants={heroItemVariants}
+            className="max-w-3xl text-[clamp(2.15rem,5vw,4.5rem)] font-black leading-[1.08] tracking-[-0.04em] text-slate-900 dark:text-white"
           >
-            <button
-              onClick={onStart}
-              className="group relative flex items-center gap-3 px-8 sm:px-12 py-3 sm:py-4 bg-deposit-500 hover:bg-deposit-600 text-white rounded-[1.25rem] sm:rounded-2xl font-black text-base sm:text-lg tracking-wide shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_24px_rgba(16,185,129,0.5)] transition-all active:scale-95 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-              <span>Начать работу</span>
-              <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    </div>
+            Управляйте капиталом
+            <br />
+            <span className="inline-block whitespace-nowrap bg-gradient-to-r from-deposit-500 to-primary-500 bg-clip-text text-transparent">
+              с элегантностью
+            </span>
+          </motion.h1>
+
+          {/* Description */}
+          <motion.p
+            variants={heroItemVariants}
+            className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400 sm:mt-5 sm:text-base lg:text-lg"
+          >
+            Ваши доходы и вклады под полным контролем. Инструмент премиального уровня для персональной финансовой аналитики.
+          </motion.p>
+        </section>
+
+        {/* ================================================================
+            Features (Hardware-Accelerated Staggered Grid)
+            ================================================================ */}
+        <section className="mt-8 grid gap-3 sm:mt-10 sm:grid-cols-3 sm:gap-4 lg:mt-12 lg:gap-5">
+          {features.map((feature) => {
+            const Icon = feature.icon;
+
+            return (
+              <motion.article
+                key={feature.title}
+                variants={cardItemVariants}
+                whileHover={
+                  shouldReduceMotion
+                    ? undefined
+                    : {
+                        y: -4,
+                        transition: { duration: 0.25, ease: easeOutSmooth },
+                      }
+                }
+                whileTap={
+                  shouldReduceMotion
+                    ? undefined
+                    : {
+                        scale: 0.985,
+                        transition: { duration: 0.15, ease: easeOutSmooth },
+                      }
+                }
+                className="group relative flex items-center gap-4 rounded-2xl border border-slate-200/60 bg-white/65 p-4 shadow-lg backdrop-blur-xl transform-gpu transition-[box-shadow,border-color,background-color] duration-300 hover:border-slate-300/80 hover:bg-white/85 hover:shadow-xl dark:border-white/[0.06] dark:bg-slate-900/60 dark:hover:border-white/15 dark:hover:bg-slate-900/85 sm:flex-col sm:items-center sm:p-5 sm:text-center lg:rounded-[1.5rem] lg:p-6"
+              >
+                {/* Icon Container with subtle micro-scale and glow on hover */}
+                <div
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white shadow-sm transition-all duration-300 ease-out group-hover:scale-105 ${feature.glowClass} dark:border-slate-700/60 dark:bg-slate-800 sm:h-12 sm:w-12 sm:rounded-2xl`}
+                >
+                  <Icon className={`h-5 w-5 ${feature.iconClass} sm:h-6 sm:w-6`} />
+                </div>
+
+                {/* Text Content */}
+                <div className="min-w-0">
+                  <h2 className="text-sm font-black text-slate-900 dark:text-white sm:text-base lg:text-lg">
+                    {feature.title}
+                  </h2>
+
+                  <p className="mt-1 text-xs font-medium leading-relaxed text-slate-500 dark:text-slate-400 sm:mt-2 sm:text-sm">
+                    {feature.desc}
+                  </p>
+                </div>
+              </motion.article>
+            );
+          })}
+        </section>
+
+        {/* ================================================================
+            CTA Action
+            ================================================================ */}
+        <motion.div variants={ctaVariants} className="mt-7 flex justify-center sm:mt-9">
+          <motion.button
+            type="button"
+            onClick={onStart}
+            whileHover={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    scale: 1.02,
+                    transition: { duration: 0.2, ease: easeOutSmooth },
+                  }
+            }
+            whileTap={
+              shouldReduceMotion
+                ? undefined
+                : {
+                    scale: 0.97,
+                    transition: { duration: 0.15, ease: easeOutSmooth },
+                  }
+            }
+            className="group relative flex min-h-12 w-full max-w-xs items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-deposit-500 px-7 text-sm font-black tracking-wide text-white shadow-[0_6px_20px_rgba(16,185,129,0.25)] transition-[background-color,box-shadow] duration-300 hover:bg-deposit-600 hover:shadow-[0_8px_28px_rgba(16,185,129,0.4)] sm:min-h-14 sm:w-auto sm:px-10 sm:text-base"
+          >
+            {/* Shimmer */}
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+            />
+
+            <span className="relative">Начать работу</span>
+
+            <ChevronRight className="relative h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+          </motion.button>
+        </motion.div>
+      </motion.div>
+    </motion.main>
   );
 };

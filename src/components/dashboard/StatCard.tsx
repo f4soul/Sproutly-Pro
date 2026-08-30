@@ -18,13 +18,17 @@ export function StatCard({ title, value, icon, description, highlight, index, to
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node)) {
         setShowTooltip(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -45,7 +49,20 @@ export function StatCard({ title, value, icon, description, highlight, index, to
               className="relative flex items-center justify-center -mb-0.5 outline-none"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
-              onClick={() => setShowTooltip(!showTooltip)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // If it's a touch device, the click might immediately follow a simulated enter.
+                // But toggle is fine if we just prevent default. Actually, better:
+                setShowTooltip((prev) => !prev);
+              }}
+              onTouchStart={(e) => {
+                // Prevent mouseenter from firing on touch
+                e.preventDefault();
+                e.stopPropagation();
+                // Just toggle
+                setShowTooltip((prev) => !prev);
+              }}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {

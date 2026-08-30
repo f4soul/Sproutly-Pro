@@ -83,6 +83,15 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
            dataToSet.years[dataToSet.activeYear] = generateDefaultYear(dataToSet.activeYear);
         }
       }
+      // Fix nulls turning into Infinity in tax brackets due to JSON serialization
+      if (dataToSet.taxBrackets) {
+        Object.keys(dataToSet.taxBrackets).forEach(year => {
+          dataToSet.taxBrackets[Number(year)] = dataToSet.taxBrackets[Number(year)].map((b, idx, arr) => ({
+            ...b,
+            limit: (b.limit === null || b.limit === 0 && idx === arr.length - 1) ? Infinity : b.limit
+          }));
+        });
+      }
       setLocalState(dataToSet);
       setIsInitialized(true);
       globalIsLoaded = true;

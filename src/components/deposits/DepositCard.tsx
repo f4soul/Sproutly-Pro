@@ -61,7 +61,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
 
   const formatVal = (val: number) => (
     <PrivacyBlur isPrivate={isPrivate}>
-      {formatCurrency(val, deposit.currency || "RUB")}
+      <span className="tabular-nums">{formatCurrency(val, deposit.currency || "RUB")}</span>
     </PrivacyBlur>
   );
 
@@ -135,7 +135,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
               className="text-xl sm:text-2xl font-black tracking-tighter"
               style={{ color: bankDetails.color }}
             >
-              {deposit.rate}%
+              <span className="tabular-nums">{deposit.rate}%</span>
             </span>
           </div>
         )}

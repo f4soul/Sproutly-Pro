@@ -737,7 +737,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-black/60" />
+            <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/60" />
           </Transition.Child>
 
           <div className="fixed inset-0 overflow-y-auto">

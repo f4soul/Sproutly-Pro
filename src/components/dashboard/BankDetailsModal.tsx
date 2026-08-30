@@ -31,7 +31,7 @@ export function BankDetailsModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
             aria-hidden="true"
           />
           <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -73,7 +73,7 @@ export function BankDetailsModal({
                   <div className="p-4 rounded-2xl bg-deposit-50 dark:bg-deposit-500/10 border border-deposit-100 dark:border-deposit-500/20">
                     <div className="text-[10px] font-bold text-deposit-600 dark:text-deposit-400 uppercase tracking-widest mb-1">Итоговый доход в банке</div>
                     <div className="text-2xl font-bold text-deposit-700 dark:text-deposit-300">
-                      {formatCurrency(bankData.find(b => b.name === selectedBank)?.value || 0)}
+                      <span className="tabular-nums">{formatCurrency(bankData.find(b => b.name === selectedBank)?.value || 0)}</span>
                     </div>
                   </div>
 
@@ -86,16 +86,16 @@ export function BankDetailsModal({
                           <div key={`bank-deposit-${d.id || i}-${i}`} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
                             <div className="flex justify-between items-start">
                               <div className="text-xs font-bold text-slate-950 dark:text-white truncate max-w-[180px]">{d.sourceNote || 'Вклад без названия'}</div>
-                              <div className="text-xs font-bold text-deposit-600 dark:text-deposit-400">{formatCurrency(yearIncome, d.currency || 'RUB')}</div>
+                              <div className="text-xs font-bold text-deposit-600 dark:text-deposit-400 tabular-nums">{formatCurrency(yearIncome, d.currency || 'RUB')}</div>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Сумма</span>
-                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{formatCurrency(d.amount, d.currency || 'RUB')}</span>
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white tabular-nums">{formatCurrency(d.amount, d.currency || 'RUB')}</span>
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Ставка</span>
-                                <span className="text-[10px] font-bold text-slate-950 dark:text-white">{d.rate}%</span>
+                                <span className="text-[10px] font-bold text-slate-950 dark:text-white tabular-nums">{d.rate}%</span>
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tighter">Срок до</span>

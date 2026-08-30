@@ -130,6 +130,8 @@ export function HeatmapExpandedMonth({
             const isSelected = selectedDay && isSameDay(day, selectedDay);
             const isMaturing = density?.maturingCount > 0;
             const isOpening = density?.openingCount > 0;
+            const isToday = isSameDay(day, new Date());
+
 
             // Calculate tooltip position
             const dateNumber = day.getDate();
@@ -183,10 +185,12 @@ export function HeatmapExpandedMonth({
                      "w-full h-full rounded-[10px] sm:rounded-xl flex flex-col items-center justify-center transition-colors duration-150 group/day cursor-default select-none relative day-touch-zone",
                      hasInfo && "cursor-pointer hover:z-50 hover:shadow-xl",
                      getColorClass(intensity),
+                     isToday 
+                       ? "shadow-[inset_0_3px_8px_rgba(0,0,0,0.4),inset_0_0_12px_rgba(59,130,246,0.8)] scale-[0.95] brightness-[0.85]" 
+                       : ((!density?.amount) ? "shadow-none" : "border-white/5 border shadow-sm"),
                      isSelected ? "ring-[2px] ring-deposit-500 ring-offset-2 ring-offset-white dark:ring-offset-[#0B0F19] shadow-[0_0_20px_rgba(var(--rgb-deposit),0.5)] z-40 scale-105" : "",
-                     (!density?.amount) ? "shadow-none" : "border-white/5 border shadow-sm"
                    )}
-                   style={{ zIndex: isSelected ? 40 : (isMaturing ? 20 : 10) }}
+                   style={{ zIndex: isSelected ? 40 : (isMaturing || isToday ? 20 : 10) }}
                  >
                    {/* Maturing Glow Layer Inside */}
                    {isMaturing && (
@@ -205,10 +209,12 @@ export function HeatmapExpandedMonth({
 
                    <span className={cn(
                      "text-[13px] sm:text-[14px] lg:text-[16px] font-black leading-none z-10 transition-colors drop-shadow-sm",
-                     intensity === 0 
-                       ? "text-slate-400 dark:text-slate-500 group-hover/day:text-slate-700 dark:group-hover/day:text-slate-300" 
-                       : "text-white",
-                     isMaturing && "text-amber-500 dark:text-amber-400 z-20"
+                     isToday 
+                       ? "text-white" 
+                       : (intensity === 0 
+                           ? "text-slate-400 dark:text-slate-500 group-hover/day:text-slate-700 dark:group-hover/day:text-slate-300" 
+                           : "text-white"),
+                     (!isToday && isMaturing) && "text-amber-500 dark:text-amber-400 z-20"
                    )}>
                      {format(day, 'd')}
                    </span>

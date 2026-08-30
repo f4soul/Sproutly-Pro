@@ -62,7 +62,7 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-slate-900/60 dark:bg-black/60 backdrop-blur-sm" />
+          <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto overflow-x-hidden">

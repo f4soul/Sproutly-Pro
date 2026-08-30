@@ -316,7 +316,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm pointer-events-auto"
+            className="absolute inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm pointer-events-auto"
             aria-hidden="true"
             onClick={onClose}
           />
@@ -394,7 +394,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
           </div>
 
           {/* Body */}
-          <div className="relative w-full flex-1 shrink min-h-0 sm:min-h-[400px] sm:h-[60vh] sm:max-h-[600px] overflow-hidden">
+          <div className="relative w-full flex-1 shrink min-h-[350px] h-[60vh] sm:min-h-[400px] sm:max-h-[600px] overflow-hidden">
             <AnimatePresence mode="wait">
               {activeTab === 'main' && (
                 <motion.div
@@ -428,7 +428,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                             <TableInput
                               value={baseSalary}
                               onChange={setBaseSalary}
-                              className="w-full bg-transparent border-transparent hover:border-transparent focus:border-transparent focus:ring-transparent p-0 text-right pr-1.5 text-xl font-mono font-black text-slate-900 dark:text-white outline-none focus:ring-0 placeholder-slate-300 dark:placeholder-slate-700 h-6 leading-none"
+                              className="w-full bg-transparent border-transparent hover:border-transparent focus:border-transparent focus:ring-transparent p-0 text-right pr-1.5 text-xl font-black text-slate-900 dark:text-white outline-none focus:ring-0 placeholder-slate-300 dark:placeholder-slate-700 h-6 leading-none"
                               hideDecimals={true}
                               isInteger={true}
                             />
@@ -484,7 +484,7 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
                         <span>
                           {applyBaseToAll ? (
                             <>
-                              Оклады во всех <strong>12 месяцах</strong> года изменятся на <strong>{baseSalary.toLocaleString('ru-RU')} ₽</strong> при сохранении.
+                              Оклады во всех <strong>12 месяцах</strong> года изменятся на <strong className="tabular-nums">{baseSalary.toLocaleString('ru-RU')} ₽</strong> при сохранении.
                             </>
                           ) : (
                             <>
@@ -601,18 +601,18 @@ export function IncomeTableConfigDialog({ isOpen, onClose, columns: initialColum
           </div>
 
           {/* Footer */}
-          <div className="px-5 sm:px-6 pt-3 sm:pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] sm:pb-4 border-t border-slate-200/50 dark:border-white/[0.05] bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl flex flex-col-reverse sm:flex-row justify-end gap-2 shrink-0 sm:rounded-b-[2.5rem] relative">
+          <div className="px-5 sm:px-6 pt-4 sm:pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-4 border-t border-slate-200/50 dark:border-white/[0.05] bg-white/40 dark:bg-slate-950/40 backdrop-blur-3xl flex gap-3 sm:gap-2 sm:flex-row justify-end shrink-0 sm:rounded-b-[2.5rem] relative">
             <button
               onClick={onClose}
-              className="px-5 py-2.5 sm:py-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800 rounded-xl transition-colors w-full sm:w-auto"
+              className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-5 text-sm sm:text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300 sm:text-slate-500 sm:dark:text-slate-400 bg-white/50 dark:bg-slate-800/80 sm:bg-transparent sm:dark:bg-transparent hover:bg-white dark:hover:bg-slate-700 sm:hover:bg-slate-200/50 sm:dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 sm:border-transparent sm:dark:border-transparent shadow-sm sm:shadow-none"
             >
               Отмена
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center justify-center gap-2 px-6 py-2.5 sm:py-2 text-xs sm:text-sm font-bold uppercase tracking-wide text-white bg-primary-600 hover:bg-primary-500 hover:scale-[1.02] active:scale-95 rounded-xl transition-all shadow-lg shadow-primary-600/20 w-full sm:w-auto"
+              className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold uppercase tracking-wide text-white bg-primary-600 hover:bg-primary-500 sm:hover:scale-[1.02] active:scale-95 rounded-xl transition-all shadow-lg shadow-primary-600/20"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5px]" />
               Сохранить
             </button>
           </div>

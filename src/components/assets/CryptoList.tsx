@@ -152,9 +152,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                 Криптоактивы
               </h2>
               <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-amber-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-                <PrivacyBlur isPrivate={isPrivate}>
-                  {formatCurrency(stats.totalCurrent)}
-                </PrivacyBlur>
+                <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(stats.totalCurrent)}</PrivacyBlur></span>
               </div>
             </div>
 
@@ -162,10 +160,10 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
               <div className="flex flex-wrap gap-4 pt-1">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-amber-500/20 rounded-xl">
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Доходность:</span>
-                  <span className={cn("text-xs font-bold font-mono tracking-tight", stats.profit >= 0 ? "text-amber-500" : "text-rose-500")}>
-                    {stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}
+                  <span className={cn("text-xs font-bold tabular-nums tracking-tight", stats.profit >= 0 ? "text-amber-500" : "text-rose-500")}>
+                    <span className="tabular-nums">{stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}</span>
                   </span>
-                  <span className={cn("text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
+                  <span className={cn("text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
                     {stats.profit > 0 ? "+" : ""}{stats.profitPercent.toFixed(2)}%
                   </span>
                 </div>
@@ -235,7 +233,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                           </span>
                         </div>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
                             {formatCurrency(totalCurrent)}
                           </PrivacyBlur>
@@ -260,7 +258,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                           {hasDynamics && currentRate && (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                 {ticker === 'USDT' 
                                   ? formatCurrency(currentRate) 
                                   : (() => {
@@ -276,7 +274,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                       {hasDynamics && profitPercent !== 0 && (
                         <div className="flex items-center pt-1">
                           <span className={cn(
-                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
                             isPositive 
                               ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                               : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -306,7 +304,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                     {hasDynamics && profitPercent !== 0 && (
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
                       <span className={cn(
-                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
                         isPositive 
                           ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                           : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -328,7 +326,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                           </span>
                         </div>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
                             {formatCurrency(currentRub)}
                           </PrivacyBlur>
@@ -360,7 +358,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                           {group.length === 1 && liveRateRub ? (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                 {asset.ticker === 'USDT' 
                                   ? formatCurrency(liveRateRub) 
                                   : (() => {
@@ -437,7 +435,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">

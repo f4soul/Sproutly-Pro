@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { SquareStop, Zap, HandCoins, DollarSign, RussianRuble, Gift, Info, ChevronDown, Check } from 'lucide-react';
+import { SquareStop, Zap, HandCoins, RussianRuble, Gift, ChevronDown, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SimulationState } from '../../types';
 import { cn } from '../../lib/utils';
@@ -117,7 +117,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                         className="absolute left-0 top-0 whitespace-nowrap flex items-center gap-1 sm:gap-1.5 px-2 py-0.5 rounded-full bg-deposit-500/10 border border-deposit-500/20 text-[9px] sm:text-[10px] font-bold text-deposit-600 dark:text-deposit-400 filter drop-shadow-[0_0_8px_rgba(16,185,129,0.25)] select-none"
                       >
                         <span className="opacity-75 uppercase tracking-wide text-[8px] sm:text-[9px]">Средний Net:</span>
-                        <span className="font-extrabold font-mono text-[9px] sm:text-[10px]">~{Math.round(averageMonthlyNet).toLocaleString('ru-RU')} ₽/мес.</span>
+                        <span className="font-extrabold text-[9px] sm:text-[10px]"><span className="tabular-nums">~{Math.round(averageMonthlyNet).toLocaleString('ru-RU')} ₽/мес.</span></span>
                       </motion.div>
                     )
                   )}
@@ -168,7 +168,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                 </div>
                 {simulation.isActive && (simulation.salaryIncrease ?? 0) > 0 && (
                   <span className="text-[8px] font-black uppercase tracking-widest text-deposit-600 dark:text-deposit-400 bg-deposit-500/10 px-1.5 py-0.5 rounded-md border border-deposit-500/20 shrink-0 select-none">
-                    +{simulation.salaryIncrease}%
+                    <span className="tabular-nums"><span className="tabular-nums">+{simulation.salaryIncrease}%</span></span>
                   </span>
                 )}
               </div>
@@ -176,11 +176,11 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
               {simulation.isActive ? (
                 <div className="mt-auto flex flex-col gap-0.5">
                   <div className="flex items-baseline text-deposit-600 dark:text-deposit-400 filter drop-shadow-[0_0_10px_rgba(16,185,129,0.15)] dark:drop-shadow-[0_0_10px_rgba(16,185,129,0.4)] select-all font-sans font-semibold text-xl sm:text-2xl tracking-tight leading-none">
-                    <span>{Math.round((simulation.projectedSalary ?? bonusBase) * (1 + (simulation.salaryIncrease || 0) / 100)).toLocaleString('ru-RU')}</span>
+                    <span className="tabular-nums">{Math.round((simulation.projectedSalary ?? bonusBase) * (1 + (simulation.salaryIncrease || 0) / 100)).toLocaleString('ru-RU')}</span>
                     <span className="text-sm font-semibold opacity-85 ml-1">₽</span>
                   </div>
                   <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                    Базовый: {(simulation.projectedSalary ?? bonusBase).toLocaleString('ru-RU')} ₽
+                    Базовый: <span className="tabular-nums">{(simulation.projectedSalary ?? bonusBase).toLocaleString('ru-RU')} ₽</span>
                   </span>
                 </div>
               ) : (
@@ -370,7 +370,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                     <HandCoins size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Индексация</span>
                   </div>
-                  <span className="text-[10px] font-bold font-mono text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded">+{simulation.salaryIncrease}%</span>
+                  <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded">+{simulation.salaryIncrease}%</span>
                 </div>
                 <input 
                   type="range"

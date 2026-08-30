@@ -31,7 +31,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
 
   const formatVal = (val: number) => (
     <PrivacyBlur isPrivate={isPrivate}>
-      {formatCurrency(val, deposit.currency || "RUB")}
+      <span className="tabular-nums">{formatCurrency(val, deposit.currency || "RUB")}</span>
     </PrivacyBlur>
   );
 

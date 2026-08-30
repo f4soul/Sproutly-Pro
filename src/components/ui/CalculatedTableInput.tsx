@@ -72,12 +72,12 @@ export const CalculatedTableInput = ({
           className
         )}
       >
-        <div className={cn("font-mono font-bold text-primary-600 dark:text-primary-400 tabular-nums w-full text-right truncate", mobileOnly && "pb-3")}>
+        <div className={cn("tabular-nums font-bold text-primary-600 dark:text-primary-400  w-full text-right truncate", mobileOnly && "pb-3")}>
           {value > 0 ? value : 0}
         </div>
         {value > 0 && (
           <div className={cn(
-            "text-slate-400 dark:text-slate-500 font-mono select-none pointer-events-none w-full text-left truncate",
+            "text-slate-400 dark:text-slate-500 tabular-nums select-none pointer-events-none w-full text-left truncate",
             mobileOnly 
               ? "absolute left-0 bottom-0 text-[10px] pr-1" 
               : "mt-0.5 text-[8px] xl:text-[9px] leading-none"
@@ -94,7 +94,7 @@ export const CalculatedTableInput = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/60 backdrop-blur-sm pointer-events-auto z-[190]"
+              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/60 backdrop-blur-sm pointer-events-auto z-[190]"
               aria-hidden="true"
               onClick={() => setIsOpen(false)}
             />
@@ -134,7 +134,7 @@ export const CalculatedTableInput = ({
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') handleSave();
                         }}
-                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 pr-10 text-lg font-mono font-bold text-primary-600 dark:text-primary-400 focus:border-primary-500 outline-none text-right placeholder/30 shadow-sm"
+                        className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 pr-10 text-lg tabular-nums font-bold text-primary-600 dark:text-primary-400 focus:border-primary-500 outline-none text-right placeholder/30 shadow-sm"
                         placeholder="0"
                       />
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 dark:text-slate-600 font-bold">
@@ -159,7 +159,7 @@ export const CalculatedTableInput = ({
 
                   <div className="flex items-center justify-between px-2 mb-6">
                     <span className="text-xs font-bold text-slate-500">Результат ({sign}):</span>
-                    <span className="font-mono font-bold text-primary-500">
+                    <span className="tabular-nums font-bold text-primary-500">
                       ≈ {formatCurrency(Math.round(liveComputed))}
                     </span>
                   </div>
@@ -167,13 +167,13 @@ export const CalculatedTableInput = ({
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setIsOpen(false)}
-                      className="flex-[0.4] apple-button flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                      className="flex-[0.4] apple-button flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wide text-xs font-bold"
                     >
                       Отмена
                     </button>
                     <button 
                       onClick={handleSave}
-                      className="flex-[0.6] apple-button flex items-center justify-center bg-primary-500 text-white shadow-lg shadow-primary-500/25 gap-2"
+                      className="flex-[0.6] apple-button flex items-center justify-center bg-primary-500 text-white shadow-lg shadow-primary-500/25 gap-2 uppercase tracking-wide text-xs font-bold"
                     >
                       Сохранить
                     </button>

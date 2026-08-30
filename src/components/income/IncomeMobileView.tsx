@@ -4,7 +4,7 @@ import { MONTH_NAMES, QUARTERS } from '../../lib/constants';
 import { formatCurrency } from '../../lib/taxCalculator';
 import { cn } from '../../lib/utils';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
-import { ChevronDown, ChevronRight, Zap } from 'lucide-react';
+import { ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { TableInput } from '../ui/TableInput';
 import { CalculatedTableInput } from '../ui/CalculatedTableInput';
 import { motion, AnimatePresence } from 'motion/react';
@@ -22,6 +22,7 @@ interface Props {
   onApplyBaseToAll: () => void;
   isPrivate?: boolean;
   isSimulationOpen?: boolean;
+  onShowTaxInfo?: () => void;
 }
 
 export function IncomeMobileView({
@@ -36,10 +37,11 @@ export function IncomeMobileView({
   onValueChange,
   onApplyBaseToAll,
   isPrivate = false,
-  isSimulationOpen = false
+  isSimulationOpen = false,
+  onShowTaxInfo
 }: Props) {
   const [showStickyFooter, setShowStickyFooter] = useState(false);
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{`${new Intl.NumberFormat('ru-RU').format(Math.round(val))} ₽`}</PrivacyBlur>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{`${new Intl.NumberFormat('ru-RU').format(Math.round(val))} ₽`}</PrivacyBlur></span>;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -92,14 +94,14 @@ export function IncomeMobileView({
                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Годовая премия</span>
                      <div className="bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 shadow-inner rounded-xl px-3 py-2 min-w-0 overflow-hidden group/cell relative h-10 flex items-center">
                        {isPrivate ? (
-                          <div className="font-mono text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
+                          <div className="text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                         ) : (
                           type === 'rub' ? (
                             <div className="relative flex flex-col justify-center h-full flex-1 min-w-0 pr-1">
                               <TableInput 
                                 value={val} 
                                 onChange={(v) => handleAnnualBonusChange('annualBonusAmount', v)} 
-                                className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                                className="w-full text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
                               />
                             </div>
                           ) : (
@@ -132,14 +134,14 @@ export function IncomeMobileView({
                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Доп. премия</span>
                      <div className="bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 shadow-inner rounded-xl px-3 py-2 min-w-0 overflow-hidden group/cell relative h-10 flex items-center">
                        {isPrivate ? (
-                          <div className="font-mono text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
+                          <div className="text-sm font-bold text-primary-600 dark:text-primary-400 w-full truncate text-right"><PrivacyBlur isPrivate={true}>{formatCurrency(computedVal)}</PrivacyBlur></div>
                         ) : (
                           type === 'rub' ? (
                             <div className="relative flex flex-col justify-center h-full flex-1 min-w-0 pr-1">
                               <TableInput 
                                 value={val} 
                                 onChange={(v) => handleAnnualBonusChange('extraBonusAmount', v)} 
-                                className="w-full font-mono text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
+                                className="w-full text-sm font-bold text-primary-600 dark:text-primary-400 bg-transparent border-none p-0 focus:ring-0 outline-none placeholder:text-primary-500/30 truncate text-right"
                               />
                             </div>
                           ) : (
@@ -190,7 +192,7 @@ export function IncomeMobileView({
                 </motion.div>
                 <div className="flex flex-col">
                   <h3 className="font-bold text-base text-slate-800 dark:text-slate-200 leading-tight">{q.name}</h3>
-                  <span className="text-[10px] text-deposit-500 dark:text-deposit-400 font-mono font-bold leading-tight mt-1"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(qNet13)}</PrivacyBlur> Net</span>
+                  <span className="text-[10px] text-deposit-500 dark:text-deposit-400 font-bold leading-tight mt-1"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(qNet13)}</PrivacyBlur> Net</span>
                 </div>
               </div>
 
@@ -264,7 +266,7 @@ export function IncomeMobileView({
                           </div>
                           <div className="bg-deposit-500/10 px-2 py-1 rounded-md flex items-center">
                             <span className="text-[10px] text-deposit-600 dark:text-deposit-400 uppercase tracking-widest font-bold mr-1.5">Net</span>
-                            <span className="font-mono font-bold text-deposit-600 dark:text-deposit-400 text-sm"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(calcM.net13)}</PrivacyBlur></span>
+                            <span className="font-bold text-deposit-600 dark:text-deposit-400 text-sm"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(calcM.net13)}</PrivacyBlur></span>
                           </div>
                         </div>
 
@@ -274,14 +276,14 @@ export function IncomeMobileView({
                             <div className="flex flex-col gap-1">
                               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Оклад</span>
                               {isPrivate ? (
-                                <div className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 font-mono text-sm font-bold text-right text-slate-800 dark:text-white flex items-center justify-end shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(m.salary)}</PrivacyBlur></div>
+                                <div className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 text-sm font-bold text-right text-slate-800 dark:text-white flex items-center justify-end shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(m.salary)}</PrivacyBlur></div>
                               ) : (
-                                <TableInput value={m.salary} onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-sm font-bold truncate text-slate-800 dark:text-white shadow-inner transition-colors" />
+                                <TableInput value={m.salary} onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right text-sm font-bold truncate text-slate-800 dark:text-white shadow-inner transition-colors" />
                               )}
                             </div>
                             <div className="text-[10px] text-slate-500 mt-2 flex items-end justify-between px-1">
                               <span>Gross:</span>
-                              <span className="font-mono font-medium text-primary-500 dark:text-primary-400"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(calcM.gross)}</PrivacyBlur></span>
+                              <span className="font-medium text-primary-500 dark:text-primary-400"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(calcM.gross)}</PrivacyBlur></span>
                             </div>
                           </div>
 
@@ -292,9 +294,9 @@ export function IncomeMobileView({
                                 className="flex items-center bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-1 h-10 focus-within:ring-1 focus-within:border-primary-500/50 transition-colors shadow-inner"
                                 {...(monthIndex === firstExpandedMonthIndex ? { 'data-tour': 'working-days-mobile' } : {})}
                               >
-                                <TableInput value={m.factDays} onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} isInteger className="w-full h-full bg-transparent text-center font-mono font-bold text-sm border-none p-0 outline-none text-slate-800 dark:text-white" />
-                                <span className="text-slate-300 dark:text-slate-700 px-1 font-mono">/</span>
-                                <TableInput value={m.normDays} onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} isInteger className="w-full h-full bg-transparent text-center font-mono font-bold text-sm text-slate-500 border-none p-0 outline-none" />
+                                <TableInput value={m.factDays} onChange={(v) => handleMonthChange(monthIndex, 'factDays', v)} isInteger className="w-full h-full bg-transparent text-center font-bold text-sm border-none p-0 outline-none text-slate-800 dark:text-white" />
+                                <span className="text-slate-300 dark:text-slate-700 px-1 tabular-nums">/</span>
+                                <TableInput value={m.normDays} onChange={(v) => handleMonthChange(monthIndex, 'normDays', v)} isInteger className="w-full h-full bg-transparent text-center font-bold text-sm text-slate-500 border-none p-0 outline-none" />
                               </div>
                             </div>
                           </div>
@@ -322,14 +324,14 @@ export function IncomeMobileView({
                                     </span>
                                   </span>
                                   {isPrivate ? (
-                                    <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 font-mono text-sm font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(computedMainVal)}</PrivacyBlur></div>
+                                    <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 text-sm font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(computedMainVal)}</PrivacyBlur></div>
                                   ) : (
                                     mainType === 'rub' ? (
                                       <div className="relative flex flex-col justify-center flex-1 min-w-0 pr-1">
                                         <TableInput 
                                           value={mainVal} 
                                           onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
-                                          className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-sm font-bold truncate text-primary-600 dark:text-primary-400 shadow-inner transition-colors" 
+                                          className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-3 h-10 focus:border-primary-500/50 outline-none text-right text-sm font-bold truncate text-primary-600 dark:text-primary-400 shadow-inner transition-colors" 
                                         />
                                       </div>
                                     ) : (
@@ -357,11 +359,11 @@ export function IncomeMobileView({
                                 <div key={col.id} className="flex flex-col gap-1 group/cell relative">
                                   <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate" title={col.name}>{col.name}</span>
                                   {isPrivate ? (
-                                    <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 font-mono text-xs font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(amountComputed)}</PrivacyBlur></div>
+                                    <div className="flex items-center justify-end bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 text-xs font-bold text-right text-primary-600 dark:text-primary-400 shadow-inner"><PrivacyBlur isPrivate={true}>{formatCurrency(amountComputed)}</PrivacyBlur></div>
                                   ) : (
                                     col.type === 'rub' ? (
                                       <div className="relative flex flex-col justify-center flex-1 min-w-0 pr-1">
-                                        <TableInput value={val} onChange={(v) => onValueChange(monthIndex, col.id, v)} className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 focus:border-primary-500/50 outline-none text-right font-mono text-xs font-bold text-primary-600 dark:text-primary-400 truncate pr-5 shadow-inner transition-colors" />
+                                        <TableInput value={val} onChange={(v) => onValueChange(monthIndex, col.id, v)} className="w-full bg-slate-50 dark:bg-[#0B0F19] border border-slate-200/50 dark:border-slate-800/80 rounded-xl px-2 h-10 focus:border-primary-500/50 outline-none text-right text-xs font-bold text-primary-600 dark:text-primary-400 truncate pr-5 shadow-inner transition-colors" />
                                         <span className="absolute right-2 top-2.5 text-[9px] font-bold text-slate-400 pointer-events-none">
                                           ₽
                                         </span>
@@ -409,18 +411,27 @@ export function IncomeMobileView({
             <div className="bg-white/80 dark:bg-[#050505]/95 backdrop-blur-3xl text-slate-800 dark:text-white rounded-3xl p-4 sm:p-5 shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] border border-slate-200/60 dark:border-white/[0.05] flex justify-between items-center pointer-events-auto transition-colors duration-300">
               <div className="flex flex-col">
                 <span className="text-[9px] sm:text-[10px] text-primary-600 dark:text-slate-500 font-black uppercase tracking-[0.1em] leading-tight mb-1">Финальный Net за год</span>
-                <span className="text-xl sm:text-2xl font-bold font-mono tracking-tighter text-slate-900 dark:text-white drop-shadow-sm transition-colors duration-300">
+                <span className="text-xl sm:text-2xl font-bold tracking-tighter text-slate-900 dark:text-white drop-shadow-sm transition-colors duration-300">
                   {formatVal(yearlyTotals.finalNet)}
                 </span>
               </div>
-              <div className="flex flex-col text-right">
+              <div className="flex flex-col text-right items-end">
                 <span className="text-[8px] sm:text-[9px] text-slate-500 dark:text-slate-500 font-black uppercase tracking-[0.1em] leading-tight mb-1">Total Gross</span>
-                <span className="text-xs sm:text-sm font-mono font-bold text-slate-700 dark:text-slate-300 transition-colors duration-300">
+                <span className="text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors duration-300">
                   {formatVal(yearlyTotals.totalGross)}
                 </span>
-                <span className="text-[9px] sm:text-[10px] text-rose-500/90 dark:text-rose-400/90 font-mono font-medium mt-1">
-                  -{formatVal(yearlyTotals.progressiveTax || 0)}
-                </span>
+                <div 
+                  className="flex items-center gap-1 mt-1 cursor-pointer group active:scale-95 transition-transform"
+                  onClick={onShowTaxInfo}
+                  role="button"
+                >
+                  <span className="text-[9px] sm:text-[10px] text-rose-500/90 dark:text-rose-400/90 font-medium">
+                    -{formatVal(yearlyTotals.progressiveTax || 0)}
+                  </span>
+                  <div className="p-0.5 rounded-full bg-rose-500/10 text-rose-500/70 group-hover:bg-rose-500/20 transition-colors">
+                    <Info size={10} />
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>

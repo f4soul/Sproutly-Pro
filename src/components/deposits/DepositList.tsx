@@ -440,22 +440,22 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="table-cell xl:hidden px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
-                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 font-mono text-[13px] font-semibold text-slate-950 dark:text-white border-b-0">
-                    <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur>
+                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-semibold text-slate-950 dark:text-white border-b-0">
+                    <span className="tabular-nums"><span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span></span></span>
                   </td>
-                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 font-mono text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 border-b-0">
-                    <PrivacyBlur isPrivate={isPrivate}>+{formatCurrency(filteredTotals.income)}</PrivacyBlur>
+                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 border-b-0">
+                    <span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span></span>
                   </td>
-                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 font-mono text-[13px] font-black text-slate-950 dark:text-white border-b-0">
-                    <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
+                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-black text-slate-950 dark:text-white border-b-0">
+                    <span className="tabular-nums"><span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span></span></span>
                   </td>
                   <td className="table-cell xl:hidden px-2 py-4 text-center border-slate-200 dark:border-slate-800 border-b-0">
-                    <div className="flex flex-col items-center justify-center font-mono font-semibold">
+                    <div className="flex flex-col items-center justify-center tabular-nums font-semibold">
                       <span className="text-[13px] font-bold text-slate-950 dark:text-white">
-                        <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
+                        <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
                       </span>
                       <span className="text-[11px] text-deposit-600 dark:text-deposit-400">
-                        +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
+                        +<span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span></span>
                       </span>
                     </div>
                   </td>
@@ -600,10 +600,10 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                       {isAnalyticsExpanded ? (
                         <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Вклады: {filteredTotals.count}</span>
                       ) : (
-                        <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-slate-850 dark:text-white leading-none">
-                          <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
+                        <div className="flex items-center gap-1.5 tabular-nums text-xs font-bold text-slate-850 dark:text-white leading-none">
+                          <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
                           <span className="text-[9px] font-medium text-deposit-600 dark:text-deposit-400">
-                            (+<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>)
+                            (+<span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>)
                           </span>
                         </div>
                       )}
@@ -635,22 +635,22 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                       <div className="pt-2 grid grid-cols-2 gap-4 pb-2">
                         <div className="flex flex-col text-left">
                           <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Сумма вкладов</span>
-                          <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none font-mono">
-                            <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur>
+                          <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none tabular-nums">
+                            <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span>
                           </span>
                         </div>
                         
                         <div className="flex flex-col text-right">
                           <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Ожидаемый доход</span>
-                          <span className="text-sm font-black text-deposit-600 dark:text-deposit-400 tracking-tight leading-none font-mono">
-                            +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
+                          <span className="text-sm font-black text-deposit-600 dark:text-deposit-400 tracking-tight leading-none tabular-nums">
+                            +<span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>
                           </span>
                         </div>
 
                         <div className="col-span-2 pt-3.5 mt-1 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Итоговая сумма</span>
-                          <span className="text-base font-black text-slate-950 dark:text-white tracking-tight font-mono">
-                            <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
+                          <span className="text-base font-black text-slate-950 dark:text-white tracking-tight tabular-nums">
+                            <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
                           </span>
                         </div>
                       </div>

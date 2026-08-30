@@ -37,8 +37,8 @@ export const MonthRow = React.memo(({
   mainCalcType = 'rub',
   hasAnyBonusColumn = false
 }: MonthRowProps) => {
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
-  const formatValNoSymbol = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val).replace(/\s?[₽|RUB]$/i, '')}</PrivacyBlur>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur></span>;
+  const formatValNoSymbol = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val).replace(/\s?[₽|RUB]$/i, '')}</PrivacyBlur></span>;
   const isProjected = (calcM as any).isProjected;
 
   const mainBonusVal = v2Month?.values?.['system_main_bonus'] || 0;
@@ -56,12 +56,12 @@ export const MonthRow = React.memo(({
       </td>
       <td className="px-1 py-1.5 align-middle min-w-[65px] lg:min-w-[80px]">
         {isPrivate ? (
-          <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm"><PrivacyBlur isPrivate={true}>{formatCurrency(calcM.salary)}</PrivacyBlur></div>
+          <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm tabular-nums"><PrivacyBlur isPrivate={true}>{formatCurrency(calcM.salary)}</PrivacyBlur></div>
         ) : (
           <TableInput 
             value={m.salary} 
             onChange={(v) => handleMonthChange(monthIndex, 'salary', v)} 
-            className="w-full font-mono text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink" 
+            className="w-full text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink" 
           />
         )}
       </td>
@@ -80,14 +80,14 @@ export const MonthRow = React.memo(({
           return (
             <td className="px-1 py-1.5 align-middle min-w-[65px] lg:min-w-[80px] group/cell relative">
               {isPrivate ? (
-                <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-600 dark:text-primary-400 font-semibold"><PrivacyBlur isPrivate={true}>{formatCurrency(actualMainVal)}</PrivacyBlur></div>
+                <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm text-primary-600 dark:text-primary-400 font-semibold tabular-nums"><PrivacyBlur isPrivate={true}>{formatCurrency(actualMainVal)}</PrivacyBlur></div>
               ) : (
                 mainType === 'rub' ? (
                   <div className="relative flex flex-col items-end justify-center w-full">
                     <TableInput 
                       value={mainBonusVal} 
                       onChange={(v) => onValueChange(monthIndex, 'system_main_bonus', v)} 
-                      className="w-full font-mono font-semibold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                      className="w-full font-semibold text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
                     />
                   </div>
                 ) : (
@@ -123,14 +123,14 @@ export const MonthRow = React.memo(({
         return (
           <td key={col.id} className="px-1 py-1.5 align-middle min-w-[65px] lg:min-w-[80px] group/cell relative">
             {isPrivate ? (
-              <div className="w-full font-mono text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm"><PrivacyBlur isPrivate={true}>{formatCurrency(val)}</PrivacyBlur></div>
+              <div className="w-full text-right px-1 py-1 text-[11px] lg:text-xs xl:text-sm tabular-nums"><PrivacyBlur isPrivate={true}>{formatCurrency(val)}</PrivacyBlur></div>
             ) : (
               col.type === 'rub' ? (
                 <div className="relative flex flex-col items-end justify-center w-full">
                   <TableInput 
                     value={val} 
                     onChange={(v) => onValueChange(monthIndex, col.id, v)} 
-                    className="w-full font-mono text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
+                    className="w-full text-right bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md px-1 py-1 text-[11px] lg:text-xs xl:text-sm shrink text-primary-600 dark:text-primary-400" 
                   />
                 </div>
               ) : (
@@ -150,12 +150,12 @@ export const MonthRow = React.memo(({
       })}
 
       <td className={cn(
-        "px-1 py-1.5 text-right font-mono font-semibold text-primary-700 dark:text-primary-300 bg-primary-50/30 dark:bg-primary-900/10 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]"
+        "px-1 py-1.5 text-right font-semibold text-primary-700 dark:text-primary-300 bg-primary-50/30 dark:bg-primary-900/10 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]"
       )}>
         {formatValNoSymbol(calcM.gross)}
       </td>
       <td className={cn(
-        "pl-1 pr-3 lg:pr-4 py-1.5 text-right font-mono text-deposit-600 dark:text-deposit-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]",
+        "pl-1 pr-3 lg:pr-4 py-1.5 text-right text-deposit-600 dark:text-deposit-400 align-middle text-[11px] lg:text-xs xl:text-sm whitespace-nowrap min-w-[85px] lg:min-w-[95px]",
         columns.length > 0 && "sticky right-0 bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm z-10 shadow-[-12px_0_15px_-10px_rgba(0,0,0,0.05)] dark:shadow-[-12px_0_15px_-10px_rgba(0,0,0,0.2)] border-l border-slate-100 dark:border-slate-800"
       )}>
         {formatValNoSymbol(calcM.net13)}

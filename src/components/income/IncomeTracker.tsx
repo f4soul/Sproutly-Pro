@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
-import { Info, HandCoins, Shield, Eye, EyeOff, Zap } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { MonthData, SimulationState, CalculatedMonth, MonthDataV2, IncomeColumnDef } from '../../types';
+import { SimulationState, CalculatedMonth, MonthData, MonthDataV2, IncomeColumnDef } from '../../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../../lib/constants';
 import { generateDefaultYear, generateEmptyYear, getDefaultExpandedQuarters } from '../../lib/helpers';
 import { TaxReferenceModal } from './TaxReferenceModal';
@@ -541,7 +539,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     simulation
   });
 
-  const formatVal = (val: number) => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur></span>;
 
   if (!isInitialized || !activeYearData) {
     return (
@@ -642,6 +640,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                   onApplyBaseToAll={handleApplyBaseToAll}
                   isPrivate={isPrivate}
                   isSimulationOpen={isSimulationOpen}
+                  onShowTaxInfo={() => setIsTaxInfoModalOpen(true)}
                 />
               )}
             </div>

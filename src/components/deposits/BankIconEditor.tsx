@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Bank } from '../../types';
 import { DEFAULT_BANK_ICON } from '../../lib/banks';
-import { Maximize, Upload, Focus } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { BankLogo } from './BankLogo';
 
 interface BankIconEditorProps {

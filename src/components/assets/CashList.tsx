@@ -1,5 +1,5 @@
 import React, { useState, useMemo, Fragment } from "react";
-import { Plus, Banknote, Edit3, Trash2, Wallet, Lock, ShieldAlert, Vault } from "lucide-react";
+import { Plus, Edit3, Trash2, Lock, ShieldAlert, Vault } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Dialog, Transition } from "@headlessui/react";
 import { CashAsset } from "../../types";
@@ -170,9 +170,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 Всего средств
               </h2>
               <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-cash-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                <PrivacyBlur isPrivate={isPrivate}>
-                  {formatCurrency(totalInRub)}
-                </PrivacyBlur>
+                <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(totalInRub)}</PrivacyBlur></span>
               </div>
             </div>
 
@@ -184,7 +182,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                   {currencyBreakdown.map(([currency, amount]) => (
                     <div 
                       key={currency} 
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-cash-500/20 rounded-xl text-xs font-bold font-mono text-slate-900 dark:text-cash-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(16,185,129,0.1)]"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-cash-500/20 rounded-xl text-xs font-bold tabular-nums text-slate-900 dark:text-cash-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(16,185,129,0.1)]"
                     >
                       <span className="w-2 h-2 rounded-full bg-cash-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
                       <PrivacyBlur isPrivate={isPrivate}>
@@ -263,9 +261,9 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                           Наличные {groupKey}
                         </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
-                            {formatCurrency(totalAmount, groupKey)}
+                            <span className="tabular-nums">{formatCurrency(totalAmount, groupKey)}</span>
                           </PrivacyBlur>
                         </div>
                       </div>
@@ -282,7 +280,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                             <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
                             <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
                               <PrivacyBlur isPrivate={isPrivate}>
-                                {formatCurrency(totalConvertedRub, "RUB")}
+                                <span className="tabular-nums">{formatCurrency(totalConvertedRub, "RUB")}</span>
                               </PrivacyBlur>
                             </span>
                           </div>
@@ -290,7 +288,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                           {groupKey !== "RUB" && currentRate > 0 && (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                 {currentRate.toFixed(2)} ₽
                               </span>
                             </div>
@@ -301,7 +299,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       {hasDynamics && profitPercent !== 0 && (
                         <div className="flex items-center pt-1">
                           <span className={cn(
-                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
                             isPositive 
                               ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                               : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -338,7 +336,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                     {hasDynamics && percentageChange !== 0 && (
                       <div className="absolute top-4 right-4 z-20">
                         <span className={cn(
-                          "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                          "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
                           isPositive 
                             ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                             : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -358,9 +356,9 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                           {asset.name}
                         </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
-                            {formatCurrency(asset.amount, asset.currency)}
+                            <span className="tabular-nums">{formatCurrency(asset.amount, asset.currency)}</span>
                           </PrivacyBlur>
                         </div>
 
@@ -383,7 +381,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                             <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
                             <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
                               <PrivacyBlur isPrivate={isPrivate}>
-                                {formatCurrency(convertedRub, "RUB")}
+                                <span className="tabular-nums">{formatCurrency(convertedRub, "RUB")}</span>
                               </PrivacyBlur>
                             </span>
                           </div>
@@ -391,7 +389,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                           {group.length === 1 && asset.currency !== "RUB" && currentRate > 0 && (
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 font-mono whitespace-nowrap">
+                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                 {currentRate.toFixed(2)} ₽
                               </span>
                             </div>
@@ -465,7 +463,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">

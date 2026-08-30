@@ -7,7 +7,7 @@ import { Deposit, TaxYearSettings, AppSettings } from '../../types';
 import { formatCurrency, cn } from '../../lib/utils';
 import { getExchangeRates, convertToRub, CurrencyRates } from '../../services/currency';
 import { AnimatedCurrency } from '../ui/AnimatedCurrency';
-import { HandCoins, ShieldAlert, ReceiptRussianRuble, Landmark, Download, FileText, Image as ImageIcon, ChevronDown, Check, ArrowDownWideNarrow, ArrowUpNarrowWide, FileSpreadsheet } from 'lucide-react';
+import { HandCoins, ShieldAlert, ReceiptRussianRuble, Landmark } from 'lucide-react';
 
 import { motion, AnimatePresence } from 'motion/react';
 import { db, syncWithFirebase } from '../../config/db';
@@ -36,7 +36,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
     getExchangeRates().then(setRates);
   }, []);
 
-  const formatVal = (val: number, currency: string = 'RUB') => <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val, currency)}</PrivacyBlur>;
+  const formatVal = (val: number, currency: string = 'RUB') => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val, currency)}</PrivacyBlur></span>;
 
   const currentYearSettings = useMemo(() => 
     taxSettings.find(s => Number(s.year) === Number(selectedYear)) || { year: Number(selectedYear), limit: 210000, ndflRate: 13 },
@@ -230,7 +230,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             </div>
             
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 shrink-0">
-              <span>0 ₽</span>
+              <span className="tabular-nums">0 ₽</span>
               <span>{formatVal(currentYearSettings.limit)}</span>
             </div>
 
@@ -358,7 +358,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
             })()}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none flex flex-col justify-center items-center">
               <div className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em] mb-1 z-10">Всего</div>
-              <div className="text-[clamp(0.9rem,1vw,1.1rem)] font-bold text-slate-950 dark:text-white leading-tight break-words z-10">{formatCurrency(stats.totalIncome)}</div>
+              <div className="text-[clamp(0.9rem,1vw,1.1rem)] font-bold text-slate-950 dark:text-white leading-tight break-words z-10"><span className="tabular-nums">{formatCurrency(stats.totalIncome)}</span></div>
             </div>
           </div>
 
@@ -381,7 +381,7 @@ export function DepositsDashboard({ deposits, taxSettings, selectedYear, onYearC
               </div>
             </div>
             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-              <span>0 ₽</span>
+              <span className="tabular-nums">0 ₽</span>
               <span>{formatVal(stats.totalIncome)}</span>
             </div>
           </div>

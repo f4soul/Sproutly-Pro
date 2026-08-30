@@ -46,6 +46,18 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Auto-scroll to current month on mobile/tablet in portrait orientation
+    const timer = setTimeout(() => {
+      if (window.innerWidth < 1024) {
+        const currentMonthCard = document.getElementById('heatmap-current-month');
+        if (currentMonthCard) {
+          currentMonthCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    }, 300); // slight delay to allow rendering and layout
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Sync expandedMonth year with displayYear dynamically
@@ -92,16 +104,23 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
         const isMaturing = density?.maturingCount > 0;
         const isOpening = density?.openingCount > 0;
 
+        const today = new Date();
+        const isToday = today.getFullYear() === displayYear && today.getMonth() === monthIdx && today.getDate() === dayNum;
+
+
         return {
           dateKey,
           dayNumber: dayNum,
           intensity,
           isMaturing,
           isOpening,
+          isToday,
           colorClass: cn(
             getColorClass(intensity),
-            intensity === 0 ? "text-slate-400/60 dark:text-slate-500/60" : "text-white/90",
-            isMaturing ? "border-[1.5px] border-amber-400 dark:border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10 text-amber-500 dark:text-amber-400/90 drop-shadow-sm" : (intensity > 0 ? "border border-white/10 shadow-sm" : "")
+            isToday 
+              ? "shadow-[inset_0_2px_5px_rgba(0,0,0,0.4),inset_0_0_8px_rgba(59,130,246,0.8)] scale-[0.94] brightness-[0.85]" 
+              : ((intensity > 0 && !isMaturing) ? "border border-white/10 shadow-sm" : ""),
+            isMaturing && "border-[1.5px] border-amber-400 dark:border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10 drop-shadow-sm"
           )
         };
       });
@@ -133,15 +152,20 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
             expandedMonth && "opacity-30 blur-md scale-[0.96] pointer-events-none grayscale-[50%]"
           )}
         >
-          {monthsData.map((m) => (
-            <HeatmapMonthCard 
-              key={m.monthDate.toString()} 
-              month={m.monthDate} 
-              days={m.days}
-              startDay={m.startDay}
-              setExpandedMonth={handleSetExpandedMonth} 
-            />
-          ))}
+          {monthsData.map((m) => {
+            const hasToday = m.days.some(d => d.isToday);
+            return (
+              <HeatmapMonthCard 
+                key={m.monthDate.toString()} 
+                month={m.monthDate} 
+                days={m.days}
+                startDay={m.startDay}
+                setExpandedMonth={handleSetExpandedMonth} 
+                hasToday={hasToday}
+                id={hasToday ? "heatmap-current-month" : undefined}
+              />
+            );
+          })}
         </div>
         
         <HeatmapLegend />

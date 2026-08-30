@@ -1,6 +1,6 @@
 import React, { useState, Fragment, useEffect, useRef } from "react";
 import { Dialog, Listbox } from "@headlessui/react";
-import { Vault, ChevronDown, X, Calendar as CalendarIcon } from "lucide-react";
+import { Vault, ChevronDown, X, Calendar as CalendarIcon , Save } from "lucide-react";
 import { CashAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { cn, maskDateInput, toISOLocalDate, parseISOLocalDate } from "../../lib/utils";
@@ -85,7 +85,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -156,7 +156,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                     preventOpenOnFocus={true}
                     locale="ru"
                     dateFormat="dd.MM.yyyy"
-                    className="apple-input w-full pr-12 cursor-text font-mono text-sm"
+                    className="apple-input w-full pr-12 cursor-text tabular-nums text-sm"
                     placeholderText="Выберите дату"
                     wrapperClassName="w-full"
                     portalId="datepicker-portal-container"
@@ -203,7 +203,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                         }
                       }
                     }}
-                    className="apple-input w-full font-mono text-sm pr-20"
+                    className="apple-input w-full tabular-nums text-sm pr-20"
                     placeholder="0"
                   />
                   <div className="absolute inset-y-1.5 right-1.5">
@@ -293,7 +293,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 >
                   <div className="overflow-hidden">
                     <p className="text-[10px] text-slate-500/80 px-1 font-medium">
-                      ≈ {formatCurrency(convertToRub(formData.amount || 0, formData.currency || "USD", rates))} по курсу ЦБ
+                      ≈ <span className="tabular-nums">{formatCurrency(convertToRub(formData.amount || 0, formData.currency || "USD", rates))}</span> по курсу ЦБ
                     </p>
                   </div>
                 </div>
@@ -327,7 +327,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                             }
                           }
                         }}
-                        className="apple-input w-full font-mono text-sm"
+                        className="apple-input w-full tabular-nums text-sm"
                         placeholder="Например, 95.50"
                       />
                       <p className="text-[10px] text-slate-500 px-1">
@@ -356,18 +356,19 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
                 </div>
               </div>
-              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 bg-white/50 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 shadow-sm"
+                  className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-5 text-sm sm:text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300 sm:text-slate-500 sm:dark:text-slate-400 bg-white/50 dark:bg-slate-800/80 sm:bg-transparent sm:dark:bg-transparent hover:bg-white dark:hover:bg-slate-700 sm:hover:bg-slate-200/50 sm:dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 sm:border-transparent sm:dark:border-transparent shadow-sm sm:shadow-none"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3.5 text-sm font-bold text-white bg-cash-500 hover:bg-cash-600 rounded-xl transition-all shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)] active:scale-95"
+                  className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold uppercase tracking-wide text-white bg-cash-500 hover:bg-cash-600 sm:hover:scale-[1.02] rounded-xl transition-all shadow-[0_4px_16px_rgba(16,185,129,0.3)] hover:shadow-[0_4px_20px_rgba(16,185,129,0.4)] active:scale-95"
                 >
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5px]" />
                   Сохранить
                 </button>
               </div>

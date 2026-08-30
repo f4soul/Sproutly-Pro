@@ -152,9 +152,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                 Биржевые активы
               </h2>
               <div className="text-3xl sm:text-4xl lg:text-[2.5rem] font-black uppercase tracking-tight text-slate-900 dark:text-invest-100 leading-none flex items-baseline gap-2 drop-shadow-sm dark:drop-shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-                <PrivacyBlur isPrivate={isPrivate}>
-                  {formatCurrency(stats.totalCurrent)}
-                </PrivacyBlur>
+                <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(stats.totalCurrent)}</PrivacyBlur></span>
               </div>
             </div>
 
@@ -162,19 +160,19 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
               <div className="flex flex-wrap gap-4 pt-1">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-invest-500/20 rounded-xl">
                   <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Доходность:</span>
-                  <span className={cn("text-xs font-bold font-mono tracking-tight", stats.profit >= 0 ? "text-invest-500" : "text-rose-500")}>
-                    {stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}
+                  <span className={cn("text-xs font-bold tabular-nums tracking-tight", stats.profit >= 0 ? "text-invest-500" : "text-rose-500")}>
+                    <span className="tabular-nums">{stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}</span>
                   </span>
-                  <span className={cn("text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
+                  <span className={cn("text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
                     {stats.profit > 0 ? "+" : ""}{stats.profitPercent.toFixed(2)}%
                   </span>
                 </div>
                 {stats.totalDeductions > 0 && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-invest-500/20 rounded-xl">
                     <span className="text-[9px] font-black uppercase text-slate-500 tracking-wider">Вычеты НДФЛ:</span>
-                    <span className="text-xs font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                    <span className="text-xs font-bold tabular-nums text-slate-900 dark:text-white tracking-tight">
                       <PrivacyBlur isPrivate={isPrivate}>
-                        {formatCurrency(stats.totalDeductions)}
+                        <span className="tabular-nums">{formatCurrency(stats.totalDeductions)}</span>
                       </PrivacyBlur>
                     </span>
                   </div>
@@ -265,7 +263,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                           </span>
                         </div>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
                             {formatCurrency(totalCurrent, sampleAsset.currency)}
                           </PrivacyBlur>
@@ -277,7 +275,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap tabular-nums">
                             <PrivacyBlur isPrivate={isPrivate}>
                               {formatCurrency(totalContributed, sampleAsset.currency)}
                             </PrivacyBlur>
@@ -286,7 +284,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                         {totalDeductions > 0 && (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
-                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap tabular-nums">
                               <PrivacyBlur isPrivate={isPrivate}>
                                 {formatCurrency(totalDeductions, sampleAsset.currency)}
                               </PrivacyBlur>
@@ -297,7 +295,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
               
                       <div className="flex items-center">
                         <span className={cn(
-                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm font-mono border",
+                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border",
                           isPositive 
                             ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
                             : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -323,7 +321,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
 
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
                       <span className={cn(
-                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm font-mono border",
+                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
                         isPositive 
                           ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
                           : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -356,7 +354,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                           </span>
                         </div>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 font-mono">
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
                           <PrivacyBlur isPrivate={isPrivate}>
                             {formatCurrency(asset.currentValue, asset.currency)}
                           </PrivacyBlur>
@@ -374,16 +372,16 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                          <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap tabular-nums">
                             <PrivacyBlur isPrivate={isPrivate}>
-                              {formatCurrency(asset.amount, asset.currency)}
+                              <span className="tabular-nums">{formatCurrency(asset.amount, asset.currency)}</span>
                             </PrivacyBlur>
                           </span>
                         </div>
                         {(asset.deductionsReceived || 0) > 0 && (
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Получено вычетов:</span>
-                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap font-mono">
+                            <span className="text-[10px] font-black text-slate-900 dark:text-slate-300 tracking-tight whitespace-nowrap tabular-nums">
                               <PrivacyBlur isPrivate={isPrivate}>
                                 {formatCurrency(asset.deductionsReceived || 0, asset.currency)}
                               </PrivacyBlur>
@@ -456,7 +454,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useTransition } from 'react';
-import { LayoutDashboard, HandCoins, Landmark, PieChart as PieChartIcon, BarChart3, ChevronDown, Eye, EyeOff, Shield, Calendar } from 'lucide-react';
+import { LayoutDashboard, HandCoins, Landmark, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BentoDashboard } from './BentoDashboard';
 import { DepositsDashboard } from './DepositsDashboard';
