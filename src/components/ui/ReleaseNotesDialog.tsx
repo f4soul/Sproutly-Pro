@@ -1,9 +1,9 @@
 import React, { useState, useEffect, Fragment } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog } from '@headlessui/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, CheckCircle2, Star, Bug, X } from 'lucide-react';
 import { changelog } from '../../data/changelog';
 import { cn } from '../../lib/utils';
-
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../../config/firebase';
 
@@ -11,10 +11,9 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
   const [isOpen, setIsOpen] = useState(false);
   const [isManual, setIsManual] = useState(false);
   const [user, loading] = useAuthState(auth);
-
   const LATEST_VERSION = changelog[0].version;
 
-  // Subscribe to manual open events (registered unconditionally on mount)
+  // Subscribe to manual open events
   useEffect(() => {
     const handleOpenNotes = () => {
       setIsOpen(true);
@@ -24,19 +23,16 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
     return () => window.removeEventListener('app:show_release_notes', handleOpenNotes);
   }, []);
 
-  // Auto-show release notes if the conditions are met
+  // Auto-show release notes
   useEffect(() => {
     if (isLocked || loading) {
       return;
     }
 
-    // Check if we need to auto-show it
     const lastSeen = localStorage.getItem('last_seen_version');
     const hasOnboarded = localStorage.getItem('hasOnboarded') === 'true';
 
-    // Only auto-show if user has onboarded AND hasn't seen the latest version.
     if (hasOnboarded && lastSeen !== LATEST_VERSION) {
-      // Delay slightly for dramatic effect after lock / tour finishes
       const timer = setTimeout(() => {
         setIsOpen(true);
         setIsManual(false);
@@ -51,45 +47,39 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
   };
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-[100]" onClose={handleClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-slate-900/20 dark:bg-black/60 backdrop-blur-sm" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 overflow-y-auto overflow-x-hidden">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300 transform"
-              enterFrom="opacity-0 translate-y-8 sm:translate-y-12 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200 transform"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-8 sm:translate-y-12 sm:scale-95"
-            >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-[2rem] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-0 text-left align-middle shadow-2xl transition-all border border-slate-200/50 dark:border-white/10 relative">
-                
+    <AnimatePresence>
+      {isOpen && (
+        <Dialog as="div" className="relative z-[100]" open={true} onClose={handleClose} static>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+            aria-hidden="true"
+          />
+          <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none z-[100]">
+            <Dialog.Panel as={Fragment}>
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="w-full max-w-md transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-0 text-left align-middle shadow-2xl border border-slate-200/50 dark:border-white/10 relative pointer-events-auto flex flex-col max-h-[90dvh] sm:max-h-[90vh]"
+              >
                 {/* Header Graphic */}
-                <div className="relative pt-12 pb-8 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent">
+                <div className="relative pt-12 pb-8 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent shrink-0">
                   <div className="absolute top-0 right-0 p-4 z-20">
                     <button
                       onClick={handleClose}
-                      className="p-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:hover:text-white backdrop-blur-md transition-all active:scale-90 border border-slate-200/50 dark:border-slate-700/50"
+                      className="p-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:hover:text-white backdrop-blur-md transition-all active:scale-90 border border-slate-200/50 dark:border-slate-700/50 cursor-pointer"
                     >
                       <X className="w-4 h-4 stroke-[2.5px]" />
                     </button>
                   </div>
                   
-                  {/* Decorative glow: transform-gpu fixes Safari overflow clipping bugs */}
+                  {/* Decorative glow */}
                   <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl transform-gpu" style={{ WebkitTransform: 'translate3d(0,0,0)' }} />
                   
                   <div className="flex flex-col items-center justify-center text-center relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -106,14 +96,13 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                 </div>
 
                 {/* Content */}
-                <div className="px-6 pb-6 overflow-y-auto max-h-[50vh] scrollbar-hide">
+                <div className="px-6 pb-6 overflow-y-auto scrollbar-hide flex-1">
                   <div className="space-y-6">
                     {changelog.map((release, i) => (
                       <div key={release.version} className={cn(
                         "relative",
                         i !== 0 && "opacity-60 grayscale-[50%] hover:grayscale-0 hover:opacity-100 transition-all duration-300"
                       )}>
-                        {/* Only show version tag if it's not the latest, to save space, but let's show it in a compact way */}
                         {i !== 0 && (
                           <div className="flex items-center gap-2 mb-3">
                             <span className="text-xs font-black uppercase tracking-wider text-slate-400">v{release.version}</span>
@@ -131,7 +120,7 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                             </p>
                           </div>
                         )}
-
+                        
                         <div className="space-y-4">
                           {release.features && release.features.length > 0 && (
                             <div>
@@ -149,7 +138,6 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                               </ul>
                             </div>
                           )}
-
                           {release.improvements && release.improvements.length > 0 && (
                             <div>
                               <div className="flex items-center gap-1.5 mb-2">
@@ -166,7 +154,6 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                               </ul>
                             </div>
                           )}
-
                           {release.fixes && release.fixes.length > 0 && (
                             <div>
                               <div className="flex items-center gap-1.5 mb-2">
@@ -190,7 +177,7 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/50 dark:border-white/5 rounded-b-[2rem]">
+                <div className="p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-4 sm:rounded-b-[32px] bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/50 dark:border-white/5 shrink-0">
                   <button
                     onClick={handleClose}
                     className="apple-button w-full bg-primary-500 hover:bg-primary-600 text-white font-bold h-12 rounded-xl shadow-lg shadow-primary-500/20 active:scale-[0.98] transition-all"
@@ -198,11 +185,11 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                     Понятно, спасибо!
                   </button>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </motion.div>
+            </Dialog.Panel>
           </div>
-        </div>
-      </Dialog>
-    </Transition>
+        </Dialog>
+      )}
+    </AnimatePresence>
   );
 }

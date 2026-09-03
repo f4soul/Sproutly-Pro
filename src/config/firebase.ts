@@ -14,7 +14,7 @@ const customConfig = {
   firestoreDatabaseId: import.meta.env.VITE_FIREBASE_DATABASE_ID || "(default)",
 };
 
-const firebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY ? customConfig : defaultPlatformConfig;
+export const firebaseConfig = import.meta.env.VITE_FIREBASE_API_KEY ? customConfig : defaultPlatformConfig;
 
 // Initialize Firebase SDK
 const app = initializeApp(firebaseConfig);

@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Trash2, BrushCleaning, Copy, FileText, FileSpreadsheet, ChevronDown, Zap, Check, Bolt } from 'lucide-react';
+import { Plus, Trash2, BrushCleaning, Copy, FileText, FileSpreadsheet, ChevronDown, Zap, Check, Settings, Columns3Cog } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
+import { Menu, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
 
 interface YearTabsProps {
   availableYears: number[];
@@ -16,7 +18,8 @@ interface YearTabsProps {
   onExportXLSX?: () => void;
   isSimulationOpen: boolean;
   setIsSimulationOpen: (open: boolean) => void;
-  onOpenStructureConfig?: () => void;
+  onOpenSettings?: () => void;
+  onOpenColumns?: () => void;
 }
 
 export const YearTabs = ({
@@ -32,7 +35,8 @@ export const YearTabs = ({
   onExportXLSX,
   isSimulationOpen,
   setIsSimulationOpen,
-  onOpenStructureConfig
+  onOpenSettings,
+  onOpenColumns,
 }: YearTabsProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDesktopMenuOpen, setIsDesktopMenuOpen] = useState(false);
@@ -151,15 +155,63 @@ export const YearTabs = ({
         {/* Right Elements: 3 Dots Menu */}
         <div className="flex items-center gap-1" ref={mobileMenuRef}>
           <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm p-0.5 gap-0.5 h-9">
-            <button
-              onClick={() => onOpenStructureConfig?.()}
-              data-tour="income-config"
-              className="flex flex-row items-center justify-center px-3 h-full text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none gap-2 font-medium text-xs whitespace-nowrap"
-              title="Настройки"
-            >
-              <Bolt size={14} className="opacity-70" />
-              <span>Настройки</span>
-            </button>
+            <Menu as="div" className="relative h-full">
+              {({ open }) => (
+                <>
+                  <Menu.Button
+                    data-tour="income-config"
+                    className={cn(
+                      "flex flex-row items-center justify-center px-3 h-full text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors focus:outline-none gap-2 font-medium text-xs whitespace-nowrap",
+                      open ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white" : "hover:bg-white dark:hover:bg-slate-800"
+                    )}
+                    title="Настройки"
+                  >
+                    <Settings size={14} className={cn("opacity-70 transition-transform duration-300", open && "rotate-90")} />
+                    <span>Настройки</span>
+                  </Menu.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-100"
+                    enterFrom="transform opacity-0 scale-95 translate-y-2"
+                    enterTo="transform opacity-100 scale-100 translate-y-0"
+                    leave="transition ease-in duration-75"
+                    leaveFrom="transform opacity-100 scale-100 translate-y-0"
+                    leaveTo="transform opacity-0 scale-95 translate-y-2"
+                  >
+                    <Menu.Items className="absolute right-0 top-full mt-2 min-w-[200px] w-max bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] z-[100] overflow-hidden outline-none p-1.5 flex flex-col gap-1">
+                       <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={(e) => { e.preventDefault(); onOpenSettings?.(); }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
+                              active ? "bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300"
+                            )}
+                          >
+                            <Settings className="w-4 h-4 shrink-0" />
+                            <span>Системные</span>
+                          </button>
+                        )}
+                      </Menu.Item>
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={(e) => { e.preventDefault(); onOpenColumns?.(); }}
+                            className={cn(
+                              "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors whitespace-nowrap cursor-pointer",
+                              active ? "bg-slate-100 dark:bg-slate-800/80 text-slate-900 dark:text-white" : "text-slate-600 dark:text-slate-300"
+                            )}
+                          >
+                            <Columns3Cog className="w-4 h-4 shrink-0" />
+                            <span>Столбцы</span>
+                          </button>
+                        )}
+                      </Menu.Item>
+                    </Menu.Items>
+                  </Transition>
+                </>
+              )}
+            </Menu>
             <button
               data-tour="income-tools"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}

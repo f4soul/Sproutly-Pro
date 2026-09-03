@@ -497,7 +497,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/20 dark:bg-black/45 backdrop-blur-xs"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">

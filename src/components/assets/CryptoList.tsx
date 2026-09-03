@@ -263,7 +263,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                                   ? formatCurrency(currentRate) 
                                   : (() => {
                                       const usdRate = getCryptoRate(ticker, 'usd', rates);
-                                      return usdRate ? usdRate.toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT" : formatCurrency(currentRate);
+                                      return usdRate ? usdRate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT" : formatCurrency(currentRate);
                                     })()}
                               </span>
                             </div>
@@ -363,7 +363,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                                   ? formatCurrency(liveRateRub) 
                                   : (() => {
                                       const usdRate = getCryptoRate(asset.ticker, 'usd', rates);
-                                      return usdRate ? usdRate.toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT" : formatCurrency(liveRateRub);
+                                      return usdRate ? usdRate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT" : formatCurrency(liveRateRub);
                                     })()}
                               </span>
                             </div>
@@ -435,7 +435,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">

@@ -1,5 +1,5 @@
 import { getToken, onMessage } from 'firebase/messaging';
-import { getFirebaseMessaging, auth, db } from '../config/firebase';
+import { getFirebaseMessaging, auth, db, firebaseConfig } from '../config/firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -30,7 +30,14 @@ export async function syncFcmToken(): Promise<boolean> {
       return false;
     }
 
-    const token = await getToken(messaging, { vapidKey });
+    // Pass the config to the Service Worker via URL parameters
+    const configStr = encodeURIComponent(JSON.stringify(firebaseConfig));
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?config=${configStr}`);
+
+    const token = await getToken(messaging, { 
+      vapidKey,
+      serviceWorkerRegistration: registration
+    });
     if (token) {
       await saveTokenToDatabase(token);
       return true;

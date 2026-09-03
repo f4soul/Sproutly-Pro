@@ -1,0 +1,1 @@
+export const TODAY_GLOW_CLASS = "absolute -inset-px rounded-[inherit] border-b-[3px] border-primary-500 pointer-events-none shadow-[inset_0_-12px_14px_-10px_theme(colors.primary.400)] animate-[breathe_2.8s_ease-in-out_infinite]";

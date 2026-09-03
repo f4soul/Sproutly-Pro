@@ -387,18 +387,21 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <Dialog.Panel as={Fragment}>
           <motion.div
-            layout
             initial={{ opacity: 0, scale: 0.95, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto"
+            className="w-full max-w-xl pointer-events-auto flex flex-col"
+          >
+            <motion.div
+              layout
+              className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] w-full"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
               <div className="flex items-center justify-between">
@@ -688,7 +691,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 )}
 
                 {showBankEditor && (
-                  <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative overflow-hidden">
+                  <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative">
                     <div className="relative flex items-center justify-between mb-6">
                       <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400">
@@ -873,6 +876,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
             />
           </motion.div>
+          </motion.div>
         </Dialog.Panel>
       </div>
 
@@ -892,7 +896,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -932,9 +936,9 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     </button>
                   </div>
                 </motion.div>
-              </Dialog.Panel>
-            </div>
-          </Dialog>
+        </Dialog.Panel>
+      </div>
+    </Dialog>
         )}
       </AnimatePresence>
     </Dialog>

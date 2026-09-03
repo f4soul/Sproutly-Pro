@@ -139,28 +139,15 @@ export const YearSummary = ({
           <div 
             ref={tooltipRef}
             className="absolute top-2 right-2 z-20 flex items-center justify-center outline-none"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setShowTooltip(true); }}
+            onPointerLeave={(e) => { if (e.pointerType === 'mouse') setShowTooltip(false); }}
           >
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // On desktop, click opens modal directly. On mobile, we might just toggle tooltip if they tapped it, or open modal.
-                // Let's just open the modal on click, since the text says "Справочник налоговых ставок".
+                setShowTooltip(false);
                 onShowTaxInfo();
-              }}
-              onTouchStart={(e) => {
-                // For touch devices, first tap shows tooltip, second tap (or tap on tooltip) could open modal.
-                // Or just show tooltip and let them read it.
-                e.preventDefault();
-                e.stopPropagation();
-                if (!showTooltip) {
-                  setShowTooltip(true);
-                } else {
-                  onShowTaxInfo();
-                  setShowTooltip(false);
-                }
               }}
               className="flex items-center justify-center p-1.5 rounded-lg transition-all duration-300 hover:bg-rose-500/10 focus:outline-none"
             >

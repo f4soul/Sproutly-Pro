@@ -289,22 +289,22 @@
 /* Datepicker Custom Styles */
 /* Driver.js Custom Sproutly Theme */
 .sproutly-tour-theme {
-  @apply !bg-white/95 dark:!bg-slate-900/95 !backdrop-blur-2xl !rounded-[1.5rem] !p-5 md:!p-6 !shadow-2xl !shadow-slate-900/10 dark:!shadow-black/40 !border !border-slate-200/60 dark:!border-white/[0.08] !font-sans;
+  @apply !bg-transparent !border-none !shadow-none !backdrop-blur-none !p-4 !font-sans;
 }
 
 @media (min-width: 768px) {
   .sproutly-tour-theme {
-    width: 340px !important;
-    max-width: 340px !important;
+    width: 372px !important; /* 340px + 32px padding */
+    max-width: 372px !important;
   }
 }
 
 @media (max-width: 767px) {
   .sproutly-tour-theme {
-    width: calc(100vw - 32px) !important;
+    width: 100vw !important;
     min-width: 0 !important;
     max-width: none !important;
-    left: 16px !important;
+    left: 0 !important;
   }
 }
 
@@ -321,6 +321,16 @@
 .sproutly-tour-theme .driver-popover-close-btn,
 .sproutly-tour-theme .driver-popover-arrow {
   display: none !important;
+}
+
+.driver-active-element {
+  position: relative;
+  z-index: 10000 !important; /* Ensure it is above the overlay */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.dark .driver-active-element {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4) !important;
 }
 
 .react-datepicker-wrapper {
@@ -421,3 +431,8 @@
 }
 @custom-variant short-landscape (@media (max-height: 500px) and (orientation: landscape));
 @custom-variant pointer-fine (@media (pointer: fine));
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}

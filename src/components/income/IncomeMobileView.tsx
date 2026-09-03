@@ -41,7 +41,7 @@ export function IncomeMobileView({
   onShowTaxInfo
 }: Props) {
   const [showStickyFooter, setShowStickyFooter] = useState(false);
-  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{`${new Intl.NumberFormat('ru-RU').format(Math.round(val))} ₽`}</PrivacyBlur></span>;
+  const formatVal = (val: number) => <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(val)}</PrivacyBlur></span>;
 
   useEffect(() => {
     const handleScroll = () => {

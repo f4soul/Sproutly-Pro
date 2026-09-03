@@ -20,7 +20,8 @@ import { IncomeDesktopTable } from './IncomeDesktopTable';
 import { IncomeMobileView } from './IncomeMobileView';
 import { useIncomeTotals } from '../../hooks/useIncomeTotals';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
-import { IncomeTableConfigDialog } from './IncomeTableConfigDialog';
+import { IncomeSettingsDialog } from './IncomeSettingsDialog';
+import { IncomeColumnsDialog } from './IncomeColumnsDialog';
 
 interface IncomeTrackerProps {
   isPrivate: boolean;
@@ -42,7 +43,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
   const [isDeleteYearModalOpen, setIsDeleteYearModalOpen] = useState(false);
   const [isSimulationOpen, setIsSimulationOpen] = useState(false);
-  const [isV2ConfigOpen, setIsV2ConfigOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isColumnsOpen, setIsColumnsOpen] = useState(false);
   
   const [isPending, startTransition] = useTransition();
   const handleSetActiveYear = (year: number) => {
@@ -618,7 +620,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
                 }}
                 isSimulationOpen={isSimulationOpen}
                 setIsSimulationOpen={setIsSimulationOpen}
-                onOpenStructureConfig={() => setIsV2ConfigOpen(true)}
+                onOpenSettings={() => setIsSettingsOpen(true)}
+                onOpenColumns={() => setIsColumnsOpen(true)}
               />
             </div>
           </div>
@@ -668,70 +671,93 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
       </div>
 
       {activeYearData.v2 && (
-        <IncomeTableConfigDialog 
-          isOpen={isV2ConfigOpen}
-          onClose={() => setIsV2ConfigOpen(false)}
-          columns={activeYearData.v2.columns}
-          settings={activeYearData.v2.settings}
-          baseSalary={activeYearData.bonusBase || 0}
-          onSave={(columns, settings, baseSalary, applyBaseToAll) => {
-            setState(prev => {
-              const newYears = { ...prev.years };
-              const currentYear = newYears[prev.activeYear];
-              if (!currentYear.v2) return prev;
-              
-              let newMonths = [...currentYear.months];
-              let newV2Months = [...currentYear.v2.months];
-              
-              if (applyBaseToAll && baseSalary > 0) {
-                newMonths = currentYear.months.map(m => ({ ...m, salary: baseSalary }));
-                newV2Months = currentYear.v2.months.map(m => ({ ...m, salary: baseSalary }));
-              }
-              
-              // Recalculate quarters if bonusBase changed
-              let newQuarters = currentYear.quarters;
-              let newAnnualAmount = settings.showAnnual ? (currentYear.annualBonusAmount || 0) : 0;
-              let newExtraBonusAmount = settings.showExtraAnnual ? (currentYear.extraBonusAmount || 0) : 0;
-              
-              if (baseSalary !== currentYear.bonusBase) {
-                 newQuarters = (currentYear.quarters || Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }))).map((q, qIndex) => {
-                  const qMonths = QUARTERS[qIndex].months.map(mi => newMonths[mi]);
-                  const qNorm = qMonths.reduce((sum, m) => sum + m.normDays, 0);
-                  const qFact = qMonths.reduce((sum, m) => sum + m.factDays, 0);
-                  const krd = qNorm > 0 ? qFact / qNorm : 0;
-                  return {
-                    ...q,
-                    bonusAmount: q.bonusCoef ? Math.round((baseSalary * q.bonusCoef * krd) * 100) / 100 : q.bonusAmount
-                  };
-                });
+        <>
+          <IncomeSettingsDialog 
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            settings={activeYearData.v2.settings}
+            baseSalary={activeYearData.bonusBase || 0}
+            onSave={(settings, baseSalary, applyBaseToAll) => {
+              const columns = activeYearData.v2!.columns;
+              setState(prev => {
+                const newYears = { ...prev.years };
+                const currentYear = newYears[prev.activeYear];
+                if (!currentYear.v2) return prev;
                 
-                if (settings.showAnnual) {
-                  const yNorm = newMonths.reduce((sum, m) => sum + m.normDays, 0);
-                  const yFact = newMonths.reduce((sum, m) => sum + m.factDays, 0);
-                  const krdg = yNorm > 0 ? yFact / yNorm : 0;
-                  newAnnualAmount = Math.round((baseSalary * (currentYear.annualBonusCoef || 0) * krdg) * 100) / 100;
+                let newMonths = [...currentYear.months];
+                let newV2Months = [...currentYear.v2.months];
+                
+                if (applyBaseToAll && baseSalary > 0) {
+                  newMonths = currentYear.months.map(m => ({ ...m, salary: baseSalary }));
+                  newV2Months = currentYear.v2.months.map(m => ({ ...m, salary: baseSalary }));
                 }
-              }
-              
-              newYears[prev.activeYear] = {
-                ...currentYear,
-                bonusBase: baseSalary,
-                months: newMonths,
-                quarters: newQuarters,
-                annualBonusAmount: newAnnualAmount,
-                extraBonusAmount: newExtraBonusAmount,
-                v2: { 
-                  ...currentYear.v2, 
-                  columns,
-                  settings,
-                  months: newV2Months
+                
+                // Recalculate quarters if bonusBase changed
+                let newQuarters = currentYear.quarters;
+                let newAnnualAmount = settings.showAnnual ? (currentYear.annualBonusAmount || 0) : 0;
+                let newExtraBonusAmount = settings.showExtraAnnual ? (currentYear.extraBonusAmount || 0) : 0;
+                
+                if (baseSalary !== currentYear.bonusBase) { 
+                  newQuarters = (currentYear.quarters || Array.from({ length: 4 }, () => ({ bonusCoef: 0, bonusAmount: 0 }))).map((q, qIndex) => {
+                    const qMonths = QUARTERS[qIndex].months.map(mi => newMonths[mi]);
+                    const qNorm = qMonths.reduce((sum, m) => sum + m.normDays, 0);
+                    const qFact = qMonths.reduce((sum, m) => sum + m.factDays, 0);
+                    const krd = qNorm > 0 ? qFact / qNorm : 0;
+                    return {
+                      ...q,
+                      bonusAmount: q.bonusCoef ? Math.round((baseSalary * q.bonusCoef * krd) * 100) / 100 : q.bonusAmount
+                    };
+                  });
+                  
+                  if (settings.showAnnual) {
+                    const yNorm = newMonths.reduce((sum, m) => sum + m.normDays, 0);
+                    const yFact = newMonths.reduce((sum, m) => sum + m.factDays, 0);
+                    const krdg = yNorm > 0 ? yFact / yNorm : 0;
+                    newAnnualAmount = Math.round((baseSalary * (currentYear.annualBonusCoef || 0) * krdg) * 100) / 100;
+                  }
                 }
-              };
-              return { ...prev, years: newYears };
-            });
-            showToast('Настройки таблицы успешно сохранены');
-          }}
-        />
+                
+                newYears[prev.activeYear] = {
+                  ...currentYear,
+                  bonusBase: baseSalary,
+                  months: newMonths,
+                  quarters: newQuarters,
+                  annualBonusAmount: newAnnualAmount,
+                  extraBonusAmount: newExtraBonusAmount,
+                  v2: { 
+                    ...currentYear.v2, 
+                    columns,
+                    settings,
+                    months: newV2Months
+                  }
+                };
+                return { ...prev, years: newYears };
+              });
+              showToast('Настройки успешно сохранены');
+            }}
+          />
+          <IncomeColumnsDialog 
+            isOpen={isColumnsOpen}
+            onClose={() => setIsColumnsOpen(false)}
+            columns={activeYearData.v2.columns}
+            onSave={(columns) => {
+              setState(prev => {
+                const newYears = { ...prev.years };
+                const currentYear = newYears[prev.activeYear];
+                if (!currentYear.v2) return prev;
+                newYears[prev.activeYear] = {
+                  ...currentYear,
+                  v2: {
+                    ...currentYear.v2,
+                    columns
+                  }
+                };
+                return { ...prev, years: newYears };
+              });
+              showToast('Столбцы успешно сохранены');
+            }}
+          />
+        </>
       )}
 
       {/* Clear Data Modal */}

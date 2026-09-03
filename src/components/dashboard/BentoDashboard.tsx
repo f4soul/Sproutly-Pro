@@ -65,14 +65,9 @@ function BentoTooltipIcon({ text }: { text: string }) {
     <div 
       ref={ref}
       className="relative flex items-center justify-center outline-none"
-      onMouseEnter={() => setShow(true)}
-      onMouseLeave={() => setShow(false)}
+      onPointerEnter={(e) => { if (e.pointerType === 'mouse') setShow(true); }}
+      onPointerLeave={(e) => { if (e.pointerType === 'mouse') setShow(false); }}
       onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setShow((prev) => !prev);
-      }}
-      onTouchStart={(e) => {
         e.preventDefault();
         e.stopPropagation();
         setShow((prev) => !prev);

@@ -49,7 +49,7 @@ function getCurrencyFormatter(currency: string) {
 }
 
 const numberFormatter = new Intl.NumberFormat('ru-RU', {
-  minimumFractionDigits: 0,
+  minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
 

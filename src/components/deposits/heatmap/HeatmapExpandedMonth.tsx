@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../../lib/utils';
 import { HeatmapData } from '../../../types';
 import { getIntensity, getColorClass } from './utils';
+import { TodayGlow } from './TodayGlow';
 import { TrendingUp, Sparkle, X } from 'lucide-react';
 import { SproutlyLogo } from '../../ui/SproutlyLogo';
 import { PrivacyBlur } from '../../ui/PrivacyBlur';
@@ -72,7 +73,7 @@ export function HeatmapExpandedMonth({
       className="fixed inset-y-0 right-0 left-0 md:left-68 z-[110] flex items-center justify-center p-4 sm:p-6 lg:p-8 pointer-events-none"
     >
       <div 
-        className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/70 cursor-pointer pointer-events-auto"
+        className="absolute inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm cursor-pointer pointer-events-auto"
         onClick={() => { setExpandedMonth(null); setSelectedDay(null); }}
       />
       
@@ -118,7 +119,7 @@ export function HeatmapExpandedMonth({
         </div>
 
         {/* Calendar Detailed Days */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 flex-1 relative">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2 flex-1 relative p-1.5 sm:p-2 -m-1.5 sm:-m-2">
           {emptyDays.map((_, i) => (
             <div key={`det-empty-${i}`} className="aspect-square bg-slate-100/50 dark:bg-white/[0.02] rounded-[10px] sm:rounded-xl border border-transparent" />
           ))}
@@ -163,7 +164,7 @@ export function HeatmapExpandedMonth({
             }
 
             return (
-              <div key={`det-${dateKey}`} className="relative aspect-square w-full h-full" style={{ zIndex: isSelected ? 50 : (hasInfo ? 20 : 10) }}> 
+              <div key={`det-${dateKey}`} className="relative aspect-square w-full h-full" style={{ zIndex: isSelected ? 50 : (isMaturing || isToday ? 30 : (hasInfo ? 20 : 10)) }}> 
                  <motion.div
                    whileHover={hasInfo ? { scale: 1.05 } : {}}
                    whileTap={hasInfo ? { scale: 0.95 } : {}}
@@ -185,18 +186,17 @@ export function HeatmapExpandedMonth({
                      "w-full h-full rounded-[10px] sm:rounded-xl flex flex-col items-center justify-center transition-colors duration-150 group/day cursor-default select-none relative day-touch-zone",
                      hasInfo && "cursor-pointer hover:z-50 hover:shadow-xl",
                      getColorClass(intensity),
-                     isToday 
-                       ? "shadow-[inset_0_3px_8px_rgba(0,0,0,0.4),inset_0_0_12px_rgba(59,130,246,0.8)] scale-[0.95] brightness-[0.85]" 
-                       : ((!density?.amount) ? "shadow-none" : "border-white/5 border shadow-sm"),
+                     ((!density?.amount) ? "shadow-none" : "border-white/5 border shadow-sm"),
                      isSelected ? "ring-[2px] ring-deposit-500 ring-offset-2 ring-offset-white dark:ring-offset-[#0B0F19] shadow-[0_0_20px_rgba(var(--rgb-deposit),0.5)] z-40 scale-105" : "",
                    )}
                    style={{ zIndex: isSelected ? 40 : (isMaturing || isToday ? 20 : 10) }}
                  >
-                   {/* Maturing Glow Layer Inside */}
+                   
+                  {/* Maturing Glow Layer Inside */}
                    {isMaturing && (
                      <div className={cn(
                        "absolute inset-0 z-0 rounded-[10px] sm:rounded-xl border-[2px] border-amber-400 dark:border-amber-500 shadow-[0_0_16px_rgba(251,191,36,0.6)]",
-                       intensity > 0 ? "bg-[#0B0F19]/80" : "bg-white/50 dark:bg-[#0B0F19]/50"
+                       "pointer-events-none"
                      )} />
                    )}
 
@@ -209,15 +209,12 @@ export function HeatmapExpandedMonth({
 
                    <span className={cn(
                      "text-[13px] sm:text-[14px] lg:text-[16px] font-black leading-none z-10 transition-colors drop-shadow-sm",
-                     isToday 
-                       ? "text-white" 
-                       : (intensity === 0 
-                           ? "text-slate-400 dark:text-slate-500 group-hover/day:text-slate-700 dark:group-hover/day:text-slate-300" 
-                           : "text-white"),
-                     (!isToday && isMaturing) && "text-amber-500 dark:text-amber-400 z-20"
+                     (intensity === 0 ? "text-slate-400 dark:text-slate-500 group-hover/day:text-slate-700 dark:group-hover/day:text-slate-300" : "text-white"),
+                     isMaturing && "text-amber-500 dark:text-amber-400 z-20"
                    )}>
                      {format(day, 'd')}
                    </span>
+                   {isToday && <TodayGlow />}
                  </motion.div>
 
                  {/* Popover Tooltip */}

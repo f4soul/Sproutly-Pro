@@ -47,20 +47,11 @@ export function StatCard({ title, value, icon, description, highlight, index, to
             <div 
               ref={tooltipRef}
               className="relative flex items-center justify-center -mb-0.5 outline-none"
-              onMouseEnter={() => setShowTooltip(true)}
-              onMouseLeave={() => setShowTooltip(false)}
+              onPointerEnter={(e) => { if (e.pointerType === 'mouse') setShowTooltip(true); }}
+              onPointerLeave={(e) => { if (e.pointerType === 'mouse') setShowTooltip(false); }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // If it's a touch device, the click might immediately follow a simulated enter.
-                // But toggle is fine if we just prevent default. Actually, better:
-                setShowTooltip((prev) => !prev);
-              }}
-              onTouchStart={(e) => {
-                // Prevent mouseenter from firing on touch
-                e.preventDefault();
-                e.stopPropagation();
-                // Just toggle
                 setShowTooltip((prev) => !prev);
               }}
               role="button"

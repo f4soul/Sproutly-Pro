@@ -40,7 +40,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
           {icon}
           {title}
         </h3>
-        <p className="text-[13px] text-slate-600 dark:text-slate-400">
+        <p className="text-[13px] text-slate-600 dark:text-slate-400 font-medium">
           {text}
         </p>
       </div>
@@ -73,7 +73,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
         description: generateHtmlContent(
           <LayoutDashboard className="w-4 h-4 text-primary-500" />,
           'Навигация по разделам',
-          'Здесь находятся основные вкладки системы. Вы всегда можете быстро переключаться между Сводкой, Активами, Тепловой картой (График) и Доходами. Не упускайте их из виду.'
+          'Здесь находятся внутренние вкладки дашборда. Вы всегда можете быстро переключаться между Сводкой, Доходами и Вкладами, не упуская из виду главные цифры.'
         ),
         side: 'bottom',
       }
@@ -218,11 +218,11 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
         showProgress: false,
         showButtons: [], // We handle buttons via Custom HTML
         allowClose: false,
-        overlayColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'rgba(0, 0, 0, 0.7)' : 'rgba(5, 10, 20, 0.4)',
+        overlayColor: typeof document !== 'undefined' && document.documentElement.classList.contains('dark') ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.55)',
         popoverClass: 'sproutly-tour-theme',
         padding: typeof window !== 'undefined' && window.innerWidth < 1024 ? 4 : 8,
         stageRadius: 16,
-        popoverOffset: 16,
+        popoverOffset: 0,
         smoothScroll: true,
         steps: steps as any,
         onHighlightStarted: () => {
@@ -245,14 +245,16 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
         onPopoverRender: (popover: any, { state }: any) => {
           const isLastStep = state.isLastStep;
           const isFirstStep = state.activeIndex === 0;
-
           popover.wrapper.innerHTML = `
-            <div class="flex flex-col h-full outline-none">
-               <div class="mb-6 text-[13px] leading-relaxed">
+            <div class="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl rounded-[2rem] p-5 md:p-6 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 border border-slate-200/60 dark:border-white/[0.08] font-sans flex flex-col h-full w-full outline-none overflow-hidden">
+               <!-- Decorative Glow -->
+               <div class="absolute -top-24 -right-24 w-48 h-48 bg-primary-500/15 dark:bg-primary-500/20 blur-3xl rounded-full pointer-events-none"></div>
+               
+               <div class="relative mb-6 text-[13px] leading-relaxed z-10">
                   ${state.activeStep?.popover?.description || ''}
                </div>
                
-               <div class="flex items-center justify-between mt-auto">
+               <div class="relative flex items-center justify-between mt-auto z-10">
                  <button class="tour-skip-btn text-[10px] font-black text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors h-9 px-2 focus:outline-none cursor-pointer">
                    Пропустить
                  </button>
@@ -262,7 +264,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
                      Назад
                    </button>
                    ` : ''}
-                   <button class="tour-next-btn text-[10px] font-black uppercase tracking-widest bg-slate-900 dark:bg-primary-500 text-white dark:text-slate-950 px-5 h-9 rounded-xl hover:scale-95 transition-all shadow-lg shadow-slate-900/10 dark:shadow-primary-500/20 focus:outline-none cursor-pointer">
+                   <button class="tour-next-btn text-[10px] font-black uppercase tracking-widest bg-primary-500 text-white px-5 h-9 rounded-xl hover:scale-95 transition-all shadow-lg shadow-primary-500/30 focus:outline-none cursor-pointer">
                      ${isLastStep ? 'Понятно' : 'Далее'}
                    </button>
                  </div>

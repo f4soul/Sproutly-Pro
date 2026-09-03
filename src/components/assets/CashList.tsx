@@ -463,7 +463,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
+            <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">

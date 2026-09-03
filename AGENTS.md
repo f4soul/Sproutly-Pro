@@ -96,3 +96,11 @@ Whenever you implement a meaningful, user-facing feature, enhancement, or major 
 - Окна ПРОСМОТРА данных (детали сгруппированных активов, AssetStack.tsx) переключаются по типу указателя (`pointer-fine:`) — это соответствует Apple HIG/Material Design: bottom sheet для тач-устройств независимо от ширины экрана, центрирование только при наличии мыши/трекпада.
 - Окна ВВОДА данных (формы добавления/редактирования активов: CashForm/CryptoForm/InvestmentForm) переключаются по ширине экрана (`sm:`) — это осознанное решение, не путать с недоработкой: форма ввода на широком экране лучше смотрится центрированной карточкой фиксированной ширины, а не растянутой во всю ширину шторкой.
 Это два разных, каждый по-своему корректных паттерна, а не рассинхронизация — не унифицировать их под одну логику при последующих правках.
+
+---
+
+## 12. Workspace Cleanliness & Temporary Files (MANDATORY)
+**CRITICAL INSTRUCTION FOR ALL AI MODELS:**
+Do not leave temporary helper scripts (e.g., Python, Bash) or artifacts in the project directory. 
+- If you create a temporary script (e.g., `update_release_notes.py`, `patch.sh`, `migrate.js`) to apply complex code changes, you **MUST** delete it immediately after successful execution.
+- Maintain the project root clean and free of any files that are not part of the actual application build or standard configuration.

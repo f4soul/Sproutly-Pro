@@ -103,18 +103,21 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <Dialog.Panel as={Fragment}>
-          <motion.div 
-            layout
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 100 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white dark:bg-slate-950 w-full max-w-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto"
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-full max-w-xl pointer-events-auto flex flex-col"
+          >
+            <motion.div
+              layout
+              className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] w-full"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-4 relative z-10 shrink-0">
               <div className="flex items-center justify-between">
@@ -245,7 +248,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                             <p className="text-[10px] text-slate-500/80 px-1 font-medium">
                               ≈ {formData.ticker === 'USDT'
                                   ? <span className="tabular-nums">{formatCurrency((formData.quantity || 0) * (getCryptoRate(formData.ticker || "", 'rub', rates) || 0))}</span>
-                                  : <span className="tabular-nums">{(((formData.quantity || 0) * (getCryptoRate(formData.ticker || "", 'usd', rates) || 0)).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + " USDT")}</span>
+                                  : <span className="tabular-nums">{(((formData.quantity || 0) * (getCryptoRate(formData.ticker || "", 'usd', rates) || 0)).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT")}</span>
                                 } по текущему курсу
                             </p>
                           </div>
@@ -349,6 +352,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
               id="datepicker-portal-container"
               className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
             />
+          </motion.div>
           </motion.div>
         </Dialog.Panel>
       </div>

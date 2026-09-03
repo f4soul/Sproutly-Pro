@@ -50,6 +50,29 @@
         window.location.reload();
       });
 
+      // Handle unhandled promise rejections (like dynamic CSS load failures)
+      window.addEventListener('unhandledrejection', (event) => {
+        const msg = event.reason?.message || event.reason || '';
+        if (
+          String(msg).includes('dynamically imported module') || 
+          String(msg).includes('Failed to fetch') || 
+          String(msg).includes('ChunkLoadError') ||
+          String(msg).includes('Error loading remote css')
+        ) {
+          console.warn('Unhandled rejection asset load error, force reloading...', event);
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+              for (const registration of registrations) {
+                registration.unregister();
+              }
+              window.location.reload();
+            });
+          } else {
+            window.location.reload();
+          }
+        }
+      });
+
       // Handle other asset loading and network issues due to stale service worker cache
       window.addEventListener('error', (event) => {
         const msg = event.message || '';

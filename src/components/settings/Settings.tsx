@@ -2,6 +2,7 @@ import React, { useState, useRef, Fragment, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { TaxYearSettings, AppSettings, TaxBracket } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
+import { formatCurrency } from "../../lib/taxCalculator";
 import { useLiveQuery } from 'dexie-react-hooks';
 import { Plus, Trash2, Download, Upload, CloudSync, Archive as ArchiveIcon, AlertTriangle, Settings2 as Settings2Icon, ChevronDown, ReceiptRussianRuble, LayoutList, Vault, ChartNoAxesCombined, Bitcoin, FileSpreadsheet, Database, RefreshCw, GripVertical } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -652,7 +653,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                                       </div>
                                       <div className="space-y-1">
                                         <label className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Лимит (₽)</label>
-                                        {bracket.limit === Infinity ? (
+                                        {((index === yearBrackets.length - 1) && (bracket.limit === Infinity || bracket.limit === null || bracket.limit === 0)) ? (
                                           <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-lg px-2.5 py-1.5 text-lg leading-[18px] font-black text-slate-400 text-center border border-transparent">∞</div>
                                         ) : (
                                           <input 
@@ -762,7 +763,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
                       {!isExpanded && (
                         <div className="text-right">
                           <span className="block text-[9px] uppercase text-slate-500 font-bold tracking-wider">Лимит</span>
-                          <span className="text-sm tabular-nums font-semibold text-deposit-600 dark:text-deposit-400">{setting.limit.toLocaleString('ru-RU')} ₽</span>
+                          <span className="text-sm tabular-nums font-semibold text-deposit-600 dark:text-deposit-400">{formatCurrency(setting.limit).replace(/\s?[₽|RUB]$/i, '')} ₽</span>
                         </div>
                       )}
                       <button 
@@ -884,7 +885,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -934,7 +935,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -983,7 +984,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -1032,7 +1033,7 @@ export function Settings({ taxSettings, appSettings }: SettingsProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">

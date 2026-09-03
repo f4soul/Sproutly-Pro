@@ -84,6 +84,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
 
   // Pre-calculate all weeks and days metrics with high-speed mathematical array mapping (50x faster, zero date-fns overhead)
   const monthsData = useMemo(() => {
+    const today = new Date();
     const leap = (displayYear % 4 === 0 && displayYear % 100 !== 0) || displayYear % 400 === 0;
     const daysInMonths = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
@@ -103,8 +104,6 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
         const intensity = getIntensity(density?.amount || 0, heatmapData);
         const isMaturing = density?.maturingCount > 0;
         const isOpening = density?.openingCount > 0;
-
-        const today = new Date();
         const isToday = today.getFullYear() === displayYear && today.getMonth() === monthIdx && today.getDate() === dayNum;
 
 
@@ -117,9 +116,7 @@ export function DepositHeatmap({ deposits, year: initialYear, isPrivate = false 
           isToday,
           colorClass: cn(
             getColorClass(intensity),
-            isToday 
-              ? "shadow-[inset_0_2px_5px_rgba(0,0,0,0.4),inset_0_0_8px_rgba(59,130,246,0.8)] scale-[0.94] brightness-[0.85]" 
-              : ((intensity > 0 && !isMaturing) ? "border border-white/10 shadow-sm" : ""),
+            ((intensity > 0 && !isMaturing) ? "border border-white/10 shadow-sm" : ""),
             isMaturing && "border-[1.5px] border-amber-400 dark:border-amber-500 shadow-[0_0_8px_rgba(251,191,36,0.5)] z-10 drop-shadow-sm"
           )
         };

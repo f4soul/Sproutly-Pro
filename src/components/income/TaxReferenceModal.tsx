@@ -25,7 +25,7 @@ export const TaxReferenceModal = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
             aria-hidden="true"
           />
           <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none z-[100]">
@@ -94,7 +94,7 @@ export const TaxReferenceModal = ({
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 shrink-0">
+        <div className="p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom)+1rem)] sm:pb-6 shrink-0">
           <button 
             onClick={onClose}
             className="apple-button w-full bg-white/60 dark:bg-white/5 border border-slate-200/60 dark:border-white/[0.08] text-slate-900 dark:text-white hover:bg-white/80 dark:hover:bg-white/10 transition-all active:scale-[0.98] py-3.5 sm:py-3 rounded-2xl font-bold text-sm sm:text-base shadow-sm"

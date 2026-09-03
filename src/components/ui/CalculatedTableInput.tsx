@@ -82,7 +82,7 @@ export const CalculatedTableInput = ({
               ? "absolute left-0 bottom-0 text-[10px] pr-1" 
               : "mt-0.5 text-[8px] xl:text-[9px] leading-none"
           )}>
-            ≈{formatCurrency(Math.round(computedValue))}
+            ≈{formatCurrency(computedValue)}
           </div>
         )}
       </div>
@@ -94,7 +94,7 @@ export const CalculatedTableInput = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/20 dark:bg-slate-950/60 backdrop-blur-sm pointer-events-auto z-[190]"
+              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm pointer-events-auto z-[190]"
               aria-hidden="true"
               onClick={() => setIsOpen(false)}
             />
@@ -160,7 +160,7 @@ export const CalculatedTableInput = ({
                   <div className="flex items-center justify-between px-2 mb-6">
                     <span className="text-xs font-bold text-slate-500">Результат ({sign}):</span>
                     <span className="tabular-nums font-bold text-primary-500">
-                      ≈ {formatCurrency(Math.round(liveComputed))}
+                      ≈ {formatCurrency(liveComputed)}
                     </span>
                   </div>
 

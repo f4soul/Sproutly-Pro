@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import * as htmlToImage from 'html-to-image';
+import { formatCurrency } from "../lib/taxCalculator";
 import * as XLSX from 'xlsx-js-style';
 import { Deposit, MonthData, CashAsset, InvestmentAsset, CryptoAsset, YearData } from '../types';
 
@@ -324,9 +325,9 @@ export const buildExportContainer = (elementId: string | null, summary?: any, de
       return div;
     };
 
-    summaryGrid.appendChild(createStat('Общий Gross', (summary.totalGross || 0).toLocaleString('ru-RU') + ' ₽'));
-    summaryGrid.appendChild(createStat('Чистый Net', (summary.totalNet || 0).toLocaleString('ru-RU') + ' ₽', '#3b82f6'));
-    summaryGrid.appendChild(createStat('Всего налогов', (summary.totalTax || 0).toLocaleString('ru-RU') + ' ₽', '#ef4444'));
+    summaryGrid.appendChild(createStat('Общий Gross', formatCurrency(summary.totalGross || 0)));
+    summaryGrid.appendChild(createStat('Чистый Net', formatCurrency(summary.totalNet || 0), '#3b82f6'));
+    summaryGrid.appendChild(createStat('Всего налогов', formatCurrency(summary.totalTax || 0), '#ef4444'));
     summaryGrid.appendChild(createStat('Эфф. ставка', (summary.effectiveRate || 0).toFixed(1) + ' %', '#6366f1'));
     
     container.appendChild(summaryGrid);
@@ -394,11 +395,11 @@ export const buildExportContainer = (elementId: string | null, summary?: any, de
       row.innerHTML = `
         <td style="padding: 12px 8px 12px 0; font-weight: 700;">${monthNames[index] || ''}</td>
         <td style="padding: 12px 8px;">${m.normDays} / ${m.factDays}</td>
-        <td style="padding: 12px 8px;">${(m.base || 0).toLocaleString('ru-RU')} ₽</td>
-        <td style="padding: 12px 8px;">${(m.bonus || 0).toLocaleString('ru-RU')} ₽</td>
-        <td style="padding: 12px 8px;">${(m.gross || 0).toLocaleString('ru-RU')} ₽</td>
-        <td style="padding: 12px 8px; color: #ef4444;">${(m.tax13 || 0).toLocaleString('ru-RU')} ₽</td>
-        <td style="padding: 12px 0 12px 8px; color: #3b82f6; font-weight: 800;">${(m.net13 || 0).toLocaleString('ru-RU')} ₽</td>
+        <td style="padding: 12px 8px;">${formatCurrency(m.base || 0).replace(/\s?[₽|RUB]$/i, '')} ₽</td>
+        <td style="padding: 12px 8px;">${formatCurrency(m.bonus || 0).replace(/\s?[₽|RUB]$/i, '')} ₽</td>
+        <td style="padding: 12px 8px;">${formatCurrency(m.gross || 0).replace(/\s?[₽|RUB]$/i, '')} ₽</td>
+        <td style="padding: 12px 8px; color: #ef4444;">${formatCurrency(m.tax13 || 0).replace(/\s?[₽|RUB]$/i, '')} ₽</td>
+        <td style="padding: 12px 0 12px 8px; color: #3b82f6; font-weight: 800;">${formatCurrency(m.net13 || 0).replace(/\s?[₽|RUB]$/i, '')} ₽</td>
       `;
       tbody.appendChild(row);
     });

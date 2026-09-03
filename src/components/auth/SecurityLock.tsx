@@ -324,7 +324,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-slate-900/20 dark:bg-slate-950/80 backdrop-blur-sm"
+                className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
                 aria-hidden="true"
                 onClick={() => setShowForgotPinTheme(false)}
               />
