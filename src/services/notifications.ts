@@ -32,7 +32,7 @@ export async function syncFcmToken(): Promise<boolean> {
 
     // Pass the config to the Service Worker via URL parameters
     const configStr = encodeURIComponent(JSON.stringify(firebaseConfig));
-    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?config=${configStr}`);
+    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?config=${configStr}`, { scope: '/firebase-push-scope/' });
 
     const token = await getToken(messaging, { 
       vapidKey,
