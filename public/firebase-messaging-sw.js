@@ -17,8 +17,8 @@ if (configParam) {
          const title = payload.data?.title || 'Новое уведомление';
          const options = {
            body: payload.data?.body || 'Проверьте ваши активы',
-           icon: '/icon-192.png',
-           badge: '/icon-192.png',
+           icon: '/icon-192x192.png',
+           badge: '/icon-192x192.png',
            data: payload.data
          };
          self.registration.showNotification(title, options);

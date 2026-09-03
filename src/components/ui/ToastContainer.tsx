@@ -14,7 +14,7 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
   }, []);
 
   return (
-    <div className="fixed left-4 right-4 top-4 sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-2 pointer-events-none">
+    <div className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-2 pointer-events-none">
       <AnimatePresence mode="popLayout">
         {toasts.map(toast => {
           const isError = toast.type === 'error';

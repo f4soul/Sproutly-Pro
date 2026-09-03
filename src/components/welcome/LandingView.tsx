@@ -111,7 +111,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.4, ease: 'easeOut' } }}
       exit={{ opacity: 0, y: -12, transition: { duration: 0.25, ease: easeOutSmooth } }}
-      className="relative min-h-[100dvh] w-full overflow-hidden bg-slate-50 selection:bg-deposit-500/30 dark:bg-[#0B0F19]"
+      className="relative min-h-[100svh] w-full overflow-hidden bg-slate-50 selection:bg-deposit-500/30 dark:bg-[#0B0F19]"
     >
       {/* ================================================================
           Ambient Background (Hardware-accelerated glows)
@@ -178,8 +178,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-center px-4 py-8 sm:px-6 sm:py-10 lg:px-8"
+        className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 sm:py-10 lg:px-8"
       >
+        <div className="my-auto flex w-full flex-col">
         {/* ================================================================
             Hero Section
             ================================================================ */}
@@ -299,6 +300,7 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
             <ChevronRight className="relative h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
           </motion.button>
         </motion.div>
+        </div>
       </motion.div>
     </motion.main>
   );

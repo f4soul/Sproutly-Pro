@@ -372,14 +372,14 @@ function AppContent() {
                   <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
                 )}
               
-              <GlobalToasts />
-              <>
+                <>
                 <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />
                 </>
             </Layout>
           )}
         </AnimatePresence>
       </div>
+      <GlobalToasts />
     </>
   );
 }
