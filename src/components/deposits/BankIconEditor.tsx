@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useRef } from 'react';
 import { Bank } from '../../types';
 import { DEFAULT_BANK_ICON } from '../../lib/banks';
@@ -89,7 +90,7 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
             resolve('#0d9488');
           }
         } catch (e) {
-          console.error("Error extracting color from image:", e);
+          logger.error("Error extracting color from image:", e);
           resolve('#0d9488');
         }
       };

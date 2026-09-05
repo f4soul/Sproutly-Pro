@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useEffect, useRef } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
@@ -208,7 +209,7 @@ export const AppTour: React.FC<AppTourProps> = ({ activeTab, isLocked = false })
           await db.appSettings.put(updated);
         }
       } catch (e) {
-        console.error('Failed to update final tour progress', e);
+        logger.error('Failed to update final tour progress', e);
       }
     };
 

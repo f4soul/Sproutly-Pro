@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useMemo, Fragment } from "react";
 import { Plus, Edit3, Trash2, Lock, ShieldAlert, Vault } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -142,16 +143,16 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
       };
       await db.deletedQueue.add(delRec);
       emitSyncEvent("syncing");
-      syncWithFirebase().catch(console.error);
+      syncWithFirebase().catch(logger.error);
     } catch (err) {
-      console.error("Failed to delete cash asset", err);
+      logger.error("Failed to delete cash asset", err);
     } finally {
       setDeletingAsset(undefined);
     }
   };
 
   return (
-    <div className="w-full pb-24">
+    <div className="w-full">
       {/* Header Stats / Safe Overview Card Wrapper */}
       <div className="relative mb-8">
         {/* Header Stats / Safe Overview Card */}
@@ -467,7 +468,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
           </Transition.Child>
 
           <div className="fixed inset-0 z-10 overflow-y-auto">
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <div className="flex min-h-full items-end justify-center p-0 sm:p-4 text-center sm:items-center">
               <Transition.Child
                 as={Fragment}
                 enter="ease-out duration-300"
@@ -477,7 +478,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <Dialog.Panel className="relative transform overflow-hidden rounded-t-[2.2rem] sm:rounded-[2.2rem] bg-white dark:bg-slate-950 p-6 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-slate-200/50 dark:border-white/[0.05]">
+                <Dialog.Panel className="relative transform overflow-hidden rounded-t-[2.2rem] sm:rounded-[2.2rem] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left shadow-2xl transition-all sm:my-8 w-full sm:max-w-md border border-slate-200/50 dark:border-white/[0.05]">
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-5 mx-auto">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
                   </div>

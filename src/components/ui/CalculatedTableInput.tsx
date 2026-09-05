@@ -104,7 +104,7 @@ export const CalculatedTableInput = ({
                   initial={{ opacity: 0, scale: 0.95, y: 100 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                  className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-t-[32px] sm:rounded-[24px] rounded-b-none sm:rounded-b-[24px] shadow-2xl max-w-sm w-full mx-auto p-5 sm:p-6 pb-8 sm:pb-6 border-t sm:border border-slate-200/60 dark:border-white/[0.05] pointer-events-auto"
+                  className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-t-[32px] sm:rounded-[24px] rounded-b-none sm:rounded-b-[24px] shadow-2xl max-w-sm w-full mx-auto p-5 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-6 border-t sm:border border-slate-200/60 dark:border-white/[0.05] pointer-events-auto"
                 >
                   <div className="flex justify-between items-center mb-5">
                     <div className="flex items-center gap-3 text-primary-500">

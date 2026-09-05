@@ -30,7 +30,7 @@ export const ClearDataModal = ({ isOpen, onClose, onConfirm, year }: ClearDataMo
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 100 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-md w-full p-6 sm:p-8 border border-slate-200 dark:border-slate-800 pointer-events-auto"
+                className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-md w-full px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 border border-slate-200 dark:border-slate-800 pointer-events-auto"
               >
                 <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-3 text-rose-500">

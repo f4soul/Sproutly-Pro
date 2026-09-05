@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 export const isBiometricsSupported = async () => {
   if (typeof window === 'undefined') return false;
   try {
@@ -10,7 +11,7 @@ export const isBiometricsSupported = async () => {
       return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     }
   } catch (e) {
-    console.warn("Biometrics support check failed:", e);
+    logger.warn("Biometrics support check failed:", e);
     return false;
   }
   return false;

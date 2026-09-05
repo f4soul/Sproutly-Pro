@@ -1,5 +1,8 @@
 {
   "name": "Sproutly.Pro",
   "description": "Умный учет доходов, вкладов и налогов.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

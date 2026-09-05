@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useEffect, Fragment, useMemo, useRef } from "react";
 import {
   X,
@@ -273,7 +274,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     setShowBankEditor(false);
 
     // Sync with Firebase in background
-    syncWithFirebase().catch(console.error);
+    syncWithFirebase().catch(logger.error);
   };
 
   const handleEditBank = (e: React.MouseEvent, bank: Bank) => {
@@ -312,7 +313,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     setBankToDelete(null);
 
     // Sync deletion with Firebase in background
-    syncWithFirebase().catch(console.error);
+    syncWithFirebase().catch(logger.error);
   };
 
   const handleDeleteBank = (e: React.MouseEvent, bankId: string | number) => {
@@ -370,7 +371,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       await db.deposits.put({ ...dataToSave, id: newId });
       localStorage.removeItem("new_deposit_draft");
     }
-    syncWithFirebase().catch(console.error);
+    syncWithFirebase().catch(logger.error);
     onClose();
   };
 
@@ -472,7 +473,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                                 setDuration(parsed.duration || "");
                               }
                             } catch (e) {
-                              console.error("Failed to restore draft:", e);
+                              logger.error("Failed to restore draft:", e);
                             }
                             setHasDraft(false);
                           }}
@@ -847,7 +848,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
             </div>
           </div>
-          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
               <button
                 type="button"
                 onClick={onClose}

@@ -8,3 +8,7 @@ coverage/
 .env*
 !.env.example
 firebase-applet-config.json
+docs/AUDIT_REVIEW.md
+
+# Аудит и ревью
+AUDIT_REVIEW.md

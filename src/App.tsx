@@ -5,15 +5,19 @@ import { GlobalToasts } from './components/ui/GlobalToasts';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
-import { UnifiedDashboard } from './components/dashboard/UnifiedDashboard';
-import { AssetsView } from './components/assets/AssetsView';
-import { DepositHeatmap } from './components/deposits/DepositHeatmap';
-import { Settings } from './components/settings/Settings';
-import { IncomeTracker } from './components/income/IncomeTracker';
+const UnifiedDashboard = lazy(() => import('./components/dashboard/UnifiedDashboard').then(m => ({ default: m.UnifiedDashboard })));
+const AssetsView = lazy(() => import('./components/assets/AssetsView').then(m => ({ default: m.AssetsView })));
+const DepositHeatmap = lazy(() => import('./components/deposits/DepositHeatmap').then(m => ({ default: m.DepositHeatmap })));
+const Settings = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
+const IncomeTracker = lazy(() => import('./components/income/IncomeTracker').then(m => ({ default: m.IncomeTracker })));
 import { AppTour } from './components/ui/AppTour';
 
 import { SecurityLock } from './components/auth/SecurityLock';
-import { useAppData } from './context/AppDataContext';
+import { AppProviders } from './context/AppProviders';
+import { useSettings } from './context/SettingsContext';
+import { useDeposits } from './context/DepositsContext';
+import { useAssets } from './context/AssetsContext';
+import { useIncome } from './context/IncomeContext';
 import { auth } from './config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
@@ -38,7 +42,7 @@ const SplashLoader = ({ theme }: { theme: 'light' | 'dark' }) => (
 
 
 
-import { AppDataProvider } from './context/AppDataContext';
+
 
 export default function App() {
   useEffect(() => {
@@ -47,9 +51,9 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <AppDataProvider>
+      <AppProviders>
         <AppContent />
-      </AppDataProvider>
+      </AppProviders>
     </ErrorBoundary>
   );
 }
@@ -64,8 +68,10 @@ function AppContent() {
     return localStorage.getItem('hasOnboarded') !== 'true';
   });
 
-  const { state, appSettings: _appSettings, deposits: _deposits, cashAssets: _cashAssets, investmentAssets: _investmentAssets, cryptoAssets: _cryptoAssets } = useAppData();
-  const _taxSettings = useLiveQuery(() => db.taxYearSettings.toArray());
+  const { state } = useIncome();
+  const { appSettings: _appSettings, taxSettings: _taxSettings } = useSettings();
+  const { deposits: _deposits } = useDeposits();
+  const { cashAssets: _cashAssets, investmentAssets: _investmentAssets, cryptoAssets: _cryptoAssets } = useAssets();
   
   const isLockActive = useMemo(() => {
     return !!(_appSettings && _appSettings.privacyLock?.enabled && (_appSettings.privacyLock?.pin || _appSettings.privacyLock?.pinHash));
@@ -339,7 +345,7 @@ function AppContent() {
             <LandingView key="landing" onStart={handleStart} />
           ) : (
             <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
-              
+              <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="w-8 h-8 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" /></div>}>
                 {activeTab === 'dashboard' && (
                   <UnifiedDashboard 
                     deposits={deposits} 
@@ -369,8 +375,9 @@ function AppContent() {
                   <IncomeTracker isPrivate={isPrivate} setIsPrivate={setIsPrivate} />
                 )}
                 {activeTab === 'settings' && (
-                  <Settings taxSettings={taxSettings} appSettings={appSettings || { id: 'main', theme: 'light', defaultNdflRate: 13, defaultLimit2025: 210000 }} />
+                  <Settings />
                 )}
+              </Suspense>
               
                 <>
                 <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />

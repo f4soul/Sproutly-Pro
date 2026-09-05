@@ -1,4 +1,4 @@
-import { getCryptoRate } from "../../services/crypto";
+import { getCryptoRate, getCryptoRates, CryptoRates } from "../../services/crypto";
 import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -14,7 +14,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import { Deposit, CashAsset, InvestmentAsset, CryptoAsset, TaxYearSettings, AppSettings } from "../../types";
-import { useAppData } from "../../context/AppDataContext";
+import { useIncome } from "../../context/IncomeContext";
 import { calculateUnifiedFinance } from "../../lib/unifiedFinance";
 import { formatCurrency, cn } from "../../lib/utils";
 import {
@@ -31,6 +31,8 @@ import { AnimatedPercentage } from "../ui/AnimatedPercentage";
 import { AutoFitText } from "../ui/AutoFitText";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import { EmptyState } from "../ui/EmptyState";
+import { UpcomingEvents } from "./UpcomingEvents";
+import { AveragesBlock } from "./AveragesBlock";
 
 interface BentoDashboardProps {
   deposits: Deposit[];
@@ -101,10 +103,11 @@ export function BentoDashboard({
   isPrivate = false,
   setIsPrivate,
 }: BentoDashboardProps) {
-  const { state } = useAppData();
+  const { state } = useIncome();
   const selectedYear = state.activeYear;
   
   const [rates, setRates] = React.useState<CurrencyRates | null>(null);
+  const [cryptoRates, setCryptoRates] = React.useState<CryptoRates | null>(null);
   const [isInvestBreakdownOpen, setIsInvestBreakdownOpen] = useState(false);
   const investBreakdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -122,6 +125,7 @@ export function BentoDashboard({
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
+    getCryptoRates().then(setCryptoRates);
   }, []);
 
   const data = useMemo(() => {
@@ -190,7 +194,7 @@ export function BentoDashboard({
 
     cryptoAssets.forEach((c) => {
       if (!c.isArchived) {
-        const liveRateRub = getCryptoRate(c.ticker, 'rub', null);
+        const liveRateRub = getCryptoRate(c.ticker, 'rub', cryptoRates);
         totalCryptoAmount += liveRateRub ? c.quantity * liveRateRub : (c.currentValue ?? c.amount);
       }
     });
@@ -219,7 +223,7 @@ export function BentoDashboard({
     const sortedEvents = upcomingEvents
       .filter((e) => e.date >= now)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 5);
+      .slice(0, 6);
 
     const prevYear = selectedYear - 1;
     const prevYearData = state.years[prevYear];
@@ -251,7 +255,7 @@ export function BentoDashboard({
       totalNormDays,
       totalWorkingHours,
     };
-  }, [deposits, selectedYear, taxSettings, state]);
+  }, [deposits, selectedYear, taxSettings, state, cryptoAssets, cryptoRates, rates]);
 
   const incomeChartData = [
     {
@@ -283,7 +287,7 @@ export function BentoDashboard({
   const limitProgress = Math.min(100, (data.depositsIncome / data.limit) * 100);
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12 w-full min-w-0">
+    <div className="space-y-6 max-w-6xl mx-auto w-full min-w-0">
       {/* Bento Grid */}
       <motion.div
         id="bento-grid"
@@ -339,32 +343,6 @@ export function BentoDashboard({
             <h2 className="text-3xl sm:text-4xl xl:text-5xl font-black tracking-tighter mb-2 text-slate-950 dark:text-white">
               {formatVal(data.totalNetCapital)}
             </h2>
-            <div className="flex items-center gap-1 font-medium">
-              {data.netDiffPercent! >= 0 ? (
-                <ArrowUpRight
-                  size={16}
-                  className="text-primary-500 dark:text-primary-400"
-                />
-              ) : (
-                <ArrowDownRight
-                  size={16}
-                  className="text-rose-500 dark:text-rose-400"
-                />
-              )}
-              <AnimatedPercentage
-                value={data.netDiffPercent!}
-                showPlus={true}
-                className={cn(
-                  "font-bold",
-                  data.netDiffPercent! >= 0
-                    ? "text-primary-600 dark:text-primary-400"
-                    : "text-rose-600 dark:text-rose-400",
-                )}
-              />
-              <span className="text-sm text-slate-500 dark:text-slate-400 ml-1">
-                к прошлому году
-              </span>
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-6 mt-6 border-t border-slate-200 dark:border-slate-800 relative z-10">
@@ -375,6 +353,26 @@ export function BentoDashboard({
               <p className="text-xl font-bold text-slate-800 dark:text-slate-200">
                 {formatVal(data.totalGross)}
               </p>
+              <div className="flex items-center gap-1 font-medium mt-1">
+                {data.netDiffPercent! >= 0 ? (
+                  <ArrowUpRight size={14} className="text-primary-500 dark:text-primary-400" />
+                ) : (
+                  <ArrowDownRight size={14} className="text-rose-500 dark:text-rose-400" />
+                )}
+                <AnimatedPercentage
+                  value={data.netDiffPercent!}
+                  showPlus={true}
+                  className={cn(
+                    "font-bold text-xs",
+                    data.netDiffPercent! >= 0
+                      ? "text-primary-600 dark:text-primary-400"
+                      : "text-rose-600 dark:text-rose-400",
+                  )}
+                />
+                <span className="text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-400 ml-0.5">
+                  к прошлому году
+                </span>
+              </div>
             </div>
             <div>
               <p className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mb-1">
@@ -387,59 +385,7 @@ export function BentoDashboard({
           </div>
         </motion.div>
 
-        {/* Averages Block */}
-        <motion.div
-          whileHover={{ y: -4 }}
-          className="@container col-span-1 md:col-span-2 lg:col-span-2 lg:row-span-1 apple-card p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden min-h-[130px] group"
-        >
-          {/* Subtle Accent Glow */}
-          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-primary-500/10 via-primary-500/5 to-transparent dark:from-primary-900/20 dark:via-primary-900/5 z-0 pointer-events-none"></div>
-
-          {/* Activity Graphic */}
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 text-primary-500 opacity-5 dark:opacity-10 group-hover:text-primary-400/20 group-hover:scale-110 transition-all duration-700 pointer-events-none z-0">
-            <Activity size={140} strokeWidth={1} />
-          </div>
-
-          <div className="relative z-10 h-full flex flex-col justify-between min-w-0">
-            <div className="flex items-center justify-between mb-1.5 w-full">
-              <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest truncate">
-                Средний доход{" "}
-                <span className="opacity-70 ml-0.5 text-[8px]">(NET)</span>
-              </h3>
-            </div>
-
-            <div className="flex flex-col gap-0.5 mt-auto overflow-hidden">
-              <AutoFitText className="flex items-baseline gap-1.5 leading-none mb-0.5 pointer-events-none">
-                <span className="text-3xl sm:text-3xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">
-                  {formatVal(data.totalNet / 12)}
-                </span>
-                <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase shrink-0">
-                  / мес
-                </span>
-              </AutoFitText>
-
-              <div className="flex flex-wrap items-center gap-0.5 mt-1">
-                <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                    {formatVal(data.totalNet / 365)}
-                  </span>
-                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
-                    / день
-                  </span>
-                </div>
-
-                <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
-                  <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                    {formatVal(data.totalNet / 1973)}
-                  </span>
-                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
-                    / час
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+        <AveragesBlock totalNet={data.totalNet} isPrivate={isPrivate} />
 
         {/* Income Structure Chart */}
         <motion.div
@@ -801,69 +747,9 @@ export function BentoDashboard({
             )}
           </div>
         </motion.div>
-
-        {/* Upcoming Events */}
-        <motion.div
-          whileHover={{ y: -4 }}
-          className="col-span-1 md:col-span-2 lg:col-span-6 lg:row-span-2 apple-card p-6 flex flex-col min-h-[300px] lg:min-h-0"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Ближайшие события
-            </h3>
-            <Calendar size={18} className="text-slate-400" />
-          </div>
-          <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 cursor-auto relative">
-            {data.upcomingEvents.length > 0 ? (
-              data.upcomingEvents.map((event, idx) => (
-                <div
-                  key={`event-${event.type}-${event.date.getTime()}-${idx}`}
-                  className="flex items-center gap-4 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 hover:shadow-sm transition-all"
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl flex flex-col items-center justify-center shrink-0",
-                      event.type === "salary"
-                        ? "bg-primary-100 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400"
-                        : "bg-deposit-100 text-deposit-600 dark:bg-deposit-500/20 dark:text-deposit-400",
-                    )}
-                  >
-                    <span className="text-[8px] font-black uppercase leading-none">
-                      {event.date.toLocaleString("ru", { month: "short" })}
-                    </span>
-                    <span className="text-base font-black leading-none tabular-nums">
-                      {event.date.getDate()}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-950 dark:text-white truncate">
-                      {event.label}
-                    </p>
-                    <p className="text-[10px] text-slate-500 font-medium">
-                      {event.type === "salary" ? "Зарплата" : "Вклад"}
-                    </p>
-                  </div>
-                  <div className="text-right flex flex-col items-end justify-center">
-                    <p className="text-xs font-black text-slate-950 dark:text-white leading-tight">
-                      {formatValPlain(
-                        event.amount || 0,
-                        event.currency || "RUB",
-                      )}
-                    </p>
-                    {event.type === "deposit_end" && event.income !== undefined && (
-                      <p className="text-[10px] font-bold text-deposit-500 dark:text-deposit-400 mt-0.5 leading-none px-1.5 py-0.5 bg-deposit-50 dark:bg-deposit-500/10 rounded-md inline-block">
-                        +{formatValPlain(event.income, event.currency || "RUB")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyState className="absolute inset-0 italic" />
-            )}
-          </div>
-        </motion.div>
       </motion.div>
+
+      <UpcomingEvents events={data.upcomingEvents} isPrivate={isPrivate} />
     </div>
   );
 }

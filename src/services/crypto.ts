@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { getExchangeRates, convertToRub } from './currency';
 
 export interface CryptoRates {
@@ -23,7 +24,7 @@ try {
     lastCryptoFetchTime = Number(storedTime) || 0;
   }
 } catch (e) {
-  console.error('Failed to load cached crypto rates from localStorage:', e);
+  logger.error('Failed to load cached crypto rates from localStorage:', e);
 }
 
 const TICKER_TO_COINGECKO: Record<string, string> = {
@@ -91,7 +92,7 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
       }
     }
   } catch (err) {
-    console.error('CoinGecko fetch error:', err);
+    logger.error('CoinGecko fetch error:', err);
   }
 
   // 2. Bybit (Secondary) - Fetch any missing tickers
@@ -102,7 +103,7 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
       // Need currency rates to convert USD to RUB for Bybit
       currencyRates = await getExchangeRates();
     } catch (e) {
-      console.error('Failed to get currency rates for Bybit fallback');
+      logger.error('Failed to get currency rates for Bybit fallback');
     }
     
     // If USDT is missing, fallback to 1:1 USD and CBR RUB
@@ -131,7 +132,7 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
       });
       await Promise.all(promises);
     } catch (e) {
-      console.error('Bybit fallback error:', e);
+      logger.error('Bybit fallback error:', e);
     }
   }
 
@@ -144,7 +145,7 @@ export async function getCryptoRates(): Promise<CryptoRates | null> {
       localStorage.setItem('coingecko_cached_rates', JSON.stringify(rates));
       localStorage.setItem('coingecko_fetch_time', String(lastCryptoFetchTime));
     } catch (e) {
-      console.error('Failed to write crypto rates to localStorage:', e);
+      logger.error('Failed to write crypto rates to localStorage:', e);
     }
     return rates;
   }

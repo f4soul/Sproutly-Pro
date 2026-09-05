@@ -104,3 +104,22 @@ Whenever you implement a meaningful, user-facing feature, enhancement, or major 
 Do not leave temporary helper scripts (e.g., Python, Bash) or artifacts in the project directory. 
 - If you create a temporary script (e.g., `update_release_notes.py`, `patch.sh`, `migrate.js`) to apply complex code changes, you **MUST** delete it immediately after successful execution.
 - Maintain the project root clean and free of any files that are not part of the actual application build or standard configuration.
+
+---
+
+## 13. State Management (LOCKED — DO NOT COMBINE)
+- **CRITICAL**: The global state is strictly decomposed into 5 isolated contexts (`AuthSyncContext`, `SettingsContext`, `DepositsContext`, `AssetsContext`, `IncomeContext`).
+- **NEVER** combine them back into a single `AppDataContext`. This architectural decision eliminates unnecessary global re-renders and isolates reactivity.
+- Always subscribe components only to the specific context they need.
+
+---
+
+## 14. Console Logs & Debugging (MANDATORY)
+- **DO NOT** use `console.log`, `console.error`, or `console.warn` anywhere in the application code.
+- Always import and use the centralized logger (`import { logger } from "@/lib/logger"`) for all logging needs. The logger is configured to safely strip logs in production and avoid `import.meta.env` crashes in Node.js test environments.
+
+---
+
+## 15. DB Sync & Reactivity (LOCKED)
+- Synchronization between IndexedDB (Dexie) and Firebase uses `Promise.allSettled` for parallel requests. Do not revert to sequential `await` chains to avoid blocking the sync process.
+- Database listeners use generic helpers (`subscribeToCollection`, `subscribeToDoc` in `src/config/db/full-sync.ts`) to avoid duplicate `onSnapshot` code blocks. Do not write manual `onSnapshot` boilerplate for standard collections.

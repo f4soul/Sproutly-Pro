@@ -417,7 +417,7 @@ export function IncomeSettingsDialog({
             </div>
 
             {/* Footer */}
-            <div className="shrink-0 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-4 sm:px-8 flex gap-3 justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+            <div className="shrink-0 px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-4 sm:px-8 flex gap-3 justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
               <button type="button"
                 onClick={onClose}
                 className="flex-1 sm:flex-none sm:w-auto py-3 sm:py-2.5 sm:px-6 text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300 sm:text-slate-500 sm:dark:text-slate-400 bg-white/50 dark:bg-slate-800/80 sm:bg-transparent sm:dark:bg-transparent hover:bg-white dark:hover:bg-slate-700 sm:hover:bg-slate-200/50 sm:dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 sm:border-transparent sm:dark:border-transparent shadow-sm sm:shadow-none"

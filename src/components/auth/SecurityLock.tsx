@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
@@ -78,7 +79,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
        // If we are in an iframe (e.g. development or share preview sandbox),
       // do not automatically trigger biometrics because webauthn is blocked by policy.
       if (typeof window !== 'undefined' && window.self !== window.top) {
-        console.warn('Skipping automatic biometric authentication inside iframe container');
+        logger.warn('Skipping automatic biometric authentication inside iframe container');
         return;
       }
       handleBiometricAuth();
@@ -140,7 +141,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
       setFailedAttempts(0);
       onUnlock();
     } catch (err: any) {
-      console.error(err);
+      logger.error(err);
       
       // Determine if error is a policy/iframe permission error, or manual cancellation.
       // If so, do not show a scary "biometrics not recognized" error.
@@ -182,12 +183,12 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
     try {
       await logout();
     } catch (e) {
-      console.error('Error logging out', e);
+      logger.error('Error logging out', e);
     }
     try {
       await db.delete();
     } catch (e) {
-      console.error('Error deleting db', e);
+      logger.error('Error deleting db', e);
     }
     localStorage.clear();
     window.location.reload();

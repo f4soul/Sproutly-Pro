@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useEffect, Fragment } from 'react';
 import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, HandCoins, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles, Map } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -8,7 +9,7 @@ import { showToast } from '../../lib/toast';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent, LayoutGroup } from 'motion/react';
 import { Menu, Transition, Dialog } from '@headlessui/react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useAppData } from '../../context/AppDataContext';
+import { useSettings } from '../../context/SettingsContext';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
 import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 
@@ -40,7 +41,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
   const [user] = useAuthState(auth);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const { appSettings } = useAppData();
+  const { appSettings } = useSettings();
   const isAdmin = user?.email === 'filimlive@gmail.com';
   const [isMobileHeaderHidden, setIsMobileHeaderHidden] = useState(false);
   const { scrollY } = useScroll();
@@ -111,7 +112,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
       showToast('Запуск принудительной синхронизации...', 'info');
       setSyncStatus('syncing');
       syncWithFirebase().catch(err => {
-        console.error('Manual retry sync failed:', err);
+        logger.error('Manual retry sync failed:', err);
       });
     }
   };
@@ -369,7 +370,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                                   showToast(nextVal ? 'Подсказки включены для всех разделов' : 'Подсказки отключены');
                                 }
                               } catch (e) {
-                                console.error(e);
+                                logger.error(e);
                               }
                               close();
                             }}
@@ -645,7 +646,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                                       syncWithFirebase();
                                     }
                                   } catch (e) {
-                                    console.error(e);
+                                    logger.error(e);
                                   }
                                   close();
                                 }}
@@ -714,10 +715,10 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-              "flex-1 w-full min-w-0 flex flex-col h-full mx-auto",
+              "flex-1 w-full min-w-0 flex flex-col mx-auto",
               activeTab === 'calendar'
                 ? "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1rem)] lg:pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-[calc(env(safe-area-inset-bottom,0px)+128px)] md:pb-6 lg:pb-6 max-w-[100vw] xl:max-w-screen-2xl"
-                : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-32 md:pb-12 max-w-6xl space-y-8 md:space-y-12"
+                : "pt-[calc(env(safe-area-inset-top)+6rem)] md:pt-[calc(env(safe-area-inset-top)+1.5rem)] lg:pt-[calc(env(safe-area-inset-top)+2rem)] pb-44 md:pb-24 max-w-6xl space-y-8 md:space-y-12"
             )}
           >
             {children}
@@ -751,7 +752,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
               >
-                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[24px] bg-white dark:bg-slate-950 p-6 sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
+                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[24px] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
                       <LogOut className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
@@ -799,7 +800,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
   );
 }
 
-function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+const NavItem = React.memo(function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button
       onClick={onClick}
@@ -827,9 +828,9 @@ function NavItem({ active, onClick, icon, label }: { active: boolean; onClick: (
       )}
     </button>
   );
-}
+});
 
-function MobileNavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
+const MobileNavItem = React.memo(function MobileNavItem({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string }) {
   return (
     <button onClick={onClick} className={cn(
       "flex flex-col items-center justify-center relative w-16 h-14 rounded-xl transition-all duration-300 cursor-pointer overflow-hidden z-10",
@@ -847,4 +848,4 @@ function MobileNavItem({ active, onClick, icon, label }: { active: boolean; onCl
       </div>
     </button>
   );
-}
+});

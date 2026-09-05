@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useEffect, useMemo, useRef, useTransition } from 'react';
 import { SimulationState, CalculatedMonth, MonthData, MonthDataV2, IncomeColumnDef } from '../../types';
 import { QUARTERS, DEFAULT_TAX_BRACKETS } from '../../lib/constants';
@@ -10,7 +11,8 @@ import { YearSummary } from './YearSummary';
 import { YearTabs } from './YearTabs';
 import { ScenarioSimulator } from './ScenarioSimulator';
 
-import { useAppData } from '../../context/AppDataContext';
+import { useIncome } from '../../context/IncomeContext';
+import { useDeposits } from '../../context/DepositsContext';
 import { showToast } from '../../lib/toast';
 import { cn, formatCurrency } from '../../lib/utils';
 import { useLiveQuery } from 'dexie-react-hooks';
@@ -29,7 +31,8 @@ interface IncomeTrackerProps {
 }
 
 export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
-  const { state, setState, isInitialized, deposits } = useAppData();
+  const { state, setState, isInitialized } = useIncome();
+  const { deposits } = useDeposits();
   const taxSettings = useLiveQuery(() => db.taxYearSettings.toArray()) || [];
   
   const handleCopy = (value: number, type: 'net' | 'gross' | 'tax') => {
@@ -134,7 +137,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
     try {
       customNorms = await CalendarService.getWorkingDays(newYear);
     } catch (e) {
-      console.error(e);
+      logger.error(e);
     }
 
     setState(prev => {
@@ -320,7 +323,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   const copyFromPreviousYear = () => {
     if (prevYear === null || !state.years[prevYear]) {
-      console.warn(`Нет данных за предыдущий год для копирования.`);
+      logger.warn(`Нет данных за предыдущий год для копирования.`);
       return;
     }
     setState(prev => {
@@ -545,7 +548,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   if (!isInitialized || !activeYearData) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-[calc(100dvh-12rem)] w-full">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
           <span className="text-slate-400 text-sm font-medium">Загрузка данных...</span>
@@ -555,7 +558,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
   }
 
   return (
-    <div id="income-tracker-content" className="relative text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-primary-500/30 min-h-screen">
+    <div id="income-tracker-content" className="relative text-slate-800 dark:text-slate-200 font-sans transition-colors duration-300 selection:bg-primary-500/30">
       <div className="max-w-full lg:max-w-6xl mx-auto space-y-6">
 
         {/* Top Summary Section Wrapper */}

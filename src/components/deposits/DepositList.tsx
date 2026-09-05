@@ -272,7 +272,7 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
   }, []);
 
   return (
-    <div id="deposits-list-content" className="space-y-6 md:space-y-10 w-full max-w-6xl mx-auto pb-24 lg:pb-0">
+    <div id="deposits-list-content" className="space-y-6 md:space-y-10 w-full max-w-6xl mx-auto">
       <SmartActionBar 
         searchQuery={searchQuery}
         setSearchQuery={handleSetSearchQuery}

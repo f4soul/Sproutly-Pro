@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { getToken, onMessage } from 'firebase/messaging';
 import { getFirebaseMessaging, auth, db, firebaseConfig } from '../config/firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
@@ -10,7 +11,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
       return await syncFcmToken();
     }
   } catch (error) {
-    console.error("Failed to request notification permission:", error);
+    logger.error("Failed to request notification permission:", error);
   }
   return false;
 }
@@ -26,7 +27,7 @@ export async function syncFcmToken(): Promise<boolean> {
 
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
     if (!vapidKey) {
-      console.warn("VITE_FIREBASE_VAPID_KEY is missing. Add it to .env.example and your .env file.");
+      logger.warn("VITE_FIREBASE_VAPID_KEY is missing. Add it to .env.example and your .env file.");
       return false;
     }
 
@@ -43,7 +44,7 @@ export async function syncFcmToken(): Promise<boolean> {
       return true;
     }
   } catch (error) {
-    console.error("Failed to sync FCM token:", error);
+    logger.error("Failed to sync FCM token:", error);
   }
   return false;
 }
@@ -51,7 +52,7 @@ export async function syncFcmToken(): Promise<boolean> {
 async function saveTokenToDatabase(token: string) {
   const user = auth.currentUser;
   if (!user) {
-    console.log("No authenticated user, skipping Firestore token save.");
+    logger.log("No authenticated user, skipping Firestore token save.");
     return;
   }
 
@@ -72,9 +73,9 @@ async function saveTokenToDatabase(token: string) {
         fcmTokens: [token]
       }, { merge: true });
     }
-    console.log("FCM Token saved successfully for user:", user.uid);
+    logger.log("FCM Token saved successfully for user:", user.uid);
   } catch (error) {
-    console.error("Error saving FCM token:", error);
+    logger.error("Error saving FCM token:", error);
   }
 }
 

@@ -9,7 +9,7 @@ import { Deposit, CashAsset, TaxYearSettings, AppSettings, AppState } from '../.
 import { calculateProgressiveTaxDetailed } from '../../lib/taxCalculator';
 import { calculateYearTotals } from '../../lib/helpers';
 import { cn } from '../../lib/utils';
-import { useAppData } from '../../context/AppDataContext';
+import { useIncome } from '../../context/IncomeContext';
 
 interface UnifiedDashboardProps {
   deposits: Deposit[];
@@ -40,7 +40,7 @@ const DASHBOARD_ITEM_VARIANTS = {
 } as const;
 
 export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets = [], cryptoAssets = [], taxSettings, appSettings, isPrivate, setIsPrivate }: UnifiedDashboardProps) {
-  const { state, setState } = useAppData();
+  const { state, setState } = useIncome();
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('dashboard');
   const [isPending, startTransition] = useTransition();
   
@@ -82,7 +82,7 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
   ];
 
   return (
-    <div id="unified-dashboard-content" className="space-y-6 lg:space-y-8 w-full min-w-0 flex flex-col relative max-w-6xl mx-auto pb-12">
+    <div id="unified-dashboard-content" className="space-y-6 lg:space-y-8 w-full min-w-0 flex flex-col relative max-w-6xl mx-auto">
       {/* Header Section with Toggles */}
       <div className="flex flex-col items-center gap-4 mb-2 w-full z-20">
         {/* Navigation Panel */}

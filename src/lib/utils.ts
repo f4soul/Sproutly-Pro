@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -22,7 +23,7 @@ export function formatCurrency(value: number, currencyCode: string = 'RUB'): str
       maximumFractionDigits: 2,
     }).format(value);
   } catch {
-    console.error('Invalid currency code:', validCurrency);
+    logger.error('Invalid currency code:', validCurrency);
     // Fallback
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',

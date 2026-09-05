@@ -3,6 +3,7 @@ import { Bell, BellRing, Info, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { requestNotificationPermission, syncFcmToken } from '../../services/notifications';
 import { showToast } from '../../lib/toast';
 import { auth } from '../../config/firebase';
+import { logger } from '../../lib/logger';
 
 export function NotificationsSettings() {
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
@@ -15,7 +16,7 @@ export function NotificationsSettings() {
       if (Notification.permission === 'granted' && auth.currentUser) {
         syncFcmToken().then((success) => {
           if (success) setTokenSynced(true);
-        }).catch(console.error);
+        }).catch((e) => logger.error(e));
       }
     }
   }, []);
@@ -40,7 +41,7 @@ export function NotificationsSettings() {
         showToast('Токен получен, но убедитесь, что вы авторизованы в аккаунте', 'info');
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       showToast('Ошибка при включении уведомлений', 'error');
     } finally {
       setIsSyncing(false);
@@ -58,7 +59,7 @@ export function NotificationsSettings() {
         showToast('Не удалось обновить токен. Проверьте авторизацию.', 'error');
       }
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       showToast('Ошибка при синхронизации токена', 'error');
     } finally {
       setIsSyncing(false);

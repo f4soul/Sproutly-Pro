@@ -7,7 +7,7 @@ import { CashList } from "./CashList";
 import { InvestmentList } from "./InvestmentList";
 import { CryptoList } from "./CryptoList";
 import { cn } from "../../lib/utils";
-import { useAppData } from "../../context/AppDataContext";
+import { useSettings } from "../../context/SettingsContext";
 import { getAssetTabOrder } from "../../lib/constants";
 
 interface AssetsViewProps {
@@ -29,7 +29,7 @@ export function AssetsView({
 }: AssetsViewProps) {
   const [activeTab, setActiveTab] = useState<"deposits" | "cash" | "investments" | "crypto">("deposits");
   const isOuterPresent = useIsPresent();
-  const { appSettings } = useAppData();
+  const { appSettings } = useSettings();
   const hiddenTabs = appSettings?.hiddenAssetTabs || [];
   const assetTabOrder = getAssetTabOrder(appSettings?.assetTabOrder);
 

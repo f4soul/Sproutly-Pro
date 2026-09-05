@@ -30,7 +30,7 @@ export const DeleteYearModal = ({ isOpen, onClose, onConfirm, year }: DeleteYear
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 100 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-white dark:bg-slate-950 w-full max-w-md rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6"
+                className="bg-white dark:bg-slate-950 w-full max-w-md rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8"
               >
             <div className="flex justify-between items-start mb-4">
               <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">

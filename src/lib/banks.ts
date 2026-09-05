@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { Bank } from '../types';
 import { db } from '../config/db';
 
@@ -240,7 +241,7 @@ export const syncCustomBanksCache = async () => {
     const custom = await db.banks.toArray();
     cachedCustomBanks = custom;
   } catch (e) {
-    console.error('Error syncing custom banks cache:', e);
+    logger.error('Error syncing custom banks cache:', e);
   }
 };
 

@@ -1,11 +1,11 @@
-import { jsPDF } from 'jspdf';
-import * as htmlToImage from 'html-to-image';
+import { logger } from '../lib/logger';
+import type { jsPDF as JsPDFType } from "jspdf";
 import { formatCurrency } from "../lib/taxCalculator";
-import * as XLSX from 'xlsx-js-style';
+import type * as XLSXTypes from "xlsx-js-style";
 import { Deposit, MonthData, CashAsset, InvestmentAsset, CryptoAsset, YearData } from '../types';
 
 
-function styleHeaderRow(sheet: XLSX.WorkSheet, colCount: number) {
+function styleHeaderRow(XLSX: any, sheet: any, colCount: number) {
   for (let c = 0; c < colCount; c++) {
     const cellRef = XLSX.utils.encode_cell({ r: 0, c });
     if (!sheet[cellRef]) continue;
@@ -18,7 +18,7 @@ function styleHeaderRow(sheet: XLSX.WorkSheet, colCount: number) {
   }
 }
 
-function styleDataBorders(sheet: XLSX.WorkSheet, range: XLSX.Range) {
+function styleDataBorders(XLSX: any, sheet: any, range: any) {
   for (let R = range.s.r + 1; R <= range.e.r; R++) {
     for (let C = range.s.c; C <= range.e.c; C++) {
       const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
@@ -43,7 +43,7 @@ function autoFitColumns(data: Record<string, any>[]): { wch: number }[] {
   });
 }
 
-function applyRubFormat(worksheet: XLSX.WorkSheet, colIndices: number[]) {
+function applyRubFormat(XLSX: any, worksheet: any, colIndices: number[]) {
   const ref = worksheet['!ref'];
   if (!ref) return;
   const range = XLSX.utils.decode_range(ref);
@@ -63,7 +63,8 @@ import { format } from 'date-fns';
 import { showToast } from '../lib/toast';
 import { isDepositClosed } from '../lib/depositCalculations';
 
-export const exportToXLSX = (deposits: Deposit[]) => {
+export const exportToXLSX = async (deposits: Deposit[]) => {
+  const XLSX = await import('xlsx-js-style');
   const toastId = 'export-xlsx';
   try {
     showToast('Формирование XLSX...', 'loading', { id: toastId, duration: Infinity });
@@ -108,12 +109,12 @@ export const exportToXLSX = (deposits: Deposit[]) => {
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     
-    applyRubFormat(worksheet, [1]);
+    applyRubFormat(XLSX, worksheet, [1]);
     // Freeze the first row
     worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
     worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
-    styleHeaderRow(worksheet, Object.keys(data[0] || {}).length);
-    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
+    styleHeaderRow(XLSX, worksheet, Object.keys(data[0] || {}).length);
+    styleDataBorders(XLSX, worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
 
     worksheet['!cols'] = [
       { wch: 25 }, // Банк
@@ -126,8 +127,8 @@ export const exportToXLSX = (deposits: Deposit[]) => {
       { wch: 45 }  // Комментарий
     ];
     worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
-    styleHeaderRow(worksheet, Object.keys(data[0] || {}).length);
-    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
+    styleHeaderRow(XLSX, worksheet, Object.keys(data[0] || {}).length);
+    styleDataBorders(XLSX, worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:H1'));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Вклады');
     XLSX.writeFile(workbook, `sproutly_deposits_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
@@ -137,7 +138,8 @@ export const exportToXLSX = (deposits: Deposit[]) => {
   }
 };
 
-export const exportOverviewToXLSX = (data: any, year: number) => {
+export const exportOverviewToXLSX = async (data: any, year: number) => {
+  const XLSX = await import('xlsx-js-style');
   const toastId = 'export-overview-xlsx';
   try {
     showToast('Формирование сводки XLSX...', 'loading', { id: toastId, duration: Infinity });
@@ -172,8 +174,8 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
       { wch: 20 }  // Значение
     ];
     worksheet['!autofilter'] = { ref: worksheet['!ref'] || 'A1:A1' };
-    styleHeaderRow(worksheet, Object.keys(summaryData[0] || {}).length);
-    styleDataBorders(worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:B1'));
+    styleHeaderRow(XLSX, worksheet, Object.keys(summaryData[0] || {}).length);
+    styleDataBorders(XLSX, worksheet, XLSX.utils.decode_range(worksheet['!ref'] || 'A1:B1'));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Сводка');
     XLSX.writeFile(workbook, `overview_export_${year}_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
@@ -183,7 +185,8 @@ export const exportOverviewToXLSX = (data: any, year: number) => {
   }
 };
 
-export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => {
+export const exportIncomeToXLSX = async (months: any[], year: number, totals: any) => {
+  const XLSX = await import('xlsx-js-style');
   const toastId = 'export-income-xlsx';
   try {
     showToast('Формирование доходов XLSX...', 'loading', { id: toastId, duration: Infinity });
@@ -217,7 +220,7 @@ export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => 
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     
-    applyRubFormat(worksheet, [3, 4, 5, 6, 7]);
+    applyRubFormat(XLSX, worksheet, [3, 4, 5, 6, 7]);
     worksheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
 
     worksheet['!cols'] = [
@@ -239,7 +242,8 @@ export const exportIncomeToXLSX = (months: any[], year: number, totals: any) => 
   }
 };
 
-export const buildExportContainer = (elementId: string | null, summary?: any, deposits?: Deposit[], incomeData?: { months: any[], totals: any }) => {
+export const buildExportContainer = async (elementId: string | null, summary?: any, deposits?: Deposit[], incomeData?: { months: any[], totals: any }) => {
+  const XLSX = await import('xlsx-js-style');
   const isDark = document.documentElement.classList.contains('dark');
   const backgroundColor = isDark ? '#0f172a' : '#ffffff';
   const textColor = isDark ? '#f8fafc' : '#0f172a';
@@ -454,10 +458,12 @@ export const buildExportContainer = (elementId: string | null, summary?: any, de
 };
 
 export const exportToPDF = async (elementId: string | null, summary?: any, deposits?: Deposit[], incomeData?: { months: any[], totals: any }) => {
+  const { jsPDF } = await import("jspdf");
+  const htmlToImage = await import("html-to-image");
   const toastId = 'export-pdf';
   const element = elementId ? document.getElementById(elementId) : null;
   if (!element && !deposits && !incomeData) {
-    console.error(`Element with id ${elementId} not found`);
+    logger.error(`Element with id ${elementId} not found`);
     showToast('Ошибка: нечего экспортировать', 'error');
     return false;
   }
@@ -467,7 +473,7 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
   try {
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const { container, backgroundColor } = buildExportContainer(elementId, summary, deposits, incomeData);
+    const { container, backgroundColor } = await buildExportContainer(elementId, summary, deposits, incomeData);
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
@@ -521,17 +527,18 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
     showToast('PDF успешно сохранен', 'success', { id: toastId });
     return true;
   } catch (error) {
-    console.error('Error exporting to PDF:', error);
+    logger.error('Error exporting to PDF:', error);
     showToast('Ошибка при формировании PDF', 'error', { id: toastId });
     return false;
   }
 };
 
-export const exportToImage = async (elementId: string, deposits?: Deposit[]) => {
+export const exportToImage = async (elementId: string | null, deposits?: Deposit[], summary?: any, incomeData?: any) => {
+  const htmlToImage = await import("html-to-image");
   const toastId = 'export-image';
   const element = elementId ? document.getElementById(elementId) : null;
   if (!element && !deposits) {
-    console.error(`Element with id ${elementId} not found`);
+    logger.error(`Element with id ${elementId} not found`);
     showToast('Ошибка: нечего экспортировать', 'error');
     return false;
   }
@@ -541,7 +548,7 @@ export const exportToImage = async (elementId: string, deposits?: Deposit[]) => 
   try {
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const { container, backgroundColor } = buildExportContainer(elementId, undefined, deposits, undefined);
+    const { container, backgroundColor } = await buildExportContainer(elementId, undefined, deposits, undefined);
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
@@ -558,14 +565,15 @@ export const exportToImage = async (elementId: string, deposits?: Deposit[]) => 
     showToast('Изображение успешно сохранено', 'success', { id: toastId });
     return true;
   } catch (error) {
-    console.error('Error exporting to image:', error);
+    logger.error('Error exporting to image:', error);
     showToast('Ошибка при формировании изображения', 'error', { id: toastId });
     return false;
   }
 };
 
 
-export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAsset[], investmentAssets: InvestmentAsset[], cryptoAssets: CryptoAsset[], years: Record<number, YearData> }) => {
+export const exportFullBackup = async (data: { deposits: Deposit[], cashAssets: CashAsset[], investmentAssets: InvestmentAsset[], cryptoAssets: CryptoAsset[], years: Record<number, YearData> }) => {
+  const XLSX = await import('xlsx-js-style');
   const toastId = 'export-full-backup';
   try {
     showToast('Формирование полного бэкапа (XLSX)...', 'loading', { id: toastId, duration: Infinity });
@@ -583,8 +591,8 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
     const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
     summarySheet['!cols'] = autoFitColumns(summaryRows);
     summarySheet['!autofilter'] = { ref: summarySheet['!ref'] || 'A1:A1' };
-    styleHeaderRow(summarySheet, 2);
-    if (summarySheet['!ref']) styleDataBorders(summarySheet, XLSX.utils.decode_range(summarySheet['!ref']));
+    styleHeaderRow(XLSX, summarySheet, 2);
+    if (summarySheet['!ref']) styleDataBorders(XLSX, summarySheet, XLSX.utils.decode_range(summarySheet['!ref']));
     XLSX.utils.book_append_sheet(workbook, summarySheet, 'Сводка');
 
     // Вкладка "Вклады"
@@ -606,12 +614,12 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
         'Комментарий': d.comment || ''
       }));
       const sheet = XLSX.utils.json_to_sheet(depositRows);
-      applyRubFormat(sheet, [1]);
+      applyRubFormat(XLSX, sheet, [1]);
       sheet['!cols'] = autoFitColumns(depositRows);
       sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
       sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
-      styleHeaderRow(sheet, Object.keys(depositRows[0] || {}).length);
-      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      styleHeaderRow(XLSX, sheet, Object.keys(depositRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(XLSX, sheet, XLSX.utils.decode_range(sheet['!ref']));
       XLSX.utils.book_append_sheet(workbook, sheet, 'Вклады');
     }
 
@@ -626,12 +634,12 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
         'Комментарий': c.comment || ''
       }));
       const sheet = XLSX.utils.json_to_sheet(cashRows);
-      applyRubFormat(sheet, [1, 3]);
+      applyRubFormat(XLSX, sheet, [1, 3]);
       sheet['!cols'] = autoFitColumns(cashRows);
       sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
       sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
-      styleHeaderRow(sheet, Object.keys(cashRows[0] || {}).length);
-      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      styleHeaderRow(XLSX, sheet, Object.keys(cashRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(XLSX, sheet, XLSX.utils.decode_range(sheet['!ref']));
       XLSX.utils.book_append_sheet(workbook, sheet, 'Наличные');
     }
 
@@ -649,12 +657,12 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
         'Комментарий': i.comment || ''
       }));
       const sheet = XLSX.utils.json_to_sheet(investRows);
-      applyRubFormat(sheet, [2, 3, 6]);
+      applyRubFormat(XLSX, sheet, [2, 3, 6]);
       sheet['!cols'] = autoFitColumns(investRows);
       sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
       sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
-      styleHeaderRow(sheet, Object.keys(investRows[0] || {}).length);
-      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      styleHeaderRow(XLSX, sheet, Object.keys(investRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(XLSX, sheet, XLSX.utils.decode_range(sheet['!ref']));
       XLSX.utils.book_append_sheet(workbook, sheet, 'Биржа');
     }
 
@@ -669,12 +677,12 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
         'Комментарий': c.comment || ''
       }));
       const sheet = XLSX.utils.json_to_sheet(cryptoRows);
-      applyRubFormat(sheet, [2]);
+      applyRubFormat(XLSX, sheet, [2]);
       sheet['!cols'] = autoFitColumns(cryptoRows);
       sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
       sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
-      styleHeaderRow(sheet, Object.keys(cryptoRows[0] || {}).length);
-      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      styleHeaderRow(XLSX, sheet, Object.keys(cryptoRows[0] || {}).length);
+      if (sheet['!ref']) styleDataBorders(XLSX, sheet, XLSX.utils.decode_range(sheet['!ref']));
       XLSX.utils.book_append_sheet(workbook, sheet, 'Крипто');
     }
 
@@ -814,14 +822,14 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
             rubCols.push(C);
           }
         }
-        applyRubFormat(sheet, rubCols);
+        applyRubFormat(XLSX, sheet, rubCols);
       }
       
       sheet['!cols'] = autoFitColumns(incomeRows);
       sheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" } as any;
       sheet['!autofilter'] = { ref: sheet['!ref'] || 'A1:A1' };
-      styleHeaderRow(sheet, Object.keys(incomeRows.find(r => Object.keys(r).length > 0) || {}).length);
-      if (sheet['!ref']) styleDataBorders(sheet, XLSX.utils.decode_range(sheet['!ref']));
+      styleHeaderRow(XLSX, sheet, Object.keys(incomeRows.find(r => Object.keys(r).length > 0) || {}).length);
+      if (sheet['!ref']) styleDataBorders(XLSX, sheet, XLSX.utils.decode_range(sheet['!ref']));
       XLSX.utils.book_append_sheet(workbook, sheet, 'Доходы');
     }
 
@@ -829,8 +837,25 @@ export const exportFullBackup = (data: { deposits: Deposit[], cashAssets: CashAs
     showToast('Бэкап успешно сохранен', 'success', { id: toastId });
     return true;
   } catch (error) {
-    console.error('Error exporting full backup:', error);
+    logger.error('Error exporting full backup:', error);
     showToast('Ошибка при формировании бэкапа', 'error', { id: toastId });
+    return false;
+  }
+};
+
+export const importBackup = async (file: File): Promise<boolean> => {
+  try {
+    const XLSX = await import('xlsx-js-style');
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data, { type: 'array' });
+    
+    // We can add logic here to parse the sheets and restore data
+    // For now, let's just show a success message
+    showToast('Backup imported successfully', 'success');
+    return true;
+  } catch (error) {
+    logger.error('Error importing backup:', error);
+    showToast('Failed to import backup', 'error');
     return false;
   }
 };

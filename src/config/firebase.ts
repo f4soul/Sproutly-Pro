@@ -1,8 +1,28 @@
+import { logger } from '../lib/logger';
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { initializeFirestore, doc, getDoc, setDoc, onSnapshot, getDocFromServer } from 'firebase/firestore';
+import { initializeFirestore, setLogLevel, doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
 import { getMessaging, isSupported } from 'firebase/messaging';
 import defaultPlatformConfig from '../../firebase-applet-config.json';
+
+// Silence internal Firestore SDK logs (suppresses "Could not reach Cloud Firestore backend" offline notices)
+setLogLevel('silent');
+
+// Intercept benign offline notices from Firestore in the browser environment
+if (typeof window !== 'undefined' && window.console) {
+  const originalError = window.console.error;
+  window.console.error = (...args: unknown[]) => {
+    const firstArg = typeof args[0] === 'string' ? args[0] : '';
+    if (
+      firstArg.includes('Could not reach Cloud Firestore backend') ||
+      firstArg.includes('@firebase/firestore')
+    ) {
+      // Benign offline state notice when operating offline in Dexie local-first mode
+      return;
+    }
+    originalError.apply(window.console, args);
+  };
+}
 
 const customConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -26,21 +46,6 @@ export const googleProvider = new GoogleAuthProvider();
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 export const logout = () => signOut(auth);
 
-// Connection test
-async function testConnection() {
-  try {
-    // Attempt to read a non-existent document to test connectivity
-    await getDocFromServer(doc(db, '_internal_', 'connection_test'));
-    console.log("Firebase connection successful.");
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The client is offline.");
-    }
-    // Other errors (like permission denied) are expected if the document doesn't exist or rules are strict
-  }
-}
-
-testConnection();
 
 export const getFirebaseMessaging = async () => {
   if (await isSupported()) {

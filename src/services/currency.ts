@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 export interface CurrencyRates {
   Date: string;
   PreviousDate: string;
@@ -31,7 +32,7 @@ try {
     lastFetchTime = Number(storedTime) || 0;
   }
 } catch (e) {
-  console.error('Failed to load cached exchange rates from localStorage:', e);
+  logger.error('Failed to load cached exchange rates from localStorage:', e);
 }
 
 export async function getExchangeRates(): Promise<CurrencyRates | null> {
@@ -83,7 +84,7 @@ export async function getExchangeRates(): Promise<CurrencyRates | null> {
           localStorage.setItem('cbr_cached_rates_v2', JSON.stringify(data));
           localStorage.setItem('cbr_rates_fetch_time_v2', String(lastFetchTime));
         } catch (e) {
-          console.error('Failed to write exchange rates to localStorage:', e);
+          logger.error('Failed to write exchange rates to localStorage:', e);
         }
         
         return data;
@@ -105,12 +106,12 @@ export async function getExchangeRates(): Promise<CurrencyRates | null> {
       localStorage.setItem('cbr_cached_rates_v2', JSON.stringify(data));
       localStorage.setItem('cbr_rates_fetch_time_v2', String(lastFetchTime));
     } catch (e) {
-      console.error('Failed to write exchange rates to localStorage:', e);
+      logger.error('Failed to write exchange rates to localStorage:', e);
     }
     
     return data;
   } catch (err) {
-    console.error('Failed to load CBR exchange rates:', err);
+    logger.error('Failed to load CBR exchange rates:', err);
     return cachedRates;
   }
 }

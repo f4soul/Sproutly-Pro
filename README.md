@@ -40,7 +40,7 @@
 
 ## 💻 Технический стек
 
-*   **Фреймворк**: React 18, Vite.
+*   **Фреймворк**: React 18, Vite (реализовано Code Splitting и динамические импорты через React.lazy + Suspense).
 *   **Типизация**: TypeScript (полное покрытие типов и интерфейсов).
 *   **Стилизация**: Tailwind CSS (кастомизированный Glassmorphism, темная/светлая тема).
 *   **Анимации**: Framer Motion (page transitions, shared layouts).
@@ -67,7 +67,7 @@
 1. Создайте аккаунт на [Vercel](https://vercel.com/).
 2. Импортируйте репозиторий проекта из GitHub.
 3. Vercel автоматически определит Vite-конфигурацию.
-4. Нажмите **Deploy**. Проект поддерживает "spa" роутинг "из коробки" за счет файла `vercel.json` и билдов Vite.
+4. Нажмите **Deploy**. Проект поддерживает "spa" роутинг "из коробки" и ежедневные CRON-задачи (для Push-уведомлений) за счет файла `vercel.json` и билдов Vite.
 
 ---
 
@@ -86,9 +86,9 @@
 *   `src/components/layout` - Боковое меню, шапка, тулбар мобильной версии.
 *   `src/components/settings` - Настройки безопасности и налоговой базы.
 *   `src/components/ui` - Общие компоненты (модалки, тосты, свитчеры, блюр).
-*   `src/config/db.ts` - Настройка IndexedDB.
+*   `src/config/db/` - Модульная настройка IndexedDB (schema, transformers, full-sync).
 *   `src/config/firebase.ts` - Настройка облачной синхронизации (Firebase/Firestore).
-*   `src/context/` - Глобальное состояние (AppDataContext — единый источник данных и состояния приложения).
+*   `src/context/` - Глобальное состояние (декомпозировано на 5 изолированных контекстов: AuthSyncContext, SettingsContext, DepositsContext, AssetsContext, IncomeContext для максимальной производительности).
 *   `src/lib/` - Вспомогательные утилиты, расчеты, словари банков.
 *   `src/services/` - Сервисы экспорта в PDF/XLSX/Image.
 

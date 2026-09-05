@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { db, syncWithFirebase } from '../../config/db';
 import { AppSettings } from '../../types';
@@ -79,7 +80,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
       updatedAt: Date.now()
     });
     // Upload changes to Cloud Firestore immediately to prevent PC/mobile sync out-of-sync
-    syncWithFirebase().catch(console.error);
+    syncWithFirebase().catch((err) => logger.error('Sync error:', err));
   };
 
   const handleToggle = async () => {
@@ -203,7 +204,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
         localStorage.setItem('isBiometricBound', 'true');
         showToast('Биометрия подключена');
       } catch (err) {
-        console.error(err);
+        logger.error(err);
         showToast('Ошибка при настройке биометрии', 'error');
       }
     }
@@ -465,7 +466,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                               setIsThisDeviceBound(true);
                               showToast('Это устройство добавлено в список разрешенных');
                             } catch (err) {
-                              console.error(err);
+                              logger.error(err);
                               showToast('Ошибка регистрации ключа устройства', 'error');
                             }
                           }}
@@ -507,7 +508,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="p-6 py-10 sm:py-8 max-w-[350px] w-full flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl relative overflow-hidden pointer-events-auto rounded-t-[32px] sm:rounded-[32px]"
+                  className="px-6 pt-8 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] sm:py-8 max-w-[350px] w-full flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl relative overflow-hidden pointer-events-auto rounded-t-[32px] sm:rounded-[32px]"
                 >
                   <div className="w-12 h-12 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-5 mt-2 sm:mt-0">
                     <Lock size={22} className="stroke-[1.8px]" />

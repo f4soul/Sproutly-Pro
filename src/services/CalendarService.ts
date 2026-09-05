@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { db } from '../config/db';
 
 export class CalendarService {
@@ -46,7 +47,7 @@ export class CalendarService {
       
       return workingDays;
     } catch (error) {
-      console.error('Failed to fetch calendar for ' + year, error);
+      logger.error('Failed to fetch calendar for ' + year, error);
       // Fallback to average/standard working days
       // Based on typical ~21 days minus some holidays
       if (year === 2024) return [17, 20, 20, 21, 20, 19, 23, 22, 21, 23, 21, 21];

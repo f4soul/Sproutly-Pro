@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { TaxBracket } from '../types';
 import { DEFAULT_TAX_BRACKETS } from './constants';
 
@@ -63,7 +64,7 @@ export const formatCurrency = (value: number, currencyCode: string = 'RUB') => {
   try {
     return getCurrencyFormatter(validCurrency).format(value);
   } catch {
-    console.error('Invalid currency code:', validCurrency);
+    logger.error('Invalid currency code:', validCurrency);
     // Fallback if the code is really invalid
     return getCurrencyFormatter('RUB').format(value);
   }

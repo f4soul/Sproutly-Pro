@@ -178,9 +178,9 @@ export const LandingView: React.FC<LandingViewProps> = ({ onStart }) => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 sm:py-10 lg:px-8"
+        className="relative mx-auto flex min-h-[100svh] w-full max-w-6xl flex-col justify-center px-4 pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-[calc(env(safe-area-inset-bottom)+2.5rem)] sm:px-6 sm:py-10 lg:px-8"
       >
-        <div className="my-auto flex w-full flex-col">
+        <div className="flex w-full flex-col">
         {/* ================================================================
             Hero Section
             ================================================================ */}

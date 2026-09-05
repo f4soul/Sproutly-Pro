@@ -37,4 +37,3 @@ export const CryptoLogo: React.FC<CryptoLogoProps> = ({ ticker, alt, className }
     </div>
   );
 };
-

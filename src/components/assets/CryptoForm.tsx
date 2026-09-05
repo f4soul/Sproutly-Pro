@@ -1,3 +1,4 @@
+import { logger } from '../../lib/logger';
 import React, { useState, Fragment, useEffect, useRef } from "react";
 import { Dialog, Combobox, Transition } from "@headlessui/react";
 import { Bitcoin, ChevronDown, X, Calendar as CalendarIcon , Save } from "lucide-react";
@@ -88,10 +89,10 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
         await db.cryptoAssets.add(dataToSave);
       }
       emitSyncEvent("syncing");
-      syncWithFirebase().catch(console.error);
+      syncWithFirebase().catch(logger.error);
       onClose();
     } catch (err) {
-      console.error("Error saving crypto asset:", err);
+      logger.error("Error saving crypto asset:", err);
       alert("Ошибка при сохранении");
     }
   };
@@ -330,7 +331,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                 </div>
                 </div>
               </div>
-              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
                 <button
                   type="button"
                   onClick={onClose}

@@ -60,7 +60,7 @@ export const ArchiveHeaderActions = ({ items }: { items: any[] }) => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 100 }}
                   transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 p-6 sm:p-8 text-center shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 pointer-events-auto"
+                  className="w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-center shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 pointer-events-auto"
                 >
                   <div className="flex justify-center mb-6">
                     <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500">
