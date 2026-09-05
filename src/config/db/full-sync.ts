@@ -5,7 +5,7 @@ import { collection, doc, setDoc, getDocs, query, where, getDoc, deleteField, on
 import { Deposit, CashAsset, InvestmentAsset, CryptoAsset, TaxYearSettings, Bank, AppSettings } from '../../types';
 import { handleFirestoreError, OperationType, stripUndefined, parseLocalId } from './transformers';
 
-const TOMBSTONE_COLLECTIONS = ['cryptoAssets', 'cashAssets', 'investmentAssets', 'deposits', 'banks'] as const;
+const TOMBSTONE_COLLECTIONS = ['cryptoAssets', 'cashAssets', 'investmentAssets', 'deposits', 'banks', 'taxYearSettings'] as const;
 const TOMBSTONE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000; // 30 дней
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000; // не чаще раза в сутки
 
@@ -197,9 +197,14 @@ export async function syncWithFirebase() {
             updatedAt: delRecord.timestamp 
           }, { merge: true });
           if (delRecord.id) await db.deletedQueue.delete(delRecord.id);
-        } catch (error) {
-          const errRes = handleFirestoreError(error, OperationType.DELETE, delRecord.collection);
+        } catch (error: any) {
+          if (error && error.code === 'permission-denied') {
+            // Tombstone creation failed because document never existed remotely. Drop it.
+            if (delRecord.id) await db.deletedQueue.delete(delRecord.id);
+          } else {
+            const errRes = handleFirestoreError(error, OperationType.DELETE, delRecord.collection);
             if (!errRes?.isOfflineError) hasErrors = true;
+          }
         }
       }
 
@@ -412,6 +417,38 @@ export async function syncWithFirebase() {
             }
           }
           await syncCollection('banks', db.banks, 'banks');
+        })(),
+
+        // Tax Year Settings
+        (async () => {
+          const localTax = await db.taxYearSettings.toArray();
+          if (localTax.length > 0) {
+            const remoteTaxMap = new Map();
+            try { const snap = await getDocs(query(collection(firestore, 'taxYearSettings'), where('userId', '==', user.uid))); snap.forEach((d) => remoteTaxMap.set(d.id, d.data())); } catch {}
+            for (const tax of localTax) {
+              if (tax.userId !== user.uid) {
+                tax.userId = user.uid;
+                tax.updatedAt = Date.now();
+                await db.taxYearSettings.put(tax);
+              }
+              const { ...data } = tax;
+              const path = 'taxYearSettings';
+              const firestoreDocId = `${user.uid}_${tax.year}`;
+              try {
+                const remoteTaxUpdate = remoteTaxMap.get(firestoreDocId)?.updatedAt || 0;
+                const localTaxUpdate = tax.updatedAt || 0;
+                if (localTaxUpdate > remoteTaxUpdate || (localTaxUpdate === 0 && !remoteTaxMap.has(firestoreDocId))) {
+                  await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
+                    ...data, userId: user.uid, isDeleted: deleteField(), updatedAt: localTaxUpdate === 0 ? Date.now() : localTaxUpdate
+                  }), { merge: true });
+                }
+              } catch (error) {
+                const errRes = handleFirestoreError(error, OperationType.SET, path);
+                if (!errRes?.isOfflineError) hasErrors = true;
+              }
+            }
+          }
+          await syncCollection('taxYearSettings', db.taxYearSettings, 'taxYearSettings', (remoteData, localId) => ({ ...remoteData }));
         })(),
 
         // Settings
