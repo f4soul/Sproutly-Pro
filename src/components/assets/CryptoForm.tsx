@@ -12,6 +12,8 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
 import { DropdownPortal } from "../ui/DropdownPortal";
+import { ClearButton } from "../ui/ClearButton";
+import { StepperButton } from "../ui/StepperButton";
 import { getCryptoRates, getCryptoRate } from "../../services/crypto";
 import { formatCurrency } from "../../lib/taxCalculator";
 
@@ -66,6 +68,21 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
         }));
       }
     }
+  };
+
+  const handleStepQuantity = (delta: number) => {
+    const current = Number(quantityStr.replace(",", ".")) || 0;
+    const step = current < 1 && delta > 0 ? 0.1 : current <= 1 && delta < 0 ? 0.1 : 1;
+    const effectiveDelta = delta > 0 ? step : -step;
+    const next = Math.max(0, Math.round((current + effectiveDelta) * 10000) / 10000);
+    const nextStr = next === 0 ? "0" : String(next);
+    setQuantityStr(nextStr);
+    setFormData((prev) => ({ ...prev, quantity: next }));
+  };
+
+  const handleClearQuantity = () => {
+    setQuantityStr("");
+    setFormData((prev) => ({ ...prev, quantity: 0 }));
   };
 
   
@@ -209,15 +226,41 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Количество
                     </label>
-                    <input
-                      required
-                      type="text"
-                      inputMode="decimal"
-                      value={quantityStr}
-                      onChange={(e) => handleAmountChange(e.target.value, setQuantityStr, 'quantity')}
-                      className="apple-input w-full tabular-nums text-sm"
-                      placeholder="0.00"
-                    />
+                    <div className="flex items-center gap-2">
+                      <StepperButton
+                        type="minus"
+                        onClick={() => handleStepQuantity(-1)}
+                        disabled={!quantityStr || Number(quantityStr.replace(",", ".")) <= 0}
+                        title="Уменьшить количество"
+                      />
+                      <div className="relative flex-1">
+                        <input
+                          required
+                          type="text"
+                          inputMode="decimal"
+                          value={quantityStr}
+                          onChange={(e) => handleAmountChange(e.target.value, setQuantityStr, 'quantity')}
+                          className={cn(
+                            "apple-input w-full tabular-nums text-sm",
+                            Boolean(quantityStr) && "pr-9"
+                          )}
+                          placeholder="0.00"
+                        />
+                        {Boolean(quantityStr) && (
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            <ClearButton
+                              onClick={handleClearQuantity}
+                              title="Очистить количество"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <StepperButton
+                        type="plus"
+                        onClick={() => handleStepQuantity(1)}
+                        title="Увеличить количество"
+                      />
+                    </div>
                     <p className="text-[10px] text-slate-500/80 px-1">Количество монет/токенов</p>
                   </div>
                 </div>
@@ -227,15 +270,28 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Вложено, ₽
                     </label>
-                    <input
-                      required
-                      type="text"
-                      inputMode="decimal"
-                      value={amountStr}
-                      onChange={(e) => handleAmountChange(e.target.value, setAmountStr, 'amount')}
-                      className="apple-input w-full tabular-nums text-sm"
-                      placeholder="0"
-                    />
+                    <div className="relative">
+                      <input
+                        required
+                        type="text"
+                        inputMode="decimal"
+                        value={amountStr}
+                        onChange={(e) => handleAmountChange(e.target.value, setAmountStr, 'amount')}
+                        className={cn("apple-input w-full tabular-nums text-sm", Boolean(amountStr) && "pr-9")}
+                        placeholder="0"
+                      />
+                      {Boolean(amountStr) && (
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                          <ClearButton
+                            onClick={() => {
+                              setAmountStr("");
+                              setFormData((prev) => ({ ...prev, amount: 0 }));
+                            }}
+                            title="Очистить сумму"
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div className="flex flex-col gap-0.5">
                       <p className="text-[10px] text-slate-500/80 px-1">Себестоимость покупки</p>
                       <div 

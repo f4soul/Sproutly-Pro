@@ -275,7 +275,7 @@ function AppContent() {
     }
 
     // Surgical fix: Hide floating panels instantly to prevent 1-frame micro-delay during AnimatePresence exit
-    const floatingEls = document.querySelectorAll('.floating-analytics-bottom, .floating-fab-bottom-with-analytics, .floating-fab-bottom-no-analytics');
+    const floatingEls = document.querySelectorAll('.floating-analytics-bottom, .floating-fab-bottom-with-analytics, .floating-fab-bottom-no-analytics, .income-sticky-analytics-bottom');
     floatingEls.forEach(el => {
       if (el instanceof HTMLElement) {
         el.style.opacity = '0';

@@ -104,7 +104,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
               isClosed && "opacity-60",
             )}
           >
-            <div className="w-7 h-7 rounded-lg overflow-hidden bg-white/50 dark:bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-all mt-1">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/50 dark:bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-all mt-1">
               {bankDetails.logoUrl ? (
                 <BankLogo
                   logoUrl={bankDetails.logoUrl}

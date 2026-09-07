@@ -581,7 +581,7 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
             <div 
               className={cn(
                 "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
-                isSimulationOpen ? "grid-rows-[1fr] opacity-100 pointer-events-auto mb-4" : "grid-rows-[0fr] opacity-0 pointer-events-none mb-0"
+                isSimulationOpen ? "relative z-40 grid-rows-[1fr] opacity-100 pointer-events-auto mb-4" : "grid-rows-[0fr] opacity-0 pointer-events-none mb-0"
               )}
             >
               <div className={cn("min-h-0", isSimulationOpen ? "overflow-visible" : "overflow-hidden")}>

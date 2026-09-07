@@ -88,7 +88,6 @@ export const HeatmapMonthCard = React.memo(function HeatmapMonthCard({
                 )}>
                   {day.dayNumber}
                 </span>
-                {day.isToday && <TodayGlow />}
 
                 {isOpening && (
                   <div className="absolute -top-1 -right-1 z-15 flex items-center justify-center">

@@ -3,6 +3,8 @@ import { SquareStop, Zap, HandCoins, RussianRuble, Gift, ChevronDown, Check } fr
 import { motion, AnimatePresence } from 'motion/react';
 import { SimulationState } from '../../types';
 import { cn, formatCurrency } from '../../lib/utils';
+import { ClearButton } from '../ui/ClearButton';
+import { StepperButton } from '../ui/StepperButton';
 
 interface ScenarioSimulatorProps {
   simulation: SimulationState;
@@ -15,6 +17,59 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
   const [showFreqDropdown, setShowFreqDropdown] = useState(false);
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   
+  const [projectedSalaryStr, setProjectedSalaryStr] = useState<string>(() => {
+    return simulation.projectedSalary !== undefined ? String(simulation.projectedSalary) : '';
+  });
+  const [bonusValueStr, setBonusValueStr] = useState<string>(() => {
+    return simulation.bonusValue !== undefined ? String(simulation.bonusValue) : '';
+  });
+  const [extraIncomeStr, setExtraIncomeStr] = useState<string>(() => {
+    return simulation.extraIncome ? String(simulation.extraIncome) : '';
+  });
+
+  useEffect(() => {
+    const currentNum = projectedSalaryStr === '' ? undefined : Number(projectedSalaryStr.replace(',', '.'));
+    if (simulation.projectedSalary !== currentNum) {
+      setProjectedSalaryStr(simulation.projectedSalary !== undefined ? String(simulation.projectedSalary) : '');
+    }
+  }, [simulation.projectedSalary]);
+
+  useEffect(() => {
+    const currentNum = bonusValueStr === '' ? undefined : Number(bonusValueStr.replace(',', '.'));
+    if (simulation.bonusValue !== currentNum) {
+      setBonusValueStr(simulation.bonusValue !== undefined ? String(simulation.bonusValue) : '');
+    }
+  }, [simulation.bonusValue]);
+
+  useEffect(() => {
+    const currentNum = extraIncomeStr === '' ? 0 : Number(extraIncomeStr.replace(',', '.'));
+    if (simulation.extraIncome !== currentNum) {
+      setExtraIncomeStr(simulation.extraIncome ? String(simulation.extraIncome) : '');
+    }
+  }, [simulation.extraIncome]);
+  
+  const freqDropdownRef = useRef<HTMLDivElement>(null);
+  const typeDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      if (freqDropdownRef.current && !freqDropdownRef.current.contains(event.target as Node)) {
+        setShowFreqDropdown(false);
+      }
+      if (typeDropdownRef.current && !typeDropdownRef.current.contains(event.target as Node)) {
+        setShowTypeDropdown(false);
+      }
+    }
+    if (showFreqDropdown || showTypeDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showFreqDropdown, showTypeDropdown]);
+
   const freqOptions = [
     { value: 'none', label: 'Нет' },
     { value: 'monthly', label: 'Месяц' },
@@ -28,6 +83,9 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
   ];
 
   const stopSimulation = () => {
+    setProjectedSalaryStr('');
+    setBonusValueStr('');
+    setExtraIncomeStr('');
     onUpdate({
       isActive: false,
       salaryIncrease: 0,
@@ -42,18 +100,48 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
   };
 
   const handleProjectedSalaryChange = (val: string) => {
-    if (val === '') onUpdate({ ...simulation, projectedSalary: undefined });
-    else onUpdate({ ...simulation, projectedSalary: Number(val) });
+    const normalized = val.replace(',', '.');
+    if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || val === '') {
+      setProjectedSalaryStr(normalized);
+      if (normalized === '' || normalized === '.') {
+        onUpdate({ ...simulation, projectedSalary: undefined });
+      } else {
+        const num = Number(normalized);
+        if (!isNaN(num)) {
+          onUpdate({ ...simulation, projectedSalary: num });
+        }
+      }
+    }
   };
 
   const handleBonusValueChange = (val: string) => {
-    if (val === '') onUpdate({ ...simulation, bonusValue: undefined });
-    else onUpdate({ ...simulation, bonusValue: Number(val) });
+    const normalized = val.replace(',', '.');
+    if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || val === '') {
+      setBonusValueStr(normalized);
+      if (normalized === '' || normalized === '.') {
+        onUpdate({ ...simulation, bonusValue: undefined });
+      } else {
+        const num = Number(normalized);
+        if (!isNaN(num)) {
+          onUpdate({ ...simulation, bonusValue: num });
+        }
+      }
+    }
   };
   
   const handleExtraIncomeChange = (val: string) => {
-    if (val === '') onUpdate({ ...simulation, extraIncome: 0 });
-    else onUpdate({ ...simulation, extraIncome: Number(val) });
+    const normalized = val.replace(',', '.');
+    if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || val === '') {
+      setExtraIncomeStr(normalized);
+      if (normalized === '' || normalized === '.') {
+        onUpdate({ ...simulation, extraIncome: 0 });
+      } else {
+        const num = Number(normalized);
+        if (!isNaN(num)) {
+          onUpdate({ ...simulation, extraIncome: num });
+        }
+      }
+    }
   };
 
   const startSimulation = () => {
@@ -154,7 +242,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
           <div className="flex flex-row lg:flex-col gap-4 w-full lg:w-1/3">
             {/* Card 1: Base Salary */}
             <div className={cn(
-              "relative flex-1 group p-4 lg:p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px]",
+              "relative flex-1 group p-4 lg:p-5 gap-0.5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px]",
               simulation.isActive 
                 ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-deposit-500/30 dark:border-deposit-500/30 shadow-[0_4px_20px_rgba(16,185,129,0.06)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)] hover:border-deposit-500/40" 
                 : "bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200 dark:border-white/5"
@@ -186,14 +274,24 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
               ) : (
                 <div className={cn("mt-auto flex items-baseline border-b transition-all border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
                   <input 
-                    type="number"
-                    value={simulation.projectedSalary === 0 ? '' : (simulation.projectedSalary ?? '')}
+                    type="text"
+                    inputMode="decimal"
+                    value={projectedSalaryStr}
                     placeholder={bonusBase.toString()}
                     onFocus={(e) => e.target.select()}
                     onChange={(e) => handleProjectedSalaryChange(e.target.value)}
-                    className="w-full bg-transparent outline-none text-xl sm:text-2xl font-sans tracking-tight font-semibold py-1 transition-all"
+                    style={{ outline: 'none', boxShadow: 'none' }}
+                    className="w-full bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none shadow-none text-xl sm:text-2xl font-sans tracking-tight font-semibold py-1 transition-all pr-2"
                   />
-                  <span className="text-sm font-semibold text-slate-500 shrink-0 ml-1 mb-1 pointer-events-none">₽</span>
+                  <div className="flex items-center gap-1 shrink-0 mb-1">
+                    {Boolean(projectedSalaryStr) && (
+                      <ClearButton
+                        onClick={() => handleProjectedSalaryChange('')}
+                        title="Сбросить оклад к базовому"
+                      />
+                    )}
+                    <span className="text-sm font-semibold text-slate-500 pointer-events-none">₽</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -211,21 +309,32 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
             </div>
               <div className={cn("flex items-baseline border-b transition-all", simulation.isActive ? "border-slate-200 dark:border-white/20 focus-within:border-primary-500 dark:focus-within:border-primary-400 text-slate-800 dark:text-white" : "border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
                 <input 
-                  type="number"
-                  value={simulation.extraIncome === 0 ? '' : (simulation.extraIncome ?? '')}
+                  type="text"
+                  inputMode="decimal"
+                  value={extraIncomeStr}
                   placeholder="0"
                   onFocus={(e) => e.target.select()}
                   onChange={(e) => handleExtraIncomeChange(e.target.value)}
-                  className="w-full bg-transparent outline-none text-xl sm:text-2xl font-sans tracking-tight font-semibold py-1 transition-all"
+                  style={{ outline: 'none', boxShadow: 'none' }}
+                  className="w-full bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none shadow-none text-xl sm:text-2xl font-sans tracking-tight font-semibold py-1 transition-all pr-2"
                 />
-                <span className="text-sm font-semibold text-slate-500 shrink-0 ml-1 mb-1 pointer-events-none">₽</span>
+                <div className="flex items-center gap-1 shrink-0 mb-1">
+                  {Boolean(extraIncomeStr) && (
+                    <ClearButton
+                      onClick={() => handleExtraIncomeChange('')}
+                      title="Очистить доп. доход"
+                    />
+                  )}
+                  <span className="text-sm font-semibold text-slate-500 pointer-events-none">₽</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Combined Bonus & Salary Increase */}
           <div className={cn(
-            "w-full lg:w-2/3 group p-4 lg:p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px]",
+            "w-full lg:w-2/3 group p-4 lg:p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px] relative",
+            (showFreqDropdown || showTypeDropdown) && "z-30",
             simulation.isActive 
               ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-lg hover:border-slate-300 dark:hover:border-white/20" 
               : "bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200 dark:border-white/5"
@@ -238,7 +347,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                     <Gift size={14} className={simulation.isActive ? "text-primary-400" : "text-slate-400"} />
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Премия</span>
                   </div>
-                  <div className="relative">
+                  <div className={cn("relative", showFreqDropdown && "z-50")} ref={freqDropdownRef}>
                     <button 
                       onClick={() => setShowFreqDropdown(!showFreqDropdown)}
                       className={cn(
@@ -295,17 +404,26 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                   </div>
                 </div>
 
-                <div className={cn("relative flex-1 w-full max-w-[140px] flex items-baseline border-b transition-all pb-1", simulation.isActive ? "border-slate-200 dark:border-white/20 focus-within:border-primary-500 dark:focus-within:border-primary-400 text-slate-800 dark:text-white" : "border-slate-300 dark:border-slate-700 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
+                <div className={cn("relative flex-1 w-full max-w-[150px] flex items-center border-b transition-all pb-1", simulation.isActive ? "border-slate-200 dark:border-white/20 focus-within:border-primary-500 dark:focus-within:border-primary-400 text-slate-800 dark:text-white" : "border-slate-300 dark:border-slate-700 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
                   <input 
-                    type="number"
-                    step={simulation.bonusType === 'coef' ? "0.05" : "1000"}
-                    value={simulation.bonusValue === 0 ? '' : (simulation.bonusValue ?? '')}
+                    type="text"
+                    inputMode="decimal"
+                    value={bonusValueStr}
                     placeholder={simulation.bonusType === 'coef' ? "0.3" : "50"}
                     onFocus={(e) => e.target.select()}
                     onChange={(e) => handleBonusValueChange(e.target.value)}
-                    className="w-full bg-transparent outline-none text-xl sm:text-2xl font-sans tracking-tight font-semibold transition-all text-right mr-2"
+                    style={{ outline: 'none', boxShadow: 'none' }}
+                    className="w-full bg-transparent outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 border-none shadow-none text-xl sm:text-2xl font-sans tracking-tight font-semibold transition-all text-right mr-1"
                   />
-                  <div className="relative z-30 shrink-0">
+                  {Boolean(bonusValueStr) && (
+                    <div className="mr-1.5 shrink-0 self-center">
+                      <ClearButton
+                        onClick={() => handleBonusValueChange('')}
+                        title="Очистить значение"
+                      />
+                    </div>
+                  )}
+                  <div className={cn("relative shrink-0", showTypeDropdown ? "z-50" : "z-30")} ref={typeDropdownRef}>
                     <button 
                       onClick={() => setShowTypeDropdown(!showTypeDropdown)}
                       className={cn(
@@ -370,7 +488,23 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                     <HandCoins size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Индексация</span>
                   </div>
-                  <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded">+{simulation.salaryIncrease}%</span>
+                  <div className="flex items-center gap-1.5">
+                    <StepperButton
+                      direction="down"
+                      size="sm"
+                      onClick={() => onUpdate({ ...simulation, salaryIncrease: Math.max(0, (simulation.salaryIncrease || 0) - 5) })}
+                      disabled={(simulation.salaryIncrease || 0) <= 0}
+                      title="Уменьшить индексацию на 5%"
+                    />
+                    <span className="w-[52px] inline-flex items-center justify-center text-center text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded tabular-nums">+{simulation.salaryIncrease}%</span>
+                    <StepperButton
+                      direction="up"
+                      size="sm"
+                      onClick={() => onUpdate({ ...simulation, salaryIncrease: Math.min(100, (simulation.salaryIncrease || 0) + 5) })}
+                      disabled={(simulation.salaryIncrease || 0) >= 100}
+                      title="Увеличить индексацию на 5%"
+                    />
+                  </div>
                 </div>
                 <input 
                   type="range"

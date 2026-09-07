@@ -6,6 +6,7 @@ import { DEFAULT_BANK_ICON } from "../../lib/banks";
 import { BankLogo } from "./BankLogo";
 import { cn } from "../../lib/utils";
 import { DropdownPortal } from "../ui/DropdownPortal";
+import { ClearButton } from "../ui/ClearButton";
 
 interface DepositFormBankPickerProps {
   formData: Partial<Deposit>;
@@ -40,7 +41,7 @@ export function DepositFormBankPicker({
   
   return (
     <div className="space-y-2">
-      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+      <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <Landmark className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
         Банк
       </label>
@@ -84,43 +85,47 @@ export function DepositFormBankPicker({
               onMouseDown={() => setBankInputMode("text")}
               onTouchStart={() => setBankInputMode("text")}
             />
-            {formData.bank || query ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
+            <div className="absolute inset-y-0 right-1.5 flex items-center gap-0.5 z-30 pointer-events-auto">
+              {Boolean(formData.bank || query) && (
+                <ClearButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setFormData((prev) => ({ ...prev, bank: "" }));
+                    setQuery("");
+                    if (bankInputRef.current) {
+                      bankInputRef.current.value = "";
+                      bankInputRef.current.focus();
+                    }
+                  }}
+                  title="Очистить банк"
+                />
+              )}
+              <Combobox.Button
+                onMouseDown={(e) => {
                   e.stopPropagation();
-                  setFormData((prev) => ({ ...prev, bank: "" }));
-                  setQuery("");
-                  if (bankInputRef.current) {
-                    bankInputRef.current.value = "";
-                    bankInputRef.current.focus();
-                  }
+                  setBankInputMode("none");
                 }}
-                className="absolute inset-y-0 right-10 flex items-center px-2 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer z-20"
-                title="Очистить"
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                  setBankInputMode("none");
+                }}
+                onClick={() => {
+                  if (typeof document !== "undefined" && document.activeElement) {
+                    (document.activeElement as HTMLElement).blur();
+                  }
+                  setTimeout(() => {
+                    setBankInputMode("text");
+                  }, 150);
+                }}
+                className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors"
               >
-                <X className="h-4 w-4 stroke-[2.5px]" />
-              </button>
-            ) : null}
-            <Combobox.Button
-              onMouseDown={() => setBankInputMode("none")}
-              onTouchStart={() => setBankInputMode("none")}
-              onClick={() => {
-                if (typeof document !== "undefined" && document.activeElement) {
-                  (document.activeElement as HTMLElement).blur();
-                }
-                setTimeout(() => {
-                  setBankInputMode("text");
-                }, 150);
-              }}
-              className="absolute inset-y-0 right-0 flex items-center px-3 cursor-pointer"
-            >
-              <ChevronDown
-                className="h-4 w-4 text-slate-500"
-                aria-hidden="true"
-              />
-            </Combobox.Button>
+                <ChevronDown
+                  className="h-4 w-4"
+                  aria-hidden="true"
+                />
+              </Combobox.Button>
+            </div>
           </div>
           <DropdownPortal targetRef={comboboxRef} matchWidth>
           <Transition

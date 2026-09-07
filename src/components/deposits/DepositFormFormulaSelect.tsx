@@ -29,7 +29,7 @@ export function DepositFormFormulaSelect({
   
   return (
     <div className="space-y-2">
-      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+      <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <Calculator className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
         Формула расчета
       </label>

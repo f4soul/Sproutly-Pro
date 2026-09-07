@@ -12,6 +12,7 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
 import { DropdownPortal } from "../ui/DropdownPortal";
+import { ClearButton } from "../ui/ClearButton";
 
 const POPULAR_BROKERS = [
   "ВТБ Мои Инвестиции",
@@ -379,17 +380,30 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Сумма пополнений
                     </label>
-                  <input
-                    required
-                    type="text"
-                    inputMode="decimal"
-                    value={amountStr}
-                    onChange={(e) => handleAmountChange(e.target.value, setAmountStr, 'amount')}
-                    className="apple-input w-full tabular-nums text-sm"
-                    placeholder="0"
-                  />
-                  <p className="text-[10px] text-slate-500/80 px-1">Сколько всего заведено денег</p>
-                </div>
+                    <div className="relative">
+                      <input
+                        required
+                        type="text"
+                        inputMode="decimal"
+                        value={amountStr}
+                        onChange={(e) => handleAmountChange(e.target.value, setAmountStr, 'amount')}
+                        className={cn("apple-input w-full tabular-nums text-sm", Boolean(amountStr) && "pr-9")}
+                        placeholder="0"
+                      />
+                      {Boolean(amountStr) && (
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                          <ClearButton
+                            onClick={() => {
+                              setAmountStr("");
+                              setFormData((prev) => ({ ...prev, amount: 0 }));
+                            }}
+                            title="Очистить сумму"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500/80 px-1">Сколько всего заведено денег</p>
+                  </div>
                 
                 <div className="space-y-2">
                   <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
@@ -409,11 +423,20 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                       inputMode="decimal"
                       value={currentValueStr}
                       onChange={(e) => handleAmountChange(e.target.value, setCurrentValueStr, 'currentValue')}
-                      className="apple-input w-full tabular-nums text-sm pr-20"
+                      className={cn("apple-input w-full tabular-nums text-sm", Boolean(currentValueStr) ? "pr-24" : "pr-20")}
                       placeholder="0"
                     />
-                    <div className="absolute inset-y-1.5 right-1.5">
-                        <div className="relative h-full text-slate-950 dark:text-white">
+                    <div className="absolute inset-y-1.5 right-1.5 flex items-center gap-1">
+                      {Boolean(currentValueStr) && (
+                        <ClearButton
+                          onClick={() => {
+                            setCurrentValueStr("");
+                            setFormData((prev) => ({ ...prev, currentValue: undefined }));
+                          }}
+                          title="Очистить стоимость"
+                        />
+                      )}
+                      <div className="relative h-full text-slate-950 dark:text-white">
                           <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                             <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
                               {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
@@ -501,14 +524,27 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Получено вычетов (НДФЛ возврат)
                       </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={deductionsStr}
-                        onChange={(e) => handleAmountChange(e.target.value, setDeductionsStr, 'deductionsReceived')}
-                        className="apple-input w-full tabular-nums text-sm"
-                        placeholder="0"
-                      />
+                      <div className="relative">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={deductionsStr}
+                          onChange={(e) => handleAmountChange(e.target.value, setDeductionsStr, 'deductionsReceived')}
+                          className={cn("apple-input w-full tabular-nums text-sm", Boolean(deductionsStr) && "pr-9")}
+                          placeholder="0"
+                        />
+                        {Boolean(deductionsStr) && (
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            <ClearButton
+                              onClick={() => {
+                                setDeductionsStr("");
+                                setFormData((prev) => ({ ...prev, deductionsReceived: undefined }));
+                              }}
+                              title="Очистить вычеты"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-500 px-1">
                         Сумма уже возвращенного налога на взнос (тип А).
                       </p>

@@ -4,6 +4,8 @@ import DatePicker from "react-datepicker";
 import { addDays, differenceInDays } from "date-fns";
 import { Deposit } from "../../types";
 import { maskDateInput, cn } from "../../lib/utils";
+import { ClearButton } from "../ui/ClearButton";
+import { StepperButton } from "../ui/StepperButton";
 
 interface DepositFormDateFieldsProps {
   formData: Partial<Deposit>;
@@ -45,10 +47,27 @@ export function DepositFormDateFields({
     }
   };
 
+  const isDurationDisabled =
+    formData.formula === "daily_balance" || formData.formula === "min_balance";
+
+  const handleStepDuration = (delta: number) => {
+    if (isDurationDisabled) return;
+    const current = Number(durationStr) || 0;
+    const next = Math.max(1, current + delta);
+    setDurationStr(String(next));
+    handleDurationChange(next);
+  };
+
+  const handleClearDuration = () => {
+    if (isDurationDisabled) return;
+    setDurationStr("");
+    handleDurationChange("");
+  };
+
   return (
     <>
       <div className="space-y-2">
-        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Дата открытия
         </label>
@@ -103,30 +122,51 @@ export function DepositFormDateFields({
       </div>
 
       <div className="space-y-2">
-        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
           <Clock className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Срок (дней)
         </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          disabled={
-            formData.formula === "daily_balance" ||
-            formData.formula === "min_balance"
-          }
-          placeholder="91, 181..."
-          value={durationStr}
-          onChange={(e) => {
-            const val = e.target.value.replace(/\D/g, "");
-            setDurationStr(val);
-            handleDurationChange(val === "" ? "" : Number(val));
-          }}
-          className="apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed tabular-nums text-sm"
-        />
+        <div className="flex items-center gap-2">
+          <StepperButton
+            type="minus"
+            onClick={() => handleStepDuration(-1)}
+            disabled={isDurationDisabled || !durationStr || Number(durationStr) <= 1}
+            title="Уменьшить срок на 1 день"
+          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              inputMode="numeric"
+              disabled={isDurationDisabled}
+              placeholder="91, 181..."
+              value={durationStr}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "");
+                setDurationStr(val);
+                handleDurationChange(val === "" ? "" : Number(val));
+              }}
+              className={cn(
+                "apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed tabular-nums text-sm",
+                Boolean(durationStr) && !isDurationDisabled && "pr-9"
+              )}
+            />
+            {Boolean(durationStr) && !isDurationDisabled && (
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <ClearButton onClick={handleClearDuration} title="Очистить срок" />
+              </div>
+            )}
+          </div>
+          <StepperButton
+            type="plus"
+            onClick={() => handleStepDuration(1)}
+            disabled={isDurationDisabled}
+            title="Увеличить срок на 1 день"
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between gap-2">
+        <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between gap-2">
           <span className="flex items-center gap-2">
             <CalendarX className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />
             Дата закрытия
@@ -168,7 +208,7 @@ export function DepositFormDateFields({
               }
             }}
             className={cn(
-              "flex items-center justify-center gap-1.5 h-6 px-2.5 md:w-6 md:h-6 md:px-0 lg:w-auto lg:h-auto lg:px-2.5 lg:py-1 rounded-lg border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 active:scale-95 shrink-0",
+              "flex items-center justify-center gap-1.5 h-6 px-2.5 md:w-6 md:h-6 md:px-0 lg:w-auto lg:h-6 lg:px-2.5 rounded-lg border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 active:scale-95 shrink-0",
               formData.isClosed
                 ? "border-deposit-500/30 bg-deposit-500/10 dark:bg-deposit-500/15 text-deposit-700 dark:text-deposit-300 shadow-[0_2px_12px_rgba(20,184,166,0.15)]"
                 : "border-slate-200/60 dark:border-white/[0.08] bg-white/40 dark:bg-slate-900/60 backdrop-blur-md text-slate-500 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/5 shadow-sm"

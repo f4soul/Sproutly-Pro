@@ -13,6 +13,7 @@ import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ru } from "date-fns/locale/ru";
 import { DropdownPortal } from "../ui/DropdownPortal";
+import { ClearButton } from "../ui/ClearButton";
 
 registerLocale("ru", ru);
 
@@ -207,11 +208,20 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                         }
                       }
                     }}
-                    className="apple-input w-full tabular-nums text-sm pr-20"
+                    className={cn("apple-input w-full tabular-nums text-sm", Boolean(amountStr) ? "pr-24" : "pr-20")}
                     placeholder="0"
                   />
-                  <div className="absolute inset-y-1.5 right-1.5">
-                        <div ref={currencyButtonRef} className="relative h-full text-slate-950 dark:text-white">
+                  <div className="absolute inset-y-1.5 right-1.5 flex items-center gap-1">
+                    {Boolean(amountStr) && (
+                      <ClearButton
+                        onClick={() => {
+                          setAmountStr("");
+                          setFormData((prev) => ({ ...prev, amount: 0 }));
+                        }}
+                        title="Очистить сумму"
+                      />
+                    )}
+                    <div ref={currencyButtonRef} className="relative h-full text-slate-950 dark:text-white">
                           <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                             <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center min-w-[1.2rem] text-center">
                               {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
@@ -313,27 +323,43 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                       <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Курс ЦБ на дату фиксации (₽)
                       </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={exchangeRateOnOpenStr}
-                        onChange={(e) => {
-                          const typed = e.target.value;
-                          const normalized = typed.replace(",", ".");
-                          if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === "") {
-                            setExchangeRateOnOpenStr(typed);
-                            const parsed = typed === "" ? undefined : Number(normalized);
-                            if (parsed === undefined || !isNaN(parsed)) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                exchangeRateOnOpen: parsed,
-                              }));
+                      <div className="relative">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={exchangeRateOnOpenStr}
+                          onChange={(e) => {
+                            const typed = e.target.value;
+                            const normalized = typed.replace(",", ".");
+                            if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === "") {
+                              setExchangeRateOnOpenStr(typed);
+                              const parsed = typed === "" ? undefined : Number(normalized);
+                              if (parsed === undefined || !isNaN(parsed)) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  exchangeRateOnOpen: parsed,
+                                }));
+                              }
                             }
-                          }
-                        }}
-                        className="apple-input w-full tabular-nums text-sm"
-                        placeholder="Например, 95.50"
-                      />
+                          }}
+                          className={cn("apple-input w-full tabular-nums text-sm", Boolean(exchangeRateOnOpenStr) && "pr-9")}
+                          placeholder="Например, 95.50"
+                        />
+                        {Boolean(exchangeRateOnOpenStr) && (
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            <ClearButton
+                              onClick={() => {
+                                setExchangeRateOnOpenStr("");
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  exchangeRateOnOpen: undefined,
+                                }));
+                              }}
+                              title="Очистить курс"
+                            />
+                          </div>
+                        )}
+                      </div>
                       <p className="text-[10px] text-slate-500 px-1">
                         Для аналитики курсовой разницы в будущем.
                       </p>

@@ -249,11 +249,11 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                     </div>
               
                     <div className="flex items-start gap-3.5 min-w-0 pr-24 mt-1">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1">
                         {getBrokerLogoUrl(sampleAsset.name) ? (
-                          <BankLogo logoUrl={getBrokerLogoUrl(sampleAsset.name)} className="w-full h-full object-contain" />
+                          <BankLogo logoUrl={getBrokerLogoUrl(sampleAsset.name)} className="w-8 h-8 object-contain" />
                         ) : (
-                          <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
+                          <ChartNoAxesCombined className="w-8 h-8 stroke-[2px]" />
                         )}
                       </div>
               
@@ -340,11 +340,11 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                     </div>
 
                     <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1.5 pb-[5px]">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-invest-500 shrink-0 shadow-sm overflow-hidden p-1">
                         {getBrokerLogoUrl(asset.name) ? (
-                          <BankLogo logoUrl={getBrokerLogoUrl(asset.name)} className="w-full h-full object-contain" />
+                          <BankLogo logoUrl={getBrokerLogoUrl(asset.name)} className="w-8 h-8 object-contain" />
                         ) : (
-                          <ChartNoAxesCombined className="w-5 h-5 stroke-[2px]" />
+                          <ChartNoAxesCombined className="w-8 h-8 stroke-[2px]" />
                         )}
                       </div>
 

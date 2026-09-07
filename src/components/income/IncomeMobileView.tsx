@@ -405,8 +405,7 @@ export function IncomeMobileView({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed left-4 right-4 sm:left-6 sm:right-6 xl:hidden z-40 pointer-events-none max-w-2xl mx-auto md:left-[calc(17rem+1.5rem)] md:right-6"
-            style={{ bottom: 'calc(env(safe-area-inset-bottom) + 96px)' }}
+            className="fixed left-4 right-4 sm:left-6 sm:right-6 xl:hidden z-40 pointer-events-none max-w-2xl mx-auto md:left-[calc(17rem+1.5rem)] md:right-6 income-sticky-analytics-bottom"
           >
             <div className="bg-white/80 dark:bg-[#050505]/95 backdrop-blur-3xl text-slate-800 dark:text-white rounded-3xl p-4 sm:p-5 shadow-[0_12px_36px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] border border-slate-200/60 dark:border-white/[0.05] flex justify-between items-center pointer-events-auto transition-colors duration-300">
               <div className="flex flex-col">

@@ -14,6 +14,8 @@ import {
   Trash2,
   Settings,
   TrendingUp,
+  Check,
+  RotateCcw,
 } from "lucide-react";
 import { Listbox, Transition, Combobox, Dialog } from "@headlessui/react";
 import DatePicker, { registerLocale } from "react-datepicker";
@@ -34,10 +36,14 @@ import {
 } from "../../lib/banks";
 import { calculateIncome } from "../../lib/depositCalculations";
 import { BankLogo } from "./BankLogo";
+import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { formatCurrency } from "../../lib/taxCalculator";
 
 import { DepositFormBankPicker } from "./DepositFormBankPicker";
 import { DepositFormFormulaSelect } from "./DepositFormFormulaSelect";
 import { DepositFormDateFields } from "./DepositFormDateFields";
+import { ClearButton } from "../ui/ClearButton";
+import { StepperButton } from "../ui/StepperButton";
 
 registerLocale("ru", ru);
 
@@ -80,7 +86,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
   });
 
   const [hasDraft, setHasDraft] = useState(false);
-  const isMountedRef = useRef(false);
+  const [draftData, setDraftData] = useState<{
+    formData?: Partial<Deposit> & {
+      startDate?: number | null;
+      endDate?: number | null;
+    };
+    duration?: number | string;
+  } | null>(null);
+  const isDraftInitializedRef = useRef(false);
   const bankInputRef = useRef<HTMLInputElement>(null);
 
   const [bankInputMode, setBankInputMode] = useState<"text" | "none">("text");
@@ -146,60 +159,179 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     }
   }, [formData.exchangeRateOnOpen]);
 
+  const [rates, setRates] = useState<CurrencyRates | null>(null);
+
+  useEffect(() => {
+    getExchangeRates().then(setRates);
+  }, []);
+
+  const isForeignCurrency = Boolean(
+    formData.currency && formData.currency !== "RUB"
+  );
+
+  const currentCbrRate = useMemo(() => {
+    if (!isForeignCurrency) return 0;
+    return convertToRub(1, formData.currency || "USD", rates);
+  }, [isForeignCurrency, formData.currency, rates]);
+
+  const rubEquivalent = useMemo(() => {
+    const amt = Number(formData.amount) || 0;
+    if (amt <= 0) return 0;
+    if (formData.exchangeRateOnOpen && formData.exchangeRateOnOpen > 0) {
+      return amt * formData.exchangeRateOnOpen;
+    }
+    return convertToRub(amt, formData.currency || "USD", rates);
+  }, [formData.amount, formData.exchangeRateOnOpen, formData.currency, rates]);
+
+  const handleStepRate = (delta: number) => {
+    const current = Number(rateStr.replace(",", ".")) || 0;
+    const next = Math.max(0, Math.round((current + delta) * 10) / 10);
+    const formatted = next === 0 ? "0" : next.toString();
+    setRateStr(formatted);
+    setFormData((prev) => ({ ...prev, rate: next }));
+  };
+
+  const handleClearRate = () => {
+    setRateStr("");
+    setFormData((prev) => ({ ...prev, rate: 0 }));
+  };
+
   // Check for draft on mount
   useEffect(() => {
-    isMountedRef.current = true;
-    if (!deposit) {
-      const stored = localStorage.getItem("new_deposit_draft");
-      if (stored) {
-        try {
+    if (!deposit && !isDraftInitializedRef.current) {
+      isDraftInitializedRef.current = true;
+      try {
+        const stored = localStorage.getItem("new_deposit_draft");
+        if (stored) {
           const parsed = JSON.parse(stored);
+          const f = parsed?.formData;
           if (
-            parsed.formData &&
-            (parsed.formData.amount > 0 ||
-              parsed.formData.bank ||
-              parsed.formData.sourceNote ||
-              parsed.formData.comment ||
-              parsed.formData.rate > 0)
+            f &&
+            ((f.amount && f.amount > 0) ||
+              (f.bank && f.bank.trim() !== "") ||
+              (f.sourceNote && f.sourceNote.trim() !== "") ||
+              (f.comment && f.comment.trim() !== "") ||
+              (f.rate && f.rate > 0) ||
+              (f.currency && f.currency !== "RUB"))
           ) {
+            setDraftData(parsed);
             setHasDraft(true);
           }
-        } catch {
-          // Ignore
         }
+      } catch (err) {
+        logger.error("Failed to read deposit draft:", err);
       }
     }
-    return () => {
-      isMountedRef.current = false;
-    };
   }, [deposit]);
 
-  // Save draft on changes (only for new deposits)
+  // Save draft on changes (only for new deposits and when draft prompt is not pending)
   useEffect(() => {
-    if (!deposit && !hasDraft && isMountedRef.current) {
-      const isInitialBlank =
-        !formData.bank &&
-        (formData.amount === 0 || !formData.amount) &&
-        (formData.rate === 0 || !formData.rate) &&
-        !formData.sourceNote &&
-        !formData.comment &&
-        formData.formula === "simple_days";
+    if (deposit || !isDraftInitializedRef.current || hasDraft) {
+      return;
+    }
 
-      if (!isInitialBlank) {
-        const draftData = {
-          formData: {
-            ...formData,
-            startDate: formData.startDate ? formData.startDate.getTime() : null,
-            endDate: formData.endDate ? formData.endDate.getTime() : null,
-          },
-          duration,
-        };
-        localStorage.setItem("new_deposit_draft", JSON.stringify(draftData));
-      } else {
-        localStorage.removeItem("new_deposit_draft");
+    const isInitialBlank =
+      (!formData.bank || formData.bank.trim() === "") &&
+      (!formData.amount || formData.amount === 0) &&
+      (!formData.rate || formData.rate === 0) &&
+      (!formData.sourceNote || formData.sourceNote.trim() === "") &&
+      (!formData.comment || formData.comment.trim() === "") &&
+      (!formData.currency || formData.currency === "RUB") &&
+      formData.formula === "simple_days";
+
+    if (!isInitialBlank) {
+      const draftPayload = {
+        formData: {
+          ...formData,
+          startDate:
+            formData.startDate instanceof Date &&
+            !isNaN(formData.startDate.getTime())
+              ? formData.startDate.getTime()
+              : null,
+          endDate:
+            formData.endDate instanceof Date &&
+            !isNaN(formData.endDate.getTime())
+              ? formData.endDate.getTime()
+              : null,
+        },
+        duration,
+      };
+      try {
+        localStorage.setItem("new_deposit_draft", JSON.stringify(draftPayload));
+      } catch (e) {
+        logger.error("Failed to save deposit draft:", e);
       }
+    } else {
+      localStorage.removeItem("new_deposit_draft");
     }
   }, [formData, duration, deposit, hasDraft]);
+
+  const handleRestoreDraft = () => {
+    let data = draftData;
+    if (!data) {
+      try {
+        const stored = localStorage.getItem("new_deposit_draft");
+        if (stored) data = JSON.parse(stored);
+      } catch (e) {
+        logger.error("Failed to parse stored draft:", e);
+      }
+    }
+
+    if (data?.formData) {
+      const f = data.formData;
+      const restoredStartDate = f.startDate ? new Date(f.startDate) : new Date();
+      const restoredEndDate = f.endDate ? new Date(f.endDate) : null;
+
+      setFormData((prev) => ({
+        ...prev,
+        ...f,
+        startDate:
+          isNaN(restoredStartDate.getTime()) ? new Date() : restoredStartDate,
+        endDate:
+          restoredEndDate && !isNaN(restoredEndDate.getTime())
+            ? restoredEndDate
+            : null,
+      }));
+
+      if (data.duration !== undefined && data.duration !== null) {
+        const parsedDuration =
+          data.duration === "" ? "" : Number(data.duration);
+        setDuration(
+          parsedDuration === "" || isNaN(parsedDuration) ? "" : parsedDuration
+        );
+        setDurationStr(data.duration === "" ? "" : String(data.duration));
+      }
+
+      if (f.amount !== undefined && f.amount !== null) {
+        setAmountStr(f.amount === 0 ? "" : String(f.amount));
+      }
+      if (f.rate !== undefined && f.rate !== null) {
+        setRateStr(f.rate === 0 ? "" : String(f.rate));
+      }
+      if (f.bank) {
+        setQuery(f.bank);
+      }
+      if (f.factIncome !== undefined && f.factIncome !== null) {
+        setFactIncomeStr(String(f.factIncome));
+      }
+      if (f.exchangeRateOnOpen !== undefined && f.exchangeRateOnOpen !== null) {
+        setExchangeRateOnOpenStr(String(f.exchangeRateOnOpen));
+      }
+    }
+
+    setHasDraft(false);
+    setDraftData(null);
+  };
+
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem("new_deposit_draft");
+    } catch (e) {
+      logger.error("Failed to remove draft:", e);
+    }
+    setHasDraft(false);
+    setDraftData(null);
+  };
 
   useEffect(() => {
     const loadBanks = async () => {
@@ -442,52 +574,33 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     transition={{ duration: 0.25, ease: "easeInOut" }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-amber-50/75 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 rounded-2xl p-4 flex items-start sm:items-center justify-between gap-3 text-xs text-amber-800 dark:text-amber-300">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-bold uppercase tracking-wider text-[9px] text-amber-600 dark:text-amber-400">
-                          Незавершенный черновик
-                        </span>
-                        <span>
-                          У вас остался незаполненный ранее вклад. Продолжить с того
-                          же места?
-                        </span>
+                    <div className="bg-amber-500/[0.08] dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/25 rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row md:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-7 h-7 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                          <RotateCcw className="w-3.5 h-3.5 stroke-[2.2px]" />
+                        </div>
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          <span className="font-bold uppercase tracking-wider text-[10px] text-amber-600 dark:text-amber-400">
+                            Незавершенный черновик
+                          </span>
+                          <span className="text-[12px] sm:text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                            У вас остался незаполненный ранее вклад. Продолжить с того же места?
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex gap-2 shrink-0">
+                      <div className="grid grid-cols-2 md:flex md:items-center gap-2 shrink-0 w-full md:w-auto pt-0.5 md:pt-0">
                         <button
                           type="button"
-                          onClick={() => {
-                            try {
-                              const stored =
-                                localStorage.getItem("new_deposit_draft");
-                              if (stored) {
-                                const parsed = JSON.parse(stored);
-                                setFormData({
-                                  ...parsed.formData,
-                                  startDate: parsed.formData.startDate
-                                    ? new Date(parsed.formData.startDate)
-                                    : new Date(),
-                                  endDate: parsed.formData.endDate
-                                    ? new Date(parsed.formData.endDate)
-                                    : null,
-                                });
-                                setDuration(parsed.duration || "");
-                              }
-                            } catch (e) {
-                              logger.error("Failed to restore draft:", e);
-                            }
-                            setHasDraft(false);
-                          }}
-                          className="px-2.5 py-1.5 bg-deposit-600 hover:bg-deposit-700 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[10px] uppercase tracking-wider"
+                          onClick={handleRestoreDraft}
+                          className="h-8.5 md:h-7 px-3 bg-deposit-500 hover:bg-deposit-600 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5"
                         >
-                          Да
+                          <Check className="w-3 h-3 stroke-[2.5px]" />
+                          <span>Продолжить</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            localStorage.removeItem("new_deposit_draft");
-                            setHasDraft(false);
-                          }}
-                          className="px-2.5 py-1.5 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[10px] uppercase tracking-wider"
+                          onClick={handleDiscardDraft}
+                          className="h-8.5 md:h-7 px-3 bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center"
                         >
                           Сбросить
                         </button>
@@ -554,7 +667,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 >
                 {({ open }) => (
                 <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Wallet className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Сумма
                   </label>
@@ -578,11 +691,20 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           }
                         }
                       }}
-                      className="apple-input w-full tabular-nums text-sm pr-16"
+                      className={cn("apple-input w-full tabular-nums text-sm", Boolean(amountStr) ? "pr-24" : "pr-16")}
                       placeholder="0.00"
                     />
-                    <div className="absolute inset-y-1 right-1">
-                          <div className="relative h-full text-slate-950 dark:text-white">
+                    <div className="absolute inset-y-1 right-1 flex items-center gap-1">
+                      {Boolean(amountStr) && (
+                        <ClearButton
+                          onClick={() => {
+                            setAmountStr("");
+                            setFormData((prev) => ({ ...prev, amount: 0 }));
+                          }}
+                          title="Очистить сумму"
+                        />
+                      )}
+                      <div className="relative h-full text-slate-950 dark:text-white">
                             <Listbox.Button className="relative min-w-[54px] h-full flex items-center justify-center gap-1 px-2 rounded-xl bg-slate-100/50 dark:bg-slate-800/80 border border-slate-200/50 dark:border-white/5 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 backdrop-blur-sm cursor-pointer transition-all focus:outline-none">
                               <span className="font-bold text-xs sm:text-sm text-slate-700 dark:text-slate-300 flex items-center justify-center w-4 text-center">
                                 {{ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[
@@ -652,68 +774,145 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 </div>
                 )}
                 </Listbox>
+              </div>
 
-                {formData.currency && formData.currency !== "RUB" && (
-                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                      <TrendingUp className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
-                      Курс ЦБ на дату открытия (₽)
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={exchangeRateOnOpenStr}
-                      onChange={(e) => {
-                        const typed = e.target.value;
-                        const normalized = typed.replace(",", ".");
-                        if (
-                          /^[0-9]*[.]?[0-9]*$/.test(normalized) ||
-                          typed === ""
-                        ) {
-                          setExchangeRateOnOpenStr(typed);
-                          const parsed =
-                            typed === "" ? undefined : Number(normalized);
-                          if (parsed === undefined || !isNaN(parsed)) {
-                            setFormData((prev) => ({
-                              ...prev,
-                              exchangeRateOnOpen: parsed,
-                            }));
-                          }
-                        }
-                      }}
-                      className="apple-input w-full tabular-nums text-sm"
-                      placeholder="95.50"
-                    />
-                    <p className="text-[10px] text-slate-500 px-1">
-                      Зафиксируйте курс, чтобы в будущем сравнивать его с
-                      текущим.
-                    </p>
-                  </div>
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                  isForeignCurrency
+                    ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
+                    : "grid-rows-[0fr] opacity-0 -mt-4 pointer-events-none"
                 )}
-
-                {showBankEditor && (
-                  <div className="md:col-span-2 mt-2 p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative">
-                    <div className="relative flex items-center justify-between mb-6">
-                      <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400">
-                          <Settings className="w-3.5 h-3.5 stroke-[2.5px]" />
-                        </div>
-                        Настройка банка
-                      </h4>
-                      <button
-                        type="button"
-                        onClick={() => setShowBankEditor(false)}
-                        className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full"
-                      >
-                        <X size={18} strokeWidth={2.5} />
-                      </button>
+              >
+                <div className="overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-0.5">
+                    <div className="space-y-2">
+                      <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        <TrendingUp className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px] shrink-0" />{" "}
+                        Курс ЦБ на дату открытия (₽)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={exchangeRateOnOpenStr}
+                          onChange={(e) => {
+                            const typed = e.target.value;
+                            const normalized = typed.replace(",", ".");
+                            if (
+                              /^[0-9]*[.]?[0-9]*$/.test(normalized) ||
+                              typed === ""
+                            ) {
+                              setExchangeRateOnOpenStr(typed);
+                              const parsed =
+                                typed === "" ? undefined : Number(normalized);
+                              if (parsed === undefined || !isNaN(parsed)) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  exchangeRateOnOpen: parsed,
+                                }));
+                              }
+                            }
+                          }}
+                          className={cn(
+                            "apple-input w-full tabular-nums font-sans text-sm",
+                            Boolean(exchangeRateOnOpenStr) && "pr-9"
+                          )}
+                          placeholder={
+                            currentCbrRate > 0
+                              ? currentCbrRate.toFixed(2)
+                              : "95.50"
+                          }
+                        />
+                        {Boolean(exchangeRateOnOpenStr) && (
+                          <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                            <ClearButton
+                              onClick={() => {
+                                setExchangeRateOnOpenStr("");
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  exchangeRateOnOpen: undefined,
+                                }));
+                              }}
+                              title="Очистить курс"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 px-1 truncate">
+                        {formData.exchangeRateOnOpen
+                          ? `Курс зафиксирован (${Number(formData.exchangeRateOnOpen).toFixed(2)} ₽/${formData.currency || "USD"})`
+                          : "Зафиксируйте курс на дату открытия"}
+                      </p>
                     </div>
-                    <div className="relative flex flex-col gap-6">
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="space-y-2 sm:col-span-2">
-                          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                            Название банка
-                          </label>
+
+                    <div className="space-y-2">
+                      <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-2 truncate">
+                          <Coins className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px] shrink-0" />{" "}
+                          Эквивалент в рублях
+                        </span>
+                        {rubEquivalent > 0 && (
+                          <span className="text-[9px] font-bold text-deposit-600 dark:text-deposit-400 uppercase tracking-wider bg-deposit-500/10 dark:bg-deposit-500/20 px-2 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                            {formData.exchangeRateOnOpen ? "Фикс" : "ЦБ"}
+                          </span>
+                        )}
+                      </label>
+                      <div className="apple-input w-full tabular-nums font-sans text-sm flex items-center justify-between select-none bg-slate-100/50 dark:bg-slate-800/30">
+                        <span
+                          className={cn(
+                            "font-bold text-sm",
+                            rubEquivalent > 0
+                              ? "text-slate-900 dark:text-white"
+                              : "text-slate-400 dark:text-slate-500"
+                          )}
+                        >
+                          {rubEquivalent > 0
+                            ? formatCurrency(rubEquivalent)
+                            : "0.00 ₽"}
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                          RUB
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 px-1 truncate">
+                        {rubEquivalent > 0
+                          ? formData.exchangeRateOnOpen
+                            ? `По курсу фиксации ${Number(formData.exchangeRateOnOpen).toFixed(2)} ₽`
+                            : currentCbrRate > 0
+                              ? `По курсу ЦБ ${currentCbrRate.toFixed(2)} ₽ за 1 ${formData.currency || "USD"}`
+                              : "Расчётная сумма в рублях"
+                          : "Укажите сумму для расчёта"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {showBankEditor && (
+                <div className="p-5 sm:p-6 lg:p-8 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2rem] border border-slate-200/60 dark:border-white/[0.08] animate-in slide-in-from-top-2 duration-300 shadow-sm relative">
+                  <div className="relative flex items-center justify-between mb-6">
+                    <h4 className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-deposit-500/10 dark:bg-deposit-500/20 flex items-center justify-center text-deposit-600 dark:text-deposit-400">
+                        <Settings className="w-3.5 h-3.5 stroke-[2.5px]" />
+                      </div>
+                      Настройка банка
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => setShowBankEditor(false)}
+                      className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full"
+                    >
+                      <X size={18} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                  <div className="relative flex flex-col gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="space-y-2 sm:col-span-2">
+                        <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                          Название банка
+                        </label>
+                        <div className="relative">
                           <input
                             type="text"
                             value={newBank.name}
@@ -721,31 +920,47 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                               setNewBank({ ...newBank, name: e.target.value })
                             }
                             placeholder="Напр. Тинькофф, Сбербанк..."
-                            className="apple-input w-full shadow-inner bg-white/50 dark:bg-slate-950/50"
+                            className={cn(
+                              "apple-input w-full shadow-inner bg-white/50 dark:bg-slate-950/50",
+                              Boolean(newBank.name) && "pr-9"
+                            )}
                           />
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={handleSaveNewBank}
-                            disabled={!newBank.name}
-                            className="apple-button w-full h-[46px] flex items-center justify-center bg-deposit-500 hover:bg-deposit-600 border border-deposit-400/50 dark:border-deposit-500/30 text-white shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-wide active:scale-95 transition-all"
-                          >
-                            Сохранить
-                          </button>
+                          {Boolean(newBank.name) && (
+                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                              <ClearButton
+                                onClick={() =>
+                                  setNewBank({ ...newBank, name: "" })
+                                }
+                                title="Очистить название банка"
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="w-full">
-                        <BankIconEditor
-                          bank={newBank}
-                          onChange={(updates) =>
-                            setNewBank((prev) => ({ ...prev, ...updates }))
-                          }
-                        />
+                      <div className="flex items-end">
+                        <button
+                          type="button"
+                          onClick={handleSaveNewBank}
+                          disabled={!newBank.name}
+                          className="apple-button w-full h-[46px] flex items-center justify-center bg-deposit-500 hover:bg-deposit-600 border border-deposit-400/50 dark:border-deposit-500/30 text-white shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold uppercase tracking-wide active:scale-95 transition-all"
+                        >
+                          Сохранить
+                        </button>
                       </div>
                     </div>
+                    <div className="w-full">
+                      <BankIconEditor
+                        bank={newBank}
+                        onChange={(updates) =>
+                          setNewBank((prev) => ({ ...prev, ...updates }))
+                        }
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <DepositFormDateFields
                   formData={formData}
@@ -757,28 +972,51 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 />
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Percent className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Ставка (%)
                   </label>
-                  <input
-                    required
-                    type="text"
-                    inputMode="decimal"
-                    value={rateStr}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(",", ".");
-                      if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
-                        setRateStr(val);
-                        const parsed = val === "" ? 0 : Number(val);
-                        if (!isNaN(parsed)) {
-                          setFormData((prev) => ({ ...prev, rate: parsed }));
-                        }
-                      }
-                    }}
-                    className="apple-input w-full tabular-nums text-sm"
-                    placeholder="0.00"
-                  />
+                  <div className="flex items-center gap-2">
+                    <StepperButton
+                      type="minus"
+                      onClick={() => handleStepRate(-0.1)}
+                      disabled={!rateStr || Number(rateStr.replace(",", ".")) <= 0}
+                      title="Уменьшить ставку на 0.1%"
+                    />
+                    <div className="relative flex-1">
+                      <input
+                        required
+                        type="text"
+                        inputMode="decimal"
+                        value={rateStr}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(",", ".");
+                          if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+                            setRateStr(val);
+                            const parsed = val === "" ? 0 : Number(val);
+                            if (!isNaN(parsed)) {
+                              setFormData((prev) => ({ ...prev, rate: parsed }));
+                            }
+                          }
+                        }}
+                        className={cn(
+                          "apple-input w-full tabular-nums text-sm",
+                          Boolean(rateStr) && "pr-8"
+                        )}
+                        placeholder="0.00"
+                      />
+                      {Boolean(rateStr) && (
+                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                          <ClearButton onClick={handleClearRate} title="Очистить ставку" />
+                        </div>
+                      )}
+                    </div>
+                    <StepperButton
+                      type="plus"
+                      onClick={() => handleStepRate(0.1)}
+                      title="Увеличить ставку на 0.1%"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -790,49 +1028,75 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 />
 
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Info className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Примечание
                   </label>
-                  <input
-                    type="text"
-                    value={formData.sourceNote}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sourceNote: e.target.value })
-                    }
-                    className="apple-input w-full"
-                    placeholder="На отпуск, Резерв..."
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={formData.sourceNote}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sourceNote: e.target.value })
+                      }
+                      className={cn("apple-input w-full", Boolean(formData.sourceNote) && "pr-9")}
+                      placeholder="На отпуск, Резерв..."
+                    />
+                    {Boolean(formData.sourceNote) && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        <ClearButton
+                          onClick={() => setFormData({ ...formData, sourceNote: "" })}
+                          title="Очистить примечание"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <HandCoins className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Факт. доход (₽)
                   </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={factIncomeStr}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(",", ".");
-                      if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
-                        setFactIncomeStr(val);
-                        setFormData((prev) => ({
-                          ...prev,
-                          factIncome: val === "" ? undefined : Number(val),
-                        }));
-                      }
-                    }}
-                    className="apple-input w-full tabular-nums text-sm"
-                    placeholder="0.00"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={factIncomeStr}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(",", ".");
+                        if (/^[0-9]*[.,]?[0-9]*$/.test(val) || val === "") {
+                          setFactIncomeStr(val);
+                          setFormData((prev) => ({
+                            ...prev,
+                            factIncome: val === "" ? undefined : Number(val),
+                          }));
+                        }
+                      }}
+                      className={cn("apple-input w-full tabular-nums text-sm", Boolean(factIncomeStr) && "pr-9")}
+                      placeholder="0.00"
+                    />
+                    {Boolean(factIncomeStr) && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        <ClearButton
+                          onClick={() => {
+                            setFactIncomeStr("");
+                            setFormData((prev) => ({
+                              ...prev,
+                              factIncome: undefined,
+                            }));
+                          }}
+                          title="Очистить фактический доход"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <label className="h-6 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                     <Info className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Комментарий
                   </label>

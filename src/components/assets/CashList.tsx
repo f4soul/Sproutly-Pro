@@ -253,8 +253,8 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                     </div>
               
                     <div className="flex items-start gap-3.5 min-w-0 pr-24 mt-1">
-                      <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
-                        <Vault className="w-5 h-5 stroke-[2px]" />
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-cash-500 shrink-0 shadow-sm overflow-hidden p-1">
+                        <Vault className="w-8 h-8 stroke-[2px]" />
                       </div>
               
                       <div className="flex-1 min-w-0">
@@ -347,9 +347,9 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       </div>
                     )}
 
-                    <div className="flex items-start gap-3.5 min-w-0 pr-16">
-                      <div className="w-10 h-10 rounded-xl bg-cash-500/10 dark:bg-cash-500/5 border border-cash-500/20 flex items-center justify-center text-cash-500 shrink-0 shadow-inner">
-                        <Vault className="w-5 h-5 stroke-[2px]" />
+                    <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center text-cash-500 shrink-0 shadow-sm overflow-hidden p-1">
+                        <Vault className="w-8 h-8 stroke-[2px]" />
                       </div>
 
                       <div className="flex-1 min-w-0">
