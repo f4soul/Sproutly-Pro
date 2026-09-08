@@ -165,7 +165,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     >
                     {({ open }) => (
                   <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Тикер
                     </label>
                       <div ref={comboboxRef} className="relative">
@@ -223,17 +223,18 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                     </Combobox>
 
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Количество
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center h-[46px] rounded-ui border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all overflow-hidden">
                       <StepperButton
                         type="minus"
                         onClick={() => handleStepQuantity(-1)}
                         disabled={!quantityStr || Number(quantityStr.replace(",", ".")) <= 0}
                         title="Уменьшить количество"
                       />
-                      <div className="relative flex-1">
+                      <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
+                      <div className="relative flex-1 h-full flex items-center">
                         <input
                           required
                           type="text"
@@ -241,8 +242,8 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                           value={quantityStr}
                           onChange={(e) => handleAmountChange(e.target.value, setQuantityStr, 'quantity')}
                           className={cn(
-                            "apple-input w-full tabular-nums text-sm",
-                            Boolean(quantityStr) && "pr-9"
+                            "w-full h-full bg-transparent border-0 outline-none text-center tabular-nums text-sm font-medium text-slate-950 dark:text-white py-0 focus:ring-0 placeholder:font-sans placeholder:text-slate-400 dark:placeholder:text-slate-500",
+                            Boolean(quantityStr) && "pr-8"
                           )}
                           placeholder="0.00"
                         />
@@ -255,6 +256,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                           </div>
                         )}
                       </div>
+                      <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
                       <StepperButton
                         type="plus"
                         onClick={() => handleStepQuantity(1)}
@@ -267,7 +269,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Вложено, ₽
                     </label>
                     <div className="relative">
@@ -315,7 +317,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                   </div>
                   
                   <div className="space-y-2 relative z-20">
-                    <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                       Дата покупки
                     </label>
                     <div className="relative w-full group">

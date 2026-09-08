@@ -72,10 +72,10 @@ export function DepositFormBankPicker({
       >
         {({ open }) => (
         <div ref={comboboxRef} className={cn("relative", open ? "z-[60]" : "z-30")}>
-          <div className="relative w-full cursor-default overflow-hidden rounded-2xl bg-slate-50 dark:bg-slate-800/50 text-left border border-transparent focus-within:border-deposit-500/30 transition-all">
+          <div className="relative w-full h-[46px] cursor-default overflow-hidden rounded-ui bg-slate-50 dark:bg-slate-800/50 text-left border border-slate-200 dark:border-slate-800 focus-within:bg-white dark:focus-within:bg-slate-950 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all flex items-center">
             <Combobox.Input
               ref={bankInputRef}
-              className="w-full border-none py-3 pl-4 pr-16 text-sm font-medium bg-transparent outline-none text-slate-950 dark:text-white"
+              className="w-full h-full border-none py-0 pl-4 pr-16 text-sm font-medium bg-transparent outline-none text-slate-950 dark:text-white"
               displayValue={(val: any) =>
                 typeof val === "string" ? val : ""
               }

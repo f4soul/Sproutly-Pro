@@ -242,7 +242,54 @@
   }
 
   .apple-input {
-    @apply bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 dark:focus:border-primary-500 rounded-ui px-4 py-3 transition-all font-medium text-sm outline-none placeholder:font-sans placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:text-sm;
+    @apply h-[46px] bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 dark:focus:border-primary-500 rounded-ui px-4 py-2.5 transition-all font-medium text-sm outline-none placeholder:font-sans placeholder:font-medium placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:text-sm;
+  }
+
+  textarea.apple-input {
+    @apply h-auto;
+  }
+
+  /* Premium range slider — уменьшенный thumb 14px, чтобы не налезал на 0%/100% */
+  input[type="range"].premium-range {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    height: 6px;
+    width: 100%;
+    cursor: pointer;
+    padding: 0 4px; /* отступ, чтобы шайба не налезала на 0%/100% */
+  }
+  input[type="range"].premium-range::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.2);
+  }
+  input[type="range"].premium-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #3b82f6;
+    margin-top: -4px; /* -(thumb - track)/2 = -(14-6)/2 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 2px 6px rgba(59, 130, 246, 0.4);
+    transition: transform 0.15s;
+  }
+  input[type="range"].premium-range::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  input[type="range"].premium-range::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.2);
+  }
+  input[type="range"].premium-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    background: #3b82f6;
+    border: 0;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 2px 6px rgba(59, 130, 246, 0.4);
   }
 
   .apple-glass {

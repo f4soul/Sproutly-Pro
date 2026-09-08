@@ -47,7 +47,7 @@ export function DepositFormFormulaSelect({
       >
         {({ open }) => (
         <div ref={listboxRef} className={cn("relative", open ? "z-[60]" : "z-30")}>
-          <Listbox.Button className="relative w-full cursor-pointer rounded-2xl bg-slate-50 dark:bg-slate-800/50 py-3 pl-4 pr-10 text-left border border-transparent focus:border-deposit-500/30 transition-all font-medium text-sm text-slate-950 dark:text-white">
+          <Listbox.Button className="relative w-full h-[46px] flex items-center cursor-pointer rounded-ui bg-slate-50 dark:bg-slate-800/50 px-4 pr-10 text-left border border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-950 focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 dark:focus:border-primary-500 transition-all font-medium text-sm text-slate-950 dark:text-white outline-none">
             <span className="block truncate">
               {formulas.find((f) => f.id === formData.formula)?.name}
             </span>

@@ -126,14 +126,18 @@ export function DepositFormDateFields({
           <Clock className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Срок (дней)
         </label>
-        <div className="flex items-center gap-2">
+        <div className={cn(
+          "flex items-center h-[46px] rounded-ui border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all overflow-hidden",
+          isDurationDisabled && "opacity-50 cursor-not-allowed"
+        )}>
           <StepperButton
             type="minus"
             onClick={() => handleStepDuration(-1)}
             disabled={isDurationDisabled || !durationStr || Number(durationStr) <= 1}
             title="Уменьшить срок на 1 день"
           />
-          <div className="relative flex-1">
+          <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
+          <div className="relative flex-1 h-full flex items-center">
             <input
               type="text"
               inputMode="numeric"
@@ -146,8 +150,8 @@ export function DepositFormDateFields({
                 handleDurationChange(val === "" ? "" : Number(val));
               }}
               className={cn(
-                "apple-input w-full disabled:opacity-50 disabled:cursor-not-allowed tabular-nums text-sm",
-                Boolean(durationStr) && !isDurationDisabled && "pr-9"
+                "w-full h-full bg-transparent border-0 outline-none text-center tabular-nums text-sm font-medium text-slate-950 dark:text-white py-0 focus:ring-0 disabled:cursor-not-allowed placeholder:font-sans placeholder:text-slate-400 dark:placeholder:text-slate-500",
+                Boolean(durationStr) && !isDurationDisabled && "pr-8"
               )}
             />
             {Boolean(durationStr) && !isDurationDisabled && (
@@ -156,6 +160,7 @@ export function DepositFormDateFields({
               </div>
             )}
           </div>
+          <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
           <StepperButton
             type="plus"
             onClick={() => handleStepDuration(1)}

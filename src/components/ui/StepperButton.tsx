@@ -10,6 +10,7 @@ interface StepperButtonProps {
   title?: string;
   className?: string;
   size?: "sm" | "md";
+  variant?: "inline" | "standalone";
 }
 
 export function StepperButton({
@@ -20,10 +21,12 @@ export function StepperButton({
   title,
   className,
   size = "md",
+  variant,
 }: StepperButtonProps) {
   const isMinus = type === "minus" || direction === "down";
   const Icon = isMinus ? Minus : Plus;
   const defaultTitle = isMinus ? "Уменьшить" : "Увеличить";
+  const isInline = variant ? variant === "inline" : size === "md";
 
   return (
     <button
@@ -37,8 +40,11 @@ export function StepperButton({
       }}
       title={title || defaultTitle}
       className={cn(
-        "flex items-center justify-center border border-slate-200/60 dark:border-white/[0.08] bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-white/10 active:scale-90 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all cursor-pointer select-none disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100 shrink-0",
-        size === "md" ? "w-[44px] h-[44px] sm:w-[46px] sm:h-[46px] rounded-ui" : "w-8 h-8 rounded-lg",
+        "flex items-center justify-center transition-all cursor-pointer select-none shrink-0",
+        isInline
+          ? "h-full w-[44px] sm:w-[46px] bg-transparent border-0 text-slate-500 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/10 active:scale-90 disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100"
+          : "border border-slate-200/60 dark:border-white/[0.08] bg-slate-100/70 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-white/10 active:scale-90 text-slate-600 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white disabled:opacity-35 disabled:cursor-not-allowed disabled:active:scale-100",
+        !isInline && (size === "md" ? "w-[44px] h-[44px] sm:w-[46px] sm:h-[46px] rounded-ui" : "w-8 h-8 rounded-lg"),
         className
       )}
     >

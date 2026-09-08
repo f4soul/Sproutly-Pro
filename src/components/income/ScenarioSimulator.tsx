@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SimulationState } from '../../types';
 import { cn, formatCurrency } from '../../lib/utils';
 import { ClearButton } from '../ui/ClearButton';
-import { StepperButton } from '../ui/StepperButton';
 
 interface ScenarioSimulatorProps {
   simulation: SimulationState;
@@ -150,31 +149,31 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
 
   return (
     <div className={cn(
-      "rounded-3xl p-5 lg:p-6 transition-all duration-700 relative",
+      "rounded-card p-5 lg:p-6 transition-all duration-700 relative",
       simulation.isActive 
         ? "bg-slate-100/50 dark:bg-[#0f121b] text-slate-900 dark:text-white border border-primary-500/25 dark:border-primary-500/30 shadow-[0_20px_50px_rgba(37,99,235,0.08)] dark:shadow-[0_20px_50px_rgba(37,99,235,0.15)]" 
         : "bg-white bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200 dark:border-white/10"
     )}>
       {/* Decorative Background Elements for Simulation Mode */}
       {simulation.isActive && (
-        <div className="absolute inset-0 pointer-events-none rounded-[2rem] overflow-hidden z-0">
+        <div className="absolute inset-0 pointer-events-none rounded-card overflow-hidden z-0">
           <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[150%] bg-primary-600/10 blur-[120px] rounded-full" />
-          <div className="absolute bottom-[-20%] left-[-10%] w-[30%] h-[100%] bg-purple-600/10 blur-[100px] rounded-full" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-[30%] h-[100%] bg-deposit-600/10 blur-[100px] rounded-full" />
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col gap-6">
+      <div className="relative z-10 flex flex-col gap-4">
         
         {/* Header Section */}
         <div className="flex sm:flex-row sm:items-center justify-between gap-4 w-full relative">
           <div className="flex items-center gap-3 flex-row min-w-0">
             <div className={cn(
-              "w-9 h-9 sm:w-10 sm:h-10 rounded-[0.875rem] sm:rounded-xl flex items-center justify-center transition-all duration-500 shadow-inner shrink-0",
+              "w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-inner shrink-0",
               simulation.isActive 
                 ? "bg-primary-50 dark:bg-[#1A1F30] text-primary-600 dark:text-primary-400 shadow-primary-500/10 border border-primary-100/30 dark:border-white/5" 
                 : "bg-slate-100 dark:bg-slate-800 text-slate-400"
             )}>
-              <Zap size={18} fill={simulation.isActive ? "currentColor" : "none"} className={simulation.isActive ? "animate-pulse" : ""} />
+              <Zap size={20} fill={simulation.isActive ? "currentColor" : "none"} className={simulation.isActive ? "animate-pulse" : ""} />
             </div>
             <div className="min-w-0 relative">
               <div className="flex items-center">
@@ -249,14 +248,14 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
             )}>
               <div className="flex items-start justify-between gap-1.5 flex-nowrap w-full">
                 <div className="flex items-center gap-1.5 min-w-0 pr-1">
-                  <HandCoins size={14} className={cn("shrink-0", simulation.isActive ? "text-deposit-550 dark:text-deposit-400" : "text-slate-400")} />
+                  <HandCoins size={14} className={cn("shrink-0", simulation.isActive ? "text-deposit-600 dark:text-deposit-400" : "text-slate-400")} />
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
                     {simulation.isActive ? "Новый оклад" : "Оклад"}
                   </span>
                 </div>
                 {simulation.isActive && (simulation.salaryIncrease ?? 0) > 0 && (
-                  <span className="text-[8px] font-black uppercase tracking-widest text-deposit-600 dark:text-deposit-400 bg-deposit-500/10 px-1.5 py-0.5 rounded-md border border-deposit-500/20 shrink-0 select-none">
-                    <span className="tabular-nums"><span className="tabular-nums">+{simulation.salaryIncrease}%</span></span>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-deposit-600 dark:text-deposit-400 bg-deposit-500/10 px-1.5 py-0.5 rounded-md border border-deposit-500/20 shrink-0 select-none">
+                    <span className="tabular-nums">+{simulation.salaryIncrease}%</span>
                   </span>
                 )}
               </div>
@@ -267,7 +266,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                     <span className="tabular-nums">{formatCurrency((simulation.projectedSalary ?? bonusBase) * (1 + (simulation.salaryIncrease || 0) / 100)).replace(/\s?[₽|RUB]$/i, '')}</span>
                     <span className="text-sm font-semibold opacity-85 ml-1">₽</span>
                   </div>
-                  <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">
                     Базовый: <span className="tabular-nums">{formatCurrency(simulation.projectedSalary ?? bonusBase)}</span>
                   </span>
                 </div>
@@ -296,18 +295,18 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
               )}
             </div>
 
-          {/* Card 3: Extra Income */}
+            {/* Card 2: Extra Income */}
             <div className={cn(
               "flex-1 group p-4 lg:p-5 rounded-2xl transition-all duration-300 flex flex-col justify-between min-h-[100px]",
               simulation.isActive 
                 ? "bg-white dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-lg hover:border-slate-300 dark:hover:border-white/20" 
                 : "bg-slate-50/80 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200 dark:border-white/5"
             )}>
-            <div className="flex items-center gap-2">
-              <RussianRuble size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Доп. доход</span>
-            </div>
-              <div className={cn("flex items-baseline border-b transition-all", simulation.isActive ? "border-slate-200 dark:border-white/20 focus-within:border-primary-500 dark:focus-within:border-primary-400 text-slate-800 dark:text-white" : "border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
+              <div className="flex items-center gap-2">
+                <RussianRuble size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Доп. доход</span>
+              </div>
+              <div className={cn("mt-auto flex items-baseline border-b transition-all", simulation.isActive ? "border-slate-200 dark:border-white/20 focus-within:border-primary-500 dark:focus-within:border-primary-400 text-slate-800 dark:text-white" : "border-slate-200 dark:border-slate-700/50 focus-within:border-primary-500 text-slate-800 dark:text-white")}>
                 <input 
                   type="text"
                   inputMode="decimal"
@@ -488,23 +487,7 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                     <HandCoins size={14} className={simulation.isActive ? "text-primary-600 dark:text-primary-400" : "text-slate-400"} />
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Индексация</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <StepperButton
-                      direction="down"
-                      size="sm"
-                      onClick={() => onUpdate({ ...simulation, salaryIncrease: Math.max(0, (simulation.salaryIncrease || 0) - 5) })}
-                      disabled={(simulation.salaryIncrease || 0) <= 0}
-                      title="Уменьшить индексацию на 5%"
-                    />
-                    <span className="w-[52px] inline-flex items-center justify-center text-center text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-1.5 py-0.5 rounded tabular-nums">+{simulation.salaryIncrease}%</span>
-                    <StepperButton
-                      direction="up"
-                      size="sm"
-                      onClick={() => onUpdate({ ...simulation, salaryIncrease: Math.min(100, (simulation.salaryIncrease || 0) + 5) })}
-                      disabled={(simulation.salaryIncrease || 0) >= 100}
-                      title="Увеличить индексацию на 5%"
-                    />
-                  </div>
+                  <span className="inline-flex items-center justify-center text-center text-[10px] font-bold text-primary-600 dark:text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-md tabular-nums">+{simulation.salaryIncrease}%</span>
                 </div>
                 <input 
                   type="range"
@@ -513,14 +496,9 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
                   step="5"
                   value={simulation.salaryIncrease}
                   onChange={(e) => onUpdate({ ...simulation, salaryIncrease: Number(e.target.value) })}
-                  className={cn(
-                    "w-full h-1.5 rounded-full appearance-none cursor-pointer mt-1",
-                    simulation.isActive 
-                      ? "bg-slate-200 dark:bg-white/10 accent-primary-500 dark:accent-primary-400" 
-                      : "bg-slate-200 dark:bg-slate-700 accent-primary-500"
-                  )}
+                  className="premium-range my-1"
                 />
-                <div className="flex justify-between mt-1 px-1">
+                <div className="flex justify-between mt-2 px-1">
                   <span className="text-[9px] font-semibold opacity-40 text-slate-400">0%</span>
                   <span className="text-[9px] font-semibold opacity-40 text-slate-400">100%</span>
                 </div>

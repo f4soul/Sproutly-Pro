@@ -124,7 +124,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
               <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 <div className="space-y-2 relative z-20">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Дата
                 </label>
                 <div className="relative w-full group">
@@ -186,7 +186,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 >
                 {({ open }) => (
                 <div className={cn("space-y-2 relative", open ? "z-[60]" : "z-30")}>
-                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                  <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                     Сумма
                   </label>
                   <div className="relative">
@@ -320,7 +320,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 >
                   <div className="overflow-hidden">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                      <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Курс ЦБ на дату фиксации (₽)
                       </label>
                       <div className="relative">
@@ -368,7 +368,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                   Комментарий (Опционально)
                 </label>
                 <textarea

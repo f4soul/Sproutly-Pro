@@ -565,50 +565,49 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             >
               <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-4 sm:p-5 flex flex-col gap-4 flex-shrink-0">
-              <AnimatePresence>
-                {hasDraft && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, height: "auto", scale: 1 }}
-                    exit={{ opacity: 0, height: 0, scale: 0.98 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="bg-amber-500/[0.08] dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/25 rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row md:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
-                      <div className="flex items-start gap-2.5">
-                        <div className="w-7 h-7 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
-                          <RotateCcw className="w-3.5 h-3.5 stroke-[2.2px]" />
-                        </div>
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          <span className="font-bold uppercase tracking-wider text-[10px] text-amber-600 dark:text-amber-400">
-                            Незавершенный черновик
-                          </span>
-                          <span className="text-[12px] sm:text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
-                            У вас остался незаполненный ранее вклад. Продолжить с того же места?
-                          </span>
-                        </div>
+              <div
+                className={cn(
+                  "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                  hasDraft
+                    ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
+                    : "grid-rows-[0fr] opacity-0 -mt-4 pointer-events-none"
+                )}
+              >
+                <div className="overflow-hidden">
+                  <div className="bg-amber-500/[0.08] dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/25 rounded-2xl p-3.5 sm:p-4 flex flex-col lg:flex-row md:items-center justify-between gap-3 text-xs text-amber-900 dark:text-amber-200">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-7 h-7 rounded-xl bg-amber-500/15 dark:bg-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.2px]" />
                       </div>
-                      <div className="grid grid-cols-2 md:flex md:items-center gap-2 shrink-0 w-full md:w-auto pt-0.5 md:pt-0">
-                        <button
-                          type="button"
-                          onClick={handleRestoreDraft}
-                          className="h-8.5 md:h-7 px-3 bg-deposit-500 hover:bg-deposit-600 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5"
-                        >
-                          <Check className="w-3 h-3 stroke-[2.5px]" />
-                          <span>Продолжить</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleDiscardDraft}
-                          className="h-8.5 md:h-7 px-3 bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center"
-                        >
-                          Сбросить
-                        </button>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="font-bold uppercase tracking-wider text-[10px] text-amber-600 dark:text-amber-400">
+                          Незавершенный черновик
+                        </span>
+                        <span className="text-[12px] sm:text-xs leading-relaxed text-amber-800/90 dark:text-amber-200/90">
+                          У вас остался незаполненный ранее вклад. Продолжить с того же места?
+                        </span>
                       </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <div className="grid grid-cols-2 md:flex md:items-center gap-2 shrink-0 w-full md:w-auto pt-0.5 md:pt-0">
+                      <button
+                        type="button"
+                        onClick={handleRestoreDraft}
+                        className="h-8.5 md:h-7 px-3 bg-deposit-500 hover:bg-deposit-600 active:scale-95 text-white font-bold rounded-xl transition-all cursor-pointer shadow-sm text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5"
+                      >
+                        <Check className="w-3 h-3 stroke-[2.5px]" />
+                        <span>Продолжить</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDiscardDraft}
+                        className="h-8.5 md:h-7 px-3 bg-slate-200/70 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/15 active:scale-95 text-slate-700 dark:text-slate-300 font-bold rounded-xl transition-all cursor-pointer text-[11px] md:text-[10px] uppercase tracking-wider flex items-center justify-center"
+                      >
+                        Сбросить
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
 
 
@@ -976,14 +975,15 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     <Percent className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
                     Ставка (%)
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center h-[46px] rounded-ui border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all overflow-hidden">
                     <StepperButton
                       type="minus"
                       onClick={() => handleStepRate(-0.1)}
                       disabled={!rateStr || Number(rateStr.replace(",", ".")) <= 0}
                       title="Уменьшить ставку на 0.1%"
                     />
-                    <div className="relative flex-1">
+                    <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
+                    <div className="relative flex-1 h-full flex items-center">
                       <input
                         required
                         type="text"
@@ -1000,7 +1000,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                           }
                         }}
                         className={cn(
-                          "apple-input w-full tabular-nums text-sm",
+                          "w-full h-full bg-transparent border-0 outline-none text-center tabular-nums text-sm font-medium text-slate-950 dark:text-white py-0 focus:ring-0",
                           Boolean(rateStr) && "pr-8"
                         )}
                         placeholder="0.00"
@@ -1011,6 +1011,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                         </div>
                       )}
                     </div>
+                    <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
                     <StepperButton
                       type="plus"
                       onClick={() => handleStepRate(0.1)}
