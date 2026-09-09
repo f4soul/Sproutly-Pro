@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
@@ -126,7 +126,8 @@ function AppContent() {
   };
   
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
+    return saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   });
 
   const theme = _appSettings?.theme || localTheme;
@@ -238,25 +239,37 @@ function AppContent() {
     };
   }, [isLockActive, isUnlocked, _appSettings]);
 
+  const lastThemeColorRef = useRef<string>('');
+
   // Sync theme to document element
   useEffect(() => {
+    // 1. Класс
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
     
-    // Dynamically update theme-color for PWA & Safari headers
-    let metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
-    if (!metaThemeColor) {
-      metaThemeColor = document.createElement('meta');
-      metaThemeColor.setAttribute('name', 'theme-color');
-      document.head.appendChild(metaThemeColor);
-    }
-    metaThemeColor.setAttribute('content', theme === 'dark' ? '#020617' : '#f8fafc');
+    // 2. Мета: кэш последнего значения (setAttribute только при реальном изменении)
+    const targetColor = theme === 'dark' ? '#020617' : '#f8fafc';
+    if (lastThemeColorRef.current !== targetColor) {
+      lastThemeColorRef.current = targetColor;
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.setAttribute('name', 'theme-color');
+        document.head.appendChild(metaThemeColor);
+      }
+      if (metaThemeColor.getAttribute('content') !== targetColor) {
+        metaThemeColor.setAttribute('content', targetColor);
+      }
 
-    // Remove media-query based meta tags to prevent system conflicts when manually switching
-    document.querySelectorAll('meta[name="theme-color"][media]').forEach(el => el.remove());
+      // Remove media-query based meta tags to prevent system conflicts when manually switching
+      document.querySelectorAll('meta[name="theme-color"][media]').forEach(el => el.remove());
+    }
+
+    // 3. Снятие inline-фона: дальше фон управляется ТОЛЬКО CSS
+    document.documentElement.style.removeProperty('background-color');
   }, [theme]);
 
   const deposits = _deposits || [];

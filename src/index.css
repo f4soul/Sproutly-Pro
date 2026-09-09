@@ -120,11 +120,8 @@
     --joyride-beacon-color: #0d9488;
   }
 
-  .dark {
-    --joyride-beacon-color: #2dd4bf;
-  }
-
   html {
+    color-scheme: light;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
@@ -132,6 +129,11 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     overscroll-behavior-y: none;
+  }
+
+  .dark {
+    --joyride-beacon-color: #2dd4bf;
+    color-scheme: dark;
   }
 
   body {

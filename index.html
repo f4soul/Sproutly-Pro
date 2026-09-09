@@ -9,6 +9,29 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Sproutly" />
+    <script>
+      (function () {
+        try {
+          const saved = localStorage.getItem('theme');
+          const isDark = saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          const root = document.documentElement;
+          if (isDark) root.classList.add('dark');
+          else root.classList.remove('dark');
+
+          const color = isDark ? '#020617' : '#f8fafc';
+          root.style.setProperty('background-color', color, 'important');
+
+          document.querySelectorAll('meta[name="theme-color"][media]').forEach(m => m.remove());
+          let meta = document.querySelector('meta[name="theme-color"]:not([media])');
+          if (!meta) {
+            meta = document.createElement('meta');
+            meta.setAttribute('name', 'theme-color');
+            document.head.appendChild(meta);
+          }
+          meta.setAttribute('content', color);
+        } catch (e) {}
+      })();
+    </script>
     
     <!-- Primary SEO Meta Tags -->
     <title>Sproutly.Pro — Умный учет доходов, вкладов и налогов</title>
