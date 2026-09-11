@@ -125,29 +125,13 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
   };
 
   try {
-    // 1. Попытка setDoc + merge (стандартный путь, покрывает create и update)
     await setDoc(userRef, payload, { merge: true });
   } catch (err: any) {
-    logger.warn("setDoc with merge failed, trying fallback strategy:", err);
-    try {
-      // 2. Fallback: проверяем состояние документа
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists() || !userSnap.data()) {
-        // Если документ не существует или пустой (как на скриншоте Firestore), создаем чистый документ без merge
-        await setDoc(userRef, {
-          fcmTokens: [token],
-          email: user.email || null,
-          updatedAt: new Date().toISOString()
-        });
-      } else {
-        // Если документ существует с данными, пробуем updateDoc
-        const { updateDoc } = await import('firebase/firestore');
-        await updateDoc(userRef, payload);
-      }
-    } catch (err2: any) {
-      logger.error("Failed to save FCM token (both primary and fallback failed):", err2);
-      throw err2;
-    }
+    // Fallback: если setDoc упал (например, из-за create vs update ambiguity),
+    // попробовать updateDoc — он явно делает update существующего документа
+    logger.warn("setDoc failed, trying updateDoc fallback:", err);
+    const { updateDoc } = await import('firebase/firestore');
+    await updateDoc(userRef, payload);
   }
 
   logger.log("FCM Token saved successfully to Firestore for user:", user.uid);

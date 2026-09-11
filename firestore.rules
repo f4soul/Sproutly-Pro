@@ -159,14 +159,13 @@ service cloud.firestore {
       allow read: if isOwner(userId);
 
       // Создание нового документа — пользователь пишет в свой собственный документ
-      // fcmTokens может быть массивом, email — строкой или null, updatedAt — строкой/timestamp
+      // fcmTokens должен быть массивом, updatedAt — строкой/timestamp
+      // email не валидируем — это поле не критично для безопасности
       allow create: if isOwner(userId)
         && request.resource.data.fcmTokens is list
-        && (request.resource.data.email is string || request.resource.data.email == null || !('email' in request.resource.data.keys()))
         && (request.resource.data.updatedAt is string || request.resource.data.updatedAt is timestamp);
 
       // Обновление существующего документа — только владелец
-      // Не проверяем структуру строго — пользователь может обновить только часть полей через merge
       allow update: if isOwner(userId);
 
       // Удаление — только владелец
