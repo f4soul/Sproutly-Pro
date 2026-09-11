@@ -27,12 +27,6 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isAuthenticated() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin';
-    }
-
     function isValidIncomeData(data) {
       return data.keys().hasAll(['years', 'taxBrackets', 'activeYear']) &&
              (data.years is map || data.years is list) &&
@@ -136,16 +130,12 @@ service cloud.firestore {
 
     // Income rules
     match /income/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId);
+      allow read, write: if isOwner(userId);
     }
 
     // User Settings rules
     match /userSettings/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId);
     }
 
     // Tax Year Settings rules
@@ -164,12 +154,9 @@ service cloud.firestore {
       allow delete: if isAuthenticated() && (resource == null || resource.data.userId == request.auth.uid);
     }
 
-    // User profile rules (for role-based access & FCM tokens)
+    // User profile rules (for FCM tokens & user profile)
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) && request.resource.data.get('role', 'user') == resource.data.get('role', 'user') || isAdmin();
-      allow delete: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId);
     }
   }
 }

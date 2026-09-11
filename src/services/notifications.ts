@@ -41,7 +41,10 @@ export async function getDeviceFcmToken(): Promise<string | null> {
     }
 
     const messaging = await getFirebaseMessaging();
-    if (!messaging) return null;
+    if (!messaging) {
+      logger.warn("Firebase Messaging is not supported in this browser.");
+      return null;
+    }
 
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
     if (!vapidKey) {
@@ -55,13 +58,23 @@ export async function getDeviceFcmToken(): Promise<string | null> {
       { scope: '/firebase-push-scope/' }
     );
 
+    // Ensure Service Worker is active
+    if (registration.installing) {
+      await new Promise<void>((resolve) => {
+        registration.installing?.addEventListener('statechange', (e: any) => {
+          if (e.target.state === 'activated') resolve();
+        });
+        setTimeout(resolve, 2000);
+      });
+    }
+
     return await getToken(messaging, { 
       vapidKey,
       serviceWorkerRegistration: registration
     });
   } catch (error) {
     logger.error("Error retrieving device FCM token:", error);
-    return null;
+    throw error;
   }
 }
 
@@ -79,7 +92,13 @@ export async function syncFcmToken(): Promise<SyncFcmResult> {
       return { success: false, error: 'Для сохранения токена необходимо войти в аккаунт' };
     }
 
-    const token = await getDeviceFcmToken();
+    let token: string | null = null;
+    try {
+      token = await getDeviceFcmToken();
+    } catch (err: any) {
+      return { success: false, error: 'Ошибка получения токена: ' + (err?.message || 'сбой Service Worker') };
+    }
+
     if (!token) {
       return { success: false, error: 'Не удалось сгенерировать токен устройства' };
     }
@@ -145,28 +164,33 @@ export async function checkDeviceTokenStatus(): Promise<TokenStatusResult> {
   }
 
   try {
-    const currentToken = await getDeviceFcmToken();
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
 
+    let tokens: string[] = [];
     if (userSnap.exists()) {
       const data = userSnap.data();
-      const tokens: string[] = Array.isArray(data.fcmTokens) ? data.fcmTokens : [];
-      const isRegistered = Boolean(currentToken && tokens.includes(currentToken));
+      tokens = Array.isArray(data?.fcmTokens) ? data.fcmTokens : [];
+    }
 
-      return {
-        permission,
-        isRegisteredInDb: isRegistered,
-        tokensCount: tokens.length,
-        currentToken,
-        userEmail: user.email || null
-      };
+    let currentToken: string | null = null;
+    let isRegistered = false;
+    try {
+      currentToken = await getDeviceFcmToken();
+      if (currentToken && tokens.includes(currentToken)) {
+        isRegistered = true;
+      } else if (tokens.length > 0 && !currentToken) {
+        // Fallback: if browser token temporarily couldn't be read but user has tokens
+        isRegistered = true;
+      }
+    } catch {
+      isRegistered = tokens.length > 0;
     }
 
     return {
       permission,
-      isRegisteredInDb: false,
-      tokensCount: 0,
+      isRegisteredInDb: isRegistered,
+      tokensCount: tokens.length,
       currentToken,
       userEmail: user.email || null
     };
