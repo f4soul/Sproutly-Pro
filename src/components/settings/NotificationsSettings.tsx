@@ -5,6 +5,21 @@ import { showToast } from '../../lib/toast';
 import { useAuthSync } from '../../context/AuthSyncContext';
 import { logger } from '../../lib/logger';
 
+function formatDevicesCount(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod100 >= 11 && mod100 <= 19) {
+    return `${count} устройств`;
+  }
+  if (mod10 === 1) {
+    return `${count} устройство`;
+  }
+  if (mod10 >= 2 && mod10 <= 4) {
+    return `${count} устройства`;
+  }
+  return `${count} устройств`;
+}
+
 export function NotificationsSettings() {
   const { user } = useAuthSync();
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
@@ -114,38 +129,59 @@ export function NotificationsSettings() {
             <div className="min-w-0 space-y-1">
               <p className="font-bold text-slate-900 dark:text-white truncate">Статус Push-уведомлений</p>
               
-              <div className="text-xs flex items-center gap-2 flex-wrap">
-                {permissionState === 'granted' && isRegisteredInDb && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Активно • Устройство в базе {tokensCount > 1 ? `(${tokensCount} устр.)` : ''}</span>
-                  </span>
-                )}
+              {permissionState === 'granted' && isRegisteredInDb ? (
+                tokensCount > 1 ? (
+                  <div className="space-y-1 text-xs">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Активно • {formatDevicesCount(tokensCount)}</span>
+                    </div>
+                    {user?.email && (
+                      <div className="text-[10px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-2 truncate max-w-[220px]">
+                        {user.email}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-xs flex items-center gap-2 flex-wrap">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Активно</span>
+                    </span>
+                    {user?.email && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-2 truncate max-w-[180px]">
+                        {user.email}
+                      </span>
+                    )}
+                  </div>
+                )
+              ) : (
+                <div className="text-xs flex items-center gap-2 flex-wrap">
+                  {permissionState === 'granted' && !isRegisteredInDb && (
+                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>Разрешено в браузере • Токен не в базе</span>
+                    </span>
+                  )}
 
-                {permissionState === 'granted' && !isRegisteredInDb && (
-                  <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                    <span>Разрешено в браузере • Токен не в базе</span>
-                  </span>
-                )}
+                  {permissionState === 'denied' && (
+                    <span className="text-rose-500 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                      <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                      <span>Заблокированы в браузере</span>
+                    </span>
+                  )}
 
-                {permissionState === 'denied' && (
-                  <span className="text-rose-500 font-medium flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                    <span>Заблокированы в браузере</span>
-                  </span>
-                )}
+                  {permissionState === 'default' && (
+                    <span className="text-slate-500 font-medium">Не включены</span>
+                  )}
 
-                {permissionState === 'default' && (
-                  <span className="text-slate-500 font-medium">Не включены</span>
-                )}
-
-                {user && (
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-2 truncate max-w-[180px]">
-                    {user.email}
-                  </span>
-                )}
-              </div>
+                  {user?.email && (
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-2 truncate max-w-[180px]">
+                      {user.email}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
