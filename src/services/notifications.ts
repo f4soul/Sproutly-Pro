@@ -117,32 +117,26 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
     throw new Error("Пользователь не авторизован. Войдите в аккаунт.");
   }
 
-  const userRef = doc(db, 'users', user.uid);
+  const uid = user.uid;
+  const userRef = doc(db, 'users', uid);
+  const projectId = firebaseConfig.projectId;
+  const databaseId = firebaseConfig.firestoreDatabaseId || "(default)";
   
   try {
-    const userSnap = await getDoc(userRef);
+    logger.log(`Attempting to save FCM token. Operation: setDoc(merge:true), Project: ${projectId}, DB: ${databaseId}, Path: /users/${uid}`);
     
-    if (!userSnap.exists() || !userSnap.data()) {
-      // Document is missing or is a phantom/tombstone (has no data)
-      // Use standard setDoc without merge to create it cleanly
-      await setDoc(userRef, {
-        fcmTokens: [token],
-        email: user.email || null,
-        updatedAt: new Date().toISOString()
-      });
-    } else {
-      // Document exists and has data, safe to use updateDoc with arrayUnion
-      const { updateDoc } = await import('firebase/firestore');
-      await updateDoc(userRef, {
-        fcmTokens: arrayUnion(token),
-        email: user.email || null,
-        updatedAt: new Date().toISOString()
-      });
-    }
+    const { arrayUnion, setDoc } = await import('firebase/firestore');
     
-    logger.log("FCM Token saved successfully to Firestore for user:", user.uid);
+    // Atomically save token without read-before-write
+    await setDoc(userRef, {
+      fcmTokens: arrayUnion(token),
+      email: user.email || null,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    
+    logger.log("FCM Token saved successfully to Firestore for user:", uid);
   } catch (error: any) {
-    logger.error("Failed to save FCM token:", error);
+    logger.error(`Permission denied or error. Operation: setDoc(merge:true), Project: ${projectId}, DB: ${databaseId}, Path: /users/${uid}. Error:`, error);
     // Throw a clear error so it can be shown in the UI
     throw new Error(error.message || "Ошибка доступа к базе данных");
   }
@@ -205,12 +199,9 @@ export async function checkDeviceTokenStatus(): Promise<TokenStatusResult> {
       currentToken = await getDeviceFcmToken();
       if (currentToken && tokens.includes(currentToken)) {
         isRegistered = true;
-      } else if (tokens.length > 0 && !currentToken) {
-        // Fallback: if browser token temporarily couldn't be read but user has tokens
-        isRegistered = true;
       }
     } catch {
-      isRegistered = tokens.length > 0;
+      // Ignore get token errors, remain unregistered
     }
 
     return {
