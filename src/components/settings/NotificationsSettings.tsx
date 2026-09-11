@@ -1,25 +1,38 @@
-import React, { useState, useEffect } from 'react';
-import { Bell, BellRing, Info, RefreshCw, CheckCircle2 } from 'lucide-react';
-import { requestNotificationPermission, syncFcmToken } from '../../services/notifications';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Bell, BellRing, Info, RefreshCw, CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react';
+import { requestNotificationPermission, syncFcmToken, checkDeviceTokenStatus } from '../../services/notifications';
 import { showToast } from '../../lib/toast';
-import { auth } from '../../config/firebase';
+import { useAuthSync } from '../../context/AuthSyncContext';
 import { logger } from '../../lib/logger';
 
 export function NotificationsSettings() {
+  const { user } = useAuthSync();
   const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
   const [isSyncing, setIsSyncing] = useState(false);
-  const [tokenSynced, setTokenSynced] = useState(false);
+  const [isRegisteredInDb, setIsRegisteredInDb] = useState(false);
+  const [tokensCount, setTokensCount] = useState(0);
+
+  const refreshStatus = useCallback(async () => {
+    if (!('Notification' in window)) return;
+    setPermissionState(Notification.permission);
+
+    if (Notification.permission === 'granted' && user) {
+      try {
+        const status = await checkDeviceTokenStatus();
+        setIsRegisteredInDb(status.isRegisteredInDb);
+        setTokensCount(status.tokensCount);
+      } catch (err) {
+        logger.error("Error refreshing notification status:", err);
+      }
+    } else {
+      setIsRegisteredInDb(false);
+      setTokensCount(0);
+    }
+  }, [user]);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setPermissionState(Notification.permission);
-      if (Notification.permission === 'granted' && auth.currentUser) {
-        syncFcmToken().then((success) => {
-          if (success) setTokenSynced(true);
-        }).catch((e) => logger.error(e));
-      }
-    }
-  }, []);
+    refreshStatus();
+  }, [refreshStatus]);
 
   const handleEnableNotifications = async () => {
     if (!('Notification' in window)) {
@@ -27,40 +40,50 @@ export function NotificationsSettings() {
       return;
     }
 
+    if (!user) {
+      showToast('Сначала войдите в Google аккаунт для привязки уведомлений', 'info');
+      return;
+    }
+
     setIsSyncing(true);
     try {
-      const success = await requestNotificationPermission();
+      const res = await requestNotificationPermission();
       setPermissionState(Notification.permission);
       
-      if (success) {
-        setTokenSynced(true);
-        showToast('Уведомления успешно включены и синхронизированы', 'success');
+      if (res.success) {
+        await refreshStatus();
+        showToast('Уведомления успешно включены и токен сохранен в базе!', 'success');
       } else if (Notification.permission === 'denied') {
-        showToast('Вы заблокировали уведомления в браузере', 'error');
+        showToast('Вы заблокировали уведомления в настройках браузера', 'error');
       } else {
-        showToast('Токен получен, но убедитесь, что вы авторизованы в аккаунте', 'info');
+        showToast(res.error || 'Не удалось зарегистрировать токен', 'error');
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error(error);
-      showToast('Ошибка при включении уведомлений', 'error');
+      showToast(error?.message || 'Ошибка при включении уведомлений', 'error');
     } finally {
       setIsSyncing(false);
     }
   };
 
   const handleResyncToken = async () => {
+    if (!user) {
+      showToast('Авторизуйтесь в аккаунте для синхронизации токена', 'error');
+      return;
+    }
+
     setIsSyncing(true);
     try {
-      const success = await syncFcmToken();
-      if (success) {
-        setTokenSynced(true);
-        showToast('FCM токен обновлен в базе данных', 'success');
+      const res = await syncFcmToken();
+      if (res.success) {
+        await refreshStatus();
+        showToast('FCM токен успешно сохранен в базе данных!', 'success');
       } else {
-        showToast('Не удалось обновить токен. Проверьте авторизацию.', 'error');
+        showToast(res.error || 'Не удалось сохранить токен в базе данных', 'error');
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error(error);
-      showToast('Ошибка при синхронизации токена', 'error');
+      showToast(error?.message || 'Ошибка при синхронизации токена', 'error');
     } finally {
       setIsSyncing(false);
     }
@@ -87,19 +110,42 @@ export function NotificationsSettings() {
             <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах (в день окончания, за 1 и 3 дня) и других важных событиях.</span>
           </p>
           
-          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between gap-4">
-            <div className="min-w-0">
+          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="min-w-0 space-y-1">
               <p className="font-bold text-slate-900 dark:text-white truncate">Статус Push-уведомлений</p>
-              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1.5 truncate">
-                {permissionState === 'granted' && (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 truncate">
+              
+              <div className="text-xs flex items-center gap-2 flex-wrap">
+                {permissionState === 'granted' && isRegisteredInDb && (
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Разрешены {tokenSynced && '• В базе'}</span>
+                    <span>Активно • Устройство в базе {tokensCount > 1 ? `(${tokensCount} устр.)` : ''}</span>
                   </span>
                 )}
-                {permissionState === 'denied' && <span className="text-rose-500 font-medium truncate">Заблокированы</span>}
-                {permissionState === 'default' && <span className="truncate">Не включены</span>}
-              </p>
+
+                {permissionState === 'granted' && !isRegisteredInDb && (
+                  <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Разрешено в браузере • Токен не в базе</span>
+                  </span>
+                )}
+
+                {permissionState === 'denied' && (
+                  <span className="text-rose-500 font-medium flex items-center gap-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                    <span>Заблокированы в браузере</span>
+                  </span>
+                )}
+
+                {permissionState === 'default' && (
+                  <span className="text-slate-500 font-medium">Не включены</span>
+                )}
+
+                {user && (
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-slate-700 pl-2 truncate max-w-[180px]">
+                    {user.email}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -108,11 +154,15 @@ export function NotificationsSettings() {
                   type="button"
                   onClick={handleResyncToken}
                   disabled={isSyncing}
-                  className="px-3.5 py-2 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
-                  title="Обновить регистрацию устройства в Firestore"
+                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50 ${
+                    !isRegisteredInDb
+                      ? 'bg-indigo-500 hover:bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                      : 'bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white'
+                  }`}
+                  title="Обновить или добавить регистрацию устройства в Firestore"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                  {isSyncing ? '...' : 'Обновить'}
+                  <span>{isSyncing ? 'Сохранение...' : !isRegisteredInDb ? 'Привязать к базе' : 'Обновить'}</span>
                 </button>
               ) : (
                 <button
@@ -122,7 +172,7 @@ export function NotificationsSettings() {
                   className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-xl font-bold text-xs transition-all flex items-center gap-2 cursor-pointer active:scale-95 shadow-md shadow-indigo-500/20"
                 >
                   <BellRing className="w-3.5 h-3.5" />
-                  {isSyncing ? '...' : 'Включить'}
+                  <span>{isSyncing ? 'Запрос...' : 'Включить'}</span>
                 </button>
               )}
             </div>

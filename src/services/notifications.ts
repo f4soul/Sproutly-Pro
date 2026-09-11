@@ -1,81 +1,185 @@
 import { logger } from '../lib/logger';
 import { getToken, onMessage } from 'firebase/messaging';
 import { getFirebaseMessaging, auth, db, firebaseConfig } from '../config/firebase';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 
-export async function requestNotificationPermission(): Promise<boolean> {
+export interface SyncFcmResult {
+  success: boolean;
+  token?: string;
+  error?: string;
+}
+
+export interface TokenStatusResult {
+  permission: NotificationPermission;
+  isRegisteredInDb: boolean;
+  tokensCount: number;
+  currentToken: string | null;
+  userEmail: string | null;
+  error?: string;
+}
+
+export async function requestNotificationPermission(): Promise<SyncFcmResult> {
   try {
-    if (!('Notification' in window)) return false;
+    if (!('Notification' in window)) {
+      return { success: false, error: 'Браузер не поддерживает Web Notifications' };
+    }
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       return await syncFcmToken();
     }
-  } catch (error) {
+    return { success: false, error: permission === 'denied' ? 'Уведомления заблокированы в браузере' : 'Разрешение не получено' };
+  } catch (error: any) {
     logger.error("Failed to request notification permission:", error);
+    return { success: false, error: error?.message || 'Ошибка запроса разрешения' };
   }
-  return false;
 }
 
-export async function syncFcmToken(): Promise<boolean> {
+export async function getDeviceFcmToken(): Promise<string | null> {
   try {
     if (!('Notification' in window) || Notification.permission !== 'granted') {
-      return false;
+      return null;
     }
 
     const messaging = await getFirebaseMessaging();
-    if (!messaging) return false;
+    if (!messaging) return null;
 
     const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_KEY;
     if (!vapidKey) {
-      logger.warn("VITE_FIREBASE_VAPID_KEY is missing. Add it to .env.example and your .env file.");
-      return false;
+      logger.warn("VITE_FIREBASE_VAPID_KEY is missing in env.");
+      return null;
     }
 
-    // Pass the config to the Service Worker via URL parameters
     const configStr = encodeURIComponent(JSON.stringify(firebaseConfig));
-    const registration = await navigator.serviceWorker.register(`/firebase-messaging-sw.js?config=${configStr}`, { scope: '/firebase-push-scope/' });
+    const registration = await navigator.serviceWorker.register(
+      `/firebase-messaging-sw.js?config=${configStr}`,
+      { scope: '/firebase-push-scope/' }
+    );
 
-    const token = await getToken(messaging, { 
+    return await getToken(messaging, { 
       vapidKey,
       serviceWorkerRegistration: registration
     });
-    if (token) {
-      await saveTokenToDatabase(token);
-      return true;
-    }
   } catch (error) {
-    logger.error("Failed to sync FCM token:", error);
+    logger.error("Error retrieving device FCM token:", error);
+    return null;
   }
-  return false;
 }
 
-async function saveTokenToDatabase(token: string) {
+export async function syncFcmToken(): Promise<SyncFcmResult> {
+  try {
+    if (!('Notification' in window)) {
+      return { success: false, error: 'Браузер не поддерживает Push-уведомления' };
+    }
+    if (Notification.permission !== 'granted') {
+      return { success: false, error: 'Уведомления не разрешены в браузере' };
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      return { success: false, error: 'Для сохранения токена необходимо войти в аккаунт' };
+    }
+
+    const token = await getDeviceFcmToken();
+    if (!token) {
+      return { success: false, error: 'Не удалось сгенерировать токен устройства' };
+    }
+
+    await saveTokenToDatabase(token);
+    return { success: true, token };
+  } catch (error: any) {
+    logger.error("Failed to sync FCM token:", error);
+    return { success: false, error: error?.message || 'Ошибка синхронизации с базой' };
+  }
+}
+
+export async function saveTokenToDatabase(token: string): Promise<void> {
   const user = auth.currentUser;
   if (!user) {
-    logger.log("No authenticated user, skipping Firestore token save.");
-    return;
+    throw new Error("Пользователь не авторизован. Войдите в аккаунт.");
+  }
+
+  const userRef = doc(db, 'users', user.uid);
+  await setDoc(userRef, {
+    fcmTokens: arrayUnion(token),
+    email: user.email || null,
+    updatedAt: new Date().toISOString()
+  }, { merge: true });
+
+  logger.log("FCM Token saved successfully to Firestore for user:", user.uid);
+}
+
+export async function removeCurrentDeviceToken(): Promise<boolean> {
+  try {
+    const user = auth.currentUser;
+    if (!user) return false;
+
+    const token = await getDeviceFcmToken();
+    if (!token) return false;
+
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, {
+      fcmTokens: arrayRemove(token),
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+
+    logger.log("FCM Token removed successfully from Firestore for user:", user.uid);
+    return true;
+  } catch (error) {
+    logger.error("Failed to remove FCM token:", error);
+    return false;
+  }
+}
+
+export async function checkDeviceTokenStatus(): Promise<TokenStatusResult> {
+  const permission = ('Notification' in window) ? Notification.permission : 'default';
+  const user = auth.currentUser;
+
+  if (permission !== 'granted' || !user) {
+    return {
+      permission,
+      isRegisteredInDb: false,
+      tokensCount: 0,
+      currentToken: null,
+      userEmail: user?.email || null
+    };
   }
 
   try {
+    const currentToken = await getDeviceFcmToken();
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       const data = userSnap.data();
-      const tokens = Array.isArray(data.fcmTokens) ? data.fcmTokens : [];
-      if (!tokens.includes(token)) {
-        await updateDoc(userRef, {
-          fcmTokens: [...tokens, token]
-        });
-      }
-    } else {
-      await setDoc(userRef, {
-        fcmTokens: [token]
-      }, { merge: true });
+      const tokens: string[] = Array.isArray(data.fcmTokens) ? data.fcmTokens : [];
+      const isRegistered = Boolean(currentToken && tokens.includes(currentToken));
+
+      return {
+        permission,
+        isRegisteredInDb: isRegistered,
+        tokensCount: tokens.length,
+        currentToken,
+        userEmail: user.email || null
+      };
     }
-    logger.log("FCM Token saved successfully for user:", user.uid);
-  } catch (error) {
-    logger.error("Error saving FCM token:", error);
+
+    return {
+      permission,
+      isRegisteredInDb: false,
+      tokensCount: 0,
+      currentToken,
+      userEmail: user.email || null
+    };
+  } catch (error: any) {
+    logger.error("Error checking FCM token status in Firestore:", error);
+    return {
+      permission,
+      isRegisteredInDb: false,
+      tokensCount: 0,
+      currentToken: null,
+      userEmail: user.email || null,
+      error: error?.message || 'Ошибка чтения из базы'
+    };
   }
 }
 

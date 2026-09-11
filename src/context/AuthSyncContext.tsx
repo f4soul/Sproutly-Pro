@@ -33,6 +33,13 @@ export const AuthSyncProvider = ({ children }: { children: ReactNode }) => {
           setSyncStatus('syncing');
           startRealTimeSync(currentUser);
           syncWithFirebase().catch(logger.error);
+
+          // Auto-sync device push token if notifications are already granted by browser
+          if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+            import('../services/notifications').then(({ syncFcmToken }) => {
+              syncFcmToken().catch((err) => logger.warn("FCM auto-sync on login:", err));
+            });
+          }
         }
       } else {
         setSyncStatus('offline');
