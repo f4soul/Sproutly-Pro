@@ -123,7 +123,7 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
   const databaseId = firebaseConfig.firestoreDatabaseId || "(default)";
   
   try {
-    logger.log(`Attempting to save FCM token. Operation: setDoc(merge:true), Project: ${projectId}, DB: ${databaseId}, Path: /users/${uid}`);
+    logger.log(`DIAGNOSTIC_BEFORE_WRITE: auth.uid=${uid}, userRef.path=${userRef.path}, projectId=${projectId}, databaseId=${databaseId}, operation=setDoc(merge:true)`);
     
     const { arrayUnion, setDoc } = await import('firebase/firestore');
     
@@ -134,9 +134,9 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
       updatedAt: new Date().toISOString()
     }, { merge: true });
     
-    logger.log("FCM Token saved successfully to Firestore for user:", uid);
+    logger.log(`DIAGNOSTIC_AFTER_WRITE_SUCCESS: auth.uid=${uid}, userRef.path=${userRef.path}`);
   } catch (error: any) {
-    logger.error(`Permission denied or error. Operation: setDoc(merge:true), Project: ${projectId}, DB: ${databaseId}, Path: /users/${uid}. Error:`, error);
+    logger.error(`DIAGNOSTIC_ERROR: Permission denied or error. Operation: setDoc(merge:true), auth.uid=${uid}, Project: ${projectId}, DB: ${databaseId}, Path: ${userRef.path}. error.code=${error.code}, error.message=${error.message}`, error);
     // Throw a clear error so it can be shown in the UI
     throw new Error(error.message || "Ошибка доступа к базе данных");
   }
