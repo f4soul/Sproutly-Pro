@@ -134,6 +134,36 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
   const userRef = doc(db, 'users', uid);
   const projectId = firebaseConfig.projectId;
   const databaseId = firebaseConfig.firestoreDatabaseId || "(default)";
+
+  // Check Firebase App instance options and forced token refresh
+  const authProjectId = (auth.app.options as any)?.projectId;
+  const dbProjectId = (db.app.options as any)?.projectId;
+  const sameAppInstance = auth.app === db.app;
+
+  console.error('[FCM_TEST] APP_INSTANCES_CHECK', {
+    authProjectId,
+    dbProjectId,
+    sameAppInstance,
+    authAppName: auth.app.name,
+    dbAppName: db.app.name
+  });
+
+  let tokenResult: any = null;
+  try {
+    tokenResult = await user.getIdTokenResult(true);
+    console.error('[FCM_TEST] ID_TOKEN_RESULT', {
+      uid: user.uid,
+      email: user.email,
+      claims: tokenResult?.claims,
+      authTime: tokenResult?.authTime,
+      issuedAtTime: tokenResult?.issuedAtTime,
+      expirationTime: tokenResult?.expirationTime,
+      projectId: firebaseConfig.projectId,
+      path: userRef.path
+    });
+  } catch (err: any) {
+    console.error('[FCM_TEST] getIdTokenResult error:', err);
+  }
   
   try {
     const { arrayUnion, setDoc } = await import('firebase/firestore');
