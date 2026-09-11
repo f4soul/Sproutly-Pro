@@ -35,6 +35,7 @@ export function NotificationsSettings() {
   }, [refreshStatus]);
 
   const handleEnableNotifications = async () => {
+    console.error('[FCM_TEST] bind button clicked (handleEnableNotifications)');
     if (!('Notification' in window)) {
       showToast('Ваш браузер не поддерживает уведомления', 'error');
       return;
@@ -67,6 +68,7 @@ export function NotificationsSettings() {
   };
 
   const handleResyncToken = async () => {
+    console.error('[FCM_TEST] bind button clicked');
     if (!user) {
       showToast('Авторизуйтесь в аккаунте для синхронизации токена', 'error');
       return;

@@ -79,16 +79,20 @@ export async function getDeviceFcmToken(): Promise<string | null> {
 }
 
 export async function syncFcmToken(): Promise<SyncFcmResult> {
+  console.error('[FCM_TEST] syncFcmToken called');
   try {
     if (!('Notification' in window)) {
+      console.error('[FCM_TEST] syncFcmToken abort: window.Notification not supported');
       return { success: false, error: 'Браузер не поддерживает Push-уведомления' };
     }
     if (Notification.permission !== 'granted') {
+      console.error('[FCM_TEST] syncFcmToken abort: permission !== granted, permission =', Notification.permission);
       return { success: false, error: 'Уведомления не разрешены в браузере' };
     }
 
     const user = auth.currentUser;
     if (!user) {
+      console.error('[FCM_TEST] syncFcmToken abort: auth.currentUser is null');
       return { success: false, error: 'Для сохранения токена необходимо войти в аккаунт' };
     }
 
@@ -96,17 +100,25 @@ export async function syncFcmToken(): Promise<SyncFcmResult> {
     try {
       token = await getDeviceFcmToken();
     } catch (err: any) {
+      console.error('[FCM_TEST] syncFcmToken getDeviceFcmToken error:', err);
       return { success: false, error: 'Ошибка получения токена: ' + (err?.message || 'сбой Service Worker') };
     }
 
     if (!token) {
+      console.error('[FCM_TEST] syncFcmToken abort: token is null');
       return { success: false, error: 'Не удалось сгенерировать токен устройства' };
     }
+
+    console.error('[FCM_TEST] saveTokenToDatabase called', {
+      uid: auth.currentUser?.uid,
+      projectId: firebaseConfig.projectId,
+      databaseId: firebaseConfig.firestoreDatabaseId || '(default)'
+    });
 
     await saveTokenToDatabase(token);
     return { success: true, token };
   } catch (error: any) {
-    logger.error("Failed to sync FCM token:", error);
+    console.error('[FCM_TEST] syncFcmToken caught error:', error);
     return { success: false, error: error?.message || 'Ошибка синхронизации с базой' };
   }
 }
@@ -114,6 +126,7 @@ export async function syncFcmToken(): Promise<SyncFcmResult> {
 export async function saveTokenToDatabase(token: string): Promise<void> {
   const user = auth.currentUser;
   if (!user) {
+    console.error('[FCM_TEST] saveTokenToDatabase abort: auth.currentUser is null');
     throw new Error("Пользователь не авторизован. Войдите в аккаунт.");
   }
 
@@ -123,10 +136,15 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
   const databaseId = firebaseConfig.firestoreDatabaseId || "(default)";
   
   try {
-    logger.log(`DIAGNOSTIC_BEFORE_WRITE: auth.uid=${uid}, userRef.path=${userRef.path}, projectId=${projectId}, databaseId=${databaseId}, operation=setDoc(merge:true)`);
-    
     const { arrayUnion, setDoc } = await import('firebase/firestore');
     
+    console.error('[FCM_TEST] BEFORE setDoc', {
+      uid: auth.currentUser?.uid,
+      path: userRef.path,
+      projectId: firebaseConfig.projectId,
+      databaseId: firebaseConfig.firestoreDatabaseId || '(default)'
+    });
+
     // Atomically save token without read-before-write
     await setDoc(userRef, {
       fcmTokens: arrayUnion(token),
@@ -134,9 +152,14 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
       updatedAt: new Date().toISOString()
     }, { merge: true });
     
-    logger.log(`DIAGNOSTIC_AFTER_WRITE_SUCCESS: auth.uid=${uid}, userRef.path=${userRef.path}`);
+    console.error('[FCM_TEST] SETDOC SUCCESS');
   } catch (error: any) {
-    logger.error(`DIAGNOSTIC_ERROR: Permission denied or error. Operation: setDoc(merge:true), auth.uid=${uid}, Project: ${projectId}, DB: ${databaseId}, Path: ${userRef.path}. error.code=${error.code}, error.message=${error.message}`, error);
+    console.error('[FCM_TEST] SETDOC ERROR', {
+      code: error?.code,
+      message: error?.message,
+      uid: auth.currentUser?.uid,
+      path: userRef.path
+    });
     // Throw a clear error so it can be shown in the UI
     throw new Error(error.message || "Ошибка доступа к базе данных");
   }
