@@ -118,23 +118,34 @@ export async function saveTokenToDatabase(token: string): Promise<void> {
   }
 
   const userRef = doc(db, 'users', user.uid);
-  const payload = {
-    fcmTokens: arrayUnion(token),
-    email: user.email || null,
-    updatedAt: new Date().toISOString()
-  };
-
+  
   try {
-    await setDoc(userRef, payload, { merge: true });
-  } catch (err: any) {
-    // Fallback: если setDoc упал (например, из-за create vs update ambiguity),
-    // попробовать updateDoc — он явно делает update существующего документа
-    logger.warn("setDoc failed, trying updateDoc fallback:", err);
-    const { updateDoc } = await import('firebase/firestore');
-    await updateDoc(userRef, payload);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists() || !userSnap.data()) {
+      // Document is missing or is a phantom/tombstone (has no data)
+      // Use standard setDoc without merge to create it cleanly
+      await setDoc(userRef, {
+        fcmTokens: [token],
+        email: user.email || null,
+        updatedAt: new Date().toISOString()
+      });
+    } else {
+      // Document exists and has data, safe to use updateDoc with arrayUnion
+      const { updateDoc } = await import('firebase/firestore');
+      await updateDoc(userRef, {
+        fcmTokens: arrayUnion(token),
+        email: user.email || null,
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    logger.log("FCM Token saved successfully to Firestore for user:", user.uid);
+  } catch (error: any) {
+    logger.error("Failed to save FCM token:", error);
+    // Throw a clear error so it can be shown in the UI
+    throw new Error(error.message || "Ошибка доступа к базе данных");
   }
-
-  logger.log("FCM Token saved successfully to Firestore for user:", user.uid);
 }
 
 export async function removeCurrentDeviceToken(): Promise<boolean> {
@@ -146,10 +157,15 @@ export async function removeCurrentDeviceToken(): Promise<boolean> {
     if (!token) return false;
 
     const userRef = doc(db, 'users', user.uid);
-    await setDoc(userRef, {
-      fcmTokens: arrayRemove(token),
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists() && userSnap.data()) {
+      const { updateDoc } = await import('firebase/firestore');
+      await updateDoc(userRef, {
+        fcmTokens: arrayRemove(token),
+        updatedAt: new Date().toISOString()
+      });
+    }
 
     logger.log("FCM Token removed successfully from Firestore for user:", user.uid);
     return true;
