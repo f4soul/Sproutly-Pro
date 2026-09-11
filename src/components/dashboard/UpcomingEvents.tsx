@@ -37,7 +37,7 @@ export function UpcomingEvents({ events, isPrivate }: UpcomingEventsProps) {
   return (
     <motion.div
       whileHover={{ y: -4 }}
-      className="w-full apple-card p-6 flex flex-col"
+      className="w-full apple-card p-6 flex flex-col min-h-[200px]"
     >
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -45,9 +45,9 @@ export function UpcomingEvents({ events, isPrivate }: UpcomingEventsProps) {
         </h3>
         <Calendar size={18} className="text-slate-400" />
       </div>
-      <div className="cursor-auto relative">
+      <div className="flex-1 flex items-center justify-center">
         {events.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 content-start">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-3 content-start">
             {events.map((event, idx) => (
               <div
                 key={`event-${event.type}-${event.date.getTime()}-${idx}`}
@@ -96,7 +96,7 @@ export function UpcomingEvents({ events, isPrivate }: UpcomingEventsProps) {
             ))}
           </div>
         ) : (
-          <EmptyState className="absolute inset-0 italic" />
+          <EmptyState className="italic" />
         )}
       </div>
     </motion.div>

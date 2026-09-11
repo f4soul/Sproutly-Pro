@@ -79,20 +79,16 @@ export async function getDeviceFcmToken(): Promise<string | null> {
 }
 
 export async function syncFcmToken(): Promise<SyncFcmResult> {
-  console.error('[FCM_TEST] syncFcmToken called');
   try {
     if (!('Notification' in window)) {
-      console.error('[FCM_TEST] syncFcmToken abort: window.Notification not supported');
       return { success: false, error: 'Браузер не поддерживает Push-уведомления' };
     }
     if (Notification.permission !== 'granted') {
-      console.error('[FCM_TEST] syncFcmToken abort: permission !== granted, permission =', Notification.permission);
       return { success: false, error: 'Уведомления не разрешены в браузере' };
     }
 
     const user = auth.currentUser;
     if (!user) {
-      console.error('[FCM_TEST] syncFcmToken abort: auth.currentUser is null');
       return { success: false, error: 'Для сохранения токена необходимо войти в аккаунт' };
     }
 
@@ -100,25 +96,18 @@ export async function syncFcmToken(): Promise<SyncFcmResult> {
     try {
       token = await getDeviceFcmToken();
     } catch (err: any) {
-      console.error('[FCM_TEST] syncFcmToken getDeviceFcmToken error:', err);
+      logger.error("getDeviceFcmToken error:", err);
       return { success: false, error: 'Ошибка получения токена: ' + (err?.message || 'сбой Service Worker') };
     }
 
     if (!token) {
-      console.error('[FCM_TEST] syncFcmToken abort: token is null');
       return { success: false, error: 'Не удалось сгенерировать токен устройства' };
     }
-
-    console.error('[FCM_TEST] saveTokenToDatabase called', {
-      uid: auth.currentUser?.uid,
-      projectId: firebaseConfig.projectId,
-      databaseId: firebaseConfig.firestoreDatabaseId || '(default)'
-    });
 
     await saveTokenToDatabase(token);
     return { success: true, token };
   } catch (error: any) {
-    console.error('[FCM_TEST] syncFcmToken caught error:', error);
+    logger.error("Failed to sync FCM token:", error);
     return { success: false, error: error?.message || 'Ошибка синхронизации с базой' };
   }
 }
@@ -126,72 +115,26 @@ export async function syncFcmToken(): Promise<SyncFcmResult> {
 export async function saveTokenToDatabase(token: string): Promise<void> {
   const user = auth.currentUser;
   if (!user) {
-    console.error('[FCM_TEST] saveTokenToDatabase abort: auth.currentUser is null');
     throw new Error("Пользователь не авторизован. Войдите в аккаунт.");
   }
 
   const uid = user.uid;
   const userRef = doc(db, 'users', uid);
-  const projectId = firebaseConfig.projectId;
-  const databaseId = firebaseConfig.firestoreDatabaseId || "(default)";
-
-  // Check Firebase App instance options and forced token refresh
-  const authProjectId = (auth.app.options as any)?.projectId;
-  const dbProjectId = (db.app.options as any)?.projectId;
-  const sameAppInstance = auth.app === db.app;
-
-  console.error('[FCM_TEST] APP_INSTANCES_CHECK', {
-    authProjectId,
-    dbProjectId,
-    sameAppInstance,
-    authAppName: auth.app.name,
-    dbAppName: db.app.name
-  });
-
-  let tokenResult: any = null;
-  try {
-    tokenResult = await user.getIdTokenResult(true);
-    console.error('[FCM_TEST] ID_TOKEN_RESULT', {
-      uid: user.uid,
-      email: user.email,
-      claims: tokenResult?.claims,
-      authTime: tokenResult?.authTime,
-      issuedAtTime: tokenResult?.issuedAtTime,
-      expirationTime: tokenResult?.expirationTime,
-      projectId: firebaseConfig.projectId,
-      path: userRef.path
-    });
-  } catch (err: any) {
-    console.error('[FCM_TEST] getIdTokenResult error:', err);
-  }
   
   try {
     const { arrayUnion, setDoc } = await import('firebase/firestore');
     
-    console.error('[FCM_TEST] BEFORE setDoc', {
-      uid: auth.currentUser?.uid,
-      path: userRef.path,
-      projectId: firebaseConfig.projectId,
-      databaseId: firebaseConfig.firestoreDatabaseId || '(default)'
-    });
-
-    // Atomically save token without read-before-write
+    // Atomically save token
     await setDoc(userRef, {
       fcmTokens: arrayUnion(token),
       email: user.email || null,
       updatedAt: new Date().toISOString()
     }, { merge: true });
     
-    console.error('[FCM_TEST] SETDOC SUCCESS');
+    logger.log("FCM token saved successfully for user:", uid);
   } catch (error: any) {
-    console.error('[FCM_TEST] SETDOC ERROR', {
-      code: error?.code,
-      message: error?.message,
-      uid: auth.currentUser?.uid,
-      path: userRef.path
-    });
-    // Throw a clear error so it can be shown in the UI
-    throw new Error(error.message || "Ошибка доступа к базе данных");
+    logger.error("Error saving FCM token to Firestore:", error);
+    throw new Error(error?.message || "Ошибка доступа к базе данных");
   }
 }
 

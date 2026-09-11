@@ -72,7 +72,8 @@ service cloud.firestore {
     }
 
     function isValidBank(data) {
-      return data.keys().hasAll(['name', 'color', 'logoText', 'logoUrl']) &&
+      return data.keys().hasAll(['userId', 'name', 'color', 'logoText', 'logoUrl']) &&
+             data.userId is string &&
              data.name is string &&
              data.color is string &&
              data.logoText is string &&
@@ -156,7 +157,12 @@ service cloud.firestore {
 
     // User profile rules (for FCM tokens & user profile)
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.fcmTokens is list
+        && (request.resource.data.updatedAt is string || request.resource.data.updatedAt is timestamp);
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
     }
   }
 }
