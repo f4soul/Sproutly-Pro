@@ -98,69 +98,85 @@ export default async function handler(req: Request, res: Response) {
       },
     ];
 
+    const isVerbose = req.query?.verbose === 'true';
+
     let notificationsSent = 0;
-    
-    // Diagnostic object to return in the API response
-    const debug = {
-      serverNowUTC: today.toISOString(),
-      moscowToday: formatter.format(today),
-      targetDates: targetDates.map(t => t.date),
-      usersChecked: 0,
-      usersWithTokens: 0,
-      totalDepositsChecked: 0,
-      depositsMatched: 0,
-      log: [] as string[]
-    };
+    let usersChecked = 0;
+    let usersWithTokens = 0;
+    let totalDepositsChecked = 0;
+    let depositsSkipped = 0;
+
+    interface MatchInfo {
+      userId: string;
+      depositId: string;
+      bank: string;
+      amount: string;
+      endDate: string;
+      pushStatus: string;
+    }
+
+    const matches: MatchInfo[] = [];
+    const warnings: string[] = [];
+    const verboseLog: string[] = [];
 
     // 2. Query all users who have FCM tokens
     const usersSnapshot = await db.collection('users').get();
-    debug.log.push(`Found ${usersSnapshot.docs.length} total users in 'users' collection.`);
+    if (isVerbose) {
+      verboseLog.push(`Found ${usersSnapshot.docs.length} total users in 'users' collection.`);
+    }
     
     for (const userDoc of usersSnapshot.docs) {
-      debug.usersChecked++;
+      usersChecked++;
       const userData = userDoc.data();
-      const tokens = userData.fcmTokens || [];
+      const tokens: string[] = userData.fcmTokens || [];
       const userId = userDoc.id;
       
       if (tokens.length === 0) {
-        debug.log.push(`User ${userId}: 0 FCM tokens (skipped).`);
+        if (isVerbose) verboseLog.push(`User ${userId}: 0 FCM tokens (skipped).`);
         continue;
       }
       
-      debug.usersWithTokens++;
-      debug.log.push(`User ${userId}: has ${tokens.length} FCM token(s).`);
+      usersWithTokens++;
+      if (isVerbose) verboseLog.push(`User ${userId}: has ${tokens.length} FCM token(s).`);
 
-      // 3. For each user, query their deposits that are not closed
+      // 3. For each user, query their deposits
       const depositsSnapshot = await db.collection('deposits').where('userId', '==', userId).get();
-      debug.log.push(`User ${userId}: retrieved ${depositsSnapshot.docs.length} deposits from Firestore.`);
+      if (isVerbose) {
+        verboseLog.push(`User ${userId}: retrieved ${depositsSnapshot.docs.length} deposits from Firestore.`);
+      }
 
       for (const depositDoc of depositsSnapshot.docs) {
-        debug.totalDepositsChecked++;
+        totalDepositsChecked++;
         const deposit = depositDoc.data();
         
         if (deposit.isClosed || deposit.isArchived || deposit.isDeleted) {
-           debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (isClosed=${deposit.isClosed}, isArchived=${deposit.isArchived}, isDeleted=${deposit.isDeleted})`);
-           continue;
+          depositsSkipped++;
+          if (isVerbose) {
+            verboseLog.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (closed/archived/deleted)`);
+          }
+          continue;
         }
         
         const rawEndDate = deposit.endDate;
         const endDt = parseDateValue(rawEndDate);
         
         if (!endDt) {
-          debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (unparseable endDate: ${JSON.stringify(rawEndDate)})`);
+          depositsSkipped++;
+          if (isVerbose) {
+            verboseLog.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'}): skipped (unparseable endDate)`);
+          }
           continue;
         }
 
         const endDateStr = formatter.format(endDt);
-        debug.log.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'} ${deposit.amount} ₽) ends on ${endDateStr}`);
+        if (isVerbose) {
+          verboseLog.push(`Deposit ${depositDoc.id} (${deposit.bank || 'Unknown'} ${deposit.amount} ₽) ends on ${endDateStr}`);
+        }
 
         // Check if the end date matches any of our target dates
         const matchedTarget = targetDates.find(target => target.date === endDateStr);
         
         if (matchedTarget) {
-          debug.depositsMatched++;
-          debug.log.push(`==> MATCH! Deposit ${depositDoc.id} matches target date ${endDateStr}! Sending push...`);
-
           // Format amount for the message
           const amountStr = deposit.amount ? `${deposit.amount.toLocaleString('ru-RU')} ₽` : 'неизвестную сумму';
           const bankName = deposit.bank || 'вашем банке';
@@ -179,23 +195,33 @@ export default async function handler(req: Request, res: Response) {
 
           try {
             const response = await messaging.sendEachForMulticast(message);
-            debug.log.push(`FCM send result for user ${userId}: success=${response.successCount}, failure=${response.failureCount}`);
-            if (response.failureCount > 0) {
-              response.responses.forEach((resp, idx) => {
-                if (!resp.success) {
-                  debug.log.push(`Token [${idx}] failed with error: ${resp.error?.message || resp.error?.code}`);
-                }
-              });
+            notificationsSent += response.successCount;
+
+            const pushStatus = response.failureCount === 0
+              ? `Отправлено на ${response.successCount} устр.`
+              : `Успешно: ${response.successCount}, сбоев: ${response.failureCount}`;
+
+            matches.push({
+              userId,
+              depositId: depositDoc.id,
+              bank: bankName,
+              amount: amountStr,
+              endDate: endDateStr,
+              pushStatus
+            });
+
+            if (isVerbose) {
+              verboseLog.push(`==> MATCH! Deposit ${depositDoc.id} (${bankName}) matches target date ${endDateStr}. Push: ${pushStatus}`);
             }
 
-            notificationsSent += response.successCount;
-            
-            // Clean up invalid tokens
+            // Clean up invalid tokens if any failed
             if (response.failureCount > 0) {
               const failedTokens: string[] = [];
               response.responses.forEach((resp: SendResponse, idx: number) => {
                 if (!resp.success) {
                   failedTokens.push(tokens[idx]);
+                  const errDetail = resp.error?.message || resp.error?.code || 'unknown error';
+                  warnings.push(`User ${userId}, token [${idx}] failed: ${errDetail}`);
                 }
               });
               
@@ -203,11 +229,11 @@ export default async function handler(req: Request, res: Response) {
                 await userDoc.ref.update({
                   fcmTokens: FieldValue.arrayRemove(...failedTokens)
                 });
-                debug.log.push(`Cleaned up ${failedTokens.length} expired FCM token(s) for user ${userId}.`);
+                warnings.push(`Cleaned up ${failedTokens.length} expired FCM token(s) for user ${userId}.`);
               }
             }
           } catch (error: any) {
-            debug.log.push(`Error invoking messaging.sendEachForMulticast: ${error.message}`);
+            warnings.push(`Error sending FCM to user ${userId}: ${error.message}`);
             console.error('Error sending message:', error);
           }
         }
@@ -215,7 +241,34 @@ export default async function handler(req: Request, res: Response) {
     }
 
     console.log(`Cron job finished. Sent ${notificationsSent} notifications.`);
-    return res.status(200).json({ success: true, notificationsSent, debug });
+
+    const summary = {
+      serverNowUTC: today.toISOString(),
+      moscowDate: formatter.format(today),
+      targetDates: targetDates.map(t => t.date),
+      usersChecked,
+      usersWithTokens,
+      totalDepositsChecked,
+      depositsSkipped,
+      depositsMatched: matches.length
+    };
+
+    const responsePayload: Record<string, any> = {
+      success: true,
+      notificationsSent,
+      summary,
+      matches
+    };
+
+    if (warnings.length > 0) {
+      responsePayload.warnings = warnings;
+    }
+
+    if (isVerbose) {
+      responsePayload.verboseLog = verboseLog;
+    }
+
+    return res.status(200).json(responsePayload);
   } catch (error: any) {
     console.error('Cron job failed:', error);
     return res.status(500).json({ error: error.message });
