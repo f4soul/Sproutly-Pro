@@ -122,6 +122,7 @@
 
   html {
     color-scheme: light;
+    background-color: #f8fafc;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
@@ -134,6 +135,7 @@
   .dark {
     --joyride-beacon-color: #2dd4bf;
     color-scheme: dark;
+    background-color: #020617;
   }
 
   body {

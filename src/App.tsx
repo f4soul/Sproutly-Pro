@@ -143,6 +143,27 @@ function AppContent() {
     }
   }, [_appSettings]);
 
+  // Слушаем системное изменение темы (iOS Control Center, Settings)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Если пользователь не выбирал тему явно (нет в localStorage),
+      // следуем системной
+      const saved = localStorage.getItem('theme');
+      if (!saved) {
+        setLocalTheme(e.matches ? 'dark' : 'light');
+      }
+      // Если есть явный выбор пользователя — не меняем,
+      // пользователь сам выбрал тему
+    };
+
+    // Современный API (iOS 14+, Safari 14+)
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
   // Set up visibility change, focus and inactive timers
   useEffect(() => {
     if (!isLockActive) return;
