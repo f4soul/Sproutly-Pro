@@ -13,33 +13,11 @@ export function useSafeModalClose(onClose: () => void) {
   const isClosingRef = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Preserve and restore the exact scroll position upon modal unmount
+  // When unmounting, ensure active focus is removed cleanly
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined') {
-        const targetY = initialScrollY.current;
-
-        // Disarm any active element focus that might trigger a scroll jump
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        // Instantly restore scroll if shifted by keyboard or FocusTrap
-        if (Math.abs(window.scrollY - targetY) > 5) {
-          window.scrollTo({ top: targetY, behavior: 'instant' });
-        }
-
-        // Ensure next animation frame also stays pinned (handles post-unmount FocusTrap micro-tasks)
-        requestAnimationFrame(() => {
-          if (typeof window !== 'undefined') {
-            if (Math.abs(window.scrollY - targetY) > 5) {
-              window.scrollTo({ top: targetY, behavior: 'instant' });
-            }
-            if (document.activeElement instanceof HTMLElement) {
-              document.activeElement.blur();
-            }
-          }
-        });
+      if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
       }
     };
   }, []);
