@@ -16,6 +16,7 @@ import { ClearButton } from "../ui/ClearButton";
 import { StepperButton } from "../ui/StepperButton";
 import { getCryptoRates, getCryptoRate } from "../../services/crypto";
 import { formatCurrency } from "../../lib/taxCalculator";
+import { useSafeModalClose } from "../../hooks/useSafeModalClose";
 
 registerLocale("ru", ru);
 
@@ -27,6 +28,7 @@ interface CryptoFormProps {
 }
 
 export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
+  const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   const comboboxRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<Partial<CryptoAsset>>(
     assetToEdit || {
@@ -86,36 +88,38 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   };
 
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.ticker) {
       alert("Укажите тикер");
       return;
     }
 
-    try {
-      const dataToSave = {
-        ...formData,
-        userId: auth.currentUser?.uid || "local",
-        updatedAt: Date.now()
-      } as CryptoAsset;
+    safeClose(async () => {
+      try {
+        const dataToSave = {
+          ...formData,
+          userId: auth.currentUser?.uid || "local",
+          updatedAt: Date.now()
+        } as CryptoAsset;
 
-      if (assetToEdit && assetToEdit.id) {
-        await db.cryptoAssets.put({ ...dataToSave, id: assetToEdit.id });
-      } else {
-        await db.cryptoAssets.add(dataToSave);
+        if (assetToEdit && assetToEdit.id) {
+          await db.cryptoAssets.put({ ...dataToSave, id: assetToEdit.id });
+        } else {
+          await db.cryptoAssets.add(dataToSave);
+        }
+        emitSyncEvent("syncing");
+        syncWithFirebase().catch(logger.error);
+      } catch (err) {
+        logger.error("Error saving crypto asset:", err);
+        alert("Ошибка при сохранении");
+        throw err;
       }
-      emitSyncEvent("syncing");
-      syncWithFirebase().catch(logger.error);
-      onClose();
-    } catch (err) {
-      logger.error("Error saving crypto asset:", err);
-      alert("Ошибка при сохранении");
-    }
+    });
   };
 
   return (
-    <Dialog as="div" className="relative z-[100]" open={true} onClose={onClose} static>
+    <Dialog as="div" className="relative z-[100]" open={true} onClose={() => safeClose()} static>
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -148,7 +152,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                   </h3>
                   <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mt-1">Информация об активе в портфеле</p>
                 </div>
-                <button type="button" onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4 relative z-20">
+                <button type="button" onClick={() => safeClose()} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4 relative z-20">
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
@@ -392,14 +396,18 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
               <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => safeClose()}
                   className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-5 text-sm sm:text-xs font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300 sm:text-slate-500 sm:dark:text-slate-400 bg-white/50 dark:bg-slate-800/80 sm:bg-transparent sm:dark:bg-transparent hover:bg-white dark:hover:bg-slate-700 sm:hover:bg-slate-200/50 sm:dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 sm:border-transparent sm:dark:border-transparent shadow-sm sm:shadow-none"
                 >
                   Отмена
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold uppercase tracking-wide text-white bg-amber-500 hover:bg-amber-600 sm:hover:scale-[1.02] rounded-xl transition-all shadow-[0_4px_16px_rgba(245,158,11,0.3)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.4)] active:scale-95"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold uppercase tracking-wide text-white bg-amber-500 hover:bg-amber-600 sm:hover:scale-[1.02] rounded-xl transition-all shadow-[0_4px_16px_rgba(245,158,11,0.3)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.4)] active:scale-95",
+                    isSubmitting && "opacity-70 pointer-events-none"
+                  )}
                 >
                   <Save className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5px]" />
                   Сохранить

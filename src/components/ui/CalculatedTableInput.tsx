@@ -34,13 +34,27 @@ export const CalculatedTableInput = ({
     setIsOpen(true);
   };
 
+  const handleClose = () => {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 60);
+  };
+
   const handleSave = () => {
+    if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     const valStr = localValue.replace(/,/g, '.').replace(/\s/g, '');
     let num = parseFloat(valStr);
     if (isNaN(num)) num = 0;
     
     onChange(num);
-    setIsOpen(false);
+    setTimeout(() => {
+      setIsOpen(false);
+    }, 60);
   };
   
   const sign = type.includes('percent') ? '%' : 'Коэф.';
@@ -89,14 +103,14 @@ export const CalculatedTableInput = ({
 
       <AnimatePresence>
         {isOpen && (
-          <Dialog as="div" className="relative z-[200]" open={isOpen} onClose={() => setIsOpen(false)} static>
+          <Dialog as="div" className="relative z-[200]" open={isOpen} onClose={handleClose} static>
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm pointer-events-auto z-[190]"
               aria-hidden="true"
-              onClick={() => setIsOpen(false)}
+              onClick={handleClose}
             />
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
               <Dialog.Panel as={Fragment}>
@@ -113,7 +127,7 @@ export const CalculatedTableInput = ({
                       </div>
                       <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-tight">{label}</h3>
                     </div>
-                    <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400">
+                    <button onClick={handleClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400">
                       <X size={18} />
                     </button>
                   </div>
@@ -166,7 +180,7 @@ export const CalculatedTableInput = ({
 
                   <div className="flex gap-2">
                     <button 
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleClose}
                       className="flex-[0.4] apple-button flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase tracking-wide text-xs font-bold"
                     >
                       Отмена

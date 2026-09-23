@@ -19,6 +19,7 @@ export function formatCurrency(value: number, currencyCode: string = 'RUB'): str
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: validCurrency,
+      currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
     }).format(value);
@@ -28,6 +29,7 @@ export function formatCurrency(value: number, currencyCode: string = 'RUB'): str
     return new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: 'RUB',
+      currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
     }).format(value);

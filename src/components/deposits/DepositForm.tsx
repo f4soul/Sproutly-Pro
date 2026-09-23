@@ -44,6 +44,7 @@ import { DepositFormFormulaSelect } from "./DepositFormFormulaSelect";
 import { DepositFormDateFields } from "./DepositFormDateFields";
 import { ClearButton } from "../ui/ClearButton";
 import { StepperButton } from "../ui/StepperButton";
+import { useSafeModalClose } from "../../hooks/useSafeModalClose";
 
 registerLocale("ru", ru);
 
@@ -53,6 +54,7 @@ interface DepositFormProps {
 }
 
 export function DepositForm({ deposit, onClose }: DepositFormProps) {
+  const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   // Scroll locking handled by Dialog natively
 
   const [duration, setDuration] = useState<number | "">("");
@@ -456,55 +458,62 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = auth.currentUser;
-    const dataToSave = {
-      ...formData,
-      userId: user?.uid || undefined,
-      updatedAt: Date.now(),
-      bank: formData.bank || "Неизвестный банк",
-      startDate: formData.startDate || new Date(),
-      amount: Number(formData.amount) || 0,
-      rate: Number(formData.rate) || 0,
-    } as Deposit;
+    safeClose(async () => {
+      try {
+        const user = auth.currentUser;
+        const dataToSave = {
+          ...formData,
+          userId: user?.uid || undefined,
+          updatedAt: Date.now(),
+          bank: formData.bank || "Неизвестный банк",
+          startDate: formData.startDate || new Date(),
+          amount: Number(formData.amount) || 0,
+          rate: Number(formData.rate) || 0,
+        } as Deposit;
 
-    if (deposit?.id) {
-      if (
-        dataToSave.formula === 'daily_balance' && 
-        (deposit.amount !== dataToSave.amount || deposit.rate !== dataToSave.rate)
-      ) {
-        // "Bank style" math: snapshot the accrued income up to today, freeze it,
-        // and start calculating new income from today for the new balance/rate.
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        if (deposit?.id) {
+          if (
+            dataToSave.formula === 'daily_balance' && 
+            (deposit.amount !== dataToSave.amount || deposit.rate !== dataToSave.rate)
+          ) {
+            // "Bank style" math: snapshot the accrued income up to today, freeze it,
+            // and start calculating new income from today for the new balance/rate.
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-        const oldEndDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
-        oldEndDate.setHours(0, 0, 0, 0);
+            const oldEndDate = deposit.endDate ? new Date(deposit.endDate) : new Date();
+            oldEndDate.setHours(0, 0, 0, 0);
 
-        // Only snap if today is before maturation, otherwise the full income is already earned
-        if (today < oldEndDate && Number(dataToSave.amount) > 0) {
-          // Calculate income earned *exactly* up to today using the old parameters
-          const originalIncomeUpToToday = calculateIncome({
-            ...deposit,
-            endDate: today,
-            factIncome: undefined
-          });
+            // Only snap if today is before maturation, otherwise the full income is already earned
+            if (today < oldEndDate && Number(dataToSave.amount) > 0) {
+              // Calculate income earned *exactly* up to today using the old parameters
+              const originalIncomeUpToToday = calculateIncome({
+                ...deposit,
+                endDate: today,
+                factIncome: undefined
+              });
 
-          dataToSave.historicalIncome = originalIncomeUpToToday;
-          dataToSave.lastAmountUpdate = today.getTime();
+              dataToSave.historicalIncome = originalIncomeUpToToday;
+              dataToSave.lastAmountUpdate = today.getTime();
+            }
+          }
+
+          await db.deposits.put({ ...dataToSave, id: deposit.id });
+        } else {
+          const newId =
+            typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : Math.random().toString(36).substr(2, 9) + Date.now();
+          await db.deposits.put({ ...dataToSave, id: newId });
+          localStorage.removeItem("new_deposit_draft");
         }
+        syncWithFirebase().catch(logger.error);
+      } catch (err) {
+        logger.error("Error saving deposit:", err);
+        alert("Ошибка при сохранении вклада");
+        throw err;
       }
-
-      await db.deposits.put({ ...dataToSave, id: deposit.id });
-    } else {
-      const newId =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : Math.random().toString(36).substr(2, 9) + Date.now();
-      await db.deposits.put({ ...dataToSave, id: newId });
-      localStorage.removeItem("new_deposit_draft");
-    }
-    syncWithFirebase().catch(logger.error);
-    onClose();
+    });
   };
 
   return (
@@ -512,7 +521,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       as="div"
       className="relative z-[100]"
       open={true}
-      onClose={onClose}
+      onClose={() => safeClose()}
       static
     >
       <motion.div
@@ -551,7 +560,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 </div>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={() => safeClose()}
                   className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-2 -mr-2 sm:-mr-2"
                 >
                   <X className="w-5 h-5 text-slate-500" />
@@ -1116,20 +1125,25 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
           <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => safeClose()}
                 className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-5 text-sm sm:text-xs font-bold text-slate-600 dark:text-slate-300 sm:text-slate-500 sm:dark:text-slate-400 bg-white/50 dark:bg-slate-800/80 sm:bg-transparent sm:dark:bg-transparent hover:bg-white dark:hover:bg-slate-700 sm:hover:bg-slate-200/50 sm:dark:hover:bg-slate-800 rounded-xl transition-all active:scale-95 border border-slate-200 dark:border-slate-700/50 sm:border-transparent sm:dark:border-transparent shadow-sm sm:shadow-none uppercase tracking-wide"
               >
                 Отмена
               </button>
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={
+                  isSubmitting ||
                   !formData.bank ||
                   !formData.amount ||
                   !formData.rate ||
                   !formData.startDate
                 }
-                className="flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold text-white bg-deposit-500 hover:bg-deposit-600 sm:hover:scale-[1.02] rounded-xl transition-all shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] active:scale-95 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100 disabled:hover:scale-100"
+                className={cn(
+                  "flex-1 sm:flex-none sm:w-auto py-3.5 sm:py-2 sm:px-6 flex items-center justify-center gap-2 text-sm sm:text-xs font-bold text-white bg-deposit-500 hover:bg-deposit-600 sm:hover:scale-[1.02] rounded-xl transition-all shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] active:scale-95 uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:active:scale-100 disabled:hover:scale-100",
+                  isSubmitting && "opacity-70 pointer-events-none"
+                )}
               >
                 <Save className="w-4 h-4 sm:w-5 sm:h-5 stroke-[1.5px]" />
                 Сохранить

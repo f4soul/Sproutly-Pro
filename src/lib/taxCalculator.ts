@@ -42,6 +42,7 @@ function getCurrencyFormatter(currency: string) {
     formatterCache.set(currency, new Intl.NumberFormat('ru-RU', {
       style: 'currency',
       currency: currency,
+      currencyDisplay: 'narrowSymbol',
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }));
