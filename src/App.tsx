@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'rea
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
+import { ReloadPrompt } from './components/ui/ReloadPrompt';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
@@ -25,9 +26,10 @@ import { SproutlyLogo } from './components/ui/SproutlyLogo';
 import { LandingView } from './components/welcome/LandingView';
 import { changelog } from './data/changelog';
 import { AnimatePresence } from 'motion/react';
+import { applyThemeToDom, getInitialTheme } from './lib/theme';
 
 const SplashLoader = ({ theme }: { theme: 'light' | 'dark' }) => (
-  <div className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center transition-colors duration-500 ${theme === 'dark' ? 'bg-slate-950' : 'bg-slate-50'}`}>
+  <div className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-950'}`}>
     <div className="relative flex items-center justify-center">
       {/* Animated pulsing glow */}
       <div className="absolute inset-0 bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl animate-pulse scale-150" />
@@ -126,15 +128,14 @@ function AppContent() {
   };
   
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>(() => {
-    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null;
-    return saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    return getInitialTheme();
   });
 
   const theme = _appSettings?.theme || localTheme;
 
   useEffect(() => {
     if (_appSettings?.theme) {
-      localStorage.setItem('theme', _appSettings.theme);
+      applyThemeToDom(_appSettings.theme);
       setLocalTheme(_appSettings.theme);
     }
     
@@ -152,7 +153,9 @@ function AppContent() {
       // следуем системной
       const saved = localStorage.getItem('theme');
       if (!saved) {
-        setLocalTheme(e.matches ? 'dark' : 'light');
+        const nextTheme = e.matches ? 'dark' : 'light';
+        applyThemeToDom(nextTheme);
+        setLocalTheme(nextTheme);
       }
       // Если есть явный выбор пользователя — не меняем,
       // пользователь сам выбрал тему
@@ -260,37 +263,9 @@ function AppContent() {
     };
   }, [isLockActive, isUnlocked, _appSettings]);
 
-  const lastThemeColorRef = useRef<string>('');
-
-  // Sync theme to document element
+  // Sync theme to document element and status bar
   useEffect(() => {
-    // 1. Класс
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    
-    // 2. Мета: кэш последнего значения (setAttribute только при реальном изменении)
-    const targetColor = theme === 'dark' ? '#020617' : '#f8fafc';
-    if (lastThemeColorRef.current !== targetColor) {
-      lastThemeColorRef.current = targetColor;
-      let metaThemeColor = document.querySelector('meta[name="theme-color"]:not([media])');
-      if (!metaThemeColor) {
-        metaThemeColor = document.createElement('meta');
-        metaThemeColor.setAttribute('name', 'theme-color');
-        document.head.appendChild(metaThemeColor);
-      }
-      if (metaThemeColor.getAttribute('content') !== targetColor) {
-        metaThemeColor.setAttribute('content', targetColor);
-      }
-
-      // Remove media-query based meta tags to prevent system conflicts when manually switching
-      document.querySelectorAll('meta[name="theme-color"][media]').forEach(el => el.remove());
-    }
-
-    // 3. Снятие inline-фона: дальше фон управляется ТОЛЬКО CSS
-    document.documentElement.style.removeProperty('background-color');
+    applyThemeToDom(theme);
   }, [theme]);
 
   const deposits = _deposits || [];
@@ -421,6 +396,7 @@ function AppContent() {
         </AnimatePresence>
       </div>
       <GlobalToasts />
+      <ReloadPrompt />
     </>
   );
 }

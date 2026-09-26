@@ -9,6 +9,7 @@ import { useIncome } from '../../../context/IncomeContext';
 import { showToast } from '../../../lib/toast';
 import { db, syncWithFirebase } from '../../../config/db';
 import { logger } from '../../../lib/logger';
+import { applyThemeToDom } from '../../../lib/theme';
 
 export function DataManagementSettings() {
   const { deposits } = useDeposits();
@@ -96,6 +97,10 @@ export function DataManagementSettings() {
           const mappedApp = data.appSettings.map((s: any) => ({ ...s, updatedAt: now }));
           await db.appSettings.clear();
           await db.appSettings.bulkPut(mappedApp);
+          const importedTheme = mappedApp.find((s: any) => s.id === 'main')?.theme || mappedApp[0]?.theme;
+          if (importedTheme === 'light' || importedTheme === 'dark') {
+            applyThemeToDom(importedTheme);
+          }
         }
         if (data.banks) {
           const mappedBanks = data.banks.map((b: any) => ({ ...b, updatedAt: now }));

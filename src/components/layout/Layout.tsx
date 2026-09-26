@@ -12,6 +12,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useSettings } from '../../context/SettingsContext';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
 import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
+import { applyThemeToDom } from '../../lib/theme';
+import { SidebarUpdatePrompt } from '../ui/ReloadPrompt';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -117,18 +119,24 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
     }
   };
 
-  const toggleTheme = async () => {
-    await db.appSettings.update('main', { theme: theme === 'light' ? 'dark' : 'light' });
+  const toggleTheme = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    const nextTheme: 'light' | 'dark' = theme === 'light' ? 'dark' : 'light';
+    // Synchronously apply theme to DOM immediately before async DB or React operations
+    applyThemeToDom(nextTheme);
+    db.appSettings.update('main', { theme: nextTheme, updatedAt: Date.now() }).catch(err => {
+      logger.error('Failed to update theme setting:', err);
+    });
   };
 
   return (
     <div className={cn(
-      "min-h-[100dvh] flex flex-col md:flex-row transition-colors duration-500",
+      "min-h-[100dvh] flex flex-col md:flex-row",
       theme === 'dark' ? "bg-slate-950 text-white" : "bg-slate-50 text-slate-950"
     )}>
       {/* Sidebar for Desktop */}
       <aside 
-        className="hidden md:flex flex-col w-68 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 px-5 lg:px-8 fixed h-full z-40 transition-all duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]"
+        className="hidden md:flex flex-col w-68 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 px-5 lg:px-8 fixed h-full z-40 transition-shadow duration-300 overflow-y-auto scrollbar-hide shadow-[8px_0_32px_rgba(0,0,0,0.02)] dark:shadow-[8px_0_48px_rgba(0,0,0,0.5)]"
         style={{
           paddingTop: 'calc(env(safe-area-inset-top, 0px) + 2rem)',
           paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)'
@@ -190,6 +198,9 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
             />
           </LayoutGroup>
         </nav>
+
+        {/* Desktop/Tablet Sidebar Update Prompt — directly below navigation */}
+        <SidebarUpdatePrompt />
 
         <div className="mt-auto flex flex-col gap-2">
           {/* New Sync Indicator Desktop */}

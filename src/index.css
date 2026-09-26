@@ -141,7 +141,6 @@
   body {
     @apply antialiased selection:bg-primary-100 selection:text-primary-900;
     @apply text-slate-950 bg-slate-50 dark:text-white dark:bg-slate-950;
-    transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1), color 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     overscroll-behavior-y: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -238,7 +237,7 @@
   }
 
   .apple-card {
-    @apply bg-white dark:bg-slate-950 rounded-card shadow-card dark:shadow-card-dark border border-slate-200 dark:border-slate-800 transition-all duration-500 overflow-hidden relative;
+    @apply bg-white dark:bg-slate-950 rounded-card shadow-card dark:shadow-card-dark border border-slate-200 dark:border-slate-800 transition-shadow duration-200 overflow-hidden relative;
   }
 
   .apple-button {

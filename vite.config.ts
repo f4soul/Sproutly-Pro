@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
         symbolId: 'icon-[name]',
       }),
       VitePWA({
-        registerType: 'autoUpdate',
+        registerType: 'prompt',
         workbox: {
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
           runtimeCaching: [
