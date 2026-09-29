@@ -146,18 +146,7 @@ export function BentoDashboard({
     deposits.forEach((d) => {
       if (d.isArchived) return;
 
-      const isClosed =
-        d.isClosed ||
-        (() => {
-          if (!d.endDate) return false;
-          const end = new Date(d.endDate);
-          end.setHours(0, 0, 0, 0);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          return end.getTime() < today.getTime();
-        })();
-
-      if (!isClosed) {
+      if (!isDepositClosed(d)) {
         totalDepositsAmount += convertToRub(
           d.amount,
           d.currency || "RUB",
