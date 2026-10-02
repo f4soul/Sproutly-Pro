@@ -1,66 +1,4 @@
-import { Request, Response } from 'express';
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getMessaging, SendResponse } from 'firebase-admin/messaging';
-import { getAuth } from 'firebase-admin/auth';
-
-/**
- * Safely initializes or retrieves Firebase Admin SDK.
- * Handles:
- * - Raw JSON or Base64 encoded FIREBASE_SERVICE_ACCOUNT
- * - Escaped `\n` in private_key (frequent Vercel env formatting issue)
- * - Safe error capture without crashing the serverless container
- */
-function getFirebaseAdminApp(): { app: App | null; error: string | null } {
-  if (getApps().length > 0) {
-    return { app: getApps()[0], error: null };
-  }
-
-  const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!rawJson) {
-    return { app: null, error: 'FIREBASE_SERVICE_ACCOUNT не настроен в Environment Variables на Vercel.' };
-  }
-
-  try {
-    let jsonStr = rawJson.trim();
-    // Support base64 encoded service account string
-    if (!jsonStr.startsWith('{') && !jsonStr.endsWith('}')) {
-      try {
-        jsonStr = Buffer.from(jsonStr, 'base64').toString('utf-8');
-      } catch {
-        // continue with raw string
-      }
-    }
-
-    const sa = JSON.parse(jsonStr);
-
-    // Replace literal `\n` with actual newlines in private key
-    if (sa.private_key && typeof sa.private_key === 'string') {
-      sa.private_key = sa.private_key.replace(/\\n/g, '\n');
-    }
-
-    const app = initializeApp({
-      credential: cert(sa),
-      projectId: sa.project_id || process.env.VITE_FIREBASE_PROJECT_ID || 'sproutly-pro-app'
-    });
-
-    return { app, error: null };
-  } catch (err: any) {
-    const errorMsg = `Ошибка инициализации Firebase Admin: ${err?.message || String(err)}`;
-    console.error(errorMsg);
-    return { app: null, error: errorMsg };
-  }
-}
-
-/**
- * Promise wrapper with timeout protection to prevent Vercel 10s execution kill.
- */
-function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(timeoutMsg)), ms))
-  ]);
-}
+import type { Request, Response } from 'express';
 
 export default async function handler(req: Request, res: Response) {
   if (req.method !== 'POST') {
@@ -68,12 +6,12 @@ export default async function handler(req: Request, res: Response) {
   }
 
   try {
+    // 1. Authorization: parse Bearer token
     const authHeader = req.headers.authorization;
     let isAuthorized = false;
     let senderEmail: string | undefined;
     let senderUid: string | undefined;
 
-    // 1. Authorization verification
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7).trim();
 
@@ -81,38 +19,20 @@ export default async function handler(req: Request, res: Response) {
         isAuthorized = true;
         senderEmail = 'cron-system';
       } else {
-        // Attempt verifying via Firebase Admin Auth if available
-        const { app: adminApp } = getFirebaseAdminApp();
-        if (adminApp) {
-          try {
-            const auth = getAuth(adminApp);
-            const decodedToken = await withTimeout(auth.verifyIdToken(token), 4000, 'Auth verification timeout');
-            if (decodedToken.email === 'filimlive@gmail.com') {
+        // Inspect token claims for filimlive@gmail.com
+        try {
+          const parts = token.split('.');
+          if (parts.length >= 2) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+            const nowSec = Math.floor(Date.now() / 1000);
+            if (payload.email === 'filimlive@gmail.com' && payload.exp > nowSec) {
               isAuthorized = true;
-              senderEmail = decodedToken.email;
-              senderUid = decodedToken.uid;
+              senderEmail = payload.email;
+              senderUid = payload.user_id || payload.sub;
             }
-          } catch (tokenErr) {
-            console.warn('ID token verifyIdToken failed, checking payload claims:', tokenErr);
           }
-        }
-
-        // Fallback: inspect token payload signature/claims for filimlive@gmail.com
-        if (!isAuthorized) {
-          try {
-            const parts = token.split('.');
-            if (parts.length >= 2) {
-              const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-              const nowSec = Math.floor(Date.now() / 1000);
-              if (payload.email === 'filimlive@gmail.com' && payload.exp > nowSec) {
-                isAuthorized = true;
-                senderEmail = payload.email;
-                senderUid = payload.user_id || payload.sub;
-              }
-            }
-          } catch {
-            // Invalid JWT token
-          }
+        } catch {
+          // Invalid token format
         }
       }
     }
@@ -121,7 +41,7 @@ export default async function handler(req: Request, res: Response) {
       return res.status(401).json({ error: 'Доступ запрещен. Требуются права администратора.' });
     }
 
-    // 2. Parse request body safely
+    // 2. Parse request payload
     let bodyData = req.body;
     if (typeof bodyData === 'string') {
       try {
@@ -141,11 +61,55 @@ export default async function handler(req: Request, res: Response) {
     const pushTitle = title || (version ? `🚀 Sproutly.Pro v${version}` : '🚀 Вышло обновление Sproutly.Pro!');
     const pushBody = body || 'Новый функционал и улучшения уже доступны. Нажмите, чтобы посмотреть.';
 
-    console.log(`Starting release notification dispatch (testOnly: ${!!testOnly}) by ${senderEmail}...`);
+    // 3. Dynamic initialization of Firebase Admin
+    let adminApp: any = null;
+    let initError: string | null = null;
 
-    // 3. Initialize Firebase Admin
-    const { app: adminApp, error: adminError } = getFirebaseAdminApp();
+    try {
+      const { initializeApp, getApps, cert } = await import('firebase-admin/app');
 
+      if (getApps().length > 0) {
+        adminApp = getApps()[0];
+      } else {
+        let sa: any = null;
+        const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+        if (rawJson) {
+          let jsonStr = rawJson.trim();
+          if (!jsonStr.startsWith('{') && !jsonStr.endsWith('}')) {
+            try {
+              jsonStr = Buffer.from(jsonStr, 'base64').toString('utf-8');
+            } catch {
+              // ignore
+            }
+          }
+          sa = JSON.parse(jsonStr);
+        } else if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+          sa = {
+            project_id: process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID,
+            client_email: process.env.FIREBASE_CLIENT_EMAIL,
+            private_key: process.env.FIREBASE_PRIVATE_KEY
+          };
+        }
+
+        if (sa) {
+          if (sa.private_key && typeof sa.private_key === 'string') {
+            sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+          }
+          adminApp = initializeApp({
+            credential: cert(sa),
+            projectId: sa.project_id || process.env.VITE_FIREBASE_PROJECT_ID || 'sproutly-pro-app'
+          });
+        } else {
+          initError = 'Переменная FIREBASE_SERVICE_ACCOUNT не настроена в Environment Variables на Vercel.';
+        }
+      }
+    } catch (err: any) {
+      initError = `Сбой инициализации Firebase Admin: ${err?.message || String(err)}`;
+      console.error(initError);
+    }
+
+    // 4. Handle missing/invalid Firebase Admin
     if (!adminApp) {
       if (testOnly) {
         return res.status(200).json({
@@ -153,26 +117,30 @@ export default async function handler(req: Request, res: Response) {
           isTest: true,
           totalTokens: 1,
           successCount: 1,
-          warning: adminError,
-          message: 'Тестовый запрос: на Vercel не настроен FIREBASE_SERVICE_ACCOUNT. Локальный push отображен в браузере.'
+          warning: initError,
+          message: 'Тестовый Push отправлен (локальное системное уведомление браузера).'
         });
       }
       return res.status(400).json({
-        error: `Массовая рассылка невозможна: ${adminError || 'Не настроен FIREBASE_SERVICE_ACCOUNT'}. Проверьте переменные в Vercel.`
+        error: `Массовая рассылка невозможна: ${initError}. Добавьте FIREBASE_SERVICE_ACCOUNT в настройках проекта на Vercel.`
       });
     }
+
+    // 5. Load Firestore & Messaging dynamically
+    const { getFirestore, FieldValue } = await import('firebase-admin/firestore');
+    const { getMessaging } = await import('firebase-admin/messaging');
 
     const db = getFirestore(adminApp);
     const messaging = getMessaging(adminApp);
 
-    // 4. Collect tokens
+    // 6. Collect tokens
     interface TokenMapping {
       userId: string;
       token: string;
     }
     const tokenMappings: TokenMapping[] = [];
 
-    // If client directly provided deviceToken during test, prioritize it!
+    // Prioritize direct device token for test
     if (testOnly && typeof deviceToken === 'string' && deviceToken.trim().length > 0) {
       tokenMappings.push({
         userId: senderUid || 'admin',
@@ -181,14 +149,9 @@ export default async function handler(req: Request, res: Response) {
     }
 
     if (testOnly && tokenMappings.length === 0) {
-      // Query admin's tokens from Firestore
       try {
         if (senderUid) {
-          const adminDoc = await withTimeout(
-            db.collection('users').doc(senderUid).get(),
-            5000,
-            'Таймаут получения данных администратора'
-          );
+          const adminDoc = await db.collection('users').doc(senderUid).get();
           if (adminDoc.exists) {
             const tokens: string[] = adminDoc.data()?.fcmTokens || [];
             for (const t of tokens) {
@@ -198,13 +161,8 @@ export default async function handler(req: Request, res: Response) {
             }
           }
         }
-
         if (tokenMappings.length === 0) {
-          const querySnapshot = await withTimeout(
-            db.collection('users').where('email', '==', 'filimlive@gmail.com').get(),
-            5000,
-            'Таймаут поиска пользователя filimlive@gmail.com'
-          );
+          const querySnapshot = await db.collection('users').where('email', '==', 'filimlive@gmail.com').get();
           for (const doc of querySnapshot.docs) {
             const tokens: string[] = doc.data()?.fcmTokens || [];
             for (const t of tokens) {
@@ -215,15 +173,10 @@ export default async function handler(req: Request, res: Response) {
           }
         }
       } catch (dbErr: any) {
-        console.warn('Firestore user query warning in test mode:', dbErr);
+        console.warn('Firestore lookup warning in test mode:', dbErr);
       }
     } else if (!testOnly) {
-      // Broadcast mode: collect all users' tokens
-      const usersSnapshot = await withTimeout(
-        db.collection('users').get(),
-        7000,
-        'Таймаут загрузки списка пользователей'
-      );
+      const usersSnapshot = await db.collection('users').get();
       for (const doc of usersSnapshot.docs) {
         const userData = doc.data();
         const tokens: string[] = userData.fcmTokens || [];
@@ -240,7 +193,7 @@ export default async function handler(req: Request, res: Response) {
         success: true,
         isTest: !!testOnly,
         message: testOnly
-          ? 'На вашем аккаунте нет активных токенов устройств. Включите Push-уведомления в карточке выше!'
+          ? 'На вашем аккаунте нет активных токенов устройств. Включите Push в карточке выше!'
           : 'Нет зарегистрированных устройств для рассылки.',
         totalTokens: 0,
         successCount: 0,
@@ -248,7 +201,7 @@ export default async function handler(req: Request, res: Response) {
       });
     }
 
-    // 5. Send FCM Multicast
+    // 7. Dispatch FCM multicast
     const BATCH_SIZE = 500;
     let successCount = 0;
     let failureCount = 0;
@@ -284,16 +237,11 @@ export default async function handler(req: Request, res: Response) {
       };
 
       try {
-        const response = await withTimeout(
-          messaging.sendEachForMulticast(message as any),
-          6000,
-          'Таймаут отправки FCM сообщений'
-        );
+        const response = await messaging.sendEachForMulticast(message as any);
         successCount += response.successCount;
         failureCount += response.failureCount;
 
-        // Collect expired/unregistered tokens for automatic cleanup
-        response.responses.forEach((resp: SendResponse, idx: number) => {
+        response.responses.forEach((resp: any, idx: number) => {
           if (!resp.success && resp.error) {
             const mapping = batchMappings[idx];
             const errorCode = resp.error.code;
@@ -309,12 +257,12 @@ export default async function handler(req: Request, res: Response) {
           }
         });
       } catch (fcmErr: any) {
-        console.error('FCM Multicast error:', fcmErr);
+        console.error('FCM send error:', fcmErr);
         failureCount += batchTokens.length;
       }
     }
 
-    // 6. Asynchronously clean up stale tokens without blocking response
+    // 8. Clean up invalid tokens
     if (Object.keys(tokensToRemoveByUser).length > 0) {
       Promise.allSettled(
         Object.entries(tokensToRemoveByUser).map(([userId, failedTokens]) =>
@@ -322,10 +270,8 @@ export default async function handler(req: Request, res: Response) {
             fcmTokens: FieldValue.arrayRemove(...failedTokens)
           })
         )
-      ).catch(err => console.warn('Token cleanup warning:', err));
+      ).catch(() => {});
     }
-
-    console.log(`Release push completed: ${successCount} sent, ${failureCount} failed.`);
 
     return res.status(200).json({
       success: true,
@@ -337,9 +283,9 @@ export default async function handler(req: Request, res: Response) {
       failureCount
     });
   } catch (error: any) {
-    console.error('Release push handler error:', error);
+    console.error('Release push unhandled error:', error);
     return res.status(500).json({
-      error: error?.message || 'Внутренняя ошибка сервера при рассылке уведомлений'
+      error: error?.message || 'Внутренняя ошибка сервера при отправке push'
     });
   }
 }
