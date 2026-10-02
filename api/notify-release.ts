@@ -58,8 +58,8 @@ export default async function handler(req: Request, res: Response) {
     }
 
     const { version, title, body, testOnly, deviceToken } = bodyData || {};
-    const pushTitle = title || (version ? `🚀 Sproutly.Pro v${version}` : '🚀 Вышло обновление Sproutly.Pro!');
-    const pushBody = body || 'Новый функционал и улучшения уже доступны. Нажмите, чтобы посмотреть.';
+    const pushTitle = title || (version ? `✨ v${version} уже здесь!` : '✨ Новая версия уже здесь!');
+    const pushBody = body || 'Добавили детальную аналитику, расчет налогов и ускорили работу. Загляните оценить!';
 
     // 3. Dynamic initialization of Firebase Admin
     let adminApp: any = null;
@@ -139,16 +139,10 @@ export default async function handler(req: Request, res: Response) {
       token: string;
     }
     const tokenMappings: TokenMapping[] = [];
+    const uniqueTokensSet = new Set<string>();
 
-    // Prioritize direct device token for test
-    if (testOnly && typeof deviceToken === 'string' && deviceToken.trim().length > 0) {
-      tokenMappings.push({
-        userId: senderUid || 'admin',
-        token: deviceToken.trim()
-      });
-    }
-
-    if (testOnly && tokenMappings.length === 0) {
+    if (testOnly) {
+      // In test mode: collect ALL devices registered under the admin account
       try {
         if (senderUid) {
           const adminDoc = await db.collection('users').doc(senderUid).get();
@@ -156,33 +150,55 @@ export default async function handler(req: Request, res: Response) {
             const tokens: string[] = adminDoc.data()?.fcmTokens || [];
             for (const t of tokens) {
               if (typeof t === 'string' && t.trim().length > 0) {
-                tokenMappings.push({ userId: senderUid, token: t.trim() });
+                const cleanToken = t.trim();
+                if (!uniqueTokensSet.has(cleanToken)) {
+                  uniqueTokensSet.add(cleanToken);
+                  tokenMappings.push({ userId: senderUid, token: cleanToken });
+                }
               }
             }
           }
         }
-        if (tokenMappings.length === 0) {
-          const querySnapshot = await db.collection('users').where('email', '==', 'filimlive@gmail.com').get();
-          for (const doc of querySnapshot.docs) {
-            const tokens: string[] = doc.data()?.fcmTokens || [];
-            for (const t of tokens) {
-              if (typeof t === 'string' && t.trim().length > 0) {
-                tokenMappings.push({ userId: doc.id, token: t.trim() });
+
+        // Also check if any documents with email 'filimlive@gmail.com' exist
+        const querySnapshot = await db.collection('users').where('email', '==', 'filimlive@gmail.com').get();
+        for (const doc of querySnapshot.docs) {
+          const tokens: string[] = doc.data()?.fcmTokens || [];
+          for (const t of tokens) {
+            if (typeof t === 'string' && t.trim().length > 0) {
+              const cleanToken = t.trim();
+              if (!uniqueTokensSet.has(cleanToken)) {
+                uniqueTokensSet.add(cleanToken);
+                tokenMappings.push({ userId: doc.id, token: cleanToken });
               }
             }
+          }
+        }
+
+        // Also include current deviceToken if provided and not yet in database
+        if (typeof deviceToken === 'string' && deviceToken.trim().length > 0) {
+          const cleanToken = deviceToken.trim();
+          if (!uniqueTokensSet.has(cleanToken)) {
+            uniqueTokensSet.add(cleanToken);
+            tokenMappings.push({ userId: senderUid || 'admin', token: cleanToken });
           }
         }
       } catch (dbErr: any) {
         console.warn('Firestore lookup warning in test mode:', dbErr);
       }
-    } else if (!testOnly) {
+    } else {
+      // Broadcast mode: collect all users' tokens
       const usersSnapshot = await db.collection('users').get();
       for (const doc of usersSnapshot.docs) {
         const userData = doc.data();
         const tokens: string[] = userData.fcmTokens || [];
         for (const t of tokens) {
           if (typeof t === 'string' && t.trim().length > 0) {
-            tokenMappings.push({ userId: doc.id, token: t.trim() });
+            const cleanToken = t.trim();
+            if (!uniqueTokensSet.has(cleanToken)) {
+              uniqueTokensSet.add(cleanToken);
+              tokenMappings.push({ userId: doc.id, token: cleanToken });
+            }
           }
         }
       }

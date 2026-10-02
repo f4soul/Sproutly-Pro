@@ -67,6 +67,9 @@ export function AdminReleaseSettings() {
     return null;
   }
 
+  const defaultPushTitle = `✨ v${latestRelease.version} уже здесь!`;
+  const defaultPushBody = `Добавили детальную аналитику, расчет налогов и ускорили работу. Загляните оценить!`;
+
   const handleSendReleasePush = async (testOnly: boolean = false) => {
     if (!user) return;
     if (testOnly) {
@@ -95,8 +98,8 @@ export function AdminReleaseSettings() {
         },
         body: JSON.stringify({
           version: latestRelease.version,
-          title: `🚀 Sproutly.Pro v${latestRelease.version}`,
-          body: latestRelease.title,
+          title: defaultPushTitle,
+          body: defaultPushBody,
           testOnly,
           deviceToken: currentDeviceToken,
         }),
@@ -118,29 +121,6 @@ export function AdminReleaseSettings() {
 
       if (res.ok && data.success) {
         setLastResult(data);
-
-        // In test mode: also trigger local browser notification if allowed on this origin
-        if (testOnly && 'Notification' in window && Notification.permission === 'granted') {
-          try {
-            const reg = await navigator.serviceWorker.ready;
-            await reg.showNotification(`🚀 Sproutly.Pro v${latestRelease.version}`, {
-              body: latestRelease.title,
-              icon: '/icon-192.png',
-              badge: '/icon-192.png',
-              tag: `release-test-${Date.now()}`,
-              data: { url: '/?openChangelog=true' },
-            });
-          } catch {
-            try {
-              new Notification(`🚀 Sproutly.Pro v${latestRelease.version}`, {
-                body: latestRelease.title,
-                icon: '/icon-192.png',
-              });
-            } catch {
-              // Notification fallback ignored
-            }
-          }
-        }
 
         if (data.isTest) {
           if (data.totalTokens === 0) {
@@ -173,10 +153,10 @@ export function AdminReleaseSettings() {
         <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
           <Rocket className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.8px]" />
           <div 
-            className="absolute -top-2.5 -left-1.5 transform -rotate-[22deg] text-amber-500 drop-shadow-[0_2px_6px_rgba(245,158,11,0.45)] pointer-events-none"
+            className="absolute -top-1.5 -left-1 sm:-top-2 sm:-left-1.5 transform -rotate-[18deg] sm:-rotate-[20deg] text-amber-500 drop-shadow-[0_2px_6px_rgba(245,158,11,0.45)] pointer-events-none"
             title="Панель администратора"
           >
-            <Crown className="w-4 h-4 sm:w-4.5 sm:h-4.5 fill-amber-400/25 stroke-[2.2px]" />
+            <Crown className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 fill-amber-400/25 stroke-[2.2px]" />
           </div>
         </div>
 
@@ -208,10 +188,10 @@ export function AdminReleaseSettings() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
-                🚀 Sproutly.Pro v{latestRelease.version}
+                {defaultPushTitle}
               </div>
               <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
-                {latestRelease.title}
+                {defaultPushBody}
               </div>
             </div>
           </div>
