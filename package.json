@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=22.x"
+  },
   "scripts": {
     "postinstall": "node -e \"const fs=require('fs'); if(!fs.existsSync('firebase-applet-config.json')) fs.copyFileSync('firebase-applet-config.example.json', 'firebase-applet-config.json')\"",
     "dev": "vite --port=3000 --host=0.0.0.0",

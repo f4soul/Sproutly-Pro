@@ -6,6 +6,7 @@ import { showToast } from '../../../lib/toast';
 import { useAuthSync } from '../../../context/AuthSyncContext';
 import { logger } from '../../../lib/logger';
 import { changelog } from '../../../data/changelog';
+import { getDeviceFcmToken } from '../../../services/notifications';
 
 /**
  * Умные окончания для личных устройств пользователя:
@@ -77,6 +78,15 @@ export function AdminReleaseSettings() {
 
     try {
       const idToken = await user.getIdToken();
+      let currentDeviceToken: string | null = null;
+      if (testOnly) {
+        try {
+          currentDeviceToken = await getDeviceFcmToken();
+        } catch {
+          // ignore
+        }
+      }
+
       const res = await fetch('/api/notify-release', {
         method: 'POST',
         headers: {
@@ -88,6 +98,7 @@ export function AdminReleaseSettings() {
           title: `🚀 Sproutly.Pro v${latestRelease.version}`,
           body: latestRelease.title,
           testOnly,
+          deviceToken: currentDeviceToken,
         }),
       });
 
@@ -99,7 +110,9 @@ export function AdminReleaseSettings() {
         data = {
           error: res.status === 404
             ? 'В среде разработки API отключено. Рассылка активна в продакшене (Vercel).'
-            : `Ошибка сервера (${res.status}): ${text.slice(0, 100) || 'Пустой ответ'}`
+            : text.includes('FUNCTION_INVOCATION_FAILED')
+              ? 'Ошибка выполнения функции на Vercel (проверьте FIREBASE_SERVICE_ACCOUNT в настройках проекта).'
+              : `Ошибка сервера (${res.status}): ${text.slice(0, 100) || 'Пустой ответ'}`
         };
       }
 

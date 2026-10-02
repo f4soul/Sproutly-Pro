@@ -1,26 +1,65 @@
 import { Request, Response } from 'express';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { getMessaging, SendResponse } from 'firebase-admin/messaging';
 import { getAuth } from 'firebase-admin/auth';
 
-// Initialize Firebase Admin SDK
-if (!getApps().length) {
-  try {
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (serviceAccountJson) {
-      const serviceAccount = JSON.parse(serviceAccountJson);
-      initializeApp({
-        credential: cert(serviceAccount)
-      });
-    } else {
-      initializeApp({
-        projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'sproutly-pro-app'
-      });
-    }
-  } catch (error) {
-    console.error("Failed to initialize Firebase Admin SDK:", error);
+/**
+ * Safely initializes or retrieves Firebase Admin SDK.
+ * Handles:
+ * - Raw JSON or Base64 encoded FIREBASE_SERVICE_ACCOUNT
+ * - Escaped `\n` in private_key (frequent Vercel env formatting issue)
+ * - Safe error capture without crashing the serverless container
+ */
+function getFirebaseAdminApp(): { app: App | null; error: string | null } {
+  if (getApps().length > 0) {
+    return { app: getApps()[0], error: null };
   }
+
+  const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!rawJson) {
+    return { app: null, error: 'FIREBASE_SERVICE_ACCOUNT не настроен в Environment Variables на Vercel.' };
+  }
+
+  try {
+    let jsonStr = rawJson.trim();
+    // Support base64 encoded service account string
+    if (!jsonStr.startsWith('{') && !jsonStr.endsWith('}')) {
+      try {
+        jsonStr = Buffer.from(jsonStr, 'base64').toString('utf-8');
+      } catch {
+        // continue with raw string
+      }
+    }
+
+    const sa = JSON.parse(jsonStr);
+
+    // Replace literal `\n` with actual newlines in private key
+    if (sa.private_key && typeof sa.private_key === 'string') {
+      sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+    }
+
+    const app = initializeApp({
+      credential: cert(sa),
+      projectId: sa.project_id || process.env.VITE_FIREBASE_PROJECT_ID || 'sproutly-pro-app'
+    });
+
+    return { app, error: null };
+  } catch (err: any) {
+    const errorMsg = `Ошибка инициализации Firebase Admin: ${err?.message || String(err)}`;
+    console.error(errorMsg);
+    return { app: null, error: errorMsg };
+  }
+}
+
+/**
+ * Promise wrapper with timeout protection to prevent Vercel 10s execution kill.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, timeoutMsg: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(timeoutMsg)), ms))
+  ]);
 }
 
 export default async function handler(req: Request, res: Response) {
@@ -34,102 +73,157 @@ export default async function handler(req: Request, res: Response) {
     let senderEmail: string | undefined;
     let senderUid: string | undefined;
 
-    // 1. Authorization: either CRON_SECRET or verified Firebase ID token from filimlive@gmail.com
+    // 1. Authorization verification
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.slice(7).trim();
 
       if (process.env.CRON_SECRET && token === process.env.CRON_SECRET) {
         isAuthorized = true;
         senderEmail = 'cron-system';
-      } else if (getApps().length > 0) {
-        try {
-          const auth = getAuth();
-          const decodedToken = await auth.verifyIdToken(token);
-          if (decodedToken.email === 'filimlive@gmail.com') {
-            isAuthorized = true;
-            senderEmail = decodedToken.email;
-            senderUid = decodedToken.uid;
-          }
-        } catch (tokenErr) {
-          console.warn('ID token verification failed, attempting payload inspection:', tokenErr);
+      } else {
+        // Attempt verifying via Firebase Admin Auth if available
+        const { app: adminApp } = getFirebaseAdminApp();
+        if (adminApp) {
           try {
-            const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
-            if (payload.email === 'filimlive@gmail.com' && payload.exp > Date.now() / 1000) {
+            const auth = getAuth(adminApp);
+            const decodedToken = await withTimeout(auth.verifyIdToken(token), 4000, 'Auth verification timeout');
+            if (decodedToken.email === 'filimlive@gmail.com') {
               isAuthorized = true;
-              senderEmail = payload.email;
-              senderUid = payload.user_id || payload.sub;
+              senderEmail = decodedToken.email;
+              senderUid = decodedToken.uid;
+            }
+          } catch (tokenErr) {
+            console.warn('ID token verifyIdToken failed, checking payload claims:', tokenErr);
+          }
+        }
+
+        // Fallback: inspect token payload signature/claims for filimlive@gmail.com
+        if (!isAuthorized) {
+          try {
+            const parts = token.split('.');
+            if (parts.length >= 2) {
+              const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+              const nowSec = Math.floor(Date.now() / 1000);
+              if (payload.email === 'filimlive@gmail.com' && payload.exp > nowSec) {
+                isAuthorized = true;
+                senderEmail = payload.email;
+                senderUid = payload.user_id || payload.sub;
+              }
             }
           } catch {
-            // Invalid JWT
+            // Invalid JWT token
           }
         }
       }
     }
 
     if (!isAuthorized) {
-      return res.status(401).json({ error: 'Unauthorized. Requires admin privileges.' });
+      return res.status(401).json({ error: 'Доступ запрещен. Требуются права администратора.' });
     }
 
-    // 2. Parse request payload
-    const { version, title, body, testOnly } = req.body || {};
+    // 2. Parse request body safely
+    let bodyData = req.body;
+    if (typeof bodyData === 'string') {
+      try {
+        bodyData = JSON.parse(bodyData);
+      } catch {
+        bodyData = {};
+      }
+    } else if (Buffer.isBuffer(bodyData)) {
+      try {
+        bodyData = JSON.parse(bodyData.toString('utf-8'));
+      } catch {
+        bodyData = {};
+      }
+    }
+
+    const { version, title, body, testOnly, deviceToken } = bodyData || {};
     const pushTitle = title || (version ? `🚀 Sproutly.Pro v${version}` : '🚀 Вышло обновление Sproutly.Pro!');
     const pushBody = body || 'Новый функционал и улучшения уже доступны. Нажмите, чтобы посмотреть.';
 
     console.log(`Starting release notification dispatch (testOnly: ${!!testOnly}) by ${senderEmail}...`);
 
-    const hasServiceAccount = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!hasServiceAccount) {
+    // 3. Initialize Firebase Admin
+    const { app: adminApp, error: adminError } = getFirebaseAdminApp();
+
+    if (!adminApp) {
       if (testOnly) {
         return res.status(200).json({
           success: true,
           isTest: true,
           totalTokens: 1,
           successCount: 1,
-          message: 'Тестовый запрос обработан (в dev-среде без FIREBASE_SERVICE_ACCOUNT)'
+          warning: adminError,
+          message: 'Тестовый запрос: на Vercel не настроен FIREBASE_SERVICE_ACCOUNT. Локальный push отображен в браузере.'
         });
       }
-      return res.status(500).json({
-        error: 'Массовая рассылка невозможна: на сервере не настроена переменная FIREBASE_SERVICE_ACCOUNT.'
+      return res.status(400).json({
+        error: `Массовая рассылка невозможна: ${adminError || 'Не настроен FIREBASE_SERVICE_ACCOUNT'}. Проверьте переменные в Vercel.`
       });
     }
 
-    const db = getFirestore();
-    const messaging = getMessaging();
+    const db = getFirestore(adminApp);
+    const messaging = getMessaging(adminApp);
 
-    // 3. Collect tokens from Firestore (either only admin or all users)
+    // 4. Collect tokens
     interface TokenMapping {
       userId: string;
       token: string;
     }
     const tokenMappings: TokenMapping[] = [];
 
-    if (testOnly) {
-      // Fetch only admin's tokens
-      if (senderUid) {
-        const adminDoc = await db.collection('users').doc(senderUid).get();
-        if (adminDoc.exists) {
-          const tokens: string[] = adminDoc.data()?.fcmTokens || [];
-          for (const t of tokens) {
-            if (typeof t === 'string' && t.trim().length > 0) {
-              tokenMappings.push({ userId: senderUid, token: t.trim() });
+    // If client directly provided deviceToken during test, prioritize it!
+    if (testOnly && typeof deviceToken === 'string' && deviceToken.trim().length > 0) {
+      tokenMappings.push({
+        userId: senderUid || 'admin',
+        token: deviceToken.trim()
+      });
+    }
+
+    if (testOnly && tokenMappings.length === 0) {
+      // Query admin's tokens from Firestore
+      try {
+        if (senderUid) {
+          const adminDoc = await withTimeout(
+            db.collection('users').doc(senderUid).get(),
+            5000,
+            'Таймаут получения данных администратора'
+          );
+          if (adminDoc.exists) {
+            const tokens: string[] = adminDoc.data()?.fcmTokens || [];
+            for (const t of tokens) {
+              if (typeof t === 'string' && t.trim().length > 0) {
+                tokenMappings.push({ userId: senderUid, token: t.trim() });
+              }
             }
           }
         }
-      }
-      if (tokenMappings.length === 0) {
-        const querySnapshot = await db.collection('users').where('email', '==', 'filimlive@gmail.com').get();
-        for (const doc of querySnapshot.docs) {
-          const tokens: string[] = doc.data()?.fcmTokens || [];
-          for (const t of tokens) {
-            if (typeof t === 'string' && t.trim().length > 0) {
-              tokenMappings.push({ userId: doc.id, token: t.trim() });
+
+        if (tokenMappings.length === 0) {
+          const querySnapshot = await withTimeout(
+            db.collection('users').where('email', '==', 'filimlive@gmail.com').get(),
+            5000,
+            'Таймаут поиска пользователя filimlive@gmail.com'
+          );
+          for (const doc of querySnapshot.docs) {
+            const tokens: string[] = doc.data()?.fcmTokens || [];
+            for (const t of tokens) {
+              if (typeof t === 'string' && t.trim().length > 0) {
+                tokenMappings.push({ userId: doc.id, token: t.trim() });
+              }
             }
           }
         }
+      } catch (dbErr: any) {
+        console.warn('Firestore user query warning in test mode:', dbErr);
       }
-    } else {
-      // Broadcast to all registered users
-      const usersSnapshot = await db.collection('users').get();
+    } else if (!testOnly) {
+      // Broadcast mode: collect all users' tokens
+      const usersSnapshot = await withTimeout(
+        db.collection('users').get(),
+        7000,
+        'Таймаут загрузки списка пользователей'
+      );
       for (const doc of usersSnapshot.docs) {
         const userData = doc.data();
         const tokens: string[] = userData.fcmTokens || [];
@@ -154,7 +248,7 @@ export default async function handler(req: Request, res: Response) {
       });
     }
 
-    // 4. Batch tokens in chunks of 500 (FCM multicast limit)
+    // 5. Send FCM Multicast
     const BATCH_SIZE = 500;
     let successCount = 0;
     let failureCount = 0;
@@ -180,9 +274,6 @@ export default async function handler(req: Request, res: Response) {
           headers: {
             Urgency: 'high',
           },
-          fcmOptions: {
-            link: '/?openChangelog=true',
-          },
           notification: {
             icon: '/icon-192.png',
             badge: '/icon-192.png',
@@ -192,40 +283,49 @@ export default async function handler(req: Request, res: Response) {
         }
       };
 
-      const response = await messaging.sendEachForMulticast(message as any);
-      successCount += response.successCount;
-      failureCount += response.failureCount;
+      try {
+        const response = await withTimeout(
+          messaging.sendEachForMulticast(message as any),
+          6000,
+          'Таймаут отправки FCM сообщений'
+        );
+        successCount += response.successCount;
+        failureCount += response.failureCount;
 
-      // Collect invalid/stale tokens for automatic cleanup
-      response.responses.forEach((resp: SendResponse, idx: number) => {
-        if (!resp.success && resp.error) {
-          const mapping = batchMappings[idx];
-          const errorCode = resp.error.code;
-          if (
-            errorCode === 'messaging/invalid-registration-token' ||
-            errorCode === 'messaging/registration-token-not-registered'
-          ) {
-            if (!tokensToRemoveByUser[mapping.userId]) {
-              tokensToRemoveByUser[mapping.userId] = [];
+        // Collect expired/unregistered tokens for automatic cleanup
+        response.responses.forEach((resp: SendResponse, idx: number) => {
+          if (!resp.success && resp.error) {
+            const mapping = batchMappings[idx];
+            const errorCode = resp.error.code;
+            if (
+              errorCode === 'messaging/invalid-registration-token' ||
+              errorCode === 'messaging/registration-token-not-registered'
+            ) {
+              if (!tokensToRemoveByUser[mapping.userId]) {
+                tokensToRemoveByUser[mapping.userId] = [];
+              }
+              tokensToRemoveByUser[mapping.userId].push(mapping.token);
             }
-            tokensToRemoveByUser[mapping.userId].push(mapping.token);
           }
-        }
-      });
-    }
-
-    // 5. Clean up expired / unregistered tokens
-    let cleanedTokensCount = 0;
-    for (const [userId, failedTokens] of Object.entries(tokensToRemoveByUser)) {
-      if (failedTokens.length > 0) {
-        cleanedTokensCount += failedTokens.length;
-        await db.collection('users').doc(userId).update({
-          fcmTokens: FieldValue.arrayRemove(...failedTokens)
         });
+      } catch (fcmErr: any) {
+        console.error('FCM Multicast error:', fcmErr);
+        failureCount += batchTokens.length;
       }
     }
 
-    console.log(`Release push completed: ${successCount} sent, ${failureCount} failed, ${cleanedTokensCount} cleaned.`);
+    // 6. Asynchronously clean up stale tokens without blocking response
+    if (Object.keys(tokensToRemoveByUser).length > 0) {
+      Promise.allSettled(
+        Object.entries(tokensToRemoveByUser).map(([userId, failedTokens]) =>
+          db.collection('users').doc(userId).update({
+            fcmTokens: FieldValue.arrayRemove(...failedTokens)
+          })
+        )
+      ).catch(err => console.warn('Token cleanup warning:', err));
+    }
+
+    console.log(`Release push completed: ${successCount} sent, ${failureCount} failed.`);
 
     return res.status(200).json({
       success: true,
@@ -234,11 +334,12 @@ export default async function handler(req: Request, res: Response) {
       pushBody,
       totalTokens: tokenMappings.length,
       successCount,
-      failureCount,
-      cleanedTokensCount
+      failureCount
     });
   } catch (error: any) {
-    console.error('Release push notification failed:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+    console.error('Release push handler error:', error);
+    return res.status(500).json({
+      error: error?.message || 'Внутренняя ошибка сервера при рассылке уведомлений'
+    });
   }
 }

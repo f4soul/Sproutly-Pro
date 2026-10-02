@@ -12,7 +12,18 @@ if (!getApps().length) {
     if (!serviceAccountJson) {
       console.warn("FIREBASE_SERVICE_ACCOUNT environment variable is not set.");
     } else {
-      const serviceAccount = JSON.parse(serviceAccountJson);
+      let jsonStr = serviceAccountJson.trim();
+      if (!jsonStr.startsWith('{') && !jsonStr.endsWith('}')) {
+        try {
+          jsonStr = Buffer.from(jsonStr, 'base64').toString('utf-8');
+        } catch {
+          // ignore
+        }
+      }
+      const serviceAccount = JSON.parse(jsonStr);
+      if (serviceAccount.private_key && typeof serviceAccount.private_key === 'string') {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
       initializeApp({
         credential: cert(serviceAccount)
       });
