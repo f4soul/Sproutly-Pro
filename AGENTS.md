@@ -123,3 +123,26 @@ Do not leave temporary helper scripts (e.g., Python, Bash) or artifacts in the p
 ## 15. DB Sync & Reactivity (LOCKED)
 - Synchronization between IndexedDB (Dexie) and Firebase uses `Promise.allSettled` for parallel requests. Do not revert to sequential `await` chains to avoid blocking the sync process.
 - Database listeners use generic helpers (`subscribeToCollection`, `subscribeToDoc` in `src/config/db/full-sync.ts`) to avoid duplicate `onSnapshot` code blocks. Do not write manual `onSnapshot` boilerplate for standard collections.
+
+---
+
+## 16. Floating Elements & Toast Animation Standard (LOCKED)
+- **Separation of Concerns**: Любые плавающие и всплывающие элементы (Floating Footers, плашки сводки, всплывающие уведомления/тосты) строго разделяют позиционирование и анимацию:
+  1. Внешний контейнер отвечает **только** за геометрию и фиксацию на экране (`fixed`, координаты `left`, `width`, `bottom`, `z-index`, `pointer-events-none`). На нем **КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО** вешать CSS-классы `transition-all duration-*`, так как они конфликтуют с покадровой интерполяцией Framer Motion и вызывают дергания/джиттер.
+  2. Внутренняя карточка рендерится внутри `<AnimatePresence>` и анимируется через `motion.div`.
+- **Эталонная физика пружины (Toast Pattern)**:
+  - `initial={{ opacity: 0, y: 24, scale: 0.95 }}`
+  - `animate={{ opacity: 1, y: 0, scale: 1 }}`
+  - `exit={{ opacity: 0, y: 16, scale: 0.95, transition: { duration: 0.18, ease: "easeInOut" } }}`
+  - `transition={{ type: "spring", stiffness: 450, damping: 32, mass: 0.8 }}`
+  - Аппаратное ускорение: обязательные классы `transform-gpu will-change-[transform,opacity]`.
+
+---
+
+## 17. Clean Glass Badges, Chips & Pills (LOCKED)
+- **Запрет на рассеянный неоновый туман**: При создании или стилизации капсул, бейджей, чипов (например, капсула «Обновить приложение», чипы банков, фильтры) **ЗАПРЕЩЕНО** использовать внешние цветные тени с большим радиусом размытия вроде `dark:shadow-[0_4px_20px_rgba(...)]`. На темных фонах они создают эффект мыльного, грязного светового ореола.
+- **Эталон чистого стекла Sproutly Glassmorphism**:
+  - Четкая тонкая полупрозрачная рамка: `border border-primary-500/30 hover:border-primary-500/50 dark:border-primary-400/30 dark:hover:border-primary-400/50`.
+  - Глубокий благородный подтон: `bg-primary-500/10 hover:bg-primary-500/15 dark:bg-[#0a1633]/90 dark:hover:bg-[#0e1f47]`.
+  - Нейтральная микротень: `shadow-sm` (без цветного размытия наружу) в сочетании с `backdrop-blur-xl`. Элемент должен выглядеть четким стеклянным артефактом, а не светящейся неоновой лампой.
+

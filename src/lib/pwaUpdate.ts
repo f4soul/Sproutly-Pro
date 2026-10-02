@@ -57,6 +57,33 @@ export function initPwaUpdate() {
         logger.error('PWA: Service Worker registration error:', error);
       },
     });
+
+    // Периодическая проверка и проверка при возвращении в приложение (PWA standalone resume)
+    const checkForUpdates = async () => {
+      try {
+        if (!navigator.onLine) return;
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          logger.info('PWA: checking for updates on resume...');
+          await reg.update();
+        }
+      } catch (e) {
+        logger.warn('PWA: update check failed:', e);
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkForUpdates();
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      checkForUpdates();
+    });
+
+    // Фоновая проверка каждые 30 минут
+    setInterval(checkForUpdates, 30 * 60 * 1000);
   } catch (err) {
     logger.error('Failed to initialize Service Worker registration:', err);
   }

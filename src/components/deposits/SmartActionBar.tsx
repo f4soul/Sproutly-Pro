@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useRef, useEffect } from 'react';
-import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet, Download, ArrowDownUp } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet, Download, ArrowDownUp, Calendar, Check, RotateCcw } from 'lucide-react';
 import { Transition, Popover, Portal } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
@@ -13,6 +13,9 @@ interface SmartActionBarProps {
   setSearchQuery: (query: string) => void;
   filterStatus: 'all' | 'active' | 'closed';
   setFilterStatus: (status: 'all' | 'active' | 'closed') => void;
+  selectedYear: number | null;
+  onSelectYear: (year: number | null) => void;
+  availableYears: number[];
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   requestSort: (key: any) => void;
   resetSort: () => void;
@@ -22,6 +25,7 @@ interface SmartActionBarProps {
   selectedBanks: string[];
   onSelectedBanksChange: (banks: string[]) => void;
   uniqueBanks: string[];
+  onResetAllFilters?: () => void;
 }
 
 export const SmartActionBar: React.FC<SmartActionBarProps> = ({
@@ -29,6 +33,9 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   setSearchQuery,
   filterStatus,
   setFilterStatus,
+  selectedYear,
+  onSelectYear,
+  availableYears,
   sortConfig,
   requestSort,
   resetSort,
@@ -37,11 +44,26 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
   isScrolled,
   selectedBanks,
   onSelectedBanksChange,
-  uniqueBanks
+  uniqueBanks,
+  onResetAllFilters
 }) => {
   const [isFiltersExpanded, setIsFiltersExpanded] = useState(false);
   const bankScrollRef = useRef<HTMLDivElement>(null);
   const desktopBankScrollRef = useRef<HTMLDivElement>(null);
+
+  // Check if any non-default filter or sort is active
+  const hasActiveFilters = filterStatus !== 'active' || selectedYear !== null || sortConfig !== null || selectedBanks.length > 0;
+
+  const handleResetFilters = () => {
+    if (onResetAllFilters) {
+      onResetAllFilters();
+    } else {
+      setFilterStatus('active');
+      onSelectYear(null);
+      resetSort();
+      onSelectedBanksChange([]);
+    }
+  };
   
   // React mouse drag state with strict touch & drag-to-scroll isolation
   const isDragging = useRef(false);
@@ -167,20 +189,42 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             </div>
           </div>
           
-          <div className="flex items-center gap-1.5 pr-1 shrink-0">
+          <div className="flex items-center pr-1 shrink-0">
+            {/* Quick Reset All Filters Button beside Filter Slider button */}
+            <AnimatePresence initial={false}>
+              {hasActiveFilters && (
+                <motion.div
+                  initial={{ opacity: 0, width: 0, marginRight: 0 }}
+                  animate={{ opacity: 1, width: 'auto', marginRight: 6 }}
+                  exit={{ opacity: 0, width: 0, marginRight: 0 }}
+                  transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                  className="overflow-hidden shrink-0 flex items-center"
+                >
+                  <button
+                    onClick={handleResetFilters}
+                    className="p-3 rounded-2xl flex items-center justify-center shrink-0 border bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border-rose-500/20 active:scale-95 cursor-pointer backdrop-blur-md transition-colors"
+                    title="Сбросить все фильтры"
+                  >
+                    <RotateCcw className="w-4 h-4 stroke-[2px]" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Toggle Filters Button */}
             <button 
               data-tour="assets-filters"
               onClick={() => setIsFiltersExpanded(!isFiltersExpanded)}
               className={cn(
                 "p-3 rounded-2xl transition-all flex items-center justify-center shrink-0 border relative backdrop-blur-md cursor-pointer",
-                isFiltersExpanded || filterStatus !== 'active' || sortConfig || selectedBanks.length > 0
+                isFiltersExpanded || hasActiveFilters
                   ? "bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 border-deposit-500/20"
                   : "bg-white/60 dark:bg-slate-900/60 border-slate-200/50 dark:border-white/[0.05] text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800"
               )}
+              title={isFiltersExpanded ? "Скрыть фильтры" : "Показать фильтры"}
             >
               <SlidersHorizontal className="w-4 h-4 stroke-[2px] transition-colors" />
-              {(!isFiltersExpanded && (filterStatus !== 'active' || sortConfig || selectedBanks.length > 0)) && (
+              {(!isFiltersExpanded && hasActiveFilters) && (
                 <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-deposit-500 rounded-full border-2 border-white dark:border-slate-900 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
               )}
             </button>
@@ -212,6 +256,80 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                 
                 {/* Desktop layout: ALL IN ONE ROW */}
                 <div className="hidden xl:flex items-center gap-2.5 w-full">
+                  {/* Desktop Year Selector Pill */}
+                  <div className="shrink-0">
+                    <Popover className="relative shrink-0 z-50">
+                      <Popover.Button
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 px-3 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md cursor-pointer active:scale-95 select-none focus:outline-none",
+                          selectedYear !== null
+                            ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30"
+                            : "bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-white/[0.05] hover:bg-white dark:hover:bg-slate-800"
+                        )}
+                        title="Выбрать налоговый период (год)"
+                      >
+                        <Calendar className="w-3.5 h-3.5 stroke-[2px] shrink-0" />
+                        <span className="leading-none mt-[1px] truncate">
+                          {selectedYear !== null ? `${selectedYear}` : "Год"}
+                        </span>
+                      </Popover.Button>
+
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-150"
+                        enterFrom="opacity-0 scale-95"
+                        enterTo="opacity-100 scale-100"
+                        leave="transition ease-in duration-150"
+                        leaveFrom="opacity-100 scale-100"
+                        leaveTo="opacity-0 scale-95"
+                      >
+                        <Popover.Panel anchor="bottom start" className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 outline-none z-[100] mt-1.5 flex flex-col gap-1">
+                          {({ close }) => (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onSelectYear(null);
+                                  close();
+                                }}
+                                className={cn(
+                                  "w-full px-3 py-2 text-left text-xs font-bold rounded-xl transition-colors flex items-center justify-between cursor-pointer",
+                                  selectedYear === null
+                                    ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                )}
+                              >
+                                <span>Все</span>
+                                {selectedYear === null && <Check size={14} className="stroke-[2.5px] text-deposit-500" />}
+                              </button>
+
+                              <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-0.5" />
+
+                              {availableYears.map(y => (
+                                <button
+                                  key={y}
+                                  type="button"
+                                  onClick={() => {
+                                    onSelectYear(y);
+                                    close();
+                                  }}
+                                  className={cn(
+                                    "w-full px-3 py-2 text-left text-xs font-bold rounded-xl transition-colors flex items-center justify-between cursor-pointer",
+                                    selectedYear === y
+                                      ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                  )}
+                                >
+                                  <span>{y} год</span>
+                                  {selectedYear === y && <Check size={14} className="stroke-[2.5px] text-deposit-500" />}
+                                </button>
+                              ))}
+                            </>
+                          )}
+                        </Popover.Panel>
+                      </Transition>
+                    </Popover>
+                  </div>
                   {/* Status Toggle (Segmented Control style) */}
                   <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 p-0.5 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm gap-0 h-8 shrink-0">
                     <button 
@@ -327,12 +445,11 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         }}
                         onDragStart={(e) => e.preventDefault()}
                         className={cn(
-                          "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
+                          "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
                           selectedBanks.length === 0
-                            ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                            ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                             : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
                         )}
-                        style={selectedBanks.length === 0 ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
                       >
                         <div className={cn("w-3.5 h-3.5 flex items-center justify-center shrink-0 leading-none", selectedBanks.length === 0 ? "text-deposit-600 dark:text-deposit-400" : "text-slate-400 dark:text-slate-500")}>
                           <svg 
@@ -376,12 +493,11 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                             }}
                             onDragStart={(e) => e.preventDefault()}
                             className={cn(
-                              "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
+                              "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
                               isSelected 
-                                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                                 : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
                             )}
-                            style={isSelected ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
                           >
                             <div className={cn("w-4 h-4 min-w-[16px] flex items-center justify-center shrink-0", isSelected && "drop-shadow-[0_0_4px_rgba(var(--rgb-deposit),0.5)]")}>
                               {hasLogo ? (
@@ -463,15 +579,90 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
 
                 {/* Mobile & Tablet layout: TWO ROWS */}
                 <div className="flex xl:hidden flex-col gap-3 w-full">
-                  {/* Row 1: Switcher + Sort (pushed left) + Export (pushed right) */}
-                  <div className="flex items-center justify-between w-full gap-2 pb-1">
-                    <div className="flex items-center gap-2 min-w-0">
+                  {/* Row 1: Year + Switcher + Sort (pushed left) + Export (pushed right) */}
+                  <div className="flex items-center justify-between w-full gap-1 sm:gap-1.5 pb-1">
+                    <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+                      {/* Mobile Year Selector Dropdown */}
+                      <div className="shrink-0">
+                        <Popover className="relative shrink-0 z-50">
+                          <Popover.Button
+                            className={cn(
+                              "flex items-center justify-center gap-1.5 px-2.5 h-[32px] sm:h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md cursor-pointer active:scale-95 select-none focus:outline-none",
+                              selectedYear !== null
+                                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30"
+                                : "bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-white/[0.05] hover:bg-white dark:hover:bg-slate-800"
+                            )}
+                            title="Выбрать налоговый период (год)"
+                          >
+                            <Calendar className="w-3.5 h-3.5 stroke-[2px] shrink-0" />
+                            <span className="leading-none mt-[1px] truncate">
+                              {selectedYear !== null ? `${selectedYear}` : "Год"}
+                            </span>
+                          </Popover.Button>
+
+                          <Transition
+                            as={Fragment}
+                            enter="transition ease-out duration-150"
+                            enterFrom="opacity-0 scale-95"
+                            enterTo="opacity-100 scale-100"
+                            leave="transition ease-in duration-150"
+                            leaveFrom="opacity-100 scale-100"
+                            leaveTo="opacity-0 scale-95"
+                          >
+                            <Popover.Panel anchor="bottom start" className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 outline-none z-[100] mt-1.5 flex flex-col gap-1">
+                              {({ close }) => (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onSelectYear(null);
+                                      close();
+                                    }}
+                                    className={cn(
+                                      "w-full px-3 py-2 text-left text-xs font-bold rounded-xl transition-colors flex items-center justify-between cursor-pointer",
+                                      selectedYear === null
+                                        ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                    )}
+                                  >
+                                    <span>Все года</span>
+                                    {selectedYear === null && <Check size={14} className="stroke-[2.5px] text-deposit-500" />}
+                                  </button>
+
+                                  <div className="h-px bg-slate-100 dark:bg-slate-800/80 my-0.5" />
+
+                                  {availableYears.map(y => (
+                                    <button
+                                      key={y}
+                                      type="button"
+                                      onClick={() => {
+                                        onSelectYear(y);
+                                        close();
+                                      }}
+                                      className={cn(
+                                        "w-full px-3 py-2 text-left text-xs font-bold rounded-xl transition-colors flex items-center justify-between cursor-pointer",
+                                        selectedYear === y
+                                          ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                                      )}
+                                    >
+                                      <span>{y} год</span>
+                                      {selectedYear === y && <Check size={14} className="stroke-[2.5px] text-deposit-500" />}
+                                    </button>
+                                  ))}
+                                </>
+                              )}
+                            </Popover.Panel>
+                          </Transition>
+                        </Popover>
+                      </div>
+
                       {/* Left: Status Toggle (Segmented Control style) */}
                       <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 p-0.5 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm gap-0 h-[32px] sm:h-8 shrink-0">
                         <button 
                           onClick={() => setFilterStatus('all')}
                           className={cn(
-                            "px-3 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[55px] sm:min-w-[65px] z-10",
+                            "px-2.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[42px] xs:min-w-[48px] sm:min-w-[58px] z-10",
                             filterStatus === 'all' 
                               ? "text-deposit-600 dark:text-deposit-400" 
                               : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-white/5"
@@ -489,7 +680,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         <button 
                           onClick={() => setFilterStatus('active')}
                           className={cn(
-                            "px-3 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[55px] sm:min-w-[65px] z-10",
+                            "px-2.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[42px] xs:min-w-[48px] sm:min-w-[58px] z-10",
                             filterStatus === 'active' 
                               ? "text-deposit-600 dark:text-deposit-400" 
                               : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-white/5"
@@ -507,7 +698,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         <button 
                           onClick={() => setFilterStatus('closed')}
                           className={cn(
-                            "px-3 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[55px] sm:min-w-[65px] z-10",
+                            "px-2.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative h-full flex items-center justify-center min-w-[42px] xs:min-w-[48px] sm:min-w-[58px] z-10",
                             filterStatus === 'closed' 
                               ? "text-deposit-600 dark:text-deposit-400" 
                               : "text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-white/5"
@@ -527,11 +718,13 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                       {/* Mobile & Portrait Tablet Sort Dropdown */}
                       <Popover className="relative shrink-0 z-50 portrait:block hidden">
                         <Popover.Button className={cn(
-                          "flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-3 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95",
+                          "flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-2.5 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95",
                           sortConfig 
                             ? "text-deposit-600 dark:text-deposit-400 border-deposit-500/30 bg-deposit-500/5 dark:bg-deposit-500/10" 
                             : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800"
-                        )}>
+                        )}
+                        title="Сортировка"
+                        >
                           <ArrowDownUp className="w-3 h-3 stroke-[2px]" />
                           <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Сортировка</span>
                         </Popover.Button>
@@ -630,8 +823,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                       </div>
                     </div>
 
-                    {/* Export popover aligned to right */}
-                    <Popover className="relative shrink-0 z-50">
+                    {/* Right side: Export */}
+                    <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                      {/* Export popover aligned to right */}
+                      <Popover className="relative shrink-0 z-50">
                       <Popover.Button className="flex items-center justify-center p-2 portrait:px-2 portrait:w-[32px] landscape:px-3 landscape:w-auto h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] text-slate-500 hover:text-deposit-600 dark:text-slate-400 dark:hover:text-deposit-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95">
                         <Download className="w-3 h-3 stroke-[2px]" />
                         <span className="hidden landscape:inline-block ml-1.5 text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Экспорт</span>
@@ -688,6 +883,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         </Popover.Panel>
                       </Transition>
                     </Popover>
+                    </div>
                   </div>
 
                   {/* Row 2: Scrollable Bank selection chips (mobile specific) */}
@@ -695,7 +891,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                     <div 
                       ref={bankScrollRef}
                       {...mobileDragHandlers}
-                      className="flex flex-nowrap items-center gap-2 relative z-30 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x pb-2 pt-1 shrink-0 px-0.5 select-none"
+                      className="flex flex-nowrap items-center gap-2 relative z-30 w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] touch-pan-x pb-2 pt-1 shrink-0 select-none"
                     >
                       <button
                         onClick={() => {
@@ -704,12 +900,11 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         }}
                         onDragStart={(e) => e.preventDefault()}
                         className={cn(
-                          "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
+                          "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
                           selectedBanks.length === 0
-                            ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                            ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                             : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
                         )}
-                        style={selectedBanks.length === 0 ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
                       >
                         <div className={cn("w-3.5 h-3.5 flex items-center justify-center shrink-0 leading-none", selectedBanks.length === 0 ? "text-deposit-600 dark:text-deposit-400" : "text-slate-400 dark:text-slate-500")}>
                           <svg 
@@ -753,12 +948,11 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                             }}
                             onDragStart={(e) => e.preventDefault()}
                             className={cn(
-                              "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
+                              "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md select-none cursor-pointer active:scale-95",
                               isSelected 
-                                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                                 : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
                             )}
-                            style={isSelected ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
                           >
                             <div className={cn("w-4 h-4 min-w-[16px] flex items-center justify-center shrink-0", isSelected && "drop-shadow-[0_0_4px_rgba(var(--rgb-deposit),0.5)]")}>
                               {hasLogo ? (

@@ -70,6 +70,18 @@ function AppContent() {
     return localStorage.getItem('hasOnboarded') !== 'true';
   });
 
+  useEffect(() => {
+    // Автоматическое открытие «Что нового?» при переходе из Push-уведомления (?openChangelog=true)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openChangelog') === 'true') {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('app:show_release_notes'));
+      }, 500);
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, []);
+
   const { state } = useIncome();
   const { appSettings: _appSettings, taxSettings: _taxSettings } = useSettings();
   const { deposits: _deposits } = useDeposits();

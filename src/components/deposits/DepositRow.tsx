@@ -121,7 +121,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
               )}
             </div>
             <div className="min-w-0 flex flex-col justify-center mt-1">
-              <span className="font-bold text-[13px] sm:text-xs md:text-[13px] truncate text-slate-950 dark:text-white leading-tight">
+              <span className="font-bold text-[13px] sm:text-xs md:text-[13px] whitespace-nowrap truncate text-slate-950 dark:text-white leading-tight">
                 {deposit.bank}
               </span>
             </div>

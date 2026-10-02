@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useTransition } from 'react';
+import React, { useState, useMemo, useTransition, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Landmark, Plus, ChevronUp, ChevronDown, BarChart3, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence, useIsPresent } from 'motion/react';
 import { Deposit } from '../../types';
 import { db, syncWithFirebase } from '../../config/db';
 import { DepositForm } from './DepositForm';
-import { calculateIncome, isDepositClosed } from '../../lib/depositCalculations';
+import { calculateIncome, isDepositClosed, calculateIncomeByYears } from '../../lib/depositCalculations';
 import { SmartActionBar } from './SmartActionBar';
 import { DepositRow } from './DepositRow';
 import { DepositCard } from './DepositCard';
@@ -21,7 +21,7 @@ interface DepositListProps {
   isOuterPresent?: boolean;
 }
 
-export function DepositList({ deposits, isPrivate = false, isOuterPresent = true }: DepositListProps) {
+export function DepositList({ deposits, selectedYear, isPrivate = false, isOuterPresent = true }: DepositListProps) {
   const isPresent = useIsPresent();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDeposit, setEditingDeposit] = useState<Deposit | undefined>();
@@ -31,6 +31,12 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
   });
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'closed'>(() => {
     return (sessionStorage.getItem('deposits_filterStatus') as 'all' | 'active' | 'closed') || 'active';
+  });
+  const [filterYear, setFilterYearState] = useState<number | null>(() => {
+    const stored = sessionStorage.getItem('deposits_filterYear');
+    if (!stored) return null;
+    const num = Number(stored);
+    return isNaN(num) ? null : num;
   });
   const [selectedBanks, setSelectedBanks] = useState<string[]>(() => {
     try {
@@ -57,6 +63,7 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
 
   const handleSetSearchQuery = (val: string | ((prev: string) => string)) => startTransition(() => setSearchQuery(val));
   const handleSetFilterStatus = (val: 'all' | 'active' | 'closed') => startTransition(() => setFilterStatus(val));
+  const handleSetFilterYear = (val: number | null) => startTransition(() => setFilterYearState(val));
   const handleSetSelectedBanks = (val: string[] | ((prev: string[]) => string[])) => startTransition(() => setSelectedBanks(val));
   const setSortConfig = (val: { key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total'; direction: 'asc' | 'desc' } | null | ((prev: any) => any)) => startTransition(() => setSortConfigState(val));
 
@@ -73,12 +80,42 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
   }, [filterStatus]);
 
   React.useEffect(() => {
+    if (filterYear !== null) {
+      sessionStorage.setItem('deposits_filterYear', String(filterYear));
+    } else {
+      sessionStorage.removeItem('deposits_filterYear');
+    }
+  }, [filterYear]);
+
+  React.useEffect(() => {
     sessionStorage.setItem('deposits_selectedBanks', JSON.stringify(selectedBanks));
   }, [selectedBanks]);
 
   React.useEffect(() => {
     sessionStorage.setItem('deposits_sortConfig', sortConfig ? JSON.stringify(sortConfig) : '');
   }, [sortConfig]);
+
+  const availableYears = useMemo(() => {
+    const yearsSet = new Set<number>();
+    const curYear = new Date().getFullYear();
+    yearsSet.add(curYear);
+    yearsSet.add(curYear - 1);
+    if (selectedYear) yearsSet.add(selectedYear);
+
+    deposits.forEach(d => {
+      if (d.isArchived) return;
+      if (d.endDate) {
+        const y = new Date(d.endDate).getFullYear();
+        if (!isNaN(y)) yearsSet.add(y);
+      }
+      if (d.startDate) {
+        const y = new Date(d.startDate).getFullYear();
+        if (!isNaN(y)) yearsSet.add(y);
+      }
+    });
+
+    return Array.from(yearsSet).sort((a, b) => b - a);
+  }, [deposits, selectedYear]);
 
   const uniqueBanks = useMemo(() => {
     const names = deposits
@@ -87,13 +124,26 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
         const depositClosed = isDepositClosed(d);
         if (filterStatus === 'active' && depositClosed) return false;
         if (filterStatus === 'closed' && !depositClosed) return false;
+
+        if (filterYear !== null) {
+          const yearIncomes = calculateIncomeByYears(d);
+          const hasIncomeInYear = yearIncomes.some(yi => yi.year === filterYear && yi.income > 0);
+          const isClosedInYear = d.endDate ? new Date(d.endDate).getFullYear() === filterYear : false;
+          if (!hasIncomeInYear && !isClosedInYear) return false;
+        }
+
         return true;
       })
       .map(d => d.bank.trim());
     return Array.from(new Set(names)).filter(Boolean).sort();
-  }, [deposits, filterStatus]);
+  }, [deposits, filterStatus, filterYear]);
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isTableBottomInView, setIsTableBottomInView] = useState(true);
+  const [isTableTopInView, setIsTableTopInView] = useState(false);
+  const [tableDimensions, setTableDimensions] = useState<{ left: number; width: number } | null>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const tfootRef = useRef<HTMLTableSectionElement>(null);
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -159,7 +209,16 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                            (filterStatus === 'active' && !depositClosed) || 
                            (filterStatus === 'closed' && depositClosed);
       
-      return matchesSearch && matchesStatus;
+      if (!matchesStatus) return false;
+
+      if (filterYear !== null) {
+        const yearIncomes = calculateIncomeByYears(d);
+        const hasIncomeInYear = yearIncomes.some(yi => yi.year === filterYear && yi.income > 0);
+        const isClosedInYear = d.endDate ? new Date(d.endDate).getFullYear() === filterYear : false;
+        if (!hasIncomeInYear && !isClosedInYear) return false;
+      }
+
+      return matchesSearch;
     });
 
     if (sortConfig !== null) {
@@ -177,11 +236,23 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
           aVal = a.endDate ? new Date(a.endDate).getTime() : 0;
           bVal = b.endDate ? new Date(b.endDate).getTime() : 0;
         } else if (sortConfig.key === 'income') {
-          aVal = convertToRub(calculateIncome(a), a.currency || 'RUB', rates);
-          bVal = convertToRub(calculateIncome(b), b.currency || 'RUB', rates);
+          const aInc = filterYear !== null 
+            ? (calculateIncomeByYears(a).find(yi => yi.year === filterYear)?.income ?? 0)
+            : calculateIncome(a);
+          const bInc = filterYear !== null 
+            ? (calculateIncomeByYears(b).find(yi => yi.year === filterYear)?.income ?? 0)
+            : calculateIncome(b);
+          aVal = convertToRub(aInc, a.currency || 'RUB', rates);
+          bVal = convertToRub(bInc, b.currency || 'RUB', rates);
         } else if (sortConfig.key === 'total') {
-          aVal = convertToRub(Number(a.amount) || 0, a.currency || 'RUB', rates) + convertToRub(calculateIncome(a), a.currency || 'RUB', rates);
-          bVal = convertToRub(Number(b.amount) || 0, b.currency || 'RUB', rates) + convertToRub(calculateIncome(b), b.currency || 'RUB', rates);
+          const aInc = filterYear !== null 
+            ? (calculateIncomeByYears(a).find(yi => yi.year === filterYear)?.income ?? 0)
+            : calculateIncome(a);
+          const bInc = filterYear !== null 
+            ? (calculateIncomeByYears(b).find(yi => yi.year === filterYear)?.income ?? 0)
+            : calculateIncome(b);
+          aVal = convertToRub(Number(a.amount) || 0, a.currency || 'RUB', rates) + convertToRub(aInc, a.currency || 'RUB', rates);
+          bVal = convertToRub(Number(b.amount) || 0, b.currency || 'RUB', rates) + convertToRub(bInc, b.currency || 'RUB', rates);
         } else if (sortConfig.key === 'amount') {
           aVal = convertToRub(Number(a.amount) || 0, a.currency || 'RUB', rates);
           bVal = convertToRub(Number(b.amount) || 0, b.currency || 'RUB', rates);
@@ -208,18 +279,79 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
       });
     }
     return sorted;
-  }, [deposits, searchQuery, filterStatus, sortConfig, selectedBanks, rates]);
+  }, [deposits, searchQuery, filterStatus, filterYear, sortConfig, selectedBanks, rates]);
 
   const filteredTotals = useMemo(() => {
     const amount = filteredDeposits.reduce((acc, d) => acc + convertToRub(Number(d.amount) || 0, d.currency || 'RUB', rates), 0);
-    const income = filteredDeposits.reduce((acc, d) => acc + convertToRub(calculateIncome(d), d.currency || 'RUB', rates), 0);
+    const income = filteredDeposits.reduce((acc, d) => {
+      const inc = filterYear !== null
+        ? (calculateIncomeByYears(d).find(yi => yi.year === filterYear)?.income ?? 0)
+        : calculateIncome(d);
+      return acc + convertToRub(inc, d.currency || 'RUB', rates);
+    }, 0);
     return {
       amount,
       income,
       total: amount + income,
       count: filteredDeposits.length
     };
-  }, [filteredDeposits, rates]);
+  }, [filteredDeposits, filterYear, rates]);
+
+  // Track table bottom visibility (for smoothly docking/floating summary row)
+  React.useEffect(() => {
+    const tfootEl = tfootRef.current;
+    if (!tfootEl) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTableBottomInView(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+
+    observer.observe(tfootEl);
+    return () => observer.disconnect();
+  }, [filteredDeposits.length]);
+
+  // Track table top visibility & viewport presence
+  React.useEffect(() => {
+    const containerEl = tableContainerRef.current;
+    if (!containerEl) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTableTopInView(entry.boundingClientRect.top < window.innerHeight && entry.boundingClientRect.bottom > 120);
+      },
+      { threshold: [0, 0.05, 0.1] }
+    );
+
+    observer.observe(containerEl);
+    return () => observer.disconnect();
+  }, [filteredDeposits.length]);
+
+  // Track table dimensions (left & width) for pixel-perfect floating summary bar alignment
+  React.useEffect(() => {
+    const containerEl = tableContainerRef.current;
+    if (!containerEl) return;
+
+    const updateDims = () => {
+      const rect = containerEl.getBoundingClientRect();
+      setTableDimensions({ left: rect.left, width: rect.width });
+    };
+
+    updateDims();
+    const resizeObserver = new ResizeObserver(updateDims);
+    resizeObserver.observe(containerEl);
+
+    window.addEventListener('resize', updateDims);
+    window.addEventListener('scroll', updateDims, { passive: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDims);
+      window.removeEventListener('scroll', updateDims);
+    };
+  }, [filteredDeposits.length]);
 
   const requestSort = (key: 'bank' | 'rate' | 'startDate' | 'endDate' | 'amount' | 'income' | 'total') => {
     const defaultDir = key === 'bank' ? 'asc' : 'desc';
@@ -278,6 +410,9 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
         setSearchQuery={handleSetSearchQuery}
         filterStatus={filterStatus}
         setFilterStatus={handleSetFilterStatus}
+        selectedYear={filterYear}
+        onSelectYear={handleSetFilterYear}
+        availableYears={availableYears}
         sortConfig={sortConfig}
         requestSort={requestSort}
         resetSort={resetSort}
@@ -287,6 +422,13 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
         selectedBanks={selectedBanks}
         onSelectedBanksChange={handleSetSelectedBanks}
         uniqueBanks={uniqueBanks}
+        onResetAllFilters={() => {
+          handleSetFilterStatus('active');
+          handleSetFilterYear(null);
+          resetSort();
+          handleSetSelectedBanks([]);
+          handleSetSearchQuery('');
+        }}
       />
 
       {/* Floating Action Button for Mobile & Tablet */}
@@ -319,61 +461,61 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
       )}
 
       {/* Desktop & Landscape Tablet Table */}
-      <div id="deposits-list-table" className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-card border border-slate-200 dark:border-slate-800 shadow-card dark:shadow-card-dark">
-        <table className="w-full text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
+      <div id="deposits-list-table" ref={tableContainerRef} className="hidden lg:block w-full overflow-x-auto scrollbar-hide bg-white dark:bg-slate-950 rounded-card border border-slate-200 dark:border-slate-800 shadow-card dark:shadow-card-dark">
+        <table className="w-full table-fixed text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-white dark:bg-slate-950">
-                <th className="pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('bank')}>
+                <th className="w-[30%] xl:w-[28%] pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('bank')}>
                   <span className="relative inline-flex items-center justify-center">
                     Банк
                     {renderSortIndicator('bank')}
                   </span>
                 </th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>
+                <th className="w-[9%] xl:w-[8%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>
                   <span className="relative inline-flex items-center justify-center">
                     СТАВКА
                     {renderSortIndicator('rate')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
                   <span className="relative inline-flex items-center justify-center">
                     ОТКРЫТ
                     {renderSortIndicator('startDate')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>
+                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>
                   <span className="relative inline-flex items-center justify-center">
                     ЗАКРЫТ
                     {renderSortIndicator('endDate')}
                   </span>
                 </th>
-                <th className="table-cell xl:hidden px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                <th className="table-cell xl:hidden w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
                   <span className="relative inline-flex items-center justify-center">
                     ПЕРИОД
                     {renderSortIndicator('startDate')}
                   </span>
                 </th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>
+                <th className="w-[22%] xl:w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>
                   <span className="relative inline-flex items-center justify-center">
                     СУММА
                     {renderSortIndicator('amount')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>
+                <th className="hidden xl:table-cell xl:w-[14%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>
                   <span className="relative inline-flex items-center justify-center">
                     ДОХОД
                     {renderSortIndicator('income')}
                   </span>
                 </th>
-                <th className="px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>
+                <th className="w-[24%] xl:w-[17%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>
                   <span className="relative inline-flex items-center justify-center">
                     ИТОГО
                     {renderSortIndicator('total')}
                   </span>
                 </th>
-                <th className="pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 w-[84px] xl:w-[100px] sticky right-0 bg-white dark:bg-slate-950 z-10 font-bold uppercase tracking-widest text-[9px]">&nbsp;</th>
+                <th className="w-[84px] xl:w-[100px] shrink-0 pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 sticky right-0 bg-white dark:bg-slate-950 z-10 font-bold uppercase tracking-widest text-[9px]">&nbsp;</th>
               </tr>
-            </thead>
+          </thead>
             <tbody className="[&>tr>td]:border-b [&>tr:last-child>td]:border-b-0 [&>tr>td]:border-slate-200 dark:[&>tr>td]:border-slate-800">
               {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
                 <DepositRow 
@@ -426,11 +568,13 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
               )}
             </tbody>
             {filteredDeposits.length > 0 && (
-              <tfoot>
+              <tfoot ref={tfootRef}>
                 <tr className="bg-white/80 dark:bg-slate-950/90 font-bold border-t border-slate-200 dark:border-slate-800">
                   <td className="pl-4 xl:pl-6 pr-2 py-4 border-slate-200 dark:border-slate-800 text-left border-b-0">
                     <div className="flex flex-col gap-0.5">
-                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Итого выбрано</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                        {filterYear !== null ? `Итого за ${filterYear} год` : 'Итого выбрано'}
+                      </span>
                       <span className="text-[12px] font-bold text-slate-850 dark:text-slate-200">
                         {filteredTotals.count} {filteredTotals.count === 1 ? 'вклад' : filteredTotals.count < 5 ? 'вклада' : 'вкладов'}
                       </span>
@@ -440,22 +584,22 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="table-cell xl:hidden px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
-                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-semibold text-slate-950 dark:text-white border-b-0">
-                    <span className="tabular-nums"><span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span></span></span>
+                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[12px] xl:text-[13px] tracking-tight font-semibold text-slate-950 dark:text-white border-b-0">
+                    <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span>
                   </td>
                   <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 border-b-0">
-                    <span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span></span>
+                    <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>
                   </td>
                   <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-black text-slate-950 dark:text-white border-b-0">
-                    <span className="tabular-nums"><span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span></span></span>
+                    <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
                   </td>
                   <td className="table-cell xl:hidden px-2 py-4 text-center border-slate-200 dark:border-slate-800 border-b-0">
-                    <div className="flex flex-col items-center justify-center tabular-nums font-semibold">
-                      <span className="text-[13px] font-bold text-slate-950 dark:text-white">
-                        <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
+                    <div className="flex flex-col items-center justify-center tabular-nums font-semibold tracking-tight">
+                      <span className="text-[12px] font-bold text-slate-950 dark:text-white">
+                        <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
                       </span>
-                      <span className="text-[11px] text-deposit-600 dark:text-deposit-400">
-                        +<span className="tabular-nums"><span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span></span>
+                      <span className="text-[10.5px] text-deposit-600 dark:text-deposit-400">
+                        +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
                       </span>
                     </div>
                   </td>
@@ -551,10 +695,8 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
           <div
             className={cn(
               "w-full pointer-events-auto overflow-hidden",
-              "border border-slate-200/70 dark:border-white/[0.1] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.45)] backdrop-blur-3xl transition-all duration-300 ease-in-out cursor-pointer",
-              isAnalyticsExpanded
-                ? "bg-white/98 dark:bg-slate-950/98 rounded-panel"
-                : "bg-white/98 dark:bg-slate-900/98 rounded-panel hover:bg-white dark:hover:bg-slate-900 active:scale-[0.98]"
+              "border border-slate-200/80 dark:border-white/[0.12] shadow-panel dark:shadow-panel-dark backdrop-blur-3xl transition-all duration-300 ease-in-out cursor-pointer",
+              "bg-white/95 dark:bg-slate-950/95 rounded-panel hover:bg-white dark:hover:bg-slate-950 active:scale-[0.98]"
             )}
             onClick={() => setIsAnalyticsExpanded(!isAnalyticsExpanded)}
             role="button"
@@ -584,7 +726,12 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                   {/* Icon & Title */}
                   <div className="flex items-center gap-3">
                     <div className={cn("shrink-0 rounded-lg flex items-center justify-center transition-all bg-deposit-500/10 dark:bg-deposit-500/25", isAnalyticsExpanded ? "w-7 h-7" : "w-7 h-7 relative")}>
-                      {!isAnalyticsExpanded && <div className="absolute inset-0 rounded-lg bg-deposit-500/10 animate-ping opacity-60" />}
+                      {!isAnalyticsExpanded && (
+                        <div 
+                          className="absolute inset-0 rounded-lg bg-deposit-500/10 animate-ping opacity-60" 
+                          style={{ animationDuration: '2s' }}
+                        />
+                      )}
                       {isAnalyticsExpanded ? (
                         <TrendingUp className="w-4 h-4 text-deposit-600 dark:text-deposit-400" />
                       ) : (
@@ -647,7 +794,7 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                           </span>
                         </div>
 
-                        <div className="col-span-2 pt-3.5 mt-1 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between">
+                        <div className="col-span-2 pt-3 mt-0.5 border-t border-slate-200/50 dark:border-white/[0.05] flex items-center justify-between">
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Итоговая сумма</span>
                           <span className="text-base font-black text-slate-950 dark:text-white tracking-tight tabular-nums">
                             <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
@@ -656,8 +803,13 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
                       </div>
 
                       {/* Tags */}
-                      {(selectedBanks.length > 0 || filterStatus !== 'active') && (
-                        <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-slate-100 dark:border-white/[0.03] w-full">
+                      {(selectedBanks.length > 0 || filterStatus !== 'active' || filterYear !== null) && (
+                        <div className="flex flex-wrap gap-1 mt-1.5 pt-2 border-t border-slate-100 dark:border-white/[0.03] w-full">
+                          {filterYear !== null && (
+                            <span className="px-2 py-0.5 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 text-[8px] font-bold rounded-md uppercase tracking-tight">
+                              {filterYear} год
+                            </span>
+                          )}
                           {selectedBanks.map(b => (
                             <span key={b} className="px-2 py-0.5 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 text-[8px] font-bold rounded-md uppercase tracking-tight">
                               {b}
@@ -677,6 +829,103 @@ export function DepositList({ deposits, isPrivate = false, isOuterPresent = true
             </div>
           </div>
         </motion.div>,
+        document.body
+      )}
+
+      {/* Floating Summary Bar for Desktop & Landscape Tablet */}
+      {isPresent && isOuterPresent && isMounted && tableDimensions && typeof document !== 'undefined' && createPortal(
+        <div
+          className="hidden lg:block fixed z-40 pointer-events-none"
+          style={{
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)',
+            left: `${tableDimensions.left}px`,
+            width: `${tableDimensions.width}px`,
+          }}
+        >
+          <AnimatePresence>
+            {!isTableBottomInView && isTableTopInView && filteredDeposits.length >= 3 && (
+              <motion.div 
+                key="desktop-floating-summary"
+                initial={{ opacity: 0, y: 24, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 16, scale: 0.95, transition: { duration: 0.18, ease: "easeInOut" } }}
+                transition={{ type: "spring", stiffness: 450, damping: 32, mass: 0.8 }}
+                className="pointer-events-auto w-full bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/80 dark:border-white/[0.12] shadow-[0_12px_36px_rgba(0,0,0,0.16),0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.7),0_8px_24px_rgba(0,0,0,0.5)] rounded-2xl px-5 py-3 flex items-center justify-between gap-4 relative overflow-hidden transform-gpu will-change-[transform,opacity]"
+              >
+                {/* Subtle atmospheric ambient glow */}
+                <div className="absolute -top-6 right-1/4 w-36 h-20 bg-deposit-500/10 rounded-full blur-2xl pointer-events-none -z-0" />
+
+                {/* Left side: Period/Selected title & count */}
+                <div className="flex items-center gap-3 shrink-0 relative z-10">
+                  <div className="w-8 h-8 rounded-xl bg-deposit-500/10 dark:bg-deposit-500/25 relative flex items-center justify-center text-deposit-600 dark:text-deposit-400 shrink-0">
+                    <div 
+                      className="absolute inset-0 rounded-xl bg-deposit-500/20 animate-ping opacity-60 pointer-events-none" 
+                      style={{ animationDuration: '3s' }}
+                    />
+                    <BarChart3 className="w-4 h-4 stroke-[2px] relative z-10" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                      {filterYear !== null ? `Итого за ${filterYear} год` : 'Итого выбрано'}
+                    </span>
+                    <span className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-none">
+                      {filteredTotals.count} {filteredTotals.count === 1 ? 'вклад' : filteredTotals.count < 5 ? 'вклада' : 'вкладов'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Middle/Right: Summary Values */}
+                <div className="flex items-center gap-6 xl:gap-8 min-w-0">
+                  {/* Amount */}
+                  <div className="flex flex-col items-center xl:items-end">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                      Сумма
+                    </span>
+                    <span className="text-[13px] font-semibold text-slate-900 dark:text-white tabular-nums leading-none">
+                      <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur>
+                    </span>
+                  </div>
+
+                  {/* Income */}
+                  <div className="flex flex-col items-center xl:items-end">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-deposit-600/70 dark:text-deposit-400/70 leading-none mb-1">
+                      Доход
+                    </span>
+                    <span className="text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 tabular-nums leading-none">
+                      +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
+                    </span>
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex flex-col items-center xl:items-end">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                      Итого
+                    </span>
+                    <span className="text-[14px] font-black text-slate-950 dark:text-white tabular-nums leading-none">
+                      <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
+                    </span>
+                  </div>
+
+                  {/* Scroll to bottom button */}
+                  <button
+                    onClick={() => {
+                      if (tfootRef.current) {
+                        const rect = tfootRef.current.getBoundingClientRect();
+                        const targetY = window.scrollY + rect.bottom - window.innerHeight + 56;
+                        window.scrollTo({ top: targetY, behavior: 'smooth' });
+                      }
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-deposit-600 dark:text-slate-400 dark:hover:text-deposit-400 hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200/60 dark:border-white/[0.08] transition-all cursor-pointer active:scale-95 shrink-0"
+                    title="Перейти к концу таблицы"
+                  >
+                    <span className="hidden xl:inline-block leading-none mt-[1px]">В конец</span>
+                    <ChevronDown className="w-3.5 h-3.5 stroke-[2.5px]" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>,
         document.body
       )}
     </div>

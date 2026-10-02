@@ -98,18 +98,18 @@ export function NotificationsSettings() {
       }
     } catch (error: any) {
       logger.error(error);
-      showToast(error?.message || 'Ошибка при синхронизации токена', 'error');
+      showToast(error?.message || 'Ошибка синхронизации токена', 'error');
     } finally {
       setIsSyncing(false);
     }
   };
 
   return (
-    <section className="apple-card p-4 sm:p-5 xl:p-6 space-y-6 h-full flex flex-col">
-      <div className="flex items-center justify-between h-12 mb-4 shrink-0">
+    <section className="apple-card p-4 sm:p-5 xl:p-6 flex flex-col justify-between h-full">
+      <div className="flex items-center gap-4 mb-4 sm:mb-6 justify-between shrink-0">
         <div className="flex items-center gap-4 min-w-0">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
-            <Bell className="w-6 h-6 text-indigo-500 stroke-[1.5px]" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-500 stroke-[1.5px]" />
           </div>
           <div className="min-w-0">
             <h3 className="text-base font-bold tracking-tight text-slate-950 dark:text-white truncate">Уведомления</h3>
@@ -125,14 +125,14 @@ export function NotificationsSettings() {
             <span className="leading-relaxed">Включите Push-уведомления, чтобы своевременно получать напоминания об истекающих вкладах (в день окончания, за 1 и 3 дня) и других важных событиях.</span>
           </p>
           
-          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="min-w-0 space-y-1">
+          <div className="pt-4 border-t border-slate-200/50 dark:border-white/[0.05] flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+            <div className="min-w-0 space-y-1 flex-1">
               <p className="font-bold text-slate-900 dark:text-white truncate">Статус Push-уведомлений</p>
               
               {permissionState === 'granted' && isRegisteredInDb ? (
                 tokensCount > 1 ? (
                   <div className="space-y-1 text-xs">
-                    <div className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                    <div className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>Активно • {formatDevicesCount(tokensCount)}</span>
                     </div>
@@ -144,7 +144,7 @@ export function NotificationsSettings() {
                   </div>
                 ) : (
                   <div className="text-xs flex items-center gap-2 flex-wrap">
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>Активно</span>
                     </span>
@@ -158,14 +158,14 @@ export function NotificationsSettings() {
               ) : (
                 <div className="text-xs flex items-center gap-2 flex-wrap">
                   {permissionState === 'granted' && !isRegisteredInDb && (
-                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1.5">
                       <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                       <span>Разрешено в браузере • Токен не в базе</span>
                     </span>
                   )}
 
                   {permissionState === 'denied' && (
-                    <span className="text-rose-500 font-medium flex items-center gap-1.5 whitespace-nowrap">
+                    <span className="text-rose-500 font-medium flex items-center gap-1.5">
                       <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                       <span>Заблокированы в браузере</span>
                     </span>
@@ -184,7 +184,7 @@ export function NotificationsSettings() {
               )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 self-start xl:self-center">
               {permissionState === 'granted' ? (
                 <button
                   type="button"

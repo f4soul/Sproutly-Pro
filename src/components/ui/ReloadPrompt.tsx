@@ -32,7 +32,7 @@ function UpdatePill() {
           triggerPwaUpdate();
         }
       }}
-      className="group relative w-full h-10 px-3 sm:px-3.5 rounded-full flex items-center justify-between gap-2 bg-primary-500/10 hover:bg-primary-500/15 dark:bg-[#0a1633]/85 dark:hover:bg-[#0e1f47] border border-primary-500/30 hover:border-primary-500/50 dark:border-primary-500/40 dark:hover:border-primary-400/60 shadow-sm hover:shadow-[0_4px_16px_rgba(59,130,246,0.18)] dark:shadow-[0_4px_20px_rgba(30,58,138,0.35)] backdrop-blur-xl transition-all duration-200 active:scale-[0.98] cursor-pointer select-none"
+      className="group relative w-full h-10 px-3 sm:px-3.5 rounded-full flex items-center justify-between gap-2 bg-primary-500/10 hover:bg-primary-500/15 dark:bg-[#0a1633]/90 dark:hover:bg-[#0e1f47] border border-primary-500/30 hover:border-primary-500/50 dark:border-primary-400/30 dark:hover:border-primary-400/50 shadow-sm backdrop-blur-xl transition-all duration-200 active:scale-[0.98] cursor-pointer select-none"
       title={isUpdating ? 'Идет обновление приложения…' : 'Доступно обновление: нажмите, чтобы обновить приложение'}
     >
       {/* Левая часть: иконка + текст */}

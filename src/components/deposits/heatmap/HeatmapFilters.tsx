@@ -121,12 +121,11 @@ export function HeatmapFilters({
           <button 
             onClick={() => setSelectedBank('all')}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md active:scale-95",
+              "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md active:scale-95",
               selectedBank === 'all' 
-                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                 : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
             )}
-            style={selectedBank === 'all' ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
           >
             <div className={cn("w-3.5 h-3.5 flex items-center justify-center shrink-0 leading-none", selectedBank === 'all' ? "text-deposit-600 dark:text-deposit-400" : "text-slate-400 dark:text-slate-500")}>
               <svg 
@@ -159,12 +158,11 @@ export function HeatmapFilters({
                 key={`bank-filter-${bank}-${bankIdx}`}
                 onClick={() => setSelectedBank(bank)}
                 className={cn(
-                  "flex items-center gap-1.5 px-2.5 h-8 rounded-[10px] text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md active:scale-95",
+                  "flex items-center gap-1.5 px-2.5 h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border group overflow-hidden shrink-0 backdrop-blur-md active:scale-95",
                   isSelected 
-                    ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30 " 
+                    ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30" 
                     : "bg-white/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/[0.08] hover:border-deposit-500/30 hover:bg-white dark:hover:bg-slate-800"
                 )}
-                style={isSelected ? { boxShadow: "0 0 12px rgba(var(--rgb-deposit),0.3)", borderColor: "rgba(var(--rgb-deposit),0.4)" } : undefined}
               >
                 <div className={cn("w-4 h-4 min-w-[16px] flex items-center justify-center shrink-0", isSelected && "drop-shadow-[0_0_4px_rgba(var(--rgb-deposit),0.5)]")}>
                   {hasLogo ? (

@@ -8,6 +8,7 @@ import { DataManagementSettings } from './sections/DataManagementSettings';
 import { AssetTabsSettings } from './sections/AssetTabsSettings';
 import { TaxBracketsSettings } from './sections/TaxBracketsSettings';
 import { DepositsTaxSettings } from './sections/DepositsTaxSettings';
+import { AdminReleaseSettings } from './sections/AdminReleaseSettings';
 import { useSettings } from '../../context/SettingsContext';
 import { useAssets } from '../../context/AssetsContext';
 import { useDeposits } from '../../context/DepositsContext';
@@ -57,6 +58,9 @@ export function Settings() {
           <NotificationsSettings />
         </div>
       </div>
+
+      {/* Admin Release Management (Full Width, only for admin) */}
+      <AdminReleaseSettings />
 
       {/* Archive Section (Full Width) */}
       <AnimatePresence initial={false}>
