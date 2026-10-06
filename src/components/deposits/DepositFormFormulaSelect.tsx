@@ -53,7 +53,7 @@ export function DepositFormFormulaSelect({
               />
             </span>
           </Listbox.Button>
-          <DropdownPortal targetRef={listboxRef} matchWidth minWidth={250}>
+          <DropdownPortal targetRef={listboxRef} matchWidth minWidth={320}>
           <Transition
             as={Fragment}
             leave="transition ease-in duration-100"

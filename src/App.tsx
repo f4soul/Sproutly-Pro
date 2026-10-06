@@ -366,7 +366,11 @@ function AppContent() {
             <LandingView key="landing" onStart={handleStart} />
           ) : (
             <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
-              <Suspense fallback={<div className="flex-1 flex items-center justify-center min-h-[50vh]"><div className="w-8 h-8 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" /></div>}>
+              <Suspense fallback={
+                <div className="fixed inset-0 md:left-68 flex items-center justify-center pointer-events-none z-30">
+                  <div className="w-10 h-10 rounded-full border-[3.5px] border-primary-500/20 border-t-primary-500 animate-spin" />
+                </div>
+              }>
                 {activeTab === 'dashboard' && (
                   <UnifiedDashboard 
                     deposits={deposits} 

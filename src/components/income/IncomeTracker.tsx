@@ -548,9 +548,9 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   if (!isInitialized || !activeYearData) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100dvh-12rem)] w-full">
+      <div className="fixed inset-0 md:left-68 flex items-center justify-center pointer-events-none z-30">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-[3.5px] border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
           <span className="text-slate-400 text-sm font-medium">Загрузка данных...</span>
         </div>
       </div>

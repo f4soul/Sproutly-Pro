@@ -583,35 +583,35 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 )}
               >
                 <div className="overflow-hidden">
-                  <div className="bg-slate-100/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-3 sm:px-3.5 sm:py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-1.5 shadow-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-lg bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 flex items-center justify-center shrink-0">
-                        <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3 stroke-[2.2px]" />
+                  <div className="bg-slate-100/70 dark:bg-slate-900/60 backdrop-blur-xl border border-slate-200/60 dark:border-white/[0.06] rounded-2xl p-3 lg:p-2 lg:pl-3 lg:pr-2 flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-2.5 shadow-xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 flex items-center justify-center shrink-0">
+                        <RotateCcw className="w-3.5 h-3.5 stroke-[2.2px]" />
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <span className="font-bold text-sm sm:text-xs text-slate-900 dark:text-white leading-tight whitespace-nowrap">
+                        <span className="font-bold text-sm lg:text-xs text-slate-900 dark:text-white leading-tight whitespace-nowrap">
                           Незавершенный черновик
                         </span>
-                        <span className="text-xs sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5 whitespace-nowrap">
+                        <span className="text-xs lg:text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight mt-0.5 whitespace-nowrap">
                           Продолжить заполнение?
                         </span>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-1 w-full sm:w-auto shrink-0 pt-0.5 sm:pt-0">
+                    <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 lg:gap-1.5 w-full lg:w-auto shrink-0 pt-0.5 lg:pt-0">
                       <button
                         type="button"
                         onClick={handleDiscardDraft}
-                        className="h-8 sm:h-6 px-2.5 sm:px-2 rounded-xl sm:rounded-lg bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 sm:bg-transparent sm:dark:bg-transparent sm:hover:bg-slate-200/50 sm:dark:hover:bg-white/5 text-slate-500 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 font-bold sm:font-semibold text-[11px] sm:text-[9px] uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                        className="h-8.5 lg:h-8 px-3 lg:px-2.5 rounded-xl bg-slate-200/50 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-slate-500 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 font-bold lg:font-semibold text-[11px] lg:text-[10px] uppercase tracking-wider leading-none active:scale-95 transition-all flex items-center justify-center text-center cursor-pointer select-none"
                       >
-                        Сбросить
+                        <span className="leading-none">Сбросить</span>
                       </button>
                       <button
                         type="button"
                         onClick={handleRestoreDraft}
-                        className="h-8 sm:h-6 px-3 sm:px-2.5 rounded-xl sm:rounded-lg bg-deposit-500/15 hover:bg-deposit-500/25 dark:bg-deposit-500/20 dark:hover:bg-deposit-500/30 text-deposit-700 dark:text-deposit-300 border border-deposit-500/25 font-bold text-[11px] sm:text-[9px] uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-1.5 sm:gap-1 shadow-2xs whitespace-nowrap cursor-pointer"
+                        className="h-8.5 lg:h-8 px-3.5 lg:px-3 rounded-xl bg-deposit-500/15 hover:bg-deposit-500/25 dark:bg-deposit-500/20 dark:hover:bg-deposit-500/30 text-deposit-700 dark:text-deposit-300 border border-deposit-500/25 font-bold text-[11px] lg:text-[10px] uppercase tracking-wider leading-none active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-2xs whitespace-nowrap cursor-pointer select-none"
                       >
-                        <Check className="w-3.5 h-3.5 sm:w-3 sm:h-3 stroke-[2.5px]" />
-                        <span>Продолжить</span>
+                        <Check className="w-3.5 h-3.5 lg:w-3 lg:h-3 stroke-[2.5px] shrink-0" />
+                        <span className="leading-none">Продолжить</span>
                       </button>
                     </div>
                   </div>

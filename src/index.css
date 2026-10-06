@@ -121,6 +121,7 @@
   }
 
   html {
+    -webkit-tap-highlight-color: transparent;
     color-scheme: light;
     background-color: #f8fafc;
     -webkit-font-smoothing: antialiased;
@@ -130,6 +131,10 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     overscroll-behavior-y: none;
+  }
+
+  *, *::before, *::after {
+    -webkit-tap-highlight-color: transparent;
   }
 
   .dark {
@@ -146,7 +151,7 @@
   }
   
   /* Global interactive elements */
-  button, [role="button"], a, input[type="submit"], input[type="button"] {
+  button, a, input[type="submit"], input[type="button"] {
     @apply cursor-pointer active:scale-[0.98] transition-all duration-200;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/80 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950;
   }

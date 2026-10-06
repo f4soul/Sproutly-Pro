@@ -246,11 +246,18 @@ export function DepositFormDateFields({
                   setDurationStr(validDuration !== "" ? String(validDuration) : "");
                 }
                 setIsEndDateOpen(false);
-              } else if (event) {
-                // Only clear duration if the user explicitly clicked the clear icon or triggered a real DOM event
-                setFormData((prev) => ({ ...prev, endDate: null }));
-                setDuration("");
-                setDurationStr("");
+              } else {
+                // If the user explicitly clicked the clear icon inside DatePicker, clear endDate only.
+                // Do NOT reset duration: duration is an independent field with its own stepper/clear controls,
+                // and savings accounts can have promo duration without a fixed closing date.
+                const isExplicitClear = Boolean(
+                  event &&
+                  (event.type === "click" ||
+                    Boolean((event.target as HTMLElement)?.closest?.(".react-datepicker__close-icon")))
+                );
+                if (isExplicitClear) {
+                  setFormData((prev) => ({ ...prev, endDate: null }));
+                }
               }
             }}
             onChangeRaw={(e) => {

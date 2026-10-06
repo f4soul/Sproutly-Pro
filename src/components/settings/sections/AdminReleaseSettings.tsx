@@ -192,24 +192,6 @@ export function AdminReleaseSettings() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Текст уведомления
             </span>
-            <div
-              className={cn(
-                "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
-                isCustomized ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-              )}
-            >
-              <div className="overflow-hidden">
-                <button
-                  type="button"
-                  onClick={handleResetToDefault}
-                  className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
-                  title="Сбросить к стандартному тексту релиза"
-                >
-                  <RotateCcw className="w-2.5 h-2.5" />
-                  <span>Сбросить к релизу</span>
-                </button>
-              </div>
-            </div>
           </div>
 
           <div className="space-y-1">

@@ -73,12 +73,12 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
   return (
     <div
       className={cn(
-        "flex flex-col p-4 relative cursor-pointer group transition-all duration-300 overflow-hidden",
+        "flex flex-col p-4 relative cursor-pointer group transition-colors duration-150 overflow-hidden outline-none focus:outline-none focus-visible:outline-none select-none tap-highlight-none active:scale-100",
         isClosed
           ? "opacity-70 grayscale-[0.3]"
           : isSavingsAccount
-            ? "bg-deposit-500/[0.02] dark:bg-deposit-500/[0.05] hover:bg-deposit-500/[0.04] dark:hover:bg-deposit-500/[0.08]"
-            : "hover:bg-slate-50/50 dark:hover:bg-white/5",
+            ? "bg-deposit-500/[0.02] dark:bg-deposit-500/[0.05] hover:bg-deposit-500/[0.04] dark:hover:bg-deposit-500/[0.08] active:bg-deposit-500/[0.08] dark:active:bg-deposit-500/[0.14]"
+            : "hover:bg-slate-50/50 dark:hover:bg-white/5 active:bg-slate-100/80 dark:active:bg-white/[0.08]",
         !isLast && "border-b border-slate-200 dark:border-slate-800",
       )}
       onClick={() => setIsExpanded(!isExpanded)}
