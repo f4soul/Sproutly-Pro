@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { calculateDepositDensity, calculateIncome, calculateIncomeByYears } from './depositCalculations';
+import { calculateDepositDensity, calculateIncome, calculateIncomeByYears, calculateDailyIncome } from './depositCalculations';
 import { Deposit } from '../types';
 
 const mockDeposit = (overrides: Partial<Deposit> = {}): Deposit => ({
@@ -97,4 +97,16 @@ test('calculateIncomeByYears: handles splitIncome correctly', () => {
   
   const total = results[0].income + results[1].income;
   assert.ok(Math.abs(total - calculateIncome(deposit)) < 0.01);
+});
+
+test('calculateDailyIncome: calculates approx daily interest', () => {
+  const deposit = mockDeposit({
+    amount: 1_000_000,
+    rate: 18.25,
+  });
+  const daily = calculateDailyIncome(deposit);
+  const currentYear = new Date().getFullYear();
+  const daysInYear = ((currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0) ? 366 : 365;
+  const expected = (1_000_000 * (18.25 / 100)) / daysInYear;
+  assert.equal(daily, expected);
 });

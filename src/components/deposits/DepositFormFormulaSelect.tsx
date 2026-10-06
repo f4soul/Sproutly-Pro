@@ -17,13 +17,11 @@ const formulas: { id: CalculationFormula; name: string }[] = [
 interface DepositFormFormulaSelectProps {
   formData: Partial<Deposit>;
   setFormData: React.Dispatch<React.SetStateAction<Partial<Deposit>>>;
-  setDuration: React.Dispatch<React.SetStateAction<number | "">>;
 }
 
 export function DepositFormFormulaSelect({
   formData,
   setFormData,
-  setDuration,
 }: DepositFormFormulaSelectProps) {
   const listboxRef = useRef<HTMLDivElement>(null);
   
@@ -36,13 +34,10 @@ export function DepositFormFormulaSelect({
       <Listbox
         value={formData.formula}
         onChange={(val) => {
-          const isSavings = val === "daily_balance" || val === "min_balance";
-          setFormData({
-            ...formData,
+          setFormData((prev) => ({
+            ...prev,
             formula: val as CalculationFormula,
-            ...(isSavings ? { endDate: null } : {}),
-          });
-          if (isSavings) setDuration("");
+          }));
         }}
       >
         {({ open }) => (
@@ -58,20 +53,20 @@ export function DepositFormFormulaSelect({
               />
             </span>
           </Listbox.Button>
-          <DropdownPortal targetRef={listboxRef} matchWidth>
+          <DropdownPortal targetRef={listboxRef} matchWidth minWidth={250}>
           <Transition
             as={Fragment}
             leave="transition ease-in duration-100"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Listbox.Options className="max-h-60 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
+            <Listbox.Options className="max-h-70 min-w-full w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl p-1.5 flex flex-col gap-0.5 text-sm shadow-[0_16px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] focus:outline-none">
               {formulas.map((formula) => (
                 <Listbox.Option
                   key={formula.id}
                   className={({ active }) =>
                     cn(
-                      "relative cursor-pointer select-none py-2.5 px-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-between gap-2 border border-transparent",
+                      "relative cursor-pointer select-none py-2.5 px-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-between gap-3 border border-transparent",
                       active
                         ? "bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-white border-slate-200/40 dark:border-white/[0.04] shadow-sm"
                         : "text-slate-850 dark:text-slate-200",
@@ -83,7 +78,7 @@ export function DepositFormFormulaSelect({
                     <>
                       <span
                         className={cn(
-                          "block truncate text-sm font-medium transition-all text-slate-800 dark:text-slate-200",
+                          "block whitespace-nowrap text-sm font-medium transition-all text-slate-800 dark:text-slate-200",
                           selected && "font-bold text-slate-950 dark:text-white",
                         )}
                       >

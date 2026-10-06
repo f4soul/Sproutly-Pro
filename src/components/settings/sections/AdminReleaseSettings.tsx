@@ -1,5 +1,5 @@
 import React, { useState, useRef, Fragment } from 'react';
-import { Rocket, Send, Sparkles, RefreshCw, CheckCircle2, Crown, Smartphone } from 'lucide-react';
+import { Rocket, Send, Sparkles, RefreshCw, CheckCircle2, Crown, Smartphone, RotateCcw, X } from 'lucide-react';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { showToast } from '../../../lib/toast';
@@ -7,6 +7,7 @@ import { useAuthSync } from '../../../context/AuthSyncContext';
 import { logger } from '../../../lib/logger';
 import { changelog } from '../../../data/changelog';
 import { getDeviceFcmToken } from '../../../services/notifications';
+import { cn } from '../../../lib/utils';
 
 /**
  * Умные окончания для личных устройств пользователя:
@@ -62,13 +63,23 @@ export function AdminReleaseSettings() {
     message?: string;
   } | null>(null);
 
+  const defaultPushTitle = `✨ v${latestRelease.version} уже здесь!`;
+  const defaultPushBody = `Промо-периоды для накопительных счетов, расчет ежедневного дохода и умные напоминания. Загляните оценить!`;
+
+  const [pushTitle, setPushTitle] = useState(defaultPushTitle);
+  const [pushBody, setPushBody] = useState(defaultPushBody);
+
   // Security guard: only visible to admin
   if (user?.email !== 'filimlive@gmail.com') {
     return null;
   }
 
-  const defaultPushTitle = `✨ v${latestRelease.version} уже здесь!`;
-  const defaultPushBody = `Добавили детальную аналитику, расчет налогов и ускорили работу. Загляните оценить!`;
+  const isCustomized = pushTitle.trim() !== defaultPushTitle || pushBody.trim() !== defaultPushBody;
+
+  const handleResetToDefault = () => {
+    setPushTitle(defaultPushTitle);
+    setPushBody(defaultPushBody);
+  };
 
   const handleSendReleasePush = async (testOnly: boolean = false) => {
     if (!user) return;
@@ -98,8 +109,8 @@ export function AdminReleaseSettings() {
         },
         body: JSON.stringify({
           version: latestRelease.version,
-          title: defaultPushTitle,
-          body: defaultPushBody,
+          title: pushTitle.trim() || defaultPushTitle,
+          body: pushBody.trim() || defaultPushBody,
           testOnly,
           deviceToken: currentDeviceToken,
         }),
@@ -171,51 +182,147 @@ export function AdminReleaseSettings() {
       </div>
 
       {/* Main Content:
-          - Mobile & Tablet portrait (< lg): Single column stacked layout
-          - Desktop & Tablet landscape (>= lg): Proportional 2 columns, height-stretched for top/bottom alignment
+          - Mobile & Tablet portrait (< lg): Single column stacked layout (Editor -> Preview & Actions)
+          - Desktop & Tablet landscape (>= lg): Balanced 2-column studio layout (Left: Editor, Right: Preview + Actions)
       */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8 items-stretch">
-        {/* Left Column: Natural phone-width notification preview */}
-        <div className="w-full mx-auto lg:mx-0 p-3.5 sm:p-4 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/[0.06] flex flex-col justify-between">
-          <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-2">
-            <span>Превью уведомления на смартфоне</span>
-            <span>Сейчас</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 items-stretch">
+        {/* Left Column: Notification editor */}
+        <div className="w-full p-3.5 sm:p-4 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/[0.06] flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Текст уведомления
+            </span>
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+                isCustomized ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+              )}
+            >
+              <div className="overflow-hidden">
+                <button
+                  type="button"
+                  onClick={handleResetToDefault}
+                  className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Сбросить к стандартному тексту релиза"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  <span>Сбросить к релизу</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 bg-white dark:bg-slate-950/80 rounded-xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm flex items-start gap-3 my-auto">
-            <div className="w-8 h-8 rounded-lg bg-deposit-500/15 text-deposit-600 dark:text-deposit-400 flex items-center justify-center shrink-0 mt-0.5">
-              <Sparkles className="w-4 h-4" />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
+                Заголовок
+              </label>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
-                {defaultPushTitle}
-              </div>
-              <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug mt-0.5">
-                {defaultPushBody}
-              </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={pushTitle}
+                onChange={(e) => setPushTitle(e.target.value)}
+                placeholder="Заголовок пуш-уведомления..."
+                className="w-full pl-3 pr-8 py-2 text-xs font-bold rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200/80 dark:border-white/[0.08] text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 transition-all"
+              />
+              {pushTitle.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPushTitle('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Очистить заголовок"
+                >
+                  <X className="w-3 h-3 stroke-[2.2]" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none">
+                Сообщение
+              </label>
+              <span className="text-[8px] text-slate-400 dark:text-slate-500 font-bold tabular-nums">
+                {pushBody.length} симв.
+              </span>
+            </div>
+            <div className="relative">
+              <textarea
+                value={pushBody}
+                onChange={(e) => setPushBody(e.target.value)}
+                rows={3}
+                placeholder="Текст для рассылки..."
+                className="w-full pl-3 pr-8 py-2 text-xs font-medium rounded-xl bg-white dark:bg-slate-950/80 border border-slate-200/80 dark:border-white/[0.08] text-slate-950 dark:text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-amber-500/30 transition-all resize-none leading-relaxed"
+              />
+              {pushBody.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPushBody('')}
+                  className="absolute right-2 top-2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  title="Очистить текст сообщения"
+                >
+                  <X className="w-3 h-3 stroke-[2.2]" />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Target release info & Two action buttons */}
-        <div className="flex flex-col justify-between h-full gap-1">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Целевой релиз:
-              </span>
-              <span className="px-2 py-0.5 rounded-lg bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 text-xs font-black">
-                v{latestRelease.version}
-              </span>
+        {/* Right Column: Phone preview & Action buttons */}
+        <div className="w-full p-3.5 sm:p-4 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-200/60 dark:border-white/[0.06] flex flex-col justify-between gap-3">
+          {/* Top: Phone Preview */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">
+              <span>Превью на смартфоне</span>
+              <span>Сейчас</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Нажатие на кнопку разошлет системное Push-уведомление всем активным пользователям приложения.
-            </p>
+
+            <div className="min-h-[64px] p-3 sm:p-3.5 bg-white dark:bg-slate-950/80 rounded-xl border border-slate-200/80 dark:border-white/[0.08] shadow-sm flex items-start gap-3 transition-colors duration-200">
+              <div className="w-8 h-8 rounded-lg bg-deposit-500/15 text-deposit-600 dark:text-deposit-400 flex items-center justify-center shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-bold text-slate-900 dark:text-white leading-snug break-words">
+                  {pushTitle.trim() || 'Без заголовка'}
+                </div>
+                {/* True AnimatePresence accordion: retains exiting text during smooth collapse, zero instant flash */}
+                <AnimatePresence initial={false}>
+                  {pushBody.trim() ? (
+                    <motion.div
+                      key="push-body-preview"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug mt-0.5 break-words line-clamp-3">
+                        {pushBody.trim()}
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2">
+          {/* Bottom: Target Release Meta & Action Buttons */}
+          <div className="flex flex-col gap-0.5 pt-2.5 border-t border-slate-200/60 dark:border-white/[0.06]">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Целевой релиз:
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 text-[10px] font-black">
+                  v{latestRelease.version}
+                </span>
+              </div>
+            </div>
+
             {/* Reserved fixed-height slot: eliminates layout shift (zero CLS) */}
-            <div className="h-5 flex items-center min-w-0">
+            <div className="h-4 flex items-center min-w-0">
               <AnimatePresence mode="wait">
                 {lastResult && (
                   <motion.div
@@ -224,16 +331,16 @@ export function AdminReleaseSettings() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -3 }}
                     transition={{ duration: 0.2 }}
-                    className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5 truncate"
+                    className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1.5 truncate"
                   >
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">
                       {lastResult.isTest
                         ? `Тест доставлен: ${formatUserDevicesCount(lastResult.successCount)}`
                         : `Доставлено: ${lastResult.successCount} из ${formatTotalDevicesCount(lastResult.totalTokens)}`}
                     </span>
                     {!!lastResult.cleanedTokensCount && (
-                      <span className="text-slate-400 font-normal text-[11px] shrink-0">
+                      <span className="text-slate-400 font-normal text-[10px] shrink-0">
                         (очищено {formatTotalDevicesCount(lastResult.cleanedTokensCount)})
                       </span>
                     )}
@@ -242,13 +349,13 @@ export function AdminReleaseSettings() {
               </AnimatePresence>
             </div>
 
-            {/* Two Action Buttons: Compact labels, equal height (h-11 sm:h-12), no awkward wraps */}
+            {/* Two Action Buttons: Compact labels, equal height (h-10 sm:h-11), no awkward wraps */}
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleSendReleasePush(true)}
                 disabled={isBusy}
-                className="h-11 sm:h-12 px-3 rounded-xl font-bold text-xs bg-slate-100/90 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-white/[0.08] transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-xs whitespace-nowrap"
+                className="h-10 sm:h-11 px-3 rounded-xl font-bold text-xs bg-slate-100/90 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/70 dark:border-white/[0.08] transition-all active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-xs whitespace-nowrap"
                 title="Отправить пуш только на устройства вашего аккаунта"
               >
                 {isSendingTest ? (
@@ -259,7 +366,7 @@ export function AdminReleaseSettings() {
                 ) : (
                   <>
                     <Smartphone className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span className="truncate">Тестовый пуш</span>
+                    <span className="truncate">Тест</span>
                   </>
                 )}
               </button>
@@ -268,7 +375,7 @@ export function AdminReleaseSettings() {
                 type="button"
                 onClick={() => setShowConfirm(true)}
                 disabled={isBusy}
-                className="h-11 sm:h-12 px-3 rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.35)] active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
+                className="h-10 sm:h-11 px-3 rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-600 text-white transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.35)] active:scale-95 disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
                 title="Разослать Push всем зарегистрированным пользователям"
               >
                 {isSendingAll ? (
@@ -279,7 +386,7 @@ export function AdminReleaseSettings() {
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5 shrink-0" />
-                    <span className="truncate">Разослать всем</span>
+                    <span className="truncate">В релиз!</span>
                   </>
                 )}
               </button>
@@ -320,10 +427,10 @@ export function AdminReleaseSettings() {
                     <Send className="w-6 h-6 text-amber-500 stroke-[1.5px]" />
                   </div>
                   <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight text-center">
-                    Отправить Push о релизе?
+                    {isCustomized ? 'Отправить Push-рассылку?' : 'Отправить Push о релизе?'}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-center">
-                    Вы уверены, что хотите отправить Push-уведомление о версии <strong className="text-slate-950 dark:text-white">v{latestRelease.version}</strong> на все зарегистрированные устройства?
+                    Вы уверены, что хотите отправить Push-уведомление «<strong className="text-slate-950 dark:text-white">{pushTitle.trim() || 'Без заголовка'}</strong>» на все зарегистрированные устройства?
                   </p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button

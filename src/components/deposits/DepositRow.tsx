@@ -5,6 +5,7 @@ import { Deposit } from "../../types";
 import { formatCurrency, formatPercent, cn } from "../../lib/utils";
 import {
   calculateIncome,
+  calculateDailyIncome,
   isDepositClosed,
 } from "../../lib/depositCalculations";
 import { getBankDetails } from "../../lib/banks";
@@ -28,6 +29,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const income = calculateIncome(deposit);
+  const dailyIncome = calculateDailyIncome(deposit);
 
   const formatVal = (val: number) => (
     <PrivacyBlur isPrivate={isPrivate}>
@@ -349,19 +351,19 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
                   !isLast && "border-b",
                 )}
               >
-                {/* Desktop/Tablet Horizontal Content */}
-                <div className="hidden lg:flex flex-row flex-wrap items-center gap-6 text-[11px] px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500 dark:text-slate-400 font-medium font-bold uppercase tracking-widest text-[8px]">
-                      Формула расчета:
+                {/* Desktop/Tablet Column Layout */}
+                <div className="hidden lg:flex flex-row items-start gap-8 xl:gap-10 2xl:gap-12 px-6 py-3.5">
+                  <div className="flex flex-col shrink-0">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                      Формула расчета
                     </span>
-                    <span className="font-bold text-slate-950 dark:text-white">
+                    <span className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight">
                       {deposit.formula === "simple_days"
                         ? "В конце срока"
                         : deposit.formula === "simple_months"
-                          ? "Ежемесячно (без капитализации)"
+                          ? "Ежемесячно"
                           : deposit.formula === "compound_monthly"
-                            ? "Ежемесячная капитализация"
+                            ? "Капитализация"
                             : deposit.formula === "daily_balance"
                               ? "На ежедневный остаток"
                               : deposit.formula === "min_balance"
@@ -369,23 +371,37 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
                                 : "Не указана"}
                     </span>
                   </div>
+
+                  <div className="flex flex-col shrink-0">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                      В день
+                    </span>
+                    <span className="text-[12px] font-bold text-deposit-600 dark:text-deposit-400 leading-tight">
+                      +{formatVal(dailyIncome)}
+                    </span>
+                  </div>
+
                   {deposit.sourceNote && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium font-bold uppercase tracking-widest text-[8px]">
-                        Вывод:
+                    <div className="flex flex-col shrink-0 max-w-[200px]">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                        Вывод
                       </span>
-                      <span className="font-bold text-slate-950 dark:text-white">
+                      <span
+                        className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight truncate"
+                        title={deposit.sourceNote}
+                      >
                         {deposit.sourceNote}
                       </span>
                     </div>
                   )}
+
                   {deposit.comment && (
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0 font-bold uppercase tracking-widest text-[8px]">
-                        Заметка:
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                        Заметка
                       </span>
                       <span
-                        className="text-slate-950 dark:text-white truncate"
+                        className="text-[12px] font-bold text-slate-900 dark:text-white leading-tight truncate"
                         title={deposit.comment}
                       >
                         {deposit.comment}
@@ -395,13 +411,13 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
                 </div>
 
                 {/* Mobile Content */}
-                <div className="lg:hidden flex flex-col gap-4 p-4 text-[11px]">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[8px]">
+                <div className="lg:hidden flex flex-col gap-3.5 p-4 text-[11px]">
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
                         Формула расчета
                       </span>
-                      <span className="font-bold text-slate-950 dark:text-white">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
                         {deposit.formula === "simple_days"
                           ? "В конце срока"
                           : deposit.formula === "simple_months"
@@ -415,23 +431,31 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
                                   : "Не указана"}
                       </span>
                     </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                        В день
+                      </span>
+                      <span className="text-xs font-bold text-deposit-600 dark:text-deposit-400 leading-tight">
+                        +{formatVal(dailyIncome)}
+                      </span>
+                    </div>
                     {deposit.sourceNote && (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[8px]">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
                           Счет вывода
                         </span>
-                        <span className="font-bold text-slate-950 dark:text-white">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate" title={deposit.sourceNote}>
                           {deposit.sourceNote}
                         </span>
                       </div>
                     )}
                   </div>
                   {deposit.comment && (
-                    <div className="flex flex-col gap-1">
-                      <span className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-[8px]">
-                        Дополнительно
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
+                        Заметка
                       </span>
-                      <span className="text-slate-950 dark:text-white break-words">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white break-words leading-snug">
                         {deposit.comment}
                       </span>
                     </div>

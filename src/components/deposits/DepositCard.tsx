@@ -6,6 +6,7 @@ import { Deposit } from "../../types";
 import { formatCurrency, cn } from "../../lib/utils";
 import {
   calculateIncome,
+  calculateDailyIncome,
   isDepositClosed,
 } from "../../lib/depositCalculations";
 import { getBankDetails } from "../../lib/banks";
@@ -38,6 +39,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
   const endDate = parseDate(deposit.endDate);
   const isClosed = isDepositClosed(deposit);
   const income = calculateIncome(deposit);
+  const dailyIncome = calculateDailyIncome(deposit);
   const total = deposit.amount + income;
   const [isExpanded, setIsExpanded] = useState(false);
   const bankDetails = getBankDetails(deposit.bank);
@@ -105,8 +107,8 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
 
       {/* Top Row: Logo & Rate */}
       <div className="flex items-start justify-between mb-4 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="w-8 h-8 rounded-lg bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm shrink-0">
             {bankDetails.logoUrl ? (
               <BankLogo
                 logoUrl={bankDetails.logoUrl}
@@ -122,15 +124,20 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
               </span>
             )}
           </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-950 dark:text-white">
+          <div className="min-w-0 flex-1 flex flex-col items-start justify-center gap-1">
+            <h3 className="font-bold text-sm text-slate-950 dark:text-white truncate max-w-full leading-tight">
               {deposit.bank}
             </h3>
+            {isSavingsAccount && (
+              <span className="self-start inline-flex items-center text-[7.5px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none shrink-0 border border-deposit-500/25 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 shadow-xs whitespace-nowrap max-w-fit">
+                Накопительный
+              </span>
+            )}
           </div>
         </div>
 
         {!isClosed && (
-          <div className="text-right">
+          <div className="text-right shrink-0 ml-3">
             <span
               className="text-xl sm:text-2xl font-black tracking-tighter"
               style={{ color: bankDetails.color }}
@@ -143,20 +150,18 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
 
       {/* Center: Progress Bar */}
       <div className="mb-3 relative z-10">
-        <div className="flex justify-between items-end mb-1.5">
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            {!deposit.endDate || isSavingsAccount ? "Тип счета" : "Срок вклада"}
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">
+            {!deposit.endDate ? "Срок счета" : isSavingsAccount ? "Срок надбавки" : "Срок вклада"}
           </span>
           <span
-            className="text-[10px] font-bold"
+            className="text-[10px] font-bold leading-tight"
             style={{ color: bankDetails.color }}
           >
-            {!deposit.endDate || isSavingsAccount
-              ? "Накопительный"
-              : getDaysRemaining()}
+            {!deposit.endDate ? "Бессрочно" : getDaysRemaining()}
           </span>
         </div>
-        {!deposit.endDate || isSavingsAccount ? (
+        {!deposit.endDate ? (
           <div className="h-1.5 w-full bg-[#E5E5EA] dark:bg-slate-700/50 rounded-full overflow-hidden flex">
             <div
               className="h-full rounded-full relative w-full opacity-30"
@@ -176,7 +181,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
                 <div className="absolute inset-0 bg-white/20" />
               </motion.div>
             </div>
-            <div className="flex justify-between mt-1 text-[9px] font-bold text-slate-500 dark:text-slate-400">
+            <div className="flex justify-between items-center mt-1 text-[9px] font-bold text-slate-500 dark:text-slate-400">
               <span>{startDate ? format(startDate, "dd.MM.yyyy") : ""}</span>
               <span>{endDate ? format(endDate, "dd.MM.yyyy") : ""}</span>
             </div>
@@ -196,7 +201,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
         </div>
         <div className="flex flex-col text-right">
           <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold mb-0.5">
-            Ожидаемый доход
+            {!deposit.endDate && isSavingsAccount ? "Начислено" : "Ожидаемый доход"}
           </span>
           <span className="text-sm font-black text-deposit-600">
             +{formatVal(income)}
@@ -230,6 +235,15 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
                         : deposit.formula === "min_balance"
                           ? "На мин. остаток"
                           : "Не указана"}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">
+                Доход в день:
+              </span>
+              <span className="font-bold text-deposit-600 dark:text-deposit-400 text-right">
+                +{formatVal(dailyIncome)}
               </span>
             </div>
 

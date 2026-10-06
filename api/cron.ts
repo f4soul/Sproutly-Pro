@@ -97,15 +97,18 @@ export default async function handler(req: Request, res: Response) {
     const targetDates = [
       { 
         date: getFormattedDate(0),
-        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается СЕГОДНЯ.`
+        depositMessage: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается СЕГОДНЯ.`,
+        savingsMessage: (bank: string, amount: string) => `Повышенная ставка по счету в ${bank} на ${amount} истекает СЕГОДНЯ. Далее ставка снизится.`
       },
       { 
         date: getFormattedDate(1),
-        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается ЗАВТРА.`
+        depositMessage: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается ЗАВТРА.`,
+        savingsMessage: (bank: string, amount: string) => `Повышенная ставка по счету в ${bank} на ${amount} истекает ЗАВТРА. Далее ставка снизится.`
       },
       { 
         date: getFormattedDate(3),
-        message: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 3 ДНЯ.`
+        depositMessage: (bank: string, amount: string) => `Ваш вклад в ${bank} на ${amount} заканчивается через 3 ДНЯ.`,
+        savingsMessage: (bank: string, amount: string) => `Повышенная ставка по счету в ${bank} на ${amount} истекает через 3 ДНЯ. Далее ставка снизится.`
       },
     ];
 
@@ -192,10 +195,16 @@ export default async function handler(req: Request, res: Response) {
           const amountStr = deposit.amount ? `${deposit.amount.toLocaleString('ru-RU')} ₽` : 'неизвестную сумму';
           const bankName = deposit.bank || 'вашем банке';
 
+          const isSavings = deposit.formula === 'daily_balance' || deposit.formula === 'min_balance';
+          const notificationTitle = isSavings ? 'Истекает промо-период по счету' : 'Закрытие вклада';
+          const notificationBody = isSavings
+            ? matchedTarget.savingsMessage(bankName, amountStr)
+            : matchedTarget.depositMessage(bankName, amountStr);
+
           const message = {
             notification: {
-              title: 'Закрытие вклада',
-              body: matchedTarget.message(bankName, amountStr),
+              title: notificationTitle,
+              body: notificationBody,
             },
             data: {
               url: '/',

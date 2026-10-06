@@ -100,6 +100,13 @@ export function isDepositClosed(deposit: Deposit): boolean {
   return today >= end;
 }
 
+export function calculateDailyIncome(deposit: Deposit | { amount: number; rate: number }): number {
+  if (!deposit.amount || !deposit.rate) return 0;
+  const currentYear = new Date().getFullYear();
+  const daysInYear = ((currentYear % 4 === 0 && currentYear % 100 !== 0) || currentYear % 400 === 0) ? 366 : 365;
+  return (deposit.amount * (deposit.rate / 100)) / daysInYear;
+}
+
 function getDaysInYear(year: number) {
   return ((year % 4 === 0 && year % 100 !== 0) || year % 400 === 0) ? 366 : 365;
 }

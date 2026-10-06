@@ -6,6 +6,7 @@ interface DropdownPortalProps {
   targetRef: React.RefObject<HTMLElement | null>;
   align?: 'left' | 'right';
   matchWidth?: boolean;
+  minWidth?: number;
   offset?: number;
 }
 
@@ -14,6 +15,7 @@ export function DropdownPortal({
   targetRef,
   align = 'left',
   matchWidth = false,
+  minWidth,
   offset = 8
 }: DropdownPortalProps) {
   const [coords, setCoords] = useState<{ top: number | 'auto', bottom: number | 'auto', left: number, right: number, width: number }>({ top: -9999, bottom: 'auto', left: -9999, right: -9999, width: 0 });
@@ -47,9 +49,15 @@ export function DropdownPortal({
           finalBottom = window.innerHeight - rect.top + offset;
         }
 
-        const newLeft = rect.left;
+        let newLeft = rect.left;
         const newRight = window.innerWidth - rect.right;
         const newWidth = rect.width;
+
+        const effectiveMinWidth = minWidth || 0;
+        const expectedWidth = Math.max(newWidth, effectiveMinWidth);
+        if (align === 'left' && newLeft + expectedWidth > window.innerWidth - 16) {
+          newLeft = Math.max(16, window.innerWidth - expectedWidth - 16);
+        }
 
         if (
           finalTop !== lastTop ||
@@ -104,7 +112,15 @@ export function DropdownPortal({
         ...(coords.bottom !== 'auto' ? { bottom: coords.bottom } : {}),
         ...(align === 'left' ? { left: coords.left } : {}),
         ...(align === 'right' ? { right: coords.right } : {}),
-        ...(matchWidth ? { width: coords.width } : {}),
+        ...(matchWidth
+          ? {
+              minWidth: minWidth ? Math.max(coords.width, minWidth) : coords.width,
+              width: minWidth && coords.width < minWidth ? 'max-content' : coords.width,
+              maxWidth: 'min(calc(100vw - 32px), 420px)',
+            }
+          : minWidth
+          ? { minWidth, maxWidth: 'min(calc(100vw - 32px), 420px)' }
+          : {}),
         zIndex: 99999
       }}
     >

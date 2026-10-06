@@ -195,7 +195,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
               {hasActiveFilters && (
                 <motion.div
                   initial={{ opacity: 0, width: 0, marginRight: 0 }}
-                  animate={{ opacity: 1, width: 'auto', marginRight: 6 }}
+                  animate={{ opacity: 1, width: 'auto', marginRight: 8 }}
                   exit={{ opacity: 0, width: 0, marginRight: 0 }}
                   transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
                   className="overflow-hidden shrink-0 flex items-center"
@@ -230,7 +230,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             </button>
             
             {/* Desktop Add Button */}
-            <div className="hidden lg:block ml-1.5">
+            <div className="hidden lg:block ml-2">
               <button 
                 onClick={onAddClick}
                 className="apple-button whitespace-nowrap bg-deposit-500 hover:bg-deposit-600 text-white flex items-center justify-center gap-2 text-sm font-bold px-5 py-[11px] rounded-2xl shadow-[0_4px_16px_rgba(20,184,166,0.3)] hover:shadow-[0_4px_20px_rgba(20,184,166,0.4)] active:scale-95 transition-all cursor-pointer"

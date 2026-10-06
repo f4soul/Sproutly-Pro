@@ -40,18 +40,19 @@ export function DepositFormDateFields({
 
   const handleStartDateChange = (date: Date) => {
     if (isNaN(date.getTime())) return;
-    setFormData((prev) => ({ ...prev, startDate: date }));
-    if (duration !== "") {
-      const newEndDate = addDays(date, Number(duration));
-      setFormData((prev) => ({ ...prev, endDate: newEndDate }));
-    }
+    setFormData((prev) => {
+      const updated = { ...prev, startDate: date };
+      if (duration !== "") {
+        updated.endDate = addDays(date, Number(duration));
+      }
+      return updated;
+    });
   };
 
-  const isDurationDisabled =
+  const isSavings =
     formData.formula === "daily_balance" || formData.formula === "min_balance";
 
   const handleStepDuration = (delta: number) => {
-    if (isDurationDisabled) return;
     const current = Number(durationStr) || 0;
     const next = Math.max(1, current + delta);
     setDurationStr(String(next));
@@ -59,9 +60,11 @@ export function DepositFormDateFields({
   };
 
   const handleClearDuration = () => {
-    if (isDurationDisabled) return;
     setDurationStr("");
     handleDurationChange("");
+    if (isSavings) {
+      setFormData((prev) => ({ ...prev, endDate: null }));
+    }
   };
 
   return (
@@ -126,14 +129,11 @@ export function DepositFormDateFields({
           <Clock className="w-3.5 h-3.5 text-deposit-500 stroke-[1.5px]" />{" "}
           Срок (дней)
         </label>
-        <div className={cn(
-          "flex items-center h-[46px] rounded-ui border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all overflow-hidden",
-          isDurationDisabled && "opacity-50 cursor-not-allowed"
-        )}>
+        <div className="flex items-center h-[46px] rounded-ui border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 focus-within:ring-4 focus-within:ring-primary-500/10 focus-within:border-primary-500 dark:focus-within:border-primary-500 transition-all overflow-hidden">
           <StepperButton
             type="minus"
             onClick={() => handleStepDuration(-1)}
-            disabled={isDurationDisabled || !durationStr || Number(durationStr) <= 1}
+            disabled={!durationStr || Number(durationStr) <= 1}
             title="Уменьшить срок на 1 день"
           />
           <div className="w-px self-stretch bg-slate-200 dark:bg-slate-700/50" />
@@ -141,20 +141,22 @@ export function DepositFormDateFields({
             <input
               type="text"
               inputMode="numeric"
-              disabled={isDurationDisabled}
-              placeholder="91, 181..."
+              placeholder={isSavings ? "Бессрочно" : "91, 181..."}
               value={durationStr}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, "");
                 setDurationStr(val);
                 handleDurationChange(val === "" ? "" : Number(val));
+                if (val === "" && isSavings) {
+                  setFormData((prev) => ({ ...prev, endDate: null }));
+                }
               }}
               className={cn(
                 "w-full h-full bg-transparent border-0 outline-none text-center tabular-nums text-sm font-medium text-slate-950 dark:text-white py-0 focus:ring-0 disabled:cursor-not-allowed placeholder:font-sans placeholder:text-slate-400 dark:placeholder:text-slate-500",
-                Boolean(durationStr) && !isDurationDisabled && "pr-8"
+                Boolean(durationStr) && "pr-8"
               )}
             />
-            {Boolean(durationStr) && !isDurationDisabled && (
+            {Boolean(durationStr) && (
               <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
                 <ClearButton onClick={handleClearDuration} title="Очистить срок" />
               </div>
@@ -164,7 +166,6 @@ export function DepositFormDateFields({
           <StepperButton
             type="plus"
             onClick={() => handleStepDuration(1)}
-            disabled={isDurationDisabled}
             title="Увеличить срок на 1 день"
           />
         </div>
@@ -183,8 +184,6 @@ export function DepositFormDateFields({
               e.preventDefault();
               e.stopPropagation();
               if (formData.isClosed) {
-                const isSavings = formData.formula === "daily_balance" || formData.formula === "min_balance";
-                
                 let nextEndDate = formData.endDate;
                 if (nextEndDate) {
                   const end = new Date(nextEndDate);
@@ -196,20 +195,24 @@ export function DepositFormDateFields({
                   }
                 }
 
-                setFormData({
-                  ...formData,
+                setFormData((prev) => ({
+                  ...prev,
                   isClosed: false,
                   endDate: isSavings ? null : nextEndDate
-                });
+                }));
                 
-                if (!isSavings && nextEndDate === null) {
+                if (nextEndDate === null) {
                   setDuration("");
+                  setDurationStr("");
                 }
               } else {
-                const isSavings = formData.formula === "daily_balance" || formData.formula === "min_balance";
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
-                setFormData({ ...formData, isClosed: true, endDate: isSavings ? today : (formData.endDate || today) });
+                setFormData((prev) => ({
+                  ...prev,
+                  isClosed: true,
+                  endDate: isSavings ? today : (prev.endDate || today)
+                }));
               }
             }}
             className={cn(
@@ -233,16 +236,21 @@ export function DepositFormDateFields({
         <div className="relative w-full group">
           <DatePicker
             selected={formData.endDate ? (isNaN(new Date(formData.endDate).getTime()) ? null : new Date(formData.endDate)) : null}
-            onChange={(date: Date | null) => {
+            onChange={(date: Date | null, event?: React.SyntheticEvent<any>) => {
               if (date) {
-                setFormData({ ...formData, endDate: date });
+                setFormData((prev) => ({ ...prev, endDate: date }));
                 if (formData.startDate) {
-                  setDuration(differenceInDays(date, formData.startDate));
+                  const daysDiff = differenceInDays(date, formData.startDate);
+                  const validDuration = daysDiff > 0 ? daysDiff : "";
+                  setDuration(validDuration);
+                  setDurationStr(validDuration !== "" ? String(validDuration) : "");
                 }
                 setIsEndDateOpen(false);
-              } else {
-                setFormData({ ...formData, endDate: null });
+              } else if (event) {
+                // Only clear duration if the user explicitly clicked the clear icon or triggered a real DOM event
+                setFormData((prev) => ({ ...prev, endDate: null }));
                 setDuration("");
+                setDurationStr("");
               }
             }}
             onChangeRaw={(e) => {
@@ -268,24 +276,16 @@ export function DepositFormDateFields({
             preventOpenOnFocus={true}
             locale="ru"
             dateFormat="dd.MM.yyyy"
-            disabled={
-              formData.formula === "daily_balance" ||
-              formData.formula === "min_balance"
-            }
-            className="apple-input w-full pr-12 disabled:opacity-50 disabled:cursor-not-allowed cursor-text"
-            placeholderText="Бессрочно"
+            className="apple-input w-full pr-14 cursor-text"
+            placeholderText={isSavings ? "Бессрочно" : "Не задана"}
             isClearable
             wrapperClassName="w-full"
             portalId="datepicker-portal-container"
           />
           <button
             type="button"
-            disabled={
-              formData.formula === "daily_balance" ||
-              formData.formula === "min_balance"
-            }
             onClick={() => setIsEndDateOpen(!isEndDateOpen)}
-            className="datepicker-toggle-btn-end absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+            className="datepicker-toggle-btn-end absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
             title="Выбрать дату"
           >
             <CalendarX className="w-4 h-4 stroke-[1.5px]" />
