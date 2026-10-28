@@ -454,7 +454,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
 
       {/* Modern, High-End Confirmation Dialog Modal (Solves standard confirm blocker inside iframes) */}
       <Transition.Root show={!!deletingAsset} as={Fragment}>
-        <Dialog as="div" className="relative z-[9999]" onClose={() => setDeletingAsset(undefined)}>
+        <Dialog as="div" className="relative z-[9999]" open={!!deletingAsset} onClose={() => setDeletingAsset(undefined)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"

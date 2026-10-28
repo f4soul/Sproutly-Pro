@@ -6,7 +6,15 @@ import { PwaUpdateToast } from './ReloadPrompt';
 import { cn } from '../../lib/utils';
 import { Toast } from '../../types';
 
-export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], removeToast: (id: string) => void }) => {
+export const ToastContainer = ({
+  toasts,
+  removeToast,
+  isLocked = false,
+}: {
+  toasts: Toast[];
+  removeToast: (id: string) => void;
+  isLocked?: boolean;
+}) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
   useEffect(() => {
@@ -15,11 +23,20 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const visibleToasts = isLocked
+    ? toasts.filter(toast => toast.type === 'error')
+    : toasts;
+
   return (
-    <div className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+5.5rem)] sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-2 pointer-events-none">
+    <div
+      className={cn(
+        "fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+5.5rem)] sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 flex flex-col items-center sm:items-end gap-2 pointer-events-none",
+        isLocked ? "z-[99995]" : "z-[9999]"
+      )}
+    >
       <AnimatePresence>
-        <PwaUpdateToast isMobile={isMobile} />
-        {toasts.map(toast => {
+        {!isLocked && <PwaUpdateToast isMobile={isMobile} />}
+        {visibleToasts.map(toast => {
           const isError = toast.type === 'error';
           const isLoading = toast.type === 'loading';
           const isSuccess = toast.type === 'success';

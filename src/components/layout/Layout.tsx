@@ -1,5 +1,5 @@
 import { logger } from '../../lib/logger';
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { LayoutDashboard, ListOrdered, Settings as SettingsIcon, Moon, Sun, User, LogOut, Wrench, Landmark, HandCoins, CalendarDays, Menu as MenuIcon, CheckCircle2, AlertTriangle, X, Sparkles, Map } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { auth, signInWithGoogle, logout } from '../../config/firebase';
@@ -121,6 +121,7 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
   const [user] = useAuthState(auth);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'success' | 'error'>('idle');
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const cancelLogoutRef = useRef<HTMLButtonElement>(null);
   const { appSettings } = useSettings();
   const isAdmin = user?.email === 'filimlive@gmail.com';
   const [isMobileHeaderHidden, setIsMobileHeaderHidden] = useState(false);
@@ -711,64 +712,68 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
       {/* Logout Confirmation Dialog */}
       <AnimatePresence>
         {showLogoutConfirm && (
-          <Dialog as="div" className="relative z-[100]" onClose={() => setShowLogoutConfirm(false)} static>
+          <Dialog
+            as="div"
+            className="relative z-[9999]"
+            open={true}
+            onClose={() => setShowLogoutConfirm(false)}
+            initialFocus={cancelLogoutRef}
+            static
+          >
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/10 dark:bg-black/60"
+              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
 
-            <div className="fixed inset-0 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-              <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center pointer-events-none">
-                <Dialog.Panel as={Fragment}>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="w-full max-w-sm overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800 pointer-events-auto"
-                  >
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
-                        <LogOut className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
-                      </div>
-                      <div>
-                        <Dialog.Title as="h3" className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
-                          Выход
-                        </Dialog.Title>
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                          Вы уверены, что хотите выйти из аккаунта?
-                        </p>
-                      </div>
-                    </div>
+            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
+                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                  className="bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 max-w-sm w-full transform-gpu will-change-[transform,opacity]"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
+                    <LogOut className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight text-center">
+                    Выйти из аккаунта?
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-center">
+                    Вы уверены, что хотите выйти? Локальные данные на этом устройстве будут очищены.
+                  </p>
 
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setShowLogoutConfirm(false)}
-                        className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10"
-                      >
-                        Отмена
-                      </button>
-                      <button
-                        onClick={async () => {
-                          setShowLogoutConfirm(false);
-                          await logout();
-                          const { db: localDb } = await import('../../config/db');
-                          await localDb.delete();
-                          localStorage.clear();
-                          window.location.reload();
-                        }}
-                        className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 cursor-pointer"
-                      >
-                        Выйти
-                      </button>
-                    </div>
-                  </motion.div>
-                </Dialog.Panel>
-              </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <button
+                      ref={cancelLogoutRef}
+                      type="button"
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide flex items-center justify-center cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setShowLogoutConfirm(false);
+                        await logout();
+                        const { db: localDb } = await import('../../config/db');
+                        await localDb.delete();
+                        localStorage.clear();
+                        window.location.reload();
+                      }}
+                      className="flex-1 px-4 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold transition-all shadow-[0_4px_16px_rgba(244,63,94,0.3)] hover:shadow-[0_4px_20px_rgba(244,63,94,0.4)] flex items-center justify-center text-sm uppercase tracking-wide cursor-pointer"
+                    >
+                      Выйти
+                    </button>
+                  </div>
+                </motion.div>
+              </Dialog.Panel>
             </div>
           </Dialog>
         )}

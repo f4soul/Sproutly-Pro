@@ -445,7 +445,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
       </AnimatePresence>
 
       <Transition.Root show={!!deletingAsset} as={Fragment}>
-        <Dialog as="div" className="relative z-[9999]" onClose={() => setDeletingAsset(undefined)}>
+        <Dialog as="div" className="relative z-[9999]" open={!!deletingAsset} onClose={() => setDeletingAsset(undefined)}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"

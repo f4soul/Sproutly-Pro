@@ -201,7 +201,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="fixed top-0 left-0 w-full h-[100dvh] z-[9999] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
+      className="fixed top-0 left-0 w-full h-[100dvh] z-[99990] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
       style={{ touchAction: 'none' }}
     >
       <motion.div 
@@ -319,7 +319,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
       {typeof document !== 'undefined' && createPortal(
         <AnimatePresence>
           {showForgotPinTheme && (
-            <div className="relative z-[10000]" role="dialog" aria-modal="true">
+            <div className="relative z-[99999]" role="dialog" aria-modal="true">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

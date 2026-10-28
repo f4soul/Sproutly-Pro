@@ -3,7 +3,7 @@ import { ToastContainer } from './ToastContainer';
 import { Toast } from '../../types';
 import { toastEvent } from '../../lib/toast';
 
-export const GlobalToasts = () => {
+export const GlobalToasts = ({ isLocked = false }: { isLocked?: boolean } = {}) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   useEffect(() => {
@@ -33,5 +33,5 @@ export const GlobalToasts = () => {
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  return <ToastContainer toasts={toasts} removeToast={removeToast} />;
+  return <ToastContainer toasts={toasts} removeToast={removeToast} isLocked={isLocked} />;
 };

@@ -86,6 +86,8 @@ function AppContent() {
     return !!(_appSettings && _appSettings.privacyLock?.enabled && (_appSettings.privacyLock?.pin || _appSettings.privacyLock?.pinHash));
   }, [_appSettings]);
 
+  const isLocked = isLockActive && !isUnlocked;
+
   const checkLockStatus = () => {
     if (!_appSettings || !_appSettings.privacyLock?.enabled || !(_appSettings.privacyLock?.pin || _appSettings.privacyLock?.pinHash)) {
       setIsUnlocked(true);
@@ -327,7 +329,7 @@ function AppContent() {
 
   return (
     <>
-      {isLockActive && !isUnlocked && appSettings?.privacyLock && (
+      {isLocked && appSettings?.privacyLock && (
         <SecurityLock
           pin={appSettings.privacyLock.pin}
           pinHash={appSettings.privacyLock.pinHash}
@@ -355,12 +357,12 @@ function AppContent() {
           }}
         />
       )}
-      <div className={isLockActive && !isUnlocked ? 'hidden' : 'contents'}>
+      <div className={isLocked ? 'hidden' : 'contents'}>
         <AnimatePresence mode="wait">
           {isFirstVisit ? (
             <LandingView key="landing" onStart={handleStart} />
           ) : (
-            <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
+            <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLocked}>
               <Suspense fallback={
                 <div className="flex-1 w-full flex items-center justify-center min-h-[60vh] pointer-events-none z-30">
                   <GrainLoader />
@@ -400,13 +402,13 @@ function AppContent() {
               </Suspense>
               
                 <>
-                <AppTour activeTab={activeTab} isLocked={isLockActive && !isUnlocked} />
+                <AppTour activeTab={activeTab} isLocked={isLocked} />
                 </>
             </Layout>
           )}
         </AnimatePresence>
       </div>
-      <GlobalToasts />
+      <GlobalToasts isLocked={isLocked} />
     </>
   );
 }
