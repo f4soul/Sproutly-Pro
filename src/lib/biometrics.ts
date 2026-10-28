@@ -21,16 +21,35 @@ const randomChallenge = () => {
   return crypto.getRandomValues(new Uint8Array(32));
 };
 
-export const registerBiometricCredential = async (userId: string, userName: string) => {
+/**
+ * Возвращает имя пользователя для регистрации Passkey (WebAuthn)
+ * в соответствии со стандартами FIDO Alliance (Apple, Google, GitHub):
+ * 1. Email аккаунта (основной системный идентификатор в менеджерах паролей)
+ * 2. Имя профиля (displayName), если email недоступен
+ * 3. «Пользователь Sproutly» для локального офлайн-режима
+ */
+export const getPasskeyUserName = (userEmail?: string | null, userDisplayName?: string | null): string => {
+  if (userEmail && userEmail.trim().length > 0) {
+    return userEmail.trim();
+  }
+  if (userDisplayName && userDisplayName.trim().length > 0) {
+    return userDisplayName.trim();
+  }
+  return 'Пользователь Sproutly';
+};
+
+export const registerBiometricCredential = async (userId: string, userName?: string) => {
   if (!window.PublicKeyCredential) throw new Error("WebAuthn not supported");
   
+  const finalName = userName && userName.trim().length > 0 ? userName.trim() : 'Пользователь Sproutly';
+
   const publicKey: PublicKeyCredentialCreationOptions = {
     challenge: randomChallenge(),
     rp: { name: "Sproutly.Pro", id: window.location.hostname },
     user: {
       id: Uint8Array.from(userId, c => c.charCodeAt(0)),
-      name: userName,
-      displayName: userName,
+      name: finalName,
+      displayName: finalName,
     },
     pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
     authenticatorSelection: {

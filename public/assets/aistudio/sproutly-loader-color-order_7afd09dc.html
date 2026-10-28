@@ -1,0 +1,188 @@
+<!-- 
+  =============================================================
+  SPROUTLY.PRO · ТЕСТОВЫЙ СТЕНД ДЛЯ PLAY.TAILWIND.COM
+  Здесь можно менять порядок цветов, тайминги, углы и анимацию
+  =============================================================
+-->
+
+<div class="min-h-screen bg-[#0B0F19] text-white flex flex-col items-center justify-center p-6 sm:p-10 font-sans selection:bg-blue-500/30">
+  
+  <div class="w-full max-w-2xl space-y-8">
+    
+    <!-- Шапка -->
+    <div class="text-center space-y-1">
+      <h1 class="text-xl font-black uppercase tracking-tight text-white">Лаборатория индикаторов Sproutly</h1>
+      <p class="text-xs text-slate-400">Стенд для экспериментов с градиентом, цветами и кинематикой</p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+      <!-- ======================================================== -->
+      <!-- КАРТОЧКА 1: SPROUTLY SPINNER (СПЕКТРАЛЬНАЯ ДУГА)         -->
+      <!-- ======================================================== -->
+      <div class="p-6 rounded-[2rem] bg-slate-900/60 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-between gap-6 shadow-2xl">
+        <div class="text-center">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">1. Спектральная дуга</span>
+          <p class="text-xs text-slate-500 mt-1">Все 5 цветов на разворачивающейся дуге</p>
+        </div>
+
+        <!-- Контейнер спиннера (размер можно менять через w-* h-*) -->
+        <div class="flex items-center justify-center gap-6 py-4">
+          
+          <!-- Размер 24px -->
+          <div class="relative w-6 h-6 shrink-0">
+            <div class="w-full h-full animate-[sproutly-spin_2s_linear_infinite] origin-center">
+              <svg viewBox="0 0 50 50" class="w-full h-full block" fill="none">
+                <defs>
+                  <!-- 
+                    НАСТРОЙКА ЦВЕТОВ ГРАДИЕНТА:
+                    Меняйте stop-color и offset местами, чтобы оценить перелив:
+                    • #3b82f6 — Primary Blue (доходы)
+                    • #10b981 — Cash Emerald (наличные)
+                    • #f59e0b — Amber (крипта)
+                    • #06b6d4 — Invest Cyan (биржа)
+                    • #14b8a6 — Deposit Teal (вклады)
+                  -->
+                  <linearGradient id="spinner-grad-small" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="25%" stop-color="#10b981" />
+                    <stop offset="50%" stop-color="#f59e0b" />
+                    <stop offset="75%" stop-color="#06b6d4" />
+                    <stop offset="100%" stop-color="#14b8a6" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="20"
+                  pathLength="100"
+                  fill="none"
+                  stroke="url(#spinner-grad-small)"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                  class="animate-[sproutly-sweep_1.333s_cubic-bezier(0.4,0,0.2,1)_infinite]"
+                />
+              </svg>
+            </div>
+          </div>
+
+          <!-- Крупный размер 44px (для наглядной оценки градиента) -->
+          <div class="relative w-11 h-11 shrink-0">
+            <div class="w-full h-full animate-[sproutly-spin_2s_linear_infinite] origin-center">
+              <svg viewBox="0 0 50 50" class="w-full h-full block" fill="none">
+                <defs>
+                  <linearGradient id="spinner-grad-large" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="25%" stop-color="#10b981" />
+                    <stop offset="50%" stop-color="#f59e0b" />
+                    <stop offset="75%" stop-color="#06b6d4" />
+                    <stop offset="100%" stop-color="#14b8a6" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="20"
+                  pathLength="100"
+                  fill="none"
+                  stroke="url(#spinner-grad-large)"
+                  stroke-width="3.8"
+                  stroke-linecap="round"
+                  class="animate-[sproutly-sweep_1.333s_cubic-bezier(0.4,0,0.2,1)_infinite]"
+                />
+              </svg>
+            </div>
+          </div>
+
+        </div>
+
+        <span class="text-[10px] text-slate-500 text-center leading-tight">
+          Период вращения: 2.0с | Разворот дуги: 1.333с
+        </span>
+      </div>
+
+
+      <!-- ======================================================== -->
+      <!-- КАРТОЧКА 2: ЛОАДЕР «ЗЁРНА» (GRAINLOADER)                  -->
+      <!-- ======================================================== -->
+      <div class="p-6 rounded-[2rem] bg-slate-900/60 border border-white/10 backdrop-blur-xl flex flex-col items-center justify-between gap-6 shadow-2xl">
+        <div class="text-center">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">2. Лоадер «Зёрна»</span>
+          <p class="text-xs text-slate-500 mt-1">5 орбитальных зёрен со смещением фаз</p>
+        </div>
+
+        <!-- Контейнер орбиты зёрен: 48x48px (радиус орбиты = 24px) -->
+        <div class="flex flex-col items-center gap-4 py-3">
+          <div class="relative w-12 h-12 shrink-0">
+            
+            <!-- Зерно 1: 0° (Верх) — Синий (доходы) -->
+            <span class="absolute inset-0 rotate-[0deg]">
+              <span class="absolute left-1/2 top-1/2 -ml-1 -mt-1 h-2 w-2 rounded-full bg-[#3b82f6] -translate-y-6 animate-[grain-wave_1.3s_ease-in-out_infinite] [animation-delay:0.00s]"></span>
+            </span>
+
+            <!-- Зерно 2: 72° — Изумрудный (наличные) -->
+            <span class="absolute inset-0 rotate-[72deg]">
+              <span class="absolute left-1/2 top-1/2 -ml-1 -mt-1 h-2 w-2 rounded-full bg-[#10b981] -translate-y-6 animate-[grain-wave_1.3s_ease-in-out_infinite] [animation-delay:0.13s]"></span>
+            </span>
+
+            <!-- Зерно 3: 144° — Янтарный (крипта) -->
+            <span class="absolute inset-0 rotate-[144deg]">
+              <span class="absolute left-1/2 top-1/2 -ml-1 -mt-1 h-2 w-2 rounded-full bg-[#f59e0b] -translate-y-6 animate-[grain-wave_1.3s_ease-in-out_infinite] [animation-delay:0.26s]"></span>
+            </span>
+
+            <!-- Зерно 4: 216° — Циан (биржа) -->
+            <span class="absolute inset-0 rotate-[216deg]">
+              <span class="absolute left-1/2 top-1/2 -ml-1 -mt-1 h-2 w-2 rounded-full bg-[#06b6d4] -translate-y-6 animate-[grain-wave_1.3s_ease-in-out_infinite] [animation-delay:0.39s]"></span>
+            </span>
+
+            <!-- Зерно 5: 288° — Тиловый (вклады) -->
+            <span class="absolute inset-0 rotate-[288deg]">
+              <span class="absolute left-1/2 top-1/2 -ml-1 -mt-1 h-2 w-2 rounded-full bg-[#14b8a6] -translate-y-6 animate-[grain-wave_1.3s_ease-in-out_infinite] [animation-delay:0.52s]"></span>
+            </span>
+
+          </div>
+
+          <span class="text-xs font-medium text-slate-400">Загрузка данных...</span>
+        </div>
+
+        <span class="text-[10px] text-slate-500 text-center leading-tight">
+          Волна дыхания: 1.3с | Смещение фазы: 0.13с
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- КЛЮЧЕВЫЕ КАДРЫ АНИМАЦИИ (CSS) -->
+  <style>
+    /* Вращение контейнера спиннера */
+    @keyframes sproutly-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Раскрытие и сжатие дуги спиннера */
+    @keyframes sproutly-sweep {
+      0% {
+        stroke-dasharray: 12 88;
+        stroke-dashoffset: 0;
+      }
+      50% {
+        stroke-dasharray: 62 38;
+        stroke-dashoffset: -25;
+      }
+      100% {
+        stroke-dasharray: 12 88;
+        stroke-dashoffset: -100;
+      }
+    }
+
+    /* Пульсация и масштаб зёрен */
+    @keyframes grain-wave {
+      0%, 100% { transform: scale(0.45); opacity: 0.3; }
+      45%      { transform: scale(1.15); opacity: 1; }
+    }
+  </style>
+
+</div>

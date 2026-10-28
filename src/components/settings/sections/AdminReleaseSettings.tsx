@@ -1,4 +1,4 @@
-import React, { useState, useRef, Fragment } from 'react';
+import React, { useState, useRef, useEffect, Fragment } from 'react';
 import { Rocket, Send, Sparkles, RefreshCw, CheckCircle2, Crown, Smartphone, RotateCcw, X } from 'lucide-react';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -64,10 +64,18 @@ export function AdminReleaseSettings() {
   } | null>(null);
 
   const defaultPushTitle = `✨ v${latestRelease.version} уже здесь!`;
-  const defaultPushBody = `Промо-периоды для накопительных счетов, расчет ежедневного дохода и умные напоминания. Загляните оценить!`;
+  const defaultPushBody =
+    latestRelease.pushAnnouncement ||
+    `${latestRelease.title}: новые функции и важные улучшения. Загляните оценить!`;
 
   const [pushTitle, setPushTitle] = useState(defaultPushTitle);
   const [pushBody, setPushBody] = useState(defaultPushBody);
+
+  // Синхронизация при смене активного релиза в changelog
+  useEffect(() => {
+    setPushTitle(defaultPushTitle);
+    setPushBody(defaultPushBody);
+  }, [latestRelease.version, defaultPushTitle, defaultPushBody]);
 
   // Security guard: only visible to admin
   if (user?.email !== 'filimlive@gmail.com') {
@@ -192,6 +200,17 @@ export function AdminReleaseSettings() {
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Текст уведомления
             </span>
+            {isCustomized && (
+              <button
+                type="button"
+                onClick={handleResetToDefault}
+                className="text-[10px] font-bold text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Сбросить к тексту релиза по умолчанию"
+              >
+                <RotateCcw className="w-3 h-3 stroke-[2.2]" />
+                <span>Сбросить</span>
+              </button>
+            )}
           </div>
 
           <div className="space-y-1">

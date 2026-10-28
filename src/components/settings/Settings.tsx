@@ -37,6 +37,7 @@ export function Settings() {
 
   return (
     <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-300 relative w-full max-w-6xl mx-auto">
+
       {/* Backup + Asset Tabs Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
         <DataManagementSettings />

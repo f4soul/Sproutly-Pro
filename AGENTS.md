@@ -33,6 +33,7 @@ This file contains the core UI/UX guidelines for this project. **All future modi
 - **Main Headings**: Strong, bold typography. Pattern: `font-black uppercase tracking-tight`.
 - **Small Labels / Subtitles**: Pattern: `text-[10px]` or `text-[8px]`, `font-bold` or `font-black`, `uppercase tracking-widest`, usually muted (`text-slate-500`).
 - **Numbers/Amounts**: Emphasize numbers related to money with primary colors and bold weights.
+- **Desktop Tables (Вклады/Доход)**: headers `text-[10px] font-bold uppercase tracking-widest`; data cells `text-[13px]` (money `font-bold`, dates `font-medium`); secondary sub-values `text-[11px]`; totals `font-black`; eyebrow labels above values `text-[8px] font-black uppercase tracking-widest`. Never use off-scale sizes (6/7/7.5/9/10.5px) or non-existent colors (e.g. `slate-850`).
 
 ## 4. Shapes & Rounding (Border Radius)
 - **Large containers (modals, main dashboard cards)**: Soft oversized corners like `rounded-[2rem]` or `rounded-[2.5rem]`.
@@ -65,6 +66,7 @@ Whenever you implement a meaningful, user-facing feature, enhancement, or major 
 - **Log Logically, Not Literally:** DO NOT log trivial code refactors, minor CSS tweaks, or typo fixes as public features. Group minor visual adjustments into single, comprehensive bullet points.
 - **Version Control:** DO NOT create a new version number for every small prompt. If you are continuing work on an ongoing feature in the current session, **append** your changes to the latest existing version block in the array. Increment the version ONLY when starting a fresh, logically distinct update cycle.
 - **Format & Tone:** Write in clear, professional Russian. Categorize under `features`, `improvements`, or `fixes`. Keep entries focused on the *value* delivered to the user.
+- **Push Announcement & Admin Release Studio:** При создании новой версии или обновлении активного релиза в `src/data/changelog.ts` **ОБЯЗАТЕЛЬНО** заполнять поле `pushAnnouncement` ёмким, продающим и лаконичным текстом анонса (до 120-140 символов) для системных FCM push-уведомлений. Блок администратора «Управление релизами» (`AdminReleaseSettings.tsx`) динамически подтягивает этот анонс как единый источник правды (Single Source of Truth). Всегда проверяйте актуальность анонса и версии в этом блоке при любых релизных обновлениях.
 - **Why:** This project uses an active user base, and showing them a beautifully formatted "What's New" popup after updates is critical for adoption and transparency.
 
 **Never forget to log your major implementations here without the user having to remind you.**
@@ -145,4 +147,14 @@ Do not leave temporary helper scripts (e.g., Python, Bash) or artifacts in the p
   - Четкая тонкая полупрозрачная рамка: `border border-primary-500/30 hover:border-primary-500/50 dark:border-primary-400/30 dark:hover:border-primary-400/50`.
   - Глубокий благородный подтон: `bg-primary-500/10 hover:bg-primary-500/15 dark:bg-[#0a1633]/90 dark:hover:bg-[#0e1f47]`.
   - Нейтральная микротень: `shadow-sm` (без цветного размытия наружу) в сочетании с `backdrop-blur-xl`. Элемент должен выглядеть четким стеклянным артефактом, а не светящейся неоновой лампой.
+
+---
+
+## 18. WebAuthn / Passkeys & Biometric Security Standards (LOCKED)
+- **FIDO Alliance UX Guidelines Compliance**: При регистрации биометрических ключей (`registerBiometricCredential` / `navigator.credentials.create`) в полях `user.name` и `user.displayName` **КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО** использовать сгенерированные таймстемпы или технические заглушки вроде `Device_${Date.now()}` или `user_123`.
+- Всегда использовать централизованный хелпер `getPasskeyUserName(email, displayName)` из `@/lib/biometrics`:
+  1. Email авторизованного пользователя (`auth.currentUser?.email`) — основной системный идентификатор в менеджерах паролей (Apple «Пароли», Google Password Manager, 1Password).
+  2. Имя профиля (`auth.currentUser?.displayName`), если email отсутствует.
+  3. Человекочитаемая заглушка `'Пользователь Sproutly'` для офлайн/локального режима.
+- Это гарантирует корректное и премиальное отображение системных диалогов Apple Face ID / Touch ID и бесшовную синхронизацию в связке ключей iCloud Keychain между устройствами пользователя.
 

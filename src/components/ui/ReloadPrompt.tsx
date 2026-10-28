@@ -1,125 +1,94 @@
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React from 'react';
+import { motion } from 'motion/react';
 import { Sparkles, RefreshCw, X } from 'lucide-react';
+import { cn } from '../../lib/utils';
 import {
-  initPwaUpdate,
   usePwaUpdate,
   triggerPwaUpdate,
   dismissPwaUpdate,
 } from '../../lib/pwaUpdate';
 
 /**
- * Компактная интерактивная капсула (pill) обновления в стиле Sproutly Pro:
- * - Вся плашка является кликабельной кнопкой обновления с мягким свечением при наведении
- * - Слева: светящаяся иконка Sparkles (или спиннер в момент обновления)
- * - По центру: кнопка действия «ОБНОВИТЬ ПРИЛОЖЕНИЕ» (в одну строку с многоточием при нехватке ширины)
- * - Справа: компактная кнопка «✕» для скрытия/откладывания
+ * Единый тост обновления PWA для всех типов устройств:
+ * - Изящная компактная ширина по максимальному содержимому контента (w-[260px]) — никаких лишних пустых пространств.
+ * - Вся плашка кликабельна: одно нажатие запускает обновление Service Worker.
+ * - Резервированный слот под кнопку закрытия (24×24px) предотвращает сдвиг контента при переключении состояний.
+ * - Вся динамика изолирована строго внутри блока, внешняя карточка сохраняет идеальную стабильность.
  */
-function UpdatePill() {
-  const { isUpdating } = usePwaUpdate();
+export function PwaUpdateToast({ isMobile }: { isMobile: boolean }) {
+  const { needRefresh, isUpdating } = usePwaUpdate();
+
+  if (!needRefresh) return null;
+
+  const initialAnim = isMobile
+    ? { opacity: 0, y: -24, scale: 0.95 }
+    : { opacity: 0, y: 24, scale: 0.95 };
+  const exitAnim = isMobile
+    ? { opacity: 0, y: -16, scale: 0.95 }
+    : { opacity: 0, y: 16, scale: 0.95 };
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={isUpdating ? 'Обновление приложения…' : 'Обновить приложение до новой версии'}
+    <motion.div
+      key="pwa-update-toast"
+      initial={initialAnim}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ ...exitAnim, transition: { duration: 0.18, ease: 'easeInOut' } }}
+      transition={{ type: 'spring', stiffness: 450, damping: 32, mass: 0.8 }}
       onClick={() => {
         if (!isUpdating) triggerPwaUpdate();
       }}
-      onKeyDown={(e) => {
-        if ((e.key === 'Enter' || e.key === ' ') && !isUpdating) {
-          e.preventDefault();
-          triggerPwaUpdate();
-        }
-      }}
-      className="group relative w-full h-10 px-3 sm:px-3.5 rounded-full flex items-center justify-between gap-2 bg-primary-500/10 hover:bg-primary-500/15 dark:bg-[#0a1633]/90 dark:hover:bg-[#0e1f47] border border-primary-500/30 hover:border-primary-500/50 dark:border-primary-400/30 dark:hover:border-primary-400/50 shadow-sm backdrop-blur-xl transition-all duration-200 active:scale-[0.98] cursor-pointer select-none"
-      title={isUpdating ? 'Идет обновление приложения…' : 'Доступно обновление: нажмите, чтобы обновить приложение'}
+      role="alert"
+      aria-live="polite"
+      className={cn(
+        'w-[260px] max-w-[calc(100vw-2rem)] rounded-2xl border px-3 py-2.5 flex items-center gap-2.5 pointer-events-auto backdrop-blur-2xl backdrop-saturate-150 transform-gpu will-change-[transform,opacity] select-none',
+        'bg-white/90 dark:bg-slate-900/90 border-primary-500/25 dark:border-primary-500/25 text-slate-900 dark:text-white',
+        'shadow-[0_12px_32px_rgba(15,23,42,0.1),inset_0_1px_0_0_rgba(255,255,255,0.6)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)]',
+        isUpdating
+          ? 'cursor-default'
+          : 'cursor-pointer group active:scale-[0.98] transition-all',
+      )}
     >
-      {/* Левая часть: иконка + текст */}
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <div className="shrink-0 text-primary-600 dark:text-primary-400 flex items-center justify-center">
-          {isUpdating ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
-          ) : (
-            <Sparkles className="w-4 h-4 animate-pulse stroke-[2.2px] group-hover:scale-110 transition-transform" />
-          )}
-        </div>
-        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-primary-600 dark:text-primary-400 leading-none flex-1">
-          {isUpdating ? 'Обновление…' : 'ОБНОВИТЬ ПРИЛОЖЕНИЕ'}
+      {/* Иконка Sparkles / RefreshCw */}
+      <div className="w-8 h-8 rounded-xl bg-primary-500/15 flex items-center justify-center shrink-0">
+        {isUpdating ? (
+          <RefreshCw className="w-4 h-4 text-primary-600 dark:text-primary-400 animate-spin" />
+        ) : (
+          <Sparkles className="w-4 h-4 text-primary-600 dark:text-primary-400 transition-transform duration-300 group-hover:scale-110" />
+        )}
+      </div>
+
+      {/* Текстовый блок со стабильной геометрией */}
+      <div className="flex flex-col min-w-0 flex-1 leading-tight text-left">
+        <span className="text-[12px] font-bold text-slate-950 dark:text-white truncate">
+          {isUpdating ? 'Обновление…' : 'Доступно обновление'}
+        </span>
+        <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 truncate">
+          {isUpdating ? 'Активация новой версии' : 'Нажмите, чтобы обновить'}
         </span>
       </div>
 
-      {/* Правая часть: кнопка закрытия */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          dismissPwaUpdate();
-        }}
-        className="p-1 -mr-1 rounded-full text-primary-500/60 hover:text-primary-600 dark:text-primary-400/60 dark:hover:text-white hover:bg-primary-500/15 dark:hover:bg-primary-500/25 active:scale-90 transition-all cursor-pointer shrink-0"
-        title="Отложить обновление"
-        aria-label="Закрыть уведомление"
-      >
-        <X className="w-3.5 h-3.5 stroke-[2.2px]" />
-      </button>
-    </div>
+      {/* Фиксированный слот закрытия (сохраняет 24px ширины при скрытии кнопки) */}
+      <div className="w-6 h-6 flex items-center justify-center shrink-0">
+        {!isUpdating && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              dismissPwaUpdate();
+            }}
+            className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer"
+            title="Скрыть уведомление"
+            aria-label="Скрыть уведомление об обновлении"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>
+    </motion.div>
   );
 }
 
-/**
- * Плавающее мобильное уведомление об обновлении (отображается только на экранах < md).
- * Размещается прямо над нижней панелью навигации в виде той же аккуратной капсулы.
- */
-export function ReloadPrompt() {
-  const { needRefresh } = usePwaUpdate();
-
-  useEffect(() => {
-    initPwaUpdate();
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {needRefresh && (
-        <motion.aside
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 14, scale: 0.95, transition: { duration: 0.16 } }}
-          transition={{ type: "spring", stiffness: 450, damping: 32 }}
-          role="status"
-          aria-live="polite"
-          className="md:hidden fixed z-[75] left-4 right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.4rem)] max-w-sm mx-auto pointer-events-auto"
-        >
-          <UpdatePill />
-        </motion.aside>
-      )}
-    </AnimatePresence>
-  );
-}
-
-/**
- * Встроенный виджет обновления для сайдбара на планшетах и ПК (отображается только внутри aside md:flex).
- * Размещается непосредственно под блоком навигации, в точности как на скриншоте.
- */
-export function SidebarUpdatePrompt() {
-  const { needRefresh } = usePwaUpdate();
-
-  useEffect(() => {
-    initPwaUpdate();
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {needRefresh && (
-        <motion.div
-          initial={{ opacity: 0, height: 0, marginTop: 0 }}
-          animate={{ opacity: 1, height: 'auto', marginTop: 14 }}
-          exit={{ opacity: 0, height: 0, marginTop: 0 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-          className="overflow-hidden"
-        >
-          <UpdatePill />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
+// Заглушки обратной совместимости
+export const ReloadPrompt = PwaUpdateToast;
+export const MobileUpdatePrompt: React.FC<{ hidden?: boolean }> = () => null;
+export const SidebarUpdatePrompt: React.FC = () => null;

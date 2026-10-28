@@ -69,7 +69,7 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                 className="w-full max-w-md transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-0 text-left align-middle shadow-2xl border border-slate-200/50 dark:border-white/10 relative pointer-events-auto flex flex-col max-h-[90dvh] sm:max-h-[90vh]"
               >
                 {/* Header Graphic */}
-                <div className="relative pt-12 pb-8 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent shrink-0">
+                <div className="relative pt-8 pb-6 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent shrink-0">
                   <div className="absolute top-0 right-0 p-4 z-20">
                     <button
                       onClick={handleClose}
@@ -82,16 +82,26 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                   {/* Decorative glow */}
                   <div className="absolute top-[-50px] right-[-50px] w-[150px] h-[150px] bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl transform-gpu" style={{ WebkitTransform: 'translate3d(0,0,0)' }} />
                   
-                  <div className="flex flex-col items-center justify-center text-center relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <div className="w-14 h-14 bg-white/80 dark:bg-slate-900/80 shadow-xl border border-slate-200/50 dark:border-white/10 rounded-2xl flex items-center justify-center mb-4">
-                      <Sparkles className="w-7 h-7 text-primary-500 shrink-0" />
+                  <div className="flex items-start gap-3.5 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-500 pr-10 text-left">
+                    <div className="w-10 h-10 bg-white/80 dark:bg-slate-900/80 shadow-sm border border-slate-200/50 dark:border-white/10 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                      <Sparkles className="w-5 h-5 text-primary-500 shrink-0" />
                     </div>
-                    <Dialog.Title as="h3" className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">
-                      {isManual ? 'История обновлений' : 'Что нового?'}
-                    </Dialog.Title>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">
-                      Версия {LATEST_VERSION}
-                    </p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          {isManual ? 'История обновлений' : 'Что нового'}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-primary-50 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border border-primary-100 dark:border-primary-500/20 leading-none">
+                          v{LATEST_VERSION}
+                        </span>
+                      </div>
+                      <Dialog.Title as="h3" className="text-xl sm:text-2xl font-black tracking-tight text-slate-950 dark:text-white leading-tight">
+                        {changelog[0].title}
+                      </Dialog.Title>
+                      <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
+                        {new Date(changelog[0].date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -108,16 +118,6 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                             <span className="text-xs font-black uppercase tracking-wider text-slate-400">v{release.version}</span>
                             <div className="h-px w-full flex-1 bg-slate-200 dark:bg-slate-800/50" />
                             <span className="text-[10px] font-bold text-slate-400">{new Date(release.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}</span>
-                          </div>
-                        )}
-                        {i === 0 && (
-                          <div className="mb-4">
-                            <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 leading-tight">
-                              {release.title}
-                            </h4>
-                            <p className="text-xs font-medium text-slate-500 mt-1">
-                              {new Date(release.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            </p>
                           </div>
                         )}
                         

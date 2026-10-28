@@ -3,9 +3,18 @@
 
 @theme {
   --animate-spin-slow: spin 3s linear infinite;
-  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+  --animate-grain: grain-wave 1.3s ease-in-out infinite;
+
+  @keyframes grain-wave {
+    0%, 100% { transform: scale(0.5); opacity: 0.35; }
+    45%      { transform: scale(1); opacity: 1; }
+  }
 
   @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
     100% {
       transform: translateX(100%);
     }
@@ -107,6 +116,53 @@
   
   --shadow-glow: 0 4px 16px rgba(0, 0, 0, 0.15);
   --shadow-glow-dark: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes sproutly-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sproutly-sweep {
+  0% {
+    stroke-dasharray: 12 88;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 62 38;
+    stroke-dashoffset: -25;
+  }
+  100% {
+    stroke-dasharray: 12 88;
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes sproutly-dash {
+  0% {
+    stroke-dasharray: 12 88;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 62 38;
+    stroke-dashoffset: -25;
+  }
+  100% {
+    stroke-dasharray: 12 88;
+    stroke-dashoffset: -100;
+  }
+}
+
+@keyframes sproutly-colors {
+  0%, 100% { stroke: #3b82f6; } /* Primary Blue */
+  20%      { stroke: #10b981; } /* Cash Emerald */
+  40%      { stroke: #f59e0b; } /* Crypto Amber */
+  60%      { stroke: #06b6d4; } /* Invest Cyan */
+  80%      { stroke: #14b8a6; } /* Deposit Teal */
 }
 
 @variant dark (&:where(.dark, .dark *));

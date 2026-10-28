@@ -74,11 +74,9 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
     <div
       className={cn(
         "flex flex-col p-4 relative cursor-pointer group transition-colors duration-150 overflow-hidden outline-none focus:outline-none focus-visible:outline-none select-none tap-highlight-none active:scale-100",
-        isClosed
-          ? "opacity-70 grayscale-[0.3]"
-          : isSavingsAccount
-            ? "bg-deposit-500/[0.02] dark:bg-deposit-500/[0.05] hover:bg-deposit-500/[0.04] dark:hover:bg-deposit-500/[0.08] active:bg-deposit-500/[0.08] dark:active:bg-deposit-500/[0.14]"
-            : "hover:bg-slate-50/50 dark:hover:bg-white/5 active:bg-slate-100/80 dark:active:bg-white/[0.08]",
+        isSavingsAccount
+          ? "bg-deposit-500/[0.02] dark:bg-deposit-500/[0.05] hover:bg-deposit-500/[0.04] dark:hover:bg-deposit-500/[0.08] active:bg-deposit-500/[0.08] dark:active:bg-deposit-500/[0.14]"
+          : "hover:bg-slate-50/50 dark:hover:bg-white/5 active:bg-slate-100/80 dark:active:bg-white/[0.08]",
         !isLast && "border-b border-slate-200 dark:border-slate-800",
       )}
       onClick={() => setIsExpanded(!isExpanded)}
@@ -100,15 +98,15 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
       />
 
       {isClosed && (
-        <div className="absolute top-0 right-0 bg-rose-500 text-white text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-bl-xl shadow-sm z-10">
+        <div className="absolute top-0 right-0 z-10 bg-slate-500/10 dark:bg-slate-500/15 text-slate-500 dark:text-slate-400 text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-bl-xl leading-none border-b border-l border-slate-500/25">
           Закрыт
         </div>
       )}
 
       {/* Top Row: Logo & Rate */}
-      <div className="flex items-start justify-between mb-4 relative z-10">
+      <div className={cn("flex items-center justify-between mb-4 relative z-10", isClosed && "opacity-70 grayscale-[0.3]")}>
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-lg bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm shrink-0">
+          <div className="w-9 h-9 rounded-[10px] bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shadow-sm shrink-0">
             {bankDetails.logoUrl ? (
               <BankLogo
                 logoUrl={bankDetails.logoUrl}
@@ -129,27 +127,25 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
               {deposit.bank}
             </h3>
             {isSavingsAccount && (
-              <span className="self-start inline-flex items-center text-[7.5px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none shrink-0 border border-deposit-500/25 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 shadow-xs whitespace-nowrap max-w-fit">
+              <span className="self-start inline-flex items-center text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none shrink-0 border border-deposit-500/25 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 shadow-xs whitespace-nowrap max-w-fit">
                 Накопительный
               </span>
             )}
           </div>
         </div>
 
-        {!isClosed && (
-          <div className="text-right shrink-0 ml-3">
-            <span
-              className="text-xl sm:text-2xl font-black tracking-tighter"
-              style={{ color: bankDetails.color }}
-            >
-              <span className="tabular-nums">{deposit.rate}%</span>
-            </span>
-          </div>
-        )}
+        <div className="text-right shrink-0 ml-3">
+          <span
+            className="text-xl sm:text-2xl font-black tracking-tighter"
+            style={{ color: bankDetails.color }}
+          >
+            <span className="tabular-nums">{deposit.rate}%</span>
+          </span>
+        </div>
       </div>
 
       {/* Center: Progress Bar */}
-      <div className="mb-3 relative z-10">
+      <div className={cn("mb-3 relative z-10", isClosed && "opacity-70 grayscale-[0.3]")}>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">
             {!deposit.endDate ? "Срок счета" : isSavingsAccount ? "Срок надбавки" : "Срок вклада"}
@@ -190,7 +186,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
       </div>
 
       {/* Bottom Row: Amount & Income */}
-      <div className="flex items-end justify-between pt-3 border-t border-slate-200/50 dark:border-slate-800/50 relative z-10">
+      <div className={cn("flex items-end justify-between pt-3 border-t border-slate-200/50 dark:border-slate-800/50 relative z-10", isClosed && "opacity-70 grayscale-[0.3]")}>
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold mb-0.5">
             Сумма
@@ -218,7 +214,7 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
         )}
       >
         <div className="overflow-hidden">
-          <div className="mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-2.5 text-xs">
+          <div className={cn("mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-2.5 text-xs", isClosed && "opacity-70 grayscale-[0.3]")}>
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">
                 Формула:

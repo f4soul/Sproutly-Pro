@@ -13,7 +13,6 @@ import { useSettings } from '../../context/SettingsContext';
 import { SproutlyLogo } from '../ui/SproutlyLogo';
 import { ReleaseNotesDialog } from '../ui/ReleaseNotesDialog';
 import { applyThemeToDom } from '../../lib/theme';
-import { SidebarUpdatePrompt } from '../ui/ReloadPrompt';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -277,9 +276,6 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
             />
           </LayoutGroup>
         </nav>
-
-        {/* Desktop/Tablet Sidebar Update Prompt — directly below navigation */}
-        <SidebarUpdatePrompt />
 
         <div className="mt-auto flex flex-col gap-2">
           {/* Sync Indicator Desktop */}
@@ -713,73 +709,70 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
       </main>
 
       {/* Logout Confirmation Dialog */}
-      <Transition appear show={showLogoutConfirm} as={Fragment}>
-        <Dialog as="div" className="relative z-[100]" onClose={() => setShowLogoutConfirm(false)}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-slate-900/10 dark:bg-black/60" />
-          </Transition.Child>
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <Dialog as="div" className="relative z-[100]" onClose={() => setShowLogoutConfirm(false)} static>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-900/10 dark:bg-black/60"
+              aria-hidden="true"
+            />
 
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300 transform"
-                enterFrom="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                enterTo="opacity-100 translate-y-0 sm:scale-100"
-                leave="ease-in duration-200 transform"
-                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                leaveTo="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-              >
-                <Dialog.Panel className="w-full max-w-sm transform overflow-hidden rounded-t-[32px] sm:rounded-[24px] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
-                      <LogOut className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+            <div className="fixed inset-0 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
+              <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4 text-center pointer-events-none">
+                <Dialog.Panel as={Fragment}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    className="w-full max-w-sm overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left align-middle shadow-2xl transition-all border border-slate-200 dark:border-slate-800 pointer-events-auto"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                        <LogOut className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
+                      </div>
+                      <div>
+                        <Dialog.Title as="h3" className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
+                          Выход
+                        </Dialog.Title>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                          Вы уверены, что хотите выйти из аккаунта?
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <Dialog.Title as="h3" className="text-xl font-bold text-slate-950 dark:text-white tracking-tight">
-                        Выход
-                      </Dialog.Title>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                        Вы уверены, что хотите выйти из аккаунта?
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setShowLogoutConfirm(false)}
-                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10"
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      onClick={async () => {
-                        setShowLogoutConfirm(false);
-                        await logout();
-                        const { db: localDb } = await import('../../config/db');
-                        await localDb.delete();
-                        localStorage.clear();
-                        window.location.reload();
-                      }}
-                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 cursor-pointer"
-                    >
-                      Выйти
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setShowLogoutConfirm(false)}
+                        className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setShowLogoutConfirm(false);
+                          await logout();
+                          const { db: localDb } = await import('../../config/db');
+                          await localDb.delete();
+                          localStorage.clear();
+                          window.location.reload();
+                        }}
+                        className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 cursor-pointer"
+                      >
+                        Выйти
+                      </button>
+                    </div>
+                  </motion.div>
                 </Dialog.Panel>
-              </Transition.Child>
+              </div>
             </div>
-          </div>
-        </Dialog>
-      </Transition>
+          </Dialog>
+        )}
+      </AnimatePresence>
 
       <ReleaseNotesDialog isLocked={isLocked} />
     </div>

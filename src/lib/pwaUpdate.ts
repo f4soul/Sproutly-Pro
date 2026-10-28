@@ -100,13 +100,37 @@ export async function triggerPwaUpdate() {
   notify();
 
   try {
-    if (updateSWFn) {
-      await updateSWFn(true);
-    } else {
-      // Плавная симуляция в dev-режиме предпросмотра
-      await new Promise((res) => setTimeout(res, 700));
-      window.location.reload();
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      let reloaded = false;
+      const reloadPage = () => {
+        if (!reloaded) {
+          reloaded = true;
+          window.location.reload();
+        }
+      };
+
+      // 1. Слушаем controllerchange: событие гарантирует, что новый Service Worker активирован и взял управление
+      navigator.serviceWorker.addEventListener('controllerchange', reloadPage);
+
+      // 2. Получаем регистрацию и отправляем сигнал SKIP_WAITING ожидающему воркеру
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.waiting) {
+        reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // 3. Вызываем функцию обновления из vite-plugin-pwa без немедленной перезагрузки (reloadPage=false)
+      if (updateSWFn) {
+        await updateSWFn(false);
+      }
+
+      // 4. Защитный таймаут: если controllerchange не сработал за 3 секунды (крайний сценарий), перезагружаем принудительно
+      setTimeout(reloadPage, 3000);
+      return;
     }
+
+    // Режим разработки без активного Service Worker или при тестировании через DevTools
+    await new Promise((res) => setTimeout(res, 600));
+    window.location.reload();
   } catch (err) {
     logger.error('PWA: failed to update service worker:', err);
     state = { ...state, isUpdating: false };

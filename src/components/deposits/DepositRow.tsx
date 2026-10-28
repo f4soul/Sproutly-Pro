@@ -70,33 +70,23 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
     <>
       <tr
         className={cn(
-          "group transition-all cursor-pointer relative",
+          "group transition-colors duration-150 cursor-pointer relative",
           trBackground,
         )}
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <td
           className={cn(
-            "p-2.5 border-slate-200 dark:border-slate-800 relative",
+            "px-2.5 py-2.5 border-slate-200 dark:border-slate-800 relative",
             !(isLast && !isExpanded) && "border-b",
           )}
         >
-          {/* Absolute Tags in Top-Left Corner */}
-          {(isClosed || isSavingsAccount) && (
-            <div className="absolute top-0 left-0 hidden sm:flex items-start z-20 pointer-events-none">
-              {isSavingsAccount && (
-                <span className={cn(
-                  "bg-deposit-500 text-white dark:text-slate-900 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 leading-none opacity-90 shadow-[1px_1px_2px_rgba(0,0,0,0.1)]",
-                  isClosed ? "rounded-none" : "rounded-br-md"
-                )}>
-                  Накопительный
-                </span>
-              )}
-              {isClosed && (
-                <span className="bg-slate-500 text-white dark:text-slate-900 text-[6px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-br-md leading-none opacity-90 shadow-[1px_1px_2px_rgba(0,0,0,0.1)]">
-                  Закрыт
-                </span>
-              )}
+          {/* Top Badge Aligned with Bank Name for Fixed Positioning Across Viewports */}
+          {isClosed && (
+            <div className="absolute top-0 left-[54px] flex items-start z-20 pointer-events-none">
+              <span className="bg-slate-500/10 dark:bg-slate-500/15 text-slate-500 dark:text-slate-400 text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-b-md leading-none border-x border-b border-slate-500/25 whitespace-nowrap">
+                Закрыт
+              </span>
             </div>
           )}
 
@@ -106,7 +96,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
               isClosed && "opacity-60",
             )}
           >
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/50 dark:bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-all mt-1">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/50 dark:bg-transparent border border-slate-200 dark:border-slate-800 flex items-center justify-center p-1 shrink-0 shadow-sm transition-colors duration-150">
               {bankDetails.logoUrl ? (
                 <BankLogo
                   logoUrl={bankDetails.logoUrl}
@@ -122,10 +112,15 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
                 </span>
               )}
             </div>
-            <div className="min-w-0 flex flex-col justify-center mt-1">
-              <span className="font-bold text-[13px] sm:text-xs md:text-[13px] whitespace-nowrap truncate text-slate-950 dark:text-white leading-tight">
+            <div className="min-w-0 flex flex-col justify-center gap-0.5">
+              <span className="font-bold text-[13px] whitespace-nowrap truncate text-slate-950 dark:text-white leading-tight">
                 {deposit.bank}
               </span>
+              {isSavingsAccount && (
+                <span className="self-start inline-flex items-center text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none shrink-0 border border-deposit-500/25 bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 shadow-xs whitespace-nowrap max-w-fit">
+                  Накопительный
+                </span>
+              )}
             </div>
           </div>
         </td>
@@ -192,13 +187,12 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
               isClosed && "opacity-60",
             )}
           >
-            <span className="text-[12px] font-medium text-slate-950 dark:text-white">
+            <span className="text-[13px] font-medium text-slate-950 dark:text-white">
               {startDate ? format(startDate, "dd.MM.yy") : "-"}
             </span>
             <span
               className={cn(
-                "text-[10px]",
-                "hidden lg:block", // For tablet landscape
+                "text-[11px]",
                 !isClosed &&
                   endDate &&
                   differenceInDays(endDate, new Date()) <= 7
@@ -208,25 +202,6 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
             >
               {endDate ? format(endDate, "dd.MM.yy") : "∞"}
             </span>
-            <span
-              className={cn(
-                "text-[10px] text-slate-500 dark:text-slate-400 lg:hidden",
-              )}
-            >
-              {endDate ? format(endDate, "dd.MM.yy") : "∞"}
-            </span>
-            <div className="flex sm:hidden items-center justify-center gap-1 mt-0.5">
-              {isSavingsAccount && (
-                <span className="bg-deposit-500/10 text-deposit-600 dark:bg-deposit-500/20 dark:text-deposit-400 text-[6px] font-black uppercase tracking-widest px-1.5 py-[3px] rounded-full leading-none whitespace-nowrap">
-                  Накопит.
-                </span>
-              )}
-              {isClosed && (
-                <span className="bg-slate-500/10 text-slate-600 dark:bg-slate-500/20 dark:text-slate-400 text-[6px] font-black uppercase tracking-widest px-1.5 py-[3px] rounded-full leading-none whitespace-nowrap">
-                  Закрыт
-                </span>
-              )}
-            </div>
           </div>
         </td>
 
@@ -305,7 +280,7 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
 
         <td
           className={cn(
-            "p-2.5 text-right border-slate-200 dark:border-slate-800 transition-colors sticky right-0 z-10",
+            "px-2.5 py-2.5 text-right border-slate-200 dark:border-slate-800 transition-colors sticky right-0 z-10",
             stickyBg,
             !(isLast && !isExpanded) && "border-b",
           )}
@@ -334,11 +309,11 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
           </div>
         </td>
       </tr>
-      <tr className="bg-slate-50/30 dark:bg-white/5 border-b border-transparent">
-        <td colSpan={9} className="p-0">
+      <tr className="bg-slate-50/30 dark:bg-white/5">
+        <td colSpan={9} className="p-0 border-0">
           <div
             className={cn(
-              "grid transition-[grid-template-rows,opacity] duration-300 ease-out",
+              "grid transition-[grid-template-rows,opacity] duration-200 ease-out transform-gpu will-change-[grid-template-rows,opacity]",
               isExpanded
                 ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
                 : "grid-rows-[0fr] opacity-0 pointer-events-none",

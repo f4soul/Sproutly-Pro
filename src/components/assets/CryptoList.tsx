@@ -439,7 +439,7 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
             <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
-          <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="fixed inset-0 z-10 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
             <div className="flex min-h-full items-end justify-center p-0 sm:p-4 text-center sm:items-center">
               <Transition.Child
                 as={Fragment}

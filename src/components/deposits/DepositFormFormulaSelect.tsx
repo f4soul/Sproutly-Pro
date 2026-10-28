@@ -69,7 +69,7 @@ export function DepositFormFormulaSelect({
                       "relative cursor-pointer select-none py-2.5 px-3 rounded-xl font-medium transition-all duration-200 flex items-center justify-between gap-3 border border-transparent",
                       active
                         ? "bg-slate-100/70 dark:bg-slate-800/60 text-slate-900 dark:text-white border-slate-200/40 dark:border-white/[0.04] shadow-sm"
-                        : "text-slate-850 dark:text-slate-200",
+                        : "text-slate-800 dark:text-slate-200",
                     )
                   }
                   value={formula.id}

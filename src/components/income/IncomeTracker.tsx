@@ -24,6 +24,7 @@ import { useIncomeTotals } from '../../hooks/useIncomeTotals';
 import { PrivacyBlur } from '../ui/PrivacyBlur';
 import { IncomeSettingsDialog } from './IncomeSettingsDialog';
 import { IncomeColumnsDialog } from './IncomeColumnsDialog';
+import { GrainLoader } from '../ui/GrainLoader';
 
 interface IncomeTrackerProps {
   isPrivate: boolean;
@@ -548,11 +549,8 @@ export function IncomeTracker({ isPrivate, setIsPrivate }: IncomeTrackerProps) {
 
   if (!isInitialized || !activeYearData) {
     return (
-      <div className="fixed inset-0 md:left-68 flex items-center justify-center pointer-events-none z-30">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-[3.5px] border-primary-500/20 border-t-primary-500 rounded-full animate-spin" />
-          <span className="text-slate-400 text-sm font-medium">Загрузка данных...</span>
-        </div>
+      <div className="flex-1 w-full flex items-center justify-center min-h-[60vh] pointer-events-none z-30">
+        <GrainLoader label="Загрузка данных..." />
       </div>
     );
   }

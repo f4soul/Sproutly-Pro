@@ -164,7 +164,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                   <span className={cn("text-xs font-bold tabular-nums tracking-tight", stats.profit >= 0 ? "text-invest-500" : "text-rose-500")}>
                     <span className="tabular-nums">{stats.profit > 0 ? "+" : ""}{formatCurrency(stats.profit)}</span>
                   </span>
-                  <span className={cn("text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-md", stats.profit >= 0 ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
+                  <span className={cn("text-[10px] font-bold tabular-nums px-2 py-0.5 rounded-full", stats.profit >= 0 ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>
                     {stats.profit > 0 ? "+" : ""}{stats.profitPercent.toFixed(2)}%
                   </span>
                 </div>
@@ -235,14 +235,14 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest leading-none uppercase shrink-0 bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400">
                         {group.length} {sampleAsset.type === 'iis' ? 'ИИС' : getPlural(group.length, ['счет', 'счета', 'счетов'])}
                       </span>
                       <span className={cn(
-                        "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
+                        "inline-flex items-center text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none border shadow-xs whitespace-nowrap",
                         sampleAsset.type === 'iis'
-                          ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
-                          : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                          ? "border-invest-500/25 bg-invest-500/10 text-invest-600 dark:text-invest-400"
+                          : "border-slate-500/25 bg-slate-500/10 text-slate-500 dark:text-slate-400"
                       )}>
                         {sampleAsset.type === 'iis' ? `ИИС ${sampleAsset.iisType || ''}` : 'Брокерский'}
                       </span>
@@ -296,10 +296,10 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
               
                       <div className="flex items-center">
                         <span className={cn(
-                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border",
-                          isPositive 
-                            ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
-                            : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest leading-none tabular-nums shrink-0",
+                          isPositive
+                            ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400"
+                            : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
                         )}>
                           {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
                         </span>
@@ -322,18 +322,18 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
 
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
                       <span className={cn(
-                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
-                        isPositive 
-                          ? "text-invest-500 dark:text-invest-400 bg-invest-500/10 border-invest-500/20" 
-                          : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest leading-none tabular-nums shrink-0",
+                        isPositive
+                          ? "bg-invest-50 text-invest-600 dark:bg-invest-500/10 dark:text-invest-400"
+                          : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400"
                       )}>
                         {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
                       </span>
                       <span className={cn(
-                        "px-1.5 py-0.5 rounded-md text-[7px] xl:text-[8px] font-black uppercase tracking-widest leading-none",
+                        "inline-flex items-center text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full leading-none border shadow-xs whitespace-nowrap",
                         asset.type === 'iis'
-                          ? "text-invest-500/80 dark:text-invest-400/80 bg-white/50 dark:bg-invest-500/10 shadow-[0_1px_2px_rgba(6,182,212,0.05)] border border-invest-500/10"
-                          : "text-slate-400 dark:text-slate-500 bg-white/60 dark:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50"
+                          ? "border-invest-500/25 bg-invest-500/10 text-invest-600 dark:text-invest-400"
+                          : "border-slate-500/25 bg-slate-500/10 text-slate-500 dark:text-slate-400"
                       )}>
                         {asset.type === 'iis' ? `ИИС ${asset.iisType || ''}` : 'Брокерский'}
                       </span>
@@ -458,7 +458,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
             <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
           </Transition.Child>
 
-          <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="fixed inset-0 z-10 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
             <div className="flex min-h-full items-end justify-center p-0 sm:p-4 text-center sm:items-center">
               <Transition.Child
                 as={Fragment}

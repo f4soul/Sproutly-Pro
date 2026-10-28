@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Deposit, CashAsset, InvestmentAsset, CryptoAsset, TaxYearSettings, AppSettings } from "../../types";
 import { useIncome } from "../../context/IncomeContext";
+import { useAuthSync } from "../../context/AuthSyncContext";
 import { calculateUnifiedFinance } from "../../lib/unifiedFinance";
 import { formatCurrency, cn } from "../../lib/utils";
 import {
@@ -103,7 +104,9 @@ export function BentoDashboard({
   isPrivate = false,
   setIsPrivate,
 }: BentoDashboardProps) {
-  const { state } = useIncome();
+  const { state, isInitialized } = useIncome();
+  const { syncStatus } = useAuthSync();
+  const isSyncing = syncStatus === 'syncing' || !isInitialized;
   const selectedYear = state.activeYear;
   
   const [rates, setRates] = React.useState<CurrencyRates | null>(null);
@@ -374,7 +377,7 @@ export function BentoDashboard({
           </div>
         </motion.div>
 
-        <AveragesBlock totalNet={data.totalNet} isPrivate={isPrivate} />
+        <AveragesBlock totalNet={data.totalNet} isPrivate={isPrivate} isSyncing={isSyncing} />
 
         {/* Income Structure Chart */}
         <motion.div
@@ -595,13 +598,8 @@ export function BentoDashboard({
                 const word =
                   lastDigit === 1 && lastTwo !== 11 ? "активный" : "активных";
                 return (
-                  <div className="bg-slate-50/80 dark:bg-slate-800/80 flex items-center px-2 py-1 rounded-lg backdrop-blur-md border border-slate-200/50 dark:border-white/5">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                      <span className="text-deposit-500 mr-1">
-                        {activeCount}
-                      </span>
-                      {word}
-                    </span>
+                  <div className="flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-widest shrink-0 bg-deposit-50 text-deposit-600 dark:bg-deposit-500/10 dark:text-deposit-400">
+                    {activeCount} {word}
                   </div>
                 );
               }

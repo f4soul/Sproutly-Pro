@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Info, Loader2, AlertCircle } from 'lucide-react';
+import { Check, Info, AlertCircle } from 'lucide-react';
+import { SproutlySpinner } from './SproutlySpinner';
+import { PwaUpdateToast } from './ReloadPrompt';
 import { cn } from '../../lib/utils';
 import { Toast } from '../../types';
 
@@ -14,8 +16,9 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
   }, []);
 
   return (
-    <div className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+1.5rem)] sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-2 pointer-events-none">
+    <div className="fixed left-4 right-4 top-[calc(env(safe-area-inset-top)+5.5rem)] sm:left-auto sm:top-auto sm:bottom-4 sm:right-4 z-[9999] flex flex-col items-center sm:items-end gap-2 pointer-events-none">
       <AnimatePresence>
+        <PwaUpdateToast isMobile={isMobile} />
         {toasts.map(toast => {
           const isError = toast.type === 'error';
           const isLoading = toast.type === 'loading';
@@ -54,7 +57,7 @@ export const ToastContainer = ({ toasts, removeToast }: { toasts: Toast[], remov
               {isError ? (
                 <AlertCircle size={20} className="text-rose-500 dark:text-rose-400 shrink-0" />
               ) : isLoading ? (
-                <Loader2 size={20} className="text-primary-500 dark:text-primary-400 animate-spin shrink-0" />
+                <SproutlySpinner size={20} />
               ) : isSuccess ? (
                 <Check size={20} className="text-emerald-500 dark:text-emerald-400 shrink-0" />
               ) : (

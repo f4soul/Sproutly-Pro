@@ -8,14 +8,17 @@ import { AutoFitText } from "../ui/AutoFitText";
 interface AveragesBlockProps {
   totalNet: number;
   isPrivate: boolean;
+  isSyncing?: boolean;
 }
 
-export function AveragesBlock({ totalNet, isPrivate }: AveragesBlockProps) {
+export function AveragesBlock({ totalNet, isPrivate, isSyncing = false }: AveragesBlockProps) {
   const formatVal = (val: number, cur: string = "RUB") => (
     <PrivacyBlur isPrivate={isPrivate}>
       <AnimatedCurrency value={val} currency={cur} />
     </PrivacyBlur>
   );
+
+  const showShimmer = isSyncing && totalNet === 0;
 
   return (
     <motion.div
@@ -40,32 +43,45 @@ export function AveragesBlock({ totalNet, isPrivate }: AveragesBlockProps) {
 
         <div className="flex flex-col gap-0.5 mt-auto overflow-hidden">
           <AutoFitText className="flex items-baseline gap-1.5 leading-none mb-0.5 pointer-events-none">
-            <span className="text-3xl sm:text-3xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">
-              {formatVal(totalNet / 12)}
-            </span>
+            {showShimmer ? (
+              <div className="h-10 w-40 rounded-xl bg-slate-200/60 dark:bg-white/5 animate-pulse" />
+            ) : (
+              <span className="text-3xl sm:text-3xl lg:text-[2.5rem] font-black text-primary-600 dark:text-primary-400 drop-shadow-sm p-0.5">
+                {formatVal(totalNet / 12)}
+              </span>
+            )}
             <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase shrink-0">
               / мес
             </span>
           </AutoFitText>
 
           <div className="flex flex-wrap items-center gap-0.5 mt-1">
-            <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                {formatVal(totalNet / 365)}
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
-                / день
-              </span>
-            </div>
+            {showShimmer ? (
+              <>
+                <div className="h-7 w-28 rounded-lg bg-slate-200/60 dark:bg-white/5 animate-pulse" />
+                <div className="h-7 w-28 rounded-lg bg-slate-200/60 dark:bg-white/5 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {formatVal(totalNet / 365)}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
+                    / день
+                  </span>
+                </div>
 
-            <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
-              <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                {formatVal(totalNet / 1973)}
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
-                / час
-              </span>
-            </div>
+                <div className="inline-flex items-baseline gap-1.5 leading-none bg-slate-50/50 dark:bg-slate-950/50 px-2.5 py-2 rounded-[8px] border border-slate-200/50 dark:border-white/5 w-max max-w-full">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                    {formatVal(totalNet / 1973)}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase tracking-widest shrink-0">
+                    / час
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'rea
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { GlobalToasts } from './components/ui/GlobalToasts';
-import { ReloadPrompt } from './components/ui/ReloadPrompt';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, initDB } from './config/db';
 
@@ -23,6 +22,7 @@ import { auth } from './config/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 
 import { SproutlyLogo } from './components/ui/SproutlyLogo';
+import { GrainLoader } from './components/ui/GrainLoader';
 import { LandingView } from './components/welcome/LandingView';
 import { changelog } from './data/changelog';
 import { AnimatePresence } from 'motion/react';
@@ -30,14 +30,9 @@ import { applyThemeToDom, getInitialTheme } from './lib/theme';
 
 const SplashLoader = ({ theme }: { theme: 'light' | 'dark' }) => (
   <div className={`fixed inset-0 z-[99999] flex flex-col items-center justify-center ${theme === 'dark' ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-950'}`}>
-    <div className="relative flex items-center justify-center">
-      {/* Animated pulsing glow */}
+    <div className="relative flex h-24 w-24 items-center justify-center">
       <div className="absolute inset-0 bg-primary-500/20 dark:bg-primary-500/30 rounded-full blur-3xl animate-pulse scale-150" />
-      
-      {/* Logo container */}
-      <div className="relative w-24 h-24 bg-white/80 dark:bg-slate-900/80 shadow-2xl border border-slate-200/50 dark:border-white/10 rounded-[2rem] flex items-center justify-center backdrop-blur-xl">
-        <SproutlyLogo className="w-12 h-12 text-primary-500 drop-shadow-[0_0_12px_rgba(var(--rgb-primary),0.5)] animate-pulse" />
-      </div>
+      <SproutlyLogo className="relative w-16 h-16 text-primary-500 drop-shadow-[0_0_12px_rgba(var(--rgb-primary),0.5)] animate-pulse" />
     </div>
   </div>
 );
@@ -367,8 +362,8 @@ function AppContent() {
           ) : (
             <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLockActive && !isUnlocked}>
               <Suspense fallback={
-                <div className="fixed inset-0 md:left-68 flex items-center justify-center pointer-events-none z-30">
-                  <div className="w-10 h-10 rounded-full border-[3.5px] border-primary-500/20 border-t-primary-500 animate-spin" />
+                <div className="flex-1 w-full flex items-center justify-center min-h-[60vh] pointer-events-none z-30">
+                  <GrainLoader />
                 </div>
               }>
                 {activeTab === 'dashboard' && (
@@ -412,7 +407,6 @@ function AppContent() {
         </AnimatePresence>
       </div>
       <GlobalToasts />
-      <ReloadPrompt />
     </>
   );
 }

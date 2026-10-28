@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { db, syncWithFirebase } from '../../config/db';
 import { AppSettings } from '../../types';
 import { Shield, Fingerprint, Lock, ShieldUser, ChevronDown, Delete, ChevronRight, KeyRound } from 'lucide-react';
-import { registerBiometricCredential, isBiometricsSupported, verifyBiometricCredential } from '../../lib/biometrics';
+import { registerBiometricCredential, isBiometricsSupported, verifyBiometricCredential, getPasskeyUserName } from '../../lib/biometrics';
+import { auth } from '../../config/firebase';
 import { verifyPin, hashPin } from '../../lib/security';
 import { showToast } from '../../lib/toast';
 import { cn } from '../../lib/utils';
@@ -197,7 +198,8 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
           return;
         }
 
-        const cred = await registerBiometricCredential(appSettings.userId || 'local_user', 'User');
+        const passkeyUser = getPasskeyUserName(auth.currentUser?.email, auth.currentUser?.displayName);
+        const cred = await registerBiometricCredential(appSettings.userId || 'local_user', passkeyUser);
         const newIds = Array.from(new Set([...ids, cred.id]));
         await updateLockSettings({ useBiometrics: true, credentialId: cred.id, credentialIds: newIds });
         localStorage.setItem('localBiometricCredId', cred.id);
@@ -458,7 +460,8 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                               }
 
                               // Register new credential if not matched/available
-                              const cred = await registerBiometricCredential(appSettings.userId || 'local_user', `Device_${Date.now()}`);
+                              const passkeyUser = getPasskeyUserName(auth.currentUser?.email, auth.currentUser?.displayName);
+                              const cred = await registerBiometricCredential(appSettings.userId || 'local_user', passkeyUser);
                               const newIds = Array.from(new Set([...currentIds, cred.id]));
                               await updateLockSettings({ credentialId: cred.id, credentialIds: newIds });
                               localStorage.setItem('localBiometricCredId', cred.id);

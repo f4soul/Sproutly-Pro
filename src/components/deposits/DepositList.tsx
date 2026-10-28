@@ -465,58 +465,58 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
         <table className="w-full table-fixed text-left border-separate border-spacing-0 min-w-[700px] xl:min-w-[800px]">
           <thead>
               <tr className="bg-white dark:bg-slate-950">
-                <th className="w-[30%] xl:w-[28%] pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('bank')}>
+                <th className="w-[30%] xl:w-[28%] pl-4 xl:pl-6 pr-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('bank')}>
                   <span className="relative inline-flex items-center justify-center">
-                    Банк
+                    БАНК
                     {renderSortIndicator('bank')}
                   </span>
                 </th>
-                <th className="w-[9%] xl:w-[8%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>
+                <th className="w-[9%] xl:w-[8%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('rate')}>
                   <span className="relative inline-flex items-center justify-center">
                     СТАВКА
                     {renderSortIndicator('rate')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
                   <span className="relative inline-flex items-center justify-center">
-                    ОТКРЫТ
+                    ОТКРЫТИЕ
                     {renderSortIndicator('startDate')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>
+                <th className="hidden xl:table-cell xl:w-[9%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('endDate')}>
                   <span className="relative inline-flex items-center justify-center">
-                    ЗАКРЫТ
+                    ЗАКРЫТИЕ
                     {renderSortIndicator('endDate')}
                   </span>
                 </th>
-                <th className="table-cell xl:hidden w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
+                <th className="table-cell xl:hidden w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('startDate')}>
                   <span className="relative inline-flex items-center justify-center">
                     ПЕРИОД
                     {renderSortIndicator('startDate')}
                   </span>
                 </th>
-                <th className="w-[22%] xl:w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>
+                <th className="w-[22%] xl:w-[15%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('amount')}>
                   <span className="relative inline-flex items-center justify-center">
                     СУММА
                     {renderSortIndicator('amount')}
                   </span>
                 </th>
-                <th className="hidden xl:table-cell xl:w-[14%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>
+                <th className="hidden xl:table-cell xl:w-[14%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('income')}>
                   <span className="relative inline-flex items-center justify-center">
                     ДОХОД
                     {renderSortIndicator('income')}
                   </span>
                 </th>
-                <th className="w-[24%] xl:w-[17%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[9px] cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>
+                <th className="w-[24%] xl:w-[17%] px-2 py-3 font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-[10px] whitespace-nowrap cursor-pointer hover:text-primary-600 transition-colors text-center border-b border-slate-200 dark:border-slate-800" onClick={() => requestSort('total')}>
                   <span className="relative inline-flex items-center justify-center">
                     ИТОГО
                     {renderSortIndicator('total')}
                   </span>
                 </th>
-                <th className="w-[84px] xl:w-[100px] shrink-0 pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 sticky right-0 bg-white dark:bg-slate-950 z-10 font-bold uppercase tracking-widest text-[9px]">&nbsp;</th>
+                <th className="w-[84px] xl:w-[100px] shrink-0 pr-4 xl:pr-6 py-3 border-b border-slate-200 dark:border-slate-800 sticky right-0 bg-white dark:bg-slate-950 z-10 font-bold uppercase tracking-widest text-[10px] whitespace-nowrap">&nbsp;</th>
               </tr>
           </thead>
-            <tbody className="[&>tr>td]:border-b [&>tr:last-child>td]:border-b-0 [&>tr>td]:border-slate-200 dark:[&>tr>td]:border-slate-800">
+            <tbody>
               {filteredDeposits.length > 0 ? filteredDeposits.map((deposit, index) => (
                 <DepositRow 
                   key={`deposit-row-${deposit.id || index}-${index}`} 
@@ -569,13 +569,13 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
             </tbody>
             {filteredDeposits.length > 0 && (
               <tfoot ref={tfootRef}>
-                <tr className="bg-white/80 dark:bg-slate-950/90 font-bold border-t border-slate-200 dark:border-slate-800">
+                <tr className="bg-white/80 dark:bg-slate-950/90 font-bold [&>td]:border-t border-slate-200 dark:border-slate-800">
                   <td className="pl-4 xl:pl-6 pr-2 py-4 border-slate-200 dark:border-slate-800 text-left border-b-0">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                         {filterYear !== null ? `Итого за ${filterYear} год` : 'Итого выбрано'}
                       </span>
-                      <span className="text-[12px] font-bold text-slate-850 dark:text-slate-200">
+                      <span className="text-[12px] font-bold text-slate-800 dark:text-slate-200">
                         {filteredTotals.count} {filteredTotals.count === 1 ? 'вклад' : filteredTotals.count < 5 ? 'вклада' : 'вкладов'}
                       </span>
                     </div>
@@ -584,10 +584,10 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="hidden xl:table-cell px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
                   <td className="table-cell xl:hidden px-2 py-4 border-slate-200 dark:border-slate-800 border-b-0"></td>
-                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[12px] xl:text-[13px] tracking-tight font-semibold text-slate-950 dark:text-white border-b-0">
+                  <td className="px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-bold text-slate-950 dark:text-white border-b-0">
                     <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span>
                   </td>
-                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 border-b-0">
+                  <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-bold text-deposit-600 dark:text-deposit-400 border-b-0">
                     <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>
                   </td>
                   <td className="hidden xl:table-cell px-2 py-4 text-center border-slate-200 dark:border-slate-800 tabular-nums text-[13px] font-black text-slate-950 dark:text-white border-b-0">
@@ -595,10 +595,10 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                   </td>
                   <td className="table-cell xl:hidden px-2 py-4 text-center border-slate-200 dark:border-slate-800 border-b-0">
                     <div className="flex flex-col items-center justify-center tabular-nums font-semibold tracking-tight">
-                      <span className="text-[12px] font-bold text-slate-950 dark:text-white">
+                      <span className="text-[13px] font-black text-slate-950 dark:text-white">
                         <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
                       </span>
-                      <span className="text-[10.5px] text-deposit-600 dark:text-deposit-400">
+                      <span className="text-[11px] font-bold text-deposit-600 dark:text-deposit-400">
                         +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
                       </span>
                     </div>
@@ -740,14 +740,14 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                     </div>
                     
                     <div className="flex flex-col text-left">
-                      <span className={cn("font-black uppercase tracking-tight leading-none mb-0.5", isAnalyticsExpanded ? "text-[10px] text-slate-900 dark:text-white" : "text-[7px] text-slate-400 dark:text-slate-500 tracking-widest mt-0.5")}>
+                      <span className={cn("font-black uppercase tracking-tight leading-none mb-0.5", isAnalyticsExpanded ? "text-[10px] text-slate-900 dark:text-white" : "text-[8px] text-slate-400 dark:text-slate-500 tracking-widest mt-0.5")}>
                         {selectedBanks.length > 0 ? (isAnalyticsExpanded ? 'Аналитика фильтра' : 'Фильтр применен') : (isAnalyticsExpanded ? 'Общая аналитика' : 'Вся аналитика')}
                       </span>
                       
                       {isAnalyticsExpanded ? (
                         <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">Вклады: {filteredTotals.count}</span>
                       ) : (
-                        <div className="flex items-center gap-1.5 tabular-nums text-xs font-bold text-slate-850 dark:text-white leading-none">
+                        <div className="flex items-center gap-1.5 tabular-nums text-xs font-bold text-slate-800 dark:text-white leading-none">
                           <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur></span>
                           <span className="text-[9px] font-medium text-deposit-600 dark:text-deposit-400">
                             (+<span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>)
@@ -781,14 +781,14 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                     >
                       <div className="pt-2 grid grid-cols-2 gap-4 pb-2">
                         <div className="flex flex-col text-left">
-                          <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Сумма вкладов</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Сумма вкладов</span>
                           <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight leading-none tabular-nums">
                             <span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur></span>
                           </span>
                         </div>
                         
                         <div className="flex flex-col text-right">
-                          <span className="text-[9px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Ожидаемый доход</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-black mb-1">Ожидаемый доход</span>
                           <span className="text-sm font-black text-deposit-600 dark:text-deposit-400 tracking-tight leading-none tabular-nums">
                             +<span className="tabular-nums"><PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur></span>
                           </span>
@@ -881,7 +881,7 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
                       Сумма
                     </span>
-                    <span className="text-[13px] font-semibold text-slate-900 dark:text-white tabular-nums leading-none">
+                    <span className="text-[13px] font-bold text-slate-900 dark:text-white tabular-nums leading-none">
                       <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.amount)}</PrivacyBlur>
                     </span>
                   </div>
@@ -891,7 +891,7 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                     <span className="text-[8px] font-black uppercase tracking-widest text-deposit-600/70 dark:text-deposit-400/70 leading-none mb-1">
                       Доход
                     </span>
-                    <span className="text-[13px] font-semibold text-deposit-600 dark:text-deposit-400 tabular-nums leading-none">
+                    <span className="text-[13px] font-bold text-deposit-600 dark:text-deposit-400 tabular-nums leading-none">
                       +<PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.income)}</PrivacyBlur>
                     </span>
                   </div>
@@ -901,7 +901,7 @@ export function DepositList({ deposits, selectedYear, isPrivate = false, isOuter
                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-1">
                       Итого
                     </span>
-                    <span className="text-[14px] font-black text-slate-950 dark:text-white tabular-nums leading-none">
+                    <span className="text-[13px] font-black text-slate-950 dark:text-white tabular-nums leading-none">
                       <PrivacyBlur isPrivate={isPrivate}>{formatCurrency(filteredTotals.total)}</PrivacyBlur>
                     </span>
                   </div>
