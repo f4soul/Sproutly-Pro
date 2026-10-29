@@ -492,135 +492,127 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
         )}
       </div>
 
-      {/* PIN Setup Modal Portal (Headless UI Transition + Dialog) */}
+      {/* PIN Setup Modal Portal (Headless UI Dialog + Framer Motion) */}
       <AnimatePresence>
         {showPinSetup && (
-          <Dialog as="div" className="relative z-[150]" open={true} onClose={() => setShowPinSetup(false)} static>
+          <Dialog as="div" className="relative z-[9999]" open={true} onClose={() => setShowPinSetup(false)} static>
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm"
               aria-hidden="true"
             />
-            <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+            <div className="fixed inset-y-0 right-0 left-0 md:left-68 z-10 flex items-end sm:items-center justify-center p-0 sm:p-4 text-center pointer-events-none">
               <Dialog.Panel as={Fragment}>
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="px-6 pt-8 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] sm:py-8 max-w-[350px] w-full flex flex-col items-center bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-2xl relative overflow-hidden pointer-events-auto rounded-t-[32px] sm:rounded-[32px]"
+                  initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: 'easeInOut' } }}
+                  transition={{ type: 'spring', damping: 32, stiffness: 380, mass: 0.8 }}
+                  className="relative transform-gpu will-change-[transform,opacity] overflow-hidden px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] sm:p-8 max-w-sm w-full flex flex-col items-center bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-slate-200/60 dark:border-white/[0.08] shadow-2xl pointer-events-auto"
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-5 mt-2 sm:mt-0">
-                    <Lock size={22} className="stroke-[1.8px]" />
+                  <div className="w-13 h-13 sm:w-16 sm:h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-4 sm:mb-6 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                    <ShieldUser className="w-7 h-7 sm:w-8 sm:h-8 stroke-[1.5px]" />
                   </div>
-                  <h3 className="text-lg font-black uppercase tracking-wider text-slate-950 dark:text-white mb-1.5 text-center">
+                  <Dialog.Title as="h3" className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-1 sm:mb-1.5 text-center">
                     {verificationType !== null 
                       ? 'Введите код-пароль' 
                       : step === 1 
                         ? 'Придумайте код-пароль' 
                         : 'Повторите код-пароль'}
-                  </h3>
-                  <p className="text-[11px] sm:text-[10px] text-slate-500 font-medium text-center mb-8">
+                  </Dialog.Title>
+                  <p className="text-[12px] sm:text-sm text-slate-500 font-medium text-center mb-5 sm:mb-8">
                     {verificationType !== null 
                       ? 'Введите текущие 4 цифры для подтверждения' 
                       : '4 цифры для защиты входа'}
                   </p>
 
-                <motion.div 
-                  animate={isErrorShake ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
-                  transition={{ duration: 0.4 }}
-                  className="flex justify-center gap-4 mb-10"
-                >
-                  {[0, 1, 2, 3].map(i => {
-                    const isConfirming = verificationType === null && step === 2;
-                    const val = isConfirming ? pinConfirm[i] : pinInput[i];
-                    return (
-                      <div key={i} className={cn(
-                        "w-4 h-4 rounded-full transition-all duration-200",
-                        isErrorShake 
-                          ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110" 
-                          : val 
-                            ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110" 
-                            : "bg-slate-200 dark:bg-slate-700/60"
-                      )} />
-                    );
-                  })}
-                </motion.div>
+                  <motion.div 
+                    animate={isErrorShake ? { x: [-10, 10, -10, 10, -5, 5, 0] } : {}}
+                    transition={{ duration: 0.4 }}
+                    className="flex justify-center gap-3.5 sm:gap-4 mb-6 sm:mb-9 h-3.5 sm:h-4"
+                  >
+                    {[0, 1, 2, 3].map(i => {
+                      const isConfirming = verificationType === null && step === 2;
+                      const val = isConfirming ? pinConfirm[i] : pinInput[i];
+                      return (
+                        <div key={i} className={cn(
+                          "w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full transition-all duration-300",
+                          isErrorShake 
+                            ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110" 
+                            : val 
+                              ? "bg-primary-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] scale-110" 
+                              : "bg-slate-200 dark:bg-slate-800"
+                        )} />
+                      );
+                    })}
+                  </motion.div>
 
-                <div className="grid grid-cols-3 gap-y-4 gap-x-6 mb-8 w-full max-w-[280px]">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                  <div className="grid grid-cols-3 gap-y-2.5 sm:gap-y-4 gap-x-6 mb-5 sm:mb-8 w-full max-w-[260px] sm:max-w-[280px]">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => {
+                          vibrate(30);
+                          const isConfirming = verificationType === null && step === 2;
+                          if (isConfirming) {
+                            if (pinConfirm.length < 4) setPinConfirm(prev => prev + num);
+                          } else {
+                            if (pinInput.length < 4) setPinInput(prev => prev + num);
+                          }
+                        }}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-xl sm:text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-colors duration-75 active:scale-90 mx-auto cursor-pointer outline-none"
+                      >
+                        {num}
+                      </button>
+                    ))}
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto" />
                     <button
-                      key={num}
                       type="button"
                       onClick={() => {
                         vibrate(30);
                         const isConfirming = verificationType === null && step === 2;
                         if (isConfirming) {
-                          if (pinConfirm.length < 4) setPinConfirm(prev => prev + num);
+                          if (pinConfirm.length < 4) setPinConfirm(prev => prev + 0);
                         } else {
-                          if (pinInput.length < 4) setPinInput(prev => prev + num);
+                          if (pinInput.length < 4) setPinInput(prev => prev + 0);
                         }
                       }}
-                      className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-xl sm:text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-colors duration-75 active:scale-90 mx-auto cursor-pointer outline-none"
                     >
-                      {num}
+                      0
                     </button>
-                  ))}
-                  <div />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      vibrate(30);
-                      const isConfirming = verificationType === null && step === 2;
-                      if (isConfirming) {
-                        if (pinConfirm.length < 4) setPinConfirm(prev => prev + 0);
-                      } else {
-                        if (pinInput.length < 4) setPinInput(prev => prev + 0);
-                      }
-                    }}
-                    className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-2xl font-light text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active:scale-95 bg-slate-50 dark:bg-slate-900/50 cursor-pointer outline-none"
-                  >
-                    0
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      vibrate(30);
-                      const isConfirming = verificationType === null && step === 2;
-                      if (isConfirming) {
-                        setPinConfirm(prev => prev.slice(0, -1));
-                      } else {
-                        setPinInput(prev => prev.slice(0, -1));
-                      }
-                    }}
-                    className="w-16 h-16 rounded-full flex mx-auto items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-colors cursor-pointer outline-none"
-                  >
-                    <Delete size={22} className="stroke-[1.5px]" />
-                  </button>
-                </div>
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center mx-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          vibrate(30);
+                          const isConfirming = verificationType === null && step === 2;
+                          if (isConfirming) {
+                            setPinConfirm(prev => prev.slice(0, -1));
+                          } else {
+                            setPinInput(prev => prev.slice(0, -1));
+                          }
+                        }}
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 active:bg-slate-300 dark:active:bg-slate-700 transition-colors duration-75 active:scale-90 cursor-pointer outline-none"
+                      >
+                        <Delete className="w-5 h-5 sm:w-6 sm:h-6 stroke-[1.5px]" />
+                      </button>
+                    </div>
+                  </div>
 
-                <div className="flex gap-3 w-full">
                   <button
                     type="button"
                     onClick={() => setShowPinSetup(false)}
-                    className="flex-1 py-3 rounded-xl font-bold text-xs uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:opacity-80 transition-opacity cursor-pointer outline-none"
+                    className="w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer outline-none"
                   >
                     Отмена
                   </button>
-                  <button
-                    type="button"
-                    onClick={handlePinSubmit}
-                    disabled={(verificationType === null && step === 2 ? pinConfirm.length : pinInput.length) !== 4}
-                    className="flex-1 py-3 rounded-xl font-bold text-xs uppercase bg-primary-500 text-white disabled:opacity-50 hover:bg-primary-600 transition-colors shadow-[0_4px_14px_rgba(16,185,129,0.3)] cursor-pointer outline-none"
-                  >
-                    {verificationType !== null ? 'Готово' : step === 1 ? 'Далее' : 'Готово'}
-                  </button>
-                </div>
-              </motion.div>
-             </Dialog.Panel>
+                </motion.div>
+              </Dialog.Panel>
             </div>
           </Dialog>
         )}

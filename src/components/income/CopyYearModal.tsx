@@ -1,7 +1,7 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useRef } from 'react';
 import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Copy, X } from 'lucide-react';
+import { Copy } from 'lucide-react';
 
 interface CopyYearModalProps {
   isOpen: boolean;
@@ -11,56 +11,63 @@ interface CopyYearModalProps {
 }
 
 export const CopyYearModal = ({ isOpen, onClose, onConfirm, prevYear }: CopyYearModalProps) => {
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <Dialog as="div" className="relative z-[150]" open={true} onClose={onClose} static>
-          <motion.div 
+        <Dialog
+          as="div"
+          className="relative z-[9999]"
+          open={true}
+          onClose={onClose}
+          initialFocus={cancelButtonRef}
+          static
+        >
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+            className="fixed inset-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
             aria-hidden="true"
           />
-          <div className="fixed inset-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+          <div className="fixed inset-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
             <Dialog.Panel as={Fragment}>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 100 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl max-w-md w-full px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 border border-slate-200 dark:border-slate-800 pointer-events-auto"
+              <motion.div
+                initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: 'easeInOut' } }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+                className="bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 max-w-sm w-full transform-gpu will-change-[transform,opacity]"
               >
-                <div className="flex justify-between items-start mb-6">
-                  <div className="flex items-center gap-3 text-primary-500">
-                    <div className="p-3 bg-primary-500/10 rounded-2xl">
-                      <Copy size={24} className="stroke-[1.5px]" />
-                    </div>
-                    <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white">Скопировать данные?</h3>
-                  </div>
-                  <button onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all text-slate-500 cursor-pointer -mt-2 -mr-2">
-                    <X size={20} />
-                  </button>
+                <div className="w-12 h-12 rounded-2xl bg-primary-500/10 flex items-center justify-center mb-6 self-center">
+                  <Copy className="w-6 h-6 text-primary-500 stroke-[1.5px]" />
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-                  Вы уверены, что хотите скопировать данные за <strong>{prevYear} год</strong>? Это действие перезапишет все текущие введенные значения.
+                <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight text-center">
+                  Скопировать данные?
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-center">
+                  Вы уверены, что хотите скопировать данные за <strong className="text-slate-950 dark:text-white">{prevYear} год</strong>? Это действие перезапишет все текущие введенные значения.
                 </p>
-                <div className="flex items-center gap-3">
-                  <button 
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button
+                    ref={cancelButtonRef}
+                    type="button"
                     onClick={onClose}
-                    className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide flex items-center justify-center cursor-pointer"
                   >
                     Отмена
                   </button>
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => {
                       onConfirm();
                       onClose();
                     }}
-                    className="flex-1 apple-button bg-primary-500 text-white shadow-lg shadow-primary-500/20 text-sm sm:text-base cursor-pointer"
+                    className="flex-1 px-4 py-3 rounded-2xl bg-primary-500 hover:bg-primary-600 active:scale-95 text-white font-bold transition-all shadow-[0_4px_16px_rgba(37,99,235,0.3)] hover:shadow-[0_4px_20px_rgba(37,99,235,0.4)] flex items-center justify-center text-sm uppercase tracking-wide cursor-pointer"
                   >
-                    Да, скопировать
+                    Скопировать
                   </button>
                 </div>
               </motion.div>

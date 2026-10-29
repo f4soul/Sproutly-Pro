@@ -79,11 +79,11 @@ export function AssetStack<T>({
               />
               <Dialog.Panel as={Fragment}>
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                  transition={{ type: "spring", damping: 30, stiffness: 300, mass: 0.8 }}
-                  className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-950 rounded-t-[2rem] rounded-b-none pointer-fine:rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-fine:max-h-[85vh]"
+                  initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+                  className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-950 rounded-t-[2rem] rounded-b-none pointer-fine:rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-fine:max-h-[85vh] transform-gpu will-change-[transform,opacity]"
                 >
                   {/* Modal Header */}
                   <div className="sticky top-0 z-20 px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start shrink-0 bg-inherit">

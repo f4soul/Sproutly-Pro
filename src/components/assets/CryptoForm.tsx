@@ -131,15 +131,11 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <Dialog.Panel as={Fragment}>
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full max-w-xl pointer-events-auto flex flex-col"
-          >
-            <motion.div
-              layout
-              className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] w-full"
+            initial={{ opacity: 0, y: 48, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+            transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+            className="w-full max-w-xl pointer-events-auto bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] relative transform-gpu will-change-[transform,opacity]"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-4 relative z-10 shrink-0">
               <div className="flex items-center justify-between">
@@ -419,7 +415,6 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
               id="datepicker-portal-container"
               className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
             />
-          </motion.div>
           </motion.div>
         </Dialog.Panel>
       </div>

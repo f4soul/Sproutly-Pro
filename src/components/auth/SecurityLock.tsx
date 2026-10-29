@@ -1,8 +1,8 @@
 import { logger } from '../../lib/logger';
-import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useRef, Fragment } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Fingerprint, Lock, ShieldUser, X, Delete, AlertTriangle } from 'lucide-react';
+import { Dialog } from '@headlessui/react';
+import { Fingerprint, ShieldUser, Delete, AlertTriangle } from 'lucide-react';
 import { verifyBiometricCredential } from '../../lib/biometrics';
 import { verifyPin, hashPin } from '../../lib/security';
 import { cn } from '../../lib/utils';
@@ -24,6 +24,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
   const [error, setError] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [showForgotPinTheme, setShowForgotPinTheme] = useState(false);
+  const cancelForgotPinRef = useRef(null);
 
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
@@ -210,7 +211,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         transition={{ type: "spring", stiffness: 350, damping: 25 }}
         className="flex flex-col items-center w-full max-w-sm px-6 h-[100dvh] justify-center pb-20 relative pt-[env(safe-area-inset-top)] overflow-y-auto"
       >
-        <div className="w-16 h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(16,185,129,0.2)] short-landscape:hidden">
+        <div className="w-16 h-16 rounded-full bg-primary-100/50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(59,130,246,0.2)] short-landscape:hidden">
           <ShieldUser size={32} className="stroke-[1.5px]" />
         </div>
         
@@ -248,7 +249,7 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
                       error 
                         ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)] scale-110"
                         : enteredPin.length > index
-                          ? "bg-primary-500 shadow-[0_0_12px_rgba(16,185,129,0.5)] scale-110"
+                          ? "bg-primary-500 shadow-[0_0_12px_rgba(59,130,246,0.5)] scale-110"
                           : "bg-slate-200 dark:bg-slate-800"
                     )}
                   />
@@ -316,65 +317,58 @@ export function SecurityLock({ pin, pinHash, useBiometrics, credentialId, creden
         </button>
       </motion.div>
 
-      {typeof document !== 'undefined' && createPortal(
-        <AnimatePresence>
-          {showForgotPinTheme && (
-            <div className="relative z-[99999]" role="dialog" aria-modal="true">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
-                aria-hidden="true"
-                onClick={() => setShowForgotPinTheme(false)}
-              />
-              <div className="fixed inset-x-0 bottom-0 top-0 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full sm:max-w-sm rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-[0_8px_24px_rgba(0,0,0,0.25)] border border-b-0 sm:border-b border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto p-6 sm:p-8 pb-[max(env(safe-area-inset-bottom,0px),24px)] sm:pb-8"
+      <AnimatePresence>
+        {showForgotPinTheme && (
+          <Dialog as="div" className="relative z-[99999]" open={true} onClose={() => setShowForgotPinTheme(false)} initialFocus={cancelForgotPinRef} static>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 z-10 flex items-end justify-center p-0 text-center sm:items-center sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div
+                  initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+                  className="relative overflow-hidden bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] border-t sm:border border-slate-200/60 dark:border-white/[0.08] p-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:pb-6 shadow-2xl w-full max-w-sm text-center pointer-events-auto transform-gpu will-change-[transform,opacity]"
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center shrink-0 border border-rose-500/20">
-                      <AlertTriangle className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold tracking-tight text-slate-950 dark:text-white leading-none">
-                        Сброс код-пароля
-                      </h3>
-                    </div>
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 mx-auto mb-4">
+                    <AlertTriangle size={24} />
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
-                    Сброс код-пароля приведет к <strong className="text-rose-500">полному удалению</strong> всех локальных данных приложения.
+                  <Dialog.Title as="h3" className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">
+                    Сброс код-пароля
+                  </Dialog.Title>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+                    Сброс код-пароля приведет к <span className="font-bold text-rose-500">полному удалению</span> всех локальных данных приложения. Если вы пользовались облачной синхронизацией, данные можно будет восстановить при повторном входе.
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed">
-                    Если вы пользовались облачной синхронизацией, ваши данные остались в облаке, и вы сможете восстановить их при повторном входе в аккаунт. Разрешить сброс?
-                  </p>
-                  
-                  <div className="flex items-center gap-3">
+                  <div className="flex gap-3">
                     <button
+                      type="button"
+                      ref={cancelForgotPinRef}
                       onClick={() => setShowForgotPinTheme(false)}
-                      className="flex-1 apple-button bg-slate-50 dark:bg-slate-800/50 text-slate-950 dark:text-white hover:bg-[#E5E5E7] dark:hover:bg-white/10 text-sm sm:text-base cursor-pointer"
+                      className="flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
                     >
                       Отмена
                     </button>
                     <button
+                      type="button"
                       onClick={handleForgotPinConfirm}
-                      className="flex-1 apple-button bg-rose-500 text-white shadow-lg shadow-rose-500/20 text-sm sm:text-base cursor-pointer"
+                      className="flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-500 text-white shadow-lg shadow-rose-500/20 hover:bg-rose-600 transition-colors cursor-pointer"
                     >
                       Сбросить
                     </button>
                   </div>
                 </motion.div>
-              </div>
+              </Dialog.Panel>
             </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
+          </Dialog>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

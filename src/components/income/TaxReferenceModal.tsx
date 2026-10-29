@@ -31,11 +31,11 @@ export const TaxReferenceModal = ({
           <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none z-[100]">
             <Dialog.Panel as={Fragment}>
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95, y: 100 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-2xl w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-events-auto"
+                initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: 'easeInOut' } }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+                className="bg-white/90 dark:bg-[#0B0F19]/90 backdrop-blur-2xl w-full max-w-lg rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-events-auto transform-gpu will-change-[transform,opacity]"
               >
         <div className="flex justify-between items-center px-6 py-5 sm:px-8 sm:py-6 shrink-0">
           <div className="flex items-center gap-3 text-slate-950 dark:text-white">

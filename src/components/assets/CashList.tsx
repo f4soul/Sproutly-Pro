@@ -1,8 +1,8 @@
 import { logger } from '../../lib/logger';
-import React, { useState, useMemo, Fragment } from "react";
+import React, { useState, useMemo, useRef, Fragment } from "react";
 import { Plus, Edit3, Trash2, Lock, ShieldAlert, Vault } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Dialog, Transition } from "@headlessui/react";
+import { Dialog } from "@headlessui/react";
 import { CashAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
@@ -25,6 +25,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<CashAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<CashAsset | undefined>();
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [rates, setRates] = useState<CurrencyRates | null>(null);
   const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
@@ -452,74 +453,70 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
         )}
       </AnimatePresence>
 
-      {/* Modern, High-End Confirmation Dialog Modal (Solves standard confirm blocker inside iframes) */}
-      <Transition.Root show={!!deletingAsset} as={Fragment}>
-        <Dialog as="div" className="relative z-[9999]" open={!!deletingAsset} onClose={() => setDeletingAsset(undefined)}>
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
+      {/* Delete Confirmation Dialog */}
+      <AnimatePresence>
+        {deletingAsset && (
+          <Dialog
+            as="div"
+            className="relative z-[9999]"
+            open={true}
+            onClose={() => setDeletingAsset(undefined)}
+            initialFocus={cancelDeleteRef}
+            static
           >
-            <div className="fixed inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity" />
-          </Transition.Child>
-
-          <div className="fixed inset-0 z-10 overflow-y-auto overscroll-contain [scrollbar-gutter:stable]">
-            <div className="flex min-h-full items-end justify-center p-0 sm:p-4 text-center sm:items-center">
-              <Transition.Child
-                as={Fragment}
-                enter="ease-out duration-300"
-                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                enterTo="opacity-100 translate-y-0 sm:scale-100"
-                leave="ease-in duration-200"
-                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              >
-                <Dialog.Panel className="relative transform overflow-hidden rounded-t-[2.2rem] sm:rounded-[2.2rem] bg-white dark:bg-slate-950 px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 text-left shadow-2xl transition-all sm:my-8 w-full sm:max-w-md border border-slate-200/50 dark:border-white/[0.05]">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-5 mx-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <div className="fixed inset-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+              <Dialog.Panel as={Fragment}>
+                <motion.div
+                  initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+                  transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+                  className="bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 max-w-sm w-full transform-gpu will-change-[transform,opacity]"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />
                   </div>
-                  
-                  <div className="text-center mb-6">
-                    <Dialog.Title as="h3" className="text-lg font-black uppercase tracking-wider text-slate-900 dark:text-white">
-                      Удалить из сейфа?
-                    </Dialog.Title>
-                    <div className="mt-2">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                        Вы действительно хотите навсегда удалить "{deletingAsset?.name}" на сумму {" "}
-                        <span className="font-bold text-slate-900 dark:text-white">
-                          {deletingAsset && formatCurrency(deletingAsset.amount, deletingAsset.currency)}
-                        </span>{" "}
-                        из сейфа? Это действие нельзя отменить.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
+                  <h3 className="text-xl font-bold text-slate-950 dark:text-white mb-2 tracking-tight text-center">
+                    Удалить из сейфа?
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 leading-relaxed text-center">
+                    Вы уверены, что хотите навсегда удалить «<strong className="text-slate-950 dark:text-white">{deletingAsset.name}</strong>» на сумму{" "}
+                    <strong className="text-slate-950 dark:text-white">
+                      {formatCurrency(deletingAsset.amount, deletingAsset.currency)}
+                    </strong>{" "}
+                    из сейфа? Это действие нельзя отменить.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button
+                      ref={cancelDeleteRef}
                       type="button"
-                      className="flex-1 px-4 py-3 bg-slate-100/80 dark:bg-slate-900/60 hover:bg-slate-200/80 dark:hover:bg-slate-800/80 text-slate-900 dark:text-white rounded-2xl font-black uppercase tracking-wider text-[10px] sm:text-xs transition-colors"
                       onClick={() => setDeletingAsset(undefined)}
+                      className="flex-1 px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold transition-all border border-slate-200/60 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 active:scale-95 shadow-sm text-sm uppercase tracking-wide flex items-center justify-center cursor-pointer"
                     >
                       Отмена
                     </button>
                     <button
                       type="button"
-                      className="flex-1 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-black uppercase tracking-wider text-[10px] sm:text-xs transition-colors shadow-[0_4px_16px_rgba(239,68,68,0.25)] hover:shadow-[0_4px_20px_rgba(239,68,68,0.35)]"
                       onClick={confirmDelete}
+                      className="flex-1 px-4 py-3 rounded-2xl bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-bold transition-all shadow-[0_4px_16px_rgba(244,63,94,0.3)] hover:shadow-[0_4px_20px_rgba(244,63,94,0.4)] flex items-center justify-center text-sm uppercase tracking-wide cursor-pointer"
                     >
                       Удалить
                     </button>
                   </div>
-                </Dialog.Panel>
-              </Transition.Child>
+                </motion.div>
+              </Dialog.Panel>
             </div>
-          </div>
-        </Dialog>
-      </Transition.Root>
+          </Dialog>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

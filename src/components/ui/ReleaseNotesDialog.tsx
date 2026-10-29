@@ -61,12 +61,11 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
           <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none z-[100]">
             <Dialog.Panel as={Fragment}>
               <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95, y: 100 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="w-full max-w-md transform overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-0 text-left align-middle shadow-2xl border border-slate-200/50 dark:border-white/10 relative pointer-events-auto flex flex-col max-h-[90dvh] sm:max-h-[90vh]"
+                initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: 'easeInOut' } }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+                className="w-full max-w-md overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl p-0 text-left align-middle shadow-2xl border border-slate-200/50 dark:border-white/10 relative pointer-events-auto flex flex-col max-h-[90dvh] sm:max-h-[90vh] transform-gpu will-change-[transform,opacity]"
               >
                 {/* Header Graphic */}
                 <div className="relative pt-8 pb-6 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent shrink-0">

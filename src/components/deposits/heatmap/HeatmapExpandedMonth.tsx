@@ -78,11 +78,11 @@ export function HeatmapExpandedMonth({
       />
       
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-        className="relative z-10 w-full max-w-[420px] bg-white dark:bg-[#111315] rounded-[1.75rem] shadow-[0_32px_80px_rgba(0,0,0,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.7)] border border-white/60 dark:border-white/10 flex flex-col p-5 sm:p-5 lg:p-6 overflow-visible mx-auto pointer-events-auto"
+        initial={{ opacity: 0, y: 48, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
+        transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+        className="relative z-10 w-full max-w-[420px] bg-white dark:bg-[#111315] rounded-[1.75rem] shadow-[0_32px_80px_rgba(0,0,0,0.15)] dark:shadow-[0_32px_80px_rgba(0,0,0,0.7)] border border-white/60 dark:border-white/10 flex flex-col p-5 sm:p-5 lg:p-6 overflow-visible mx-auto pointer-events-auto transform-gpu will-change-[transform,opacity]"
         onClick={(e) => {
           e.stopPropagation();
           setSelectedDay(null);

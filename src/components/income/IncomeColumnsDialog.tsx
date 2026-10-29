@@ -1,7 +1,7 @@
-import React, { useState, useId, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useId, useEffect, Fragment } from 'react';
+import { Dialog } from '@headlessui/react';
 import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
-import { X, Save, Plus, Trash2, GripVertical, Columns } from 'lucide-react';
+import { X, Save, Plus, Trash2, GripVertical } from 'lucide-react';
 import { IncomeColumnDef } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -120,11 +120,7 @@ export function IncomeColumnsDialog({ isOpen, onClose, columns: initialColumns, 
   useEffect(() => {
     if (isOpen) {
       setColumns(initialColumns);
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
   }, [isOpen, initialColumns]);
 
   const handleAdd = () => {
@@ -149,29 +145,27 @@ export function IncomeColumnsDialog({ isOpen, onClose, columns: initialColumns, 
     onClose();
   };
 
-  if (typeof document === 'undefined') return null;
-
-  return createPortal(
+  return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-y-0 right-0 left-0 md:left-68 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
+        <Dialog as="div" className="relative z-[100]" open={true} onClose={onClose} static>
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm pointer-events-auto"
+            className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
             aria-hidden="true"
-            onClick={onClose}
           />
-          
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto overflow-hidden"
-          >
+          <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none z-[100]">
+            <Dialog.Panel as={Fragment}>
+              <motion.div
+                initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: 'easeInOut' } }}
+                transition={{ type: 'spring', stiffness: 380, damping: 32, mass: 0.8 }}
+                className="relative bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl w-full max-w-[420px] lg:max-w-[460px] rounded-t-[32px] sm:rounded-[2.5rem] shadow-[0_24px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_24px_50px_rgba(0,0,0,0.5)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] pointer-events-auto overflow-hidden transform-gpu will-change-[transform,opacity]"
+              >
             {/* Decorative Ambient Lighting */}
             <div className="absolute top-[-10%] left-[-10%] w-64 h-64 bg-primary-500/20 dark:bg-primary-500/10 blur-[80px] rounded-full mt-4 ml-4 mix-blend-screen pointer-events-none" />
             <div className="absolute bottom-[-10%] right-[-10%] w-48 h-48 bg-deposit-500/20 dark:bg-deposit-500/10 blur-[80px] rounded-full pointer-events-none" />
@@ -244,10 +238,11 @@ export function IncomeColumnsDialog({ isOpen, onClose, columns: initialColumns, 
               </button>
             </div>
 
-          </motion.div>
-        </div>
+              </motion.div>
+            </Dialog.Panel>
+          </div>
+        </Dialog>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
 }

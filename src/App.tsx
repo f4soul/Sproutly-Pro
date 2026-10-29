@@ -364,7 +364,7 @@ function AppContent() {
           ) : (
             <Layout key="main-layout" activeTab={activeTab} onTabChange={handleNavigation} theme={theme} isLocked={isLocked}>
               <Suspense fallback={
-                <div className="flex-1 w-full flex items-center justify-center min-h-[60vh] pointer-events-none z-30">
+                <div className="absolute inset-x-0 top-[calc(env(safe-area-inset-top,0px)+5rem)] bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] md:inset-y-0 flex items-center justify-center pointer-events-none z-30">
                   <GrainLoader />
                 </div>
               }>

@@ -535,15 +535,21 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
         <Dialog.Panel as={Fragment}>
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 100 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full max-w-xl pointer-events-auto flex flex-col"
-          >
-            <motion.div
-              layout
-              className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] w-full"
+            initial={{ opacity: 0, y: 48, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{
+              opacity: 0,
+              y: 32,
+              scale: 0.98,
+              transition: { duration: 0.18, ease: "easeInOut" },
+            }}
+            transition={{
+              type: "spring",
+              damping: 32,
+              stiffness: 380,
+              mass: 0.8,
+            }}
+            className="bg-white dark:bg-slate-950 rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800/50 flex flex-col h-auto max-h-[90dvh] sm:max-h-[90vh] w-full max-w-xl pointer-events-auto transform-gpu will-change-[transform,opacity]"
           >
             <div className="px-6 py-5 sm:px-8 sm:py-6 border-b border-slate-200 dark:border-slate-800 flex flex-col gap-3 shrink-0">
               <div className="flex items-center justify-between">
@@ -1156,7 +1162,6 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               className="absolute inset-0 pointer-events-none z-[120] [&>div]:pointer-events-auto"
             />
           </motion.div>
-          </motion.div>
         </Dialog.Panel>
       </div>
 
@@ -1182,11 +1187,21 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
               <Dialog.Panel as={Fragment}>
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 100 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 100 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] sm:p-8"
+                  initial={{ opacity: 0, y: 48, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    y: 32,
+                    scale: 0.98,
+                    transition: { duration: 0.18, ease: "easeInOut" },
+                  }}
+                  transition={{
+                    type: "spring",
+                    damping: 32,
+                    stiffness: 380,
+                    mass: 0.8,
+                  }}
+                  className="bg-white dark:bg-slate-950 w-full max-w-sm rounded-t-[32px] sm:rounded-[32px] shadow-2xl border border-slate-200 dark:border-slate-800/50 flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+24px)] sm:p-8 transform-gpu will-change-[transform,opacity]"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Check, Info, AlertCircle } from 'lucide-react';
 import { SproutlySpinner } from './SproutlySpinner';
 import { PwaUpdateToast } from './ReloadPrompt';
+import { usePwaUpdate } from '../../lib/pwaUpdate';
 import { cn } from '../../lib/utils';
 import { Toast } from '../../types';
 
@@ -16,11 +17,24 @@ export const ToastContainer = ({
   isLocked?: boolean;
 }) => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { needRefresh } = usePwaUpdate();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 640);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const checkModal = () => {
+      setIsModalOpen(Boolean(document.querySelector('[role="dialog"]')));
+    };
+    checkModal();
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
   }, []);
 
   const visibleToasts = isLocked
@@ -34,8 +48,8 @@ export const ToastContainer = ({
         isLocked ? "z-[99995]" : "z-[9999]"
       )}
     >
-      <AnimatePresence>
-        {!isLocked && <PwaUpdateToast isMobile={isMobile} />}
+      <AnimatePresence mode="popLayout">
+        {!isLocked && !isModalOpen && needRefresh && <PwaUpdateToast key="pwa-update-toast" isMobile={isMobile} />}
         {visibleToasts.map(toast => {
           const isError = toast.type === 'error';
           const isLoading = toast.type === 'loading';
