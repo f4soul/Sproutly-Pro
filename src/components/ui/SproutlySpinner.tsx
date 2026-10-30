@@ -43,7 +43,7 @@ export const SproutlySpinner: React.FC<SproutlySpinnerProps> = ({
         aria-label="Загрузка"
       >
         <div
-          className="w-full h-full rounded-full will-change-transform"
+          className="w-full h-full rounded-full transform-gpu will-change-transform"
           style={{
             background:
               'conic-gradient(from 0deg, var(--color-primary-500, #3b82f6) 0%, var(--color-cash-500, #10b981) 20%, var(--color-crypto-500, #f59e0b) 40%, var(--color-invest-500, #06b6d4) 60%, var(--color-deposit-500, #14b8a6) 80%, transparent 100%)',
@@ -51,12 +51,13 @@ export const SproutlySpinner: React.FC<SproutlySpinnerProps> = ({
             mask: `radial-gradient(farthest-side, transparent calc(100% - ${strokeWidth}px), #000 calc(100% - ${strokeWidth}px + 0.5px))`,
             animation: 'sproutly-spin 1.2s linear infinite',
             transformOrigin: '50% 50%',
+            backfaceVisibility: 'hidden',
           }}
         />
         <style>{`
           @keyframes sproutly-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% { transform: translateZ(0) rotate(0deg); }
+            100% { transform: translateZ(0) rotate(360deg); }
           }
         `}</style>
       </div>
@@ -73,10 +74,11 @@ export const SproutlySpinner: React.FC<SproutlySpinnerProps> = ({
       aria-label="Загрузка"
     >
       <div
-        className="w-full h-full will-change-transform"
+        className="w-full h-full transform-gpu will-change-transform"
         style={{
           transformOrigin: '50% 50%',
           animation: 'sproutly-spin 2s linear infinite',
+          backfaceVisibility: 'hidden',
         }}
       >
         <svg
@@ -117,10 +119,10 @@ export const SproutlySpinner: React.FC<SproutlySpinnerProps> = ({
       <style>{`
         @keyframes sproutly-spin {
           0% {
-            transform: rotate(0deg);
+            transform: translateZ(0) rotate(0deg);
           }
           100% {
-            transform: rotate(360deg);
+            transform: translateZ(0) rotate(360deg);
           }
         }
         @keyframes sproutly-sweep {

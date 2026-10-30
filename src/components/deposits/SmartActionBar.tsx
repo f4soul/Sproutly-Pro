@@ -1,5 +1,5 @@
 import React, { Fragment, useState, useRef, useEffect } from 'react';
-import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet, Download, ArrowDownUp, Calendar, Check, RotateCcw } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Plus, FileText, Image as ImageIcon, FileSpreadsheet, Download, ArrowDownUp, ArrowUp, ArrowDown, Calendar, Check, RotateCcw } from 'lucide-react';
 import { Transition, Popover, Portal } from '@headlessui/react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
@@ -609,7 +609,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                             leaveFrom="opacity-100 scale-100"
                             leaveTo="opacity-0 scale-95"
                           >
-                            <Popover.Panel anchor="bottom start" className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 outline-none z-[100] mt-1.5 flex flex-col gap-1">
+                            <Popover.Panel anchor={{ to: 'bottom start', gap: 6, padding: 12 }} className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-1.5 outline-none z-[100] flex flex-col gap-1">
                               {({ close }) => (
                                 <>
                                   <button
@@ -718,7 +718,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                       {/* Mobile & Portrait Tablet Sort Dropdown */}
                       <Popover className="relative shrink-0 z-50 portrait:block hidden">
                         <Popover.Button className={cn(
-                          "flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-2.5 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95",
+                          "relative flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-2.5 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95",
                           sortConfig 
                             ? "text-deposit-600 dark:text-deposit-400 border-deposit-500/30 bg-deposit-500/5 dark:bg-deposit-500/10" 
                             : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800"
@@ -727,6 +727,9 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         >
                           <ArrowDownUp className="w-3 h-3 stroke-[2px]" />
                           <span className="hidden md:inline-block text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Сортировка</span>
+                          {sortConfig && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-deposit-500 rounded-full border-2 border-white dark:border-slate-900 shadow-[0_0_8px_rgba(20,184,166,0.5)]" />
+                          )}
                         </Popover.Button>
                         <Transition
                           as={Fragment}
@@ -737,7 +740,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                           leaveFrom="opacity-100 scale-100"
                           leaveTo="opacity-0 scale-95"
                         >
-                          <Popover.Panel anchor="bottom start" className="w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50 mt-1">
+                          <Popover.Panel anchor={{ to: 'bottom end', gap: 6, padding: 12 }} className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
                                <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-2 pt-1">Сортировка</h4>
                               <div className="flex flex-col gap-0.5">
                                 {[
@@ -750,18 +753,20 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                                     key={`sort-mobile-${item.key}`}
                                     onClick={() => requestSort(item.key as any)}
                                     className={cn(
-                                      "flex items-center justify-between p-2 rounded-xl transition-all cursor-pointer group active:scale-95",
+                                      "flex items-center justify-between px-2 h-8 rounded-xl transition-all cursor-pointer group active:scale-95",
                                       sortConfig?.key === item.key
-                                        ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400"
+                                        ? "bg-deposit-50 dark:bg-deposit-500/10 text-deposit-600 dark:text-deposit-400 font-bold"
                                         : "hover:bg-slate-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300"
                                     )}
                                   >
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-[1px]">{item.label}</span>
                                     {sortConfig?.key === item.key && (
-                                      <div className="flex items-center gap-1.5">
-                                        <span className="text-[8px] font-bold bg-white dark:bg-black/20 px-1.5 py-0.5 rounded-md shadow-sm">
-                                          {sortConfig.direction === 'asc' ? 'По возраст.' : 'По убыв.'}
-                                        </span>
+                                      <div className="w-4 h-4 rounded-md flex items-center justify-center shrink-0 bg-deposit-500/15 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400">
+                                        {sortConfig.direction === 'asc' ? (
+                                          <ArrowUp className="w-2.5 h-2.5 stroke-[2.5px]" />
+                                        ) : (
+                                          <ArrowDown className="w-2.5 h-2.5 stroke-[2.5px]" />
+                                        )}
                                       </div>
                                     )}
                                   </button>
@@ -840,7 +845,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         leaveFrom="opacity-100 scale-100"
                         leaveTo="opacity-0 scale-95"
                       >
-                        <Popover.Panel anchor="bottom end" className="w-36 bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50 mt-1">
+                        <Popover.Panel anchor={{ to: 'bottom end', gap: 6, padding: 12 }} className="w-36 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border border-slate-200/50 dark:border-white/[0.08] rounded-2xl shadow-2xl p-2 outline-none z-50">
                           <h4 className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 px-1">Экспорт</h4>
                           <div className="flex flex-col gap-1">
                             <button 

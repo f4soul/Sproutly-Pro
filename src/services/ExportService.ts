@@ -243,7 +243,6 @@ export const exportIncomeToXLSX = async (months: any[], year: number, totals: an
 };
 
 export const buildExportContainer = async (elementId: string | null, summary?: any, deposits?: Deposit[], incomeData?: { months: any[], totals: any }) => {
-  const XLSX = await import('xlsx-js-style');
   const isDark = document.documentElement.classList.contains('dark');
   const backgroundColor = isDark ? '#0f172a' : '#ffffff';
   const textColor = isDark ? '#f8fafc' : '#0f172a';
@@ -255,11 +254,12 @@ export const buildExportContainer = async (elementId: string | null, summary?: a
   else container.classList.remove('dark');
   
   container.style.position = 'fixed'; 
-  container.style.left = '0';
+  container.style.left = '-9999px';
   container.style.top = '0';
   container.style.width = '1200px';
   container.style.zIndex = '-9999';
   container.style.pointerEvents = 'none';
+  container.style.contain = 'layout paint style';
   container.style.backgroundColor = backgroundColor;
   container.style.color = textColor;
   container.style.padding = '60px';
@@ -457,9 +457,9 @@ export const buildExportContainer = async (elementId: string | null, summary?: a
   return { container, backgroundColor };
 };
 
+const yieldToFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+
 export const exportToPDF = async (elementId: string | null, summary?: any, deposits?: Deposit[], incomeData?: { months: any[], totals: any }) => {
-  const { jsPDF } = await import("jspdf");
-  const htmlToImage = await import("html-to-image");
   const toastId = 'export-pdf';
   const element = elementId ? document.getElementById(elementId) : null;
   if (!element && !deposits && !incomeData) {
@@ -471,21 +471,30 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
   showToast('Формирование PDF...', 'loading', { id: toastId, duration: Infinity });
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await yieldToFrame();
+    const [{ jsPDF }, htmlToImage] = await Promise.all([
+      import("jspdf"),
+      import("html-to-image"),
+      new Promise(resolve => setTimeout(resolve, 400))
+    ]);
+
     const { container, backgroundColor } = await buildExportContainer(elementId, summary, deposits, incomeData);
+    await yieldToFrame();
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
       pixelRatio: 2,
-      skipAutoScale: true
+      skipAutoScale: true,
+      skipFonts: true
     });
     
     document.body.removeChild(container);
+    await yieldToFrame();
 
     const img = new Image();
     img.src = dataUrl;
     await new Promise(resolve => img.onload = resolve);
+    await yieldToFrame();
 
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -516,12 +525,14 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
     // Render subsequent pages
     const PADDING_TOLERANCE_PX = 70; // чуть больше bottom-padding контейнера (60px), с небольшим запасом
     while (heightLeftPx > PADDING_TOLERANCE_PX) {
+      await yieldToFrame();
       positionMm -= pdfHeight;
       pdf.addPage();
       pdf.addImage(dataUrl, 'PNG', 0, positionMm, renderWidthMm, renderHeightMm);
       heightLeftPx -= pageHeightPx;
     }
     
+    await yieldToFrame();
     pdf.save(`export_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     
     showToast('PDF успешно сохранен', 'success', { id: toastId });
@@ -534,7 +545,6 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
 };
 
 export const exportToImage = async (elementId: string | null, deposits?: Deposit[], summary?: any, incomeData?: any) => {
-  const htmlToImage = await import("html-to-image");
   const toastId = 'export-image';
   const element = elementId ? document.getElementById(elementId) : null;
   if (!element && !deposits) {
@@ -546,17 +556,24 @@ export const exportToImage = async (elementId: string | null, deposits?: Deposit
   showToast('Формирование изображения...', 'loading', { id: toastId, duration: Infinity });
 
   try {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
+    await yieldToFrame();
+    const [htmlToImage] = await Promise.all([
+      import("html-to-image"),
+      new Promise(resolve => setTimeout(resolve, 400))
+    ]);
+
     const { container, backgroundColor } = await buildExportContainer(elementId, undefined, deposits, undefined);
+    await yieldToFrame();
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
       pixelRatio: 2,
-      skipAutoScale: true
+      skipAutoScale: true,
+      skipFonts: true
     });
     
     document.body.removeChild(container);
+    await yieldToFrame();
 
     const link = document.createElement('a');
     link.download = `export_${format(new Date(), 'yyyy-MM-dd')}.png`;
