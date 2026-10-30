@@ -7,7 +7,7 @@ import { CashAsset } from "../../types";
 import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
 import { CashForm } from "./CashForm";
-import { cn, formatCurrency, getPlural } from "../../lib/utils";
+import { cn, formatCurrency, getPlural, parseISOLocalDate } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import {
   getExchangeRates,
@@ -240,15 +240,15 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
               onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}
               renderAggregate={() => {
-                const { totalAmount, totalConvertedRub, totalContributedRub, currentRate, hasDynamics, profitValue, profitPercent } = aggregate;
+                const { totalAmount, totalConvertedRub, currentRate, hasDynamics, profitPercent } = aggregate;
                 const isPositive = profitPercent >= 0;
 
                 return (
                   <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
               
-                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20">
+                    <div className="absolute top-5 right-4 z-20 flex flex-col items-end gap-1.5">
+                      <span className="text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20 leading-none inline-flex items-center">
                         {group.length} {getPlural(group.length, ['счет', 'счета', 'счетов'])}
                       </span>
                     </div>
@@ -259,49 +259,44 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       </div>
               
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
-                          Наличные {groupKey}
+                        <h4 className="flex items-center text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none mt-0.5">
+                          <span className="inline-flex items-center leading-none">Наличные {groupKey}</span>
                         </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 tabular-nums">
-                          <PrivacyBlur isPrivate={isPrivate}>
-                            <span className="tabular-nums">{formatCurrency(totalAmount, groupKey)}</span>
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2 px-0.5 tabular-nums leading-none">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
+                            {formatCurrency(totalAmount, groupKey)}
                           </PrivacyBlur>
                         </div>
                       </div>
                     </div>
               
                     <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                          ИТОГО ({groupKey})
-                        </span>
+                      <div className="flex flex-col justify-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs leading-none">
+                          <span className="inline-flex items-center font-bold leading-none text-slate-400 dark:text-slate-500">В рублях:</span>
+                          <PrivacyBlur
+                            isPrivate={isPrivate}
+                            className="inline-flex items-center font-black leading-none text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap tabular-nums"
+                          >
+                            {formatCurrency(totalConvertedRub, "RUB")}
+                          </PrivacyBlur>
+                        </div>
                         
-                        <div className="flex flex-col mt-0.5 gap-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
-                            <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
-                              <PrivacyBlur isPrivate={isPrivate}>
-                                <span className="tabular-nums">{formatCurrency(totalConvertedRub, "RUB")}</span>
-                              </PrivacyBlur>
+                        {groupKey !== "RUB" && currentRate > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-bold leading-none">
+                            <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
+                            <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                              {currentRate.toFixed(2)} ₽
                             </span>
                           </div>
-                          
-                          {groupKey !== "RUB" && currentRate > 0 && (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
-                                {currentRate.toFixed(2)} ₽
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
               
                       {hasDynamics && profitPercent !== 0 && (
-                        <div className="flex items-center pt-1">
+                        <div className="flex items-center">
                           <span className={cn(
-                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
+                            "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border leading-none inline-flex items-center",
                             isPositive 
                               ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                               : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -321,24 +316,34 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 let hasDynamics = false;
                 let isPositive = true;
                 let currentRate = 0;
-                if (asset.currency !== "RUB" && asset.exchangeRateOnOpen && rates) {
+                if (asset.currency !== "RUB" && rates) {
                   const valute = rates?.Valute?.[asset.currency];
                   if (valute) {
                     currentRate = valute.Value / valute.Nominal;
-                    percentageChange = ((currentRate - asset.exchangeRateOnOpen) / asset.exchangeRateOnOpen) * 100;
-                    hasDynamics = true;
-                    isPositive = percentageChange >= 0;
+                    if (asset.exchangeRateOnOpen) {
+                      percentageChange = ((currentRate - asset.exchangeRateOnOpen) / asset.exchangeRateOnOpen) * 100;
+                      hasDynamics = true;
+                      isPositive = percentageChange >= 0;
+                    }
                   }
                 }
+
+                const parsedPurchaseDate = asset.currency !== "RUB" ? parseISOLocalDate(asset.purchaseDate) : null;
+                const formattedPurchaseDate = parsedPurchaseDate
+                  ? `${String(parsedPurchaseDate.getDate()).padStart(2, "0")}.${String(parsedPurchaseDate.getMonth() + 1).padStart(2, "0")}.${parsedPurchaseDate.getFullYear()}`
+                  : null;
+
+                const hasPurchaseRate = asset.currency !== "RUB" && Boolean(asset.exchangeRateOnOpen && asset.exchangeRateOnOpen > 0);
+                const showCbrRate = group.length === 1 && asset.currency !== "RUB" && currentRate > 0;
 
                 return (
                   <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     {hasDynamics && percentageChange !== 0 && (
-                      <div className="absolute top-4 right-4 z-20">
+                      <div className="absolute top-5 right-4 z-20 flex items-center">
                         <span className={cn(
-                          "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
+                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border leading-none inline-flex items-center",
                           isPositive 
                             ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                             : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -354,13 +359,23 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight mt-0.5">
-                          {asset.name}
+                        <h4 className="flex items-center flex-wrap gap-y-1 text-xs font-bold leading-none mt-0.5">
+                          <span className="inline-flex items-center text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none">
+                            {asset.name}
+                          </span>
+                          {formattedPurchaseDate && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 mx-2 shrink-0 -translate-y-[0.5px]" />
+                              <span className="inline-flex items-center text-slate-400 dark:text-slate-500 tabular-nums tracking-normal leading-none">
+                                {formattedPurchaseDate}
+                              </span>
+                            </>
+                          )}
                         </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-1.5 px-0.5 tabular-nums">
-                          <PrivacyBlur isPrivate={isPrivate}>
-                            <span className="tabular-nums">{formatCurrency(asset.amount, asset.currency)}</span>
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2 px-0.5 tabular-nums leading-none">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
+                            {formatCurrency(asset.amount, asset.currency)}
                           </PrivacyBlur>
                         </div>
 
@@ -373,30 +388,48 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                          НАЛИЧНЫЕ
-                        </span>
-                        
-                        <div className="flex flex-col mt-0.5 gap-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">В рублях:</span>
-                            <span className="text-xs sm:text-sm font-black text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap">
-                              <PrivacyBlur isPrivate={isPrivate}>
-                                <span className="tabular-nums">{formatCurrency(convertedRub, "RUB")}</span>
-                              </PrivacyBlur>
-                            </span>
-                          </div>
-                          
-                          {group.length === 1 && asset.currency !== "RUB" && currentRate > 0 && (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
-                                {currentRate.toFixed(2)} ₽
-                              </span>
-                            </div>
-                          )}
+                      <div className="flex flex-col justify-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs leading-none">
+                          <span className="inline-flex items-center font-bold leading-none text-slate-400 dark:text-slate-500">В рублях:</span>
+                          <PrivacyBlur
+                            isPrivate={isPrivate}
+                            className="inline-flex items-center font-black leading-none text-cash-500 dark:text-cash-400 tracking-tight whitespace-nowrap tabular-nums"
+                          >
+                            {formatCurrency(convertedRub, "RUB")}
+                          </PrivacyBlur>
                         </div>
+                        
+                        {(hasPurchaseRate || showCbrRate) && (
+                          <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-bold leading-none">
+                            {hasPurchaseRate && showCbrRate ? (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Покупка:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                                  {asset.exchangeRateOnOpen!.toFixed(2)} ₽
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-0.5 shrink-0 -translate-y-[0.5px]" />
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">ЦБ:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                                  {currentRate.toFixed(2)} ₽
+                                </span>
+                              </>
+                            ) : hasPurchaseRate ? (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс покупки:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                                  {asset.exchangeRateOnOpen!.toFixed(2)} ₽
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс ЦБ:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
+                                  {currentRate.toFixed(2)} ₽
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">

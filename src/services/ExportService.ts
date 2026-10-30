@@ -248,23 +248,32 @@ export const buildExportContainer = async (elementId: string | null, summary?: a
   const textColor = isDark ? '#f8fafc' : '#0f172a';
   const borderColor = isDark ? '#1e293b' : '#e2e8f0';
 
+  const wrapper = document.createElement('div');
+  wrapper.id = 'export-staging-wrapper';
+  wrapper.style.position = 'fixed';
+  wrapper.style.left = '-10000px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '1200px';
+  wrapper.style.zIndex = '-9999';
+  wrapper.style.pointerEvents = 'none';
+  wrapper.style.overflow = 'hidden';
+
   const container = document.createElement('div');
   container.id = 'export-container';
   if (isDark) container.classList.add('dark');
   else container.classList.remove('dark');
   
-  container.style.position = 'fixed'; 
-  container.style.left = '-9999px';
+  container.style.position = 'relative';
+  container.style.left = '0';
   container.style.top = '0';
   container.style.width = '1200px';
-  container.style.zIndex = '-9999';
-  container.style.pointerEvents = 'none';
-  container.style.contain = 'layout paint style';
+  container.style.boxSizing = 'border-box';
   container.style.backgroundColor = backgroundColor;
   container.style.color = textColor;
   container.style.padding = '60px';
   container.style.fontFamily = '"Inter", system-ui, -apple-system, sans-serif';
-  document.body.appendChild(container);
+  wrapper.appendChild(container);
+  document.body.appendChild(wrapper);
 
   const header = document.createElement('div');
   header.style.display = 'flex';
@@ -454,7 +463,7 @@ export const buildExportContainer = async (elementId: string | null, summary?: a
     container.appendChild(table);
   }
 
-  return { container, backgroundColor };
+  return { container, wrapper, backgroundColor };
 };
 
 const yieldToFrame = () => new Promise<void>(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
@@ -470,6 +479,7 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
 
   showToast('Формирование PDF...', 'loading', { id: toastId, duration: Infinity });
 
+  let wrapperToCleanup: HTMLElement | null = null;
   try {
     await yieldToFrame();
     const [{ jsPDF }, htmlToImage] = await Promise.all([
@@ -478,17 +488,31 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
       new Promise(resolve => setTimeout(resolve, 400))
     ]);
 
-    const { container, backgroundColor } = await buildExportContainer(elementId, summary, deposits, incomeData);
+    const { container, wrapper, backgroundColor } = await buildExportContainer(elementId, summary, deposits, incomeData);
+    wrapperToCleanup = wrapper;
     await yieldToFrame();
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
       pixelRatio: 2,
       skipAutoScale: true,
-      skipFonts: true
+      skipFonts: true,
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      style: {
+        position: 'relative',
+        left: '0',
+        top: '0',
+        right: 'auto',
+        bottom: 'auto',
+        inset: '0',
+        margin: '0',
+        transform: 'none'
+      }
     });
     
-    document.body.removeChild(container);
+    wrapper.remove();
+    wrapperToCleanup = null;
     await yieldToFrame();
 
     const img = new Image();
@@ -518,16 +542,23 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
     let heightLeftPx = imgHeightPx;
     let positionMm = 0;
 
+    const fillPageBackground = () => {
+      pdf.setFillColor(backgroundColor);
+      pdf.rect(0, 0, pdfWidth, pdfHeight, 'F');
+    };
+
     // Render first page
+    fillPageBackground();
     pdf.addImage(dataUrl, 'PNG', 0, positionMm, renderWidthMm, renderHeightMm);
     heightLeftPx -= pageHeightPx;
 
     // Render subsequent pages
-    const PADDING_TOLERANCE_PX = 70; // чуть больше bottom-padding контейнера (60px), с небольшим запасом
+    const PADDING_TOLERANCE_PX = 130; // pixelRatio(2) * 60px bottom-padding контейнера + запас
     while (heightLeftPx > PADDING_TOLERANCE_PX) {
       await yieldToFrame();
       positionMm -= pdfHeight;
       pdf.addPage();
+      fillPageBackground();
       pdf.addImage(dataUrl, 'PNG', 0, positionMm, renderWidthMm, renderHeightMm);
       heightLeftPx -= pageHeightPx;
     }
@@ -541,6 +572,10 @@ export const exportToPDF = async (elementId: string | null, summary?: any, depos
     logger.error('Error exporting to PDF:', error);
     showToast('Ошибка при формировании PDF', 'error', { id: toastId });
     return false;
+  } finally {
+    if (wrapperToCleanup) {
+      wrapperToCleanup.remove();
+    }
   }
 };
 
@@ -555,6 +590,7 @@ export const exportToImage = async (elementId: string | null, deposits?: Deposit
 
   showToast('Формирование изображения...', 'loading', { id: toastId, duration: Infinity });
 
+  let wrapperToCleanup: HTMLElement | null = null;
   try {
     await yieldToFrame();
     const [htmlToImage] = await Promise.all([
@@ -562,17 +598,31 @@ export const exportToImage = async (elementId: string | null, deposits?: Deposit
       new Promise(resolve => setTimeout(resolve, 400))
     ]);
 
-    const { container, backgroundColor } = await buildExportContainer(elementId, undefined, deposits, undefined);
+    const { container, wrapper, backgroundColor } = await buildExportContainer(elementId, summary, deposits, incomeData);
+    wrapperToCleanup = wrapper;
     await yieldToFrame();
 
     const dataUrl = await htmlToImage.toPng(container, {
       backgroundColor,
       pixelRatio: 2,
       skipAutoScale: true,
-      skipFonts: true
+      skipFonts: true,
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+      style: {
+        position: 'relative',
+        left: '0',
+        top: '0',
+        right: 'auto',
+        bottom: 'auto',
+        inset: '0',
+        margin: '0',
+        transform: 'none'
+      }
     });
     
-    document.body.removeChild(container);
+    wrapper.remove();
+    wrapperToCleanup = null;
     await yieldToFrame();
 
     const link = document.createElement('a');
@@ -585,6 +635,10 @@ export const exportToImage = async (elementId: string | null, deposits?: Deposit
     logger.error('Error exporting to image:', error);
     showToast('Ошибка при формировании изображения', 'error', { id: toastId });
     return false;
+  } finally {
+    if (wrapperToCleanup) {
+      wrapperToCleanup.remove();
+    }
   }
 };
 
