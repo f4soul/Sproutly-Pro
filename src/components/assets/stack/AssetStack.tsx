@@ -53,12 +53,12 @@ export function AssetStack<T>({
           {/* Peeking cards for stack effect */}
           {items.length > 1 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[19] translate-y-2 scale-[0.96] group-hover:translate-y-2.5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/75 dark:bg-slate-900/80 border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[19] translate-y-2 scale-[0.96] group-hover:translate-y-2.5"
             />
           )}
           {items.length > 2 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[18] translate-y-4 scale-[0.92] group-hover:translate-y-5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/55 dark:bg-slate-900/60 border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[18] translate-y-4 scale-[0.92] group-hover:translate-y-5"
             />
           )}
         </div>

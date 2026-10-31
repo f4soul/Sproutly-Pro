@@ -337,7 +337,12 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 const showCbrRate = group.length === 1 && asset.currency !== "RUB" && currentRate > 0;
 
                 return (
-                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
+                  <div className={cn(
+                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden",
+                    group.length === 1
+                      ? "bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl"
+                      : "bg-slate-50/60 dark:bg-slate-950/40"
+                  )}>
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     {hasDynamics && percentageChange !== 0 && (
@@ -359,13 +364,13 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="flex items-center flex-wrap gap-y-1 text-xs font-bold leading-none mt-0.5">
-                          <span className="inline-flex items-center text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-none">
-                            {asset.name}
+                        <h4 className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs font-bold leading-none mt-0.5">
+                          <span className="inline-flex items-center text-slate-500 dark:text-slate-400 uppercase tracking-widest -mr-[0.1em] leading-none">
+                            {asset.name.trim()}
                           </span>
                           {formattedPurchaseDate && (
                             <>
-                              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 mx-2 shrink-0 -translate-y-[0.5px]" />
+                              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 shrink-0" />
                               <span className="inline-flex items-center text-slate-400 dark:text-slate-500 tabular-nums tracking-normal leading-none">
                                 {formattedPurchaseDate}
                               </span>
@@ -407,7 +412,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                                 <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                   {asset.exchangeRateOnOpen!.toFixed(2)} ₽
                                 </span>
-                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-0.5 shrink-0 -translate-y-[0.5px]" />
+                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-0.5 shrink-0" />
                                 <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">ЦБ:</span>
                                 <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
                                   {currentRate.toFixed(2)} ₽

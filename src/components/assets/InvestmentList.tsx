@@ -318,7 +318,12 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                 let isPositive = profitPercent >= 0;
 
                 return (
-                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl border border-slate-200/50 dark:border-white/[0.05] hover:border-invest-500/30 dark:hover:border-invest-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden">
+                  <div className={cn(
+                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] hover:border-invest-500/30 dark:hover:border-invest-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden",
+                    group.length === 1
+                      ? "bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl"
+                      : "bg-slate-50/60 dark:bg-slate-950/40"
+                  )}>
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-invest-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
