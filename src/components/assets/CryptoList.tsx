@@ -8,7 +8,7 @@ import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { auth } from "../../config/firebase";
 import { CryptoForm } from "./CryptoForm";
 import { CryptoLogo } from "./CryptoLogo";
-import { cn, formatCurrency, getPlural } from "../../lib/utils";
+import { cn, formatCurrency, getPlural, parseISOLocalDate } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
 import { getCryptoRates, getCryptoRate, CryptoRates } from "../../services/crypto";
 import { AssetStack } from "./stack/AssetStack";
@@ -197,17 +197,35 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
               getItemKey={(asset) => String(asset.id)}
               renderAggregate={() => {
                 const ticker = groupKey;
-                const { totalContributed, totalQuantity, totalCurrent, profitValue, profitPercent } = aggregate;
+                const { totalContributed, totalQuantity, totalCurrent, profitPercent } = aggregate;
                 const isPositive = profitPercent >= 0;
-                const hasDynamics = Boolean(getCryptoRate(ticker, 'rub', rates));
                 const currentRate = getCryptoRate(ticker, 'rub', rates);
+                const hasDynamics = Boolean(currentRate);
+                const cleanTotalQuantity = Number(totalQuantity.toFixed(8));
+
+                const formatUsdtValue = (val: number) =>
+                  val.toLocaleString('ru-RU', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: val < 1 ? 4 : 2,
+                  });
+
+                const marketRateLabel = currentRate
+                  ? ticker.trim().toUpperCase() === 'USDT'
+                    ? `${currentRate.toFixed(2)} ₽`
+                    : (() => {
+                        const usdRate = getCryptoRate(ticker, 'usd', rates);
+                        return usdRate
+                          ? `${formatUsdtValue(usdRate)} USDT`
+                          : formatCurrency(currentRate, 'RUB');
+                      })()
+                  : null;
               
                 return (
                   <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/95 dark:bg-slate-950/95 border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden">
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
               
-                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                      <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20">
+                    <div className="absolute top-5 right-4 z-20 flex flex-col items-end gap-1.5">
+                      <span className="text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20 leading-none inline-flex items-center">
                         {group.length} {getPlural(group.length, ['позиция', 'позиции', 'позиций'])}
                       </span>
                     </div>
@@ -218,54 +236,52 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                       </div>
               
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
-                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                            {ticker} <span className="font-medium lowercase ml-1">({totalQuantity})</span>
+                        <h4 className="flex items-center gap-x-2 text-xs font-bold leading-none mt-0.5">
+                          <span className="inline-flex items-center text-slate-500 dark:text-slate-400 uppercase tracking-widest -mr-[0.1em] leading-none">
+                            {ticker}
                           </span>
-                        </div>
+                        </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
-                          <PrivacyBlur isPrivate={isPrivate}>
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2 px-0.5 tabular-nums leading-none">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
                             {formatCurrency(totalCurrent)}
+                          </PrivacyBlur>
+                        </div>
+
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 tabular-nums leading-none mt-1.5 px-0.5">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
+                            {cleanTotalQuantity} {ticker}
                           </PrivacyBlur>
                         </div>
                       </div>
                     </div>
               
                     <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                          Итого ({ticker})
-                        </span>
-                        <div className="flex flex-col mt-0.5 gap-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                            <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
-                              <PrivacyBlur isPrivate={isPrivate}>
-                                {formatCurrency(totalContributed)}
-                              </PrivacyBlur>
+                      <div className="flex flex-col justify-center gap-1.5 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs leading-none">
+                          <span className="inline-flex items-center font-bold leading-none text-slate-400 dark:text-slate-500">Вложено:</span>
+                          <PrivacyBlur
+                            isPrivate={isPrivate}
+                            className="inline-flex items-center font-black leading-none text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap tabular-nums"
+                          >
+                            {formatCurrency(totalContributed)}
+                          </PrivacyBlur>
+                        </div>
+
+                        {hasDynamics && marketRateLabel && (
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold leading-none whitespace-nowrap">
+                            <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс:</span>
+                            <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums">
+                              {marketRateLabel}
                             </span>
                           </div>
-                          {hasDynamics && currentRate && (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
-                                {ticker === 'USDT' 
-                                  ? formatCurrency(currentRate) 
-                                  : (() => {
-                                      const usdRate = getCryptoRate(ticker, 'usd', rates);
-                                      return usdRate ? usdRate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT" : formatCurrency(currentRate);
-                                    })()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
               
                       {hasDynamics && profitPercent !== 0 && (
-                        <div className="flex items-center pt-1">
+                        <div className="flex items-center shrink-0">
                           <span className={cn(
-                            "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
+                            "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border leading-none inline-flex items-center",
                             isPositive 
                               ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
                               : "text-rose-500 bg-rose-500/10 border-rose-500/20"
@@ -279,14 +295,83 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                 );
               }}
               renderItem={(asset) => {
+                const tickerUpper = asset.ticker.trim().toUpperCase();
+                const isUsdt = tickerUpper === 'USDT';
                 const contributedRub = asset.amount;
                 const liveRateRub = getCryptoRate(asset.ticker, 'rub', rates);
                 const currentRub = liveRateRub ? asset.quantity * liveRateRub : (asset.currentValue ?? asset.amount);
                 const hasDynamics = Boolean(liveRateRub);
                 
-                let profitValue = currentRub - contributedRub;
-                let profitPercent = hasDynamics && contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
-                let isPositive = profitPercent >= 0;
+                const profitValue = currentRub - contributedRub;
+                const profitPercent = hasDynamics && contributedRub > 0 ? (profitValue / contributedRub) * 100 : 0;
+                const isPositive = profitPercent >= 0;
+
+                const parsedPurchaseDate = parseISOLocalDate(asset.purchaseDate);
+                const formattedPurchaseDate = parsedPurchaseDate
+                  ? `${String(parsedPurchaseDate.getDate()).padStart(2, "0")}.${String(parsedPurchaseDate.getMonth() + 1).padStart(2, "0")}.${parsedPurchaseDate.getFullYear()}`
+                  : null;
+
+                // Извлекаем курс покупки из штатного поля purchaseRate либо из legacy-комментария вида «Курс покупки: 78 634.6»
+                let extractedLegacyRate: number | undefined;
+                let cleanComment = asset.comment || "";
+                if (cleanComment) {
+                  const match = cleanComment.match(/курс\s*покупки\s*[:\-—]?\s*([0-9]+(?:[\s.,][0-9]+)*)/i);
+                  if (match) {
+                    const parsed = Number(match[1].replace(/\s+/g, "").replace(",", "."));
+                    if (!isNaN(parsed) && parsed > 0) {
+                      extractedLegacyRate = parsed;
+                      cleanComment = cleanComment
+                        .replace(match[0], "")
+                        .replace(/^[\s,;•\-—]+|[\s,;•\-—]+$/g, "")
+                        .trim();
+                    }
+                  }
+                }
+
+                const formatUsdtValue = (val: number) =>
+                  val.toLocaleString('ru-RU', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: val < 1 ? 4 : 2,
+                  });
+
+                const effectivePurchaseRate =
+                  asset.purchaseRate && asset.purchaseRate > 0
+                    ? asset.purchaseRate
+                    : extractedLegacyRate && extractedLegacyRate > 0
+                      ? extractedLegacyRate
+                      : isUsdt && asset.quantity > 0 && asset.amount > 0
+                        ? asset.amount / asset.quantity
+                        : undefined;
+
+                const showMarketRate = group.length === 1 && Boolean(liveRateRub);
+                const liveUsdRate = !isUsdt ? getCryptoRate(asset.ticker, 'usd', rates) : null;
+
+                // Форматирование строк курсов:
+                // - Для USDT: оба курса в ₽ (Покупка: 82.48 ₽ • Курс: 80.24 ₽)
+                // - Для остальных монет: оба курса в USDT с единым суффиксом USDT в конце (Покупка: 78 634,6 • Курс: 77 358 USDT)
+                const purchaseRateNumStr =
+                  effectivePurchaseRate !== undefined
+                    ? isUsdt
+                      ? `${effectivePurchaseRate.toFixed(2)} ₽`
+                      : formatUsdtValue(effectivePurchaseRate)
+                    : null;
+
+                const purchaseRateStandaloneLabel =
+                  effectivePurchaseRate !== undefined
+                    ? isUsdt
+                      ? `${effectivePurchaseRate.toFixed(2)} ₽`
+                      : `${formatUsdtValue(effectivePurchaseRate)} USDT`
+                    : null;
+
+                const marketRateStandaloneLabel = showMarketRate
+                  ? isUsdt && liveRateRub
+                    ? `${liveRateRub.toFixed(2)} ₽`
+                    : liveUsdRate
+                      ? `${formatUsdtValue(liveUsdRate)} USDT`
+                      : null
+                  : null;
+
+                const cleanAssetQuantity = Number(asset.quantity.toFixed(8));
 
                 return (
                   <div className={cn(
@@ -298,17 +383,17 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     {hasDynamics && profitPercent !== 0 && (
-                    <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
-                      <span className={cn(
-                        "text-[9px] font-black tracking-tight px-2 py-0.5 rounded-lg shadow-sm tabular-nums border",
-                        isPositive 
-                          ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
-                          : "text-rose-500 bg-rose-500/10 border-rose-500/20"
-                      )}>
-                        {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
-                      </span>
-                    </div>
-                  )}
+                      <div className="absolute top-5 right-4 z-20 flex items-center">
+                        <span className={cn(
+                          "text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm tabular-nums border leading-none inline-flex items-center",
+                          isPositive 
+                            ? "text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20" 
+                            : "text-rose-500 bg-rose-500/10 border-rose-500/20"
+                        )}>
+                          {isPositive ? "+" : ""}{profitPercent.toFixed(2)}%
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-start gap-3.5 min-w-0 pr-16 mt-1">
                       <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700/50 flex items-center justify-center shrink-0 shadow-sm overflow-hidden p-1">
@@ -316,55 +401,83 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mt-0.5 mb-1.5">
-                          <span className="font-extrabold text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest leading-tight truncate">
-                            {asset.ticker} <span className="font-medium lowercase ml-1">({asset.quantity})</span>
+                        <h4 className="flex items-center gap-x-2 text-xs font-bold leading-none mt-0.5 whitespace-nowrap">
+                          <span className="inline-flex items-center text-slate-500 dark:text-slate-400 uppercase tracking-widest -mr-[0.1em] leading-none">
+                            {asset.ticker.trim()}
                           </span>
-                        </div>
+                          {formattedPurchaseDate && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600 shrink-0" />
+                              <span className="inline-flex items-center text-slate-400 dark:text-slate-500 tabular-nums tracking-normal leading-none">
+                                {formattedPurchaseDate}
+                              </span>
+                            </>
+                          )}
+                        </h4>
                         
-                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight px-0.5 tabular-nums">
-                          <PrivacyBlur isPrivate={isPrivate}>
+                        <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight mt-2 px-0.5 tabular-nums leading-none">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
                             {formatCurrency(currentRub)}
                           </PrivacyBlur>
                         </div>
 
-                        {asset.comment && (
-                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1 font-normal w-full" title={asset.comment}>
-                            {asset.comment}
+                        <div className="text-xs font-bold text-slate-400 dark:text-slate-500 tabular-nums leading-none mt-1.5 px-0.5">
+                          <PrivacyBlur isPrivate={isPrivate} className="inline-flex items-center leading-none tabular-nums">
+                            {cleanAssetQuantity} {asset.ticker.trim()}
+                          </PrivacyBlur>
+                        </div>
+
+                        {cleanComment && (
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate italic mt-1.5 px-0.5 font-normal w-full" title={cleanComment}>
+                            {cleanComment}
                           </p>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-widest">
-                          КРИПТОАКТИВ
-                        </span>
-                        <div className="flex flex-col mt-0.5 gap-1.5">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">Вложено:</span>
-                            <span className="text-xs sm:text-sm font-black text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap">
-                              <PrivacyBlur isPrivate={isPrivate}>
-                                {formatCurrency(asset.amount)}
-                              </PrivacyBlur>
-                            </span>
-                          </div>
-                          
-                          {group.length === 1 && liveRateRub ? (
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">Курс:</span>
-                              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 tabular-nums whitespace-nowrap">
-                                {asset.ticker === 'USDT' 
-                                  ? formatCurrency(liveRateRub) 
-                                  : (() => {
-                                      const usdRate = getCryptoRate(asset.ticker, 'usd', rates);
-                                      return usdRate ? usdRate.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " USDT" : formatCurrency(liveRateRub);
-                                    })()}
-                              </span>
-                            </div>
-                          ) : null}
+                    <div className="mt-4 pt-3 border-t border-slate-200/40 dark:border-white/[0.04] flex items-center justify-between relative z-10 gap-2">
+                      <div className="flex flex-col justify-center gap-1.5 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap text-xs leading-none">
+                          <span className="inline-flex items-center font-bold leading-none text-slate-400 dark:text-slate-500">Вложено:</span>
+                          <PrivacyBlur
+                            isPrivate={isPrivate}
+                            className="inline-flex items-center font-black leading-none text-crypto-500 dark:text-crypto-400 tracking-tight whitespace-nowrap tabular-nums"
+                          >
+                            {formatCurrency(asset.amount)}
+                          </PrivacyBlur>
                         </div>
+                        
+                        {(purchaseRateStandaloneLabel || marketRateStandaloneLabel) && (
+                          <div className="flex items-center gap-1.5 text-[10px] font-bold leading-none whitespace-nowrap">
+                            {purchaseRateNumStr && marketRateStandaloneLabel ? (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Покупка:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums">
+                                  {purchaseRateNumStr}
+                                </span>
+                                <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600 mx-0.5 shrink-0" />
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums">
+                                  {marketRateStandaloneLabel}
+                                </span>
+                              </>
+                            ) : purchaseRateStandaloneLabel ? (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс покупки:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums">
+                                  {purchaseRateStandaloneLabel}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="inline-flex items-center leading-none text-slate-400 dark:text-slate-500">Курс:</span>
+                                <span className="inline-flex items-center leading-none text-slate-500 dark:text-slate-400 tabular-nums">
+                                  {marketRateStandaloneLabel}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">

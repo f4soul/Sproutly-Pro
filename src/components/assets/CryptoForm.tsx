@@ -27,17 +27,43 @@ interface CryptoFormProps {
   assetToEdit?: CryptoAsset;
 }
 
+function extractLegacyCommentRate(comment?: string): { rate?: number; cleanComment: string } {
+  if (!comment) return { cleanComment: "" };
+  const match = comment.match(/курс\s*покупки\s*[:\-—]?\s*([0-9]+(?:[\s.,][0-9]+)*)/i);
+  if (!match) return { cleanComment: comment };
+  const rawNum = match[1].replace(/\s+/g, "").replace(",", ".");
+  const parsed = Number(rawNum);
+  if (isNaN(parsed) || parsed <= 0) return { cleanComment: comment };
+  const cleaned = comment
+    .replace(match[0], "")
+    .replace(/^[\s,;•\-—]+|[\s,;•\-—]+$/g, "")
+    .trim();
+  return { rate: parsed, cleanComment: cleaned };
+}
+
 export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   const comboboxRef = useRef<HTMLDivElement>(null);
+
+  const initialLegacy = assetToEdit && !assetToEdit.purchaseRate
+    ? extractLegacyCommentRate(assetToEdit.comment)
+    : null;
+
   const [formData, setFormData] = useState<Partial<CryptoAsset>>(
-    assetToEdit || {
-      ticker: "",
-      quantity: 0,
-      amount: 0,
-      comment: "",
-      purchaseDate: new Date().toISOString().split('T')[0],
-    },
+    assetToEdit
+      ? {
+          ...assetToEdit,
+          purchaseRate: assetToEdit.purchaseRate ?? initialLegacy?.rate,
+          comment: initialLegacy?.rate !== undefined ? initialLegacy.cleanComment : assetToEdit.comment,
+        }
+      : {
+          ticker: "",
+          quantity: 0,
+          amount: 0,
+          purchaseRate: undefined,
+          comment: "",
+          purchaseDate: new Date().toISOString().split('T')[0],
+        },
   );
 
   const [query, setQuery] = useState("");
@@ -52,6 +78,12 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   const [amountStr, setAmountStr] = useState<string>(
     assetToEdit ? assetToEdit.amount.toString() : "",
   );
+  const [purchaseRateStr, setPurchaseRateStr] = useState<string>(() => {
+    const initialRate = assetToEdit?.purchaseRate ?? initialLegacy?.rate;
+    return initialRate !== undefined && initialRate !== null && initialRate > 0
+      ? initialRate.toString()
+      : "";
+  });
   const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
 
   const filteredTickers = query === "" 
@@ -369,6 +401,59 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
                       </button>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                    {formData.ticker?.trim().toUpperCase() === "USDT"
+                      ? "Курс покупки, ₽ (Опционально)"
+                      : "Курс покупки, USDT (Опционально)"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={purchaseRateStr}
+                      onChange={(e) => {
+                        const typed = e.target.value;
+                        const normalized = typed.replace(/\s+/g, "").replace(",", ".");
+                        if (/^[0-9]*[.]?[0-9]*$/.test(normalized) || typed === "") {
+                          setPurchaseRateStr(typed);
+                          const parsed = typed.trim() === "" ? undefined : Number(normalized);
+                          if (parsed === undefined || !isNaN(parsed)) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              purchaseRate: parsed,
+                            }));
+                          }
+                        }
+                      }}
+                      className={cn("apple-input w-full tabular-nums text-sm", Boolean(purchaseRateStr) && "pr-9")}
+                      placeholder={
+                        formData.ticker?.trim().toUpperCase() === "USDT"
+                          ? (formData.amount && formData.quantity && formData.quantity > 0
+                              ? `Авторасчет: ${(formData.amount / formData.quantity).toFixed(2)}`
+                              : "Например, 82.48")
+                          : "Например, 78 634.6"
+                      }
+                    />
+                    {Boolean(purchaseRateStr) && (
+                      <div className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                        <ClearButton
+                          onClick={() => {
+                            setPurchaseRateStr("");
+                            setFormData((prev) => ({ ...prev, purchaseRate: undefined }));
+                          }}
+                          title="Очистить курс покупки"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-500/80 px-1">
+                    {formData.ticker?.trim().toUpperCase() === "USDT"
+                      ? "Если оставить пустым, рассчитывается автоматически из суммы и количества"
+                      : "Курс приобретения монеты в пересчете на USDT"}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

@@ -271,7 +271,12 @@ export async function syncWithFirebase() {
                 const localCashUpdate = cash.updatedAt || 0;
                 if (localCashUpdate > remoteCashUpdate || (localCashUpdate === 0 && !remoteCashMap.has(firestoreDocId))) {
                   await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
-                    ...data, currency: data.currency || 'RUB', userId: user.uid, isDeleted: deleteField(), updatedAt: localCashUpdate === 0 ? Date.now() : localCashUpdate
+                    ...data,
+                    exchangeRateOnOpen: data.exchangeRateOnOpen ?? deleteField(),
+                    currency: data.currency || 'RUB',
+                    userId: user.uid,
+                    isDeleted: deleteField(),
+                    updatedAt: localCashUpdate === 0 ? Date.now() : localCashUpdate
                   }), { merge: true });
                 }
               } catch (error) {
@@ -335,7 +340,11 @@ export async function syncWithFirebase() {
                 const localCryptoUpdate = crypto.updatedAt || 0;
                 if (localCryptoUpdate > remoteCryptoUpdate || (localCryptoUpdate === 0 && !remoteCryptoMap.has(firestoreDocId))) {
                   await setDoc(doc(firestore, path, firestoreDocId), stripUndefined({
-                    ...data, userId: user.uid, isDeleted: deleteField(), updatedAt: localCryptoUpdate === 0 ? Date.now() : localCryptoUpdate
+                    ...data,
+                    purchaseRate: data.purchaseRate ?? deleteField(),
+                    userId: user.uid,
+                    isDeleted: deleteField(),
+                    updatedAt: localCryptoUpdate === 0 ? Date.now() : localCryptoUpdate
                   }), { merge: true });
                 }
               } catch (error) {
