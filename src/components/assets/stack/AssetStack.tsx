@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@headlessui/react';
 import { X } from 'lucide-react';
@@ -6,8 +6,8 @@ import { cn } from '../../../lib/utils';
 
 interface AssetStackProps<T> {
   items: T[];
-  isExpanded: boolean;
-  onToggle: () => void;
+  isExpanded?: boolean;
+  onToggle?: () => void;
   renderAggregate: () => React.ReactNode;
   renderItem: (item: T, index: number) => React.ReactNode;
   getItemKey: (item: T) => string;
@@ -29,6 +29,23 @@ export function AssetStack<T>({
   groupSubtitle,
   groupIcon
 }: AssetStackProps<T>) {
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = isExpanded !== undefined ? isExpanded : internalExpanded;
+
+  const handleToggle = () => {
+    if (onToggle) {
+      onToggle();
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
+  };
+
+  useEffect(() => {
+    if (items.length <= 1 && internalExpanded) {
+      setInternalExpanded(false);
+    }
+  }, [items.length, internalExpanded]);
+
   if (items.length === 1) {
     return (
       <div className="w-full">
@@ -42,23 +59,23 @@ export function AssetStack<T>({
       <div className="w-full">
         {/* Aggregate Card / Group Header */}
         <div 
-          className="relative w-full cursor-pointer group isolate z-20 hover:-translate-y-1 transition-transform duration-300"
-          onClick={onToggle}
+          className="relative w-full cursor-pointer group isolate z-20 pointer-fine:hover:-translate-y-1 transition-transform duration-300"
+          onClick={handleToggle}
           style={{ marginBottom: `${Math.min(items.length - 1, 2) * 8}px` }}
         >
-          <div className="relative z-20 w-full transition-all duration-300">
+          <div className="relative z-20 w-full">
             {renderAggregate()}
           </div>
           
           {/* Peeking cards for stack effect */}
           {items.length > 1 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/75 dark:bg-slate-900/80 border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[19] translate-y-2 scale-[0.96] group-hover:translate-y-2.5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/75 dark:bg-slate-900/80 border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-transform duration-300 z-[19] translate-y-2 scale-[0.96] pointer-fine:group-hover:translate-y-2.5"
             />
           )}
           {items.length > 2 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/55 dark:bg-slate-900/60 border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-all duration-300 z-[18] translate-y-4 scale-[0.92] group-hover:translate-y-5"
+              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/55 dark:bg-slate-900/60 border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-transform duration-300 z-[18] translate-y-4 scale-[0.92] pointer-fine:group-hover:translate-y-5"
             />
           )}
         </div>
@@ -66,8 +83,8 @@ export function AssetStack<T>({
 
       {/* Expanded Modal */}
       <AnimatePresence>
-        {isExpanded && (
-          <Dialog as="div" className="relative z-[100]" open={isExpanded} onClose={onToggle} static>
+        {expanded && (
+          <Dialog as="div" className="relative z-[100]" open={expanded} onClose={handleToggle} static>
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end pointer-fine:items-center justify-center p-0 pointer-fine:p-4 pointer-events-none">
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -75,7 +92,7 @@ export function AssetStack<T>({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/70 cursor-pointer pointer-events-auto"
-                onClick={onToggle}
+                onClick={handleToggle}
               />
               <Dialog.Panel as={Fragment}>
                 <motion.div 
@@ -99,7 +116,7 @@ export function AssetStack<T>({
                       )}
                     </div>
                     <button 
-                      onClick={onToggle}
+                      onClick={handleToggle}
                       className="w-9 h-9 shrink-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer relative z-20"
                     >
                       <X className="w-5 h-5 text-slate-500" />

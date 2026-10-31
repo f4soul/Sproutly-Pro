@@ -27,7 +27,6 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   const [deletingAsset, setDeletingAsset] = useState<CashAsset | undefined>();
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [rates, setRates] = useState<CurrencyRates | null>(null);
-  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   React.useEffect(() => {
     getExchangeRates().then(setRates);
@@ -113,14 +112,6 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
-    const currency = deletingAsset.currency;
-    
-    if (expandedGroupKey === currency) {
-      const groupData = groupedAssets.find(g => g.key === currency);
-      if (groupData && groupData.items.length === 2) {
-        setExpandedGroupKey(null);
-      }
-    }
     
     try {
       await db.cashAssets.delete(id as any);
@@ -186,7 +177,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                       key={currency} 
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-cash-500/20 rounded-xl text-xs font-bold tabular-nums text-slate-900 dark:text-cash-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_12px_rgba(16,185,129,0.1)]"
                     >
-                      <span className="w-2 h-2 rounded-full bg-cash-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-cash-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                       <PrivacyBlur isPrivate={isPrivate}>
                         {formatCurrency(amount, currency)}
                       </PrivacyBlur>
@@ -236,16 +227,14 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                   <Vault className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2px]" />
                 </div>
               }
-              isExpanded={expandedGroupKey === groupKey}
-              onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}
               renderAggregate={() => {
                 const { totalAmount, totalConvertedRub, currentRate, hasDynamics, profitPercent } = aggregate;
                 const isPositive = profitPercent >= 0;
 
                 return (
-                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
-                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/95 dark:bg-slate-950/95 border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
               
                     <div className="absolute top-5 right-4 z-20 flex flex-col items-end gap-1.5">
                       <span className="text-[10px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-cash-500 dark:text-cash-400 bg-cash-500/10 border-cash-500/20 leading-none inline-flex items-center">
@@ -338,12 +327,12 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
 
                 return (
                   <div className={cn(
-                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] hover:border-cash-500/30 dark:hover:border-cash-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden",
+                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] pointer-fine:hover:border-cash-500/30 dark:pointer-fine:hover:border-cash-500/20 shadow-sm pointer-fine:hover:shadow-md transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden",
                     group.length === 1
-                      ? "bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl"
+                      ? "bg-white/80 dark:bg-slate-950/60"
                       : "bg-slate-50/60 dark:bg-slate-950/40"
                   )}>
-                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     {hasDynamics && percentageChange !== 0 && (
                       <div className="absolute top-5 right-4 z-20 flex items-center">

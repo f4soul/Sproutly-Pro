@@ -24,7 +24,6 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
   const [deletingAsset, setDeletingAsset] = useState<CryptoAsset | undefined>();
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [rates, setRates] = useState<CryptoRates | null>(null);
-  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   React.useEffect(() => {
     getCryptoRates().then(setRates);
@@ -98,14 +97,6 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
   const confirmDelete = async () => {
     if (!deletingAsset || deletingAsset.id === undefined || deletingAsset.id === null) return;
     const id = deletingAsset.id;
-    const ticker = deletingAsset.ticker;
-    
-    if (expandedGroupKey === ticker) {
-      const groupData = groupedAssets.find(g => g.key === ticker);
-      if (groupData && groupData.items.length === 2) {
-        setExpandedGroupKey(null);
-      }
-    }
     
     try {
       await db.cryptoAssets.delete(id as any);
@@ -203,8 +194,6 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                   <CryptoLogo ticker={groupKey} className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
               }
-              isExpanded={expandedGroupKey === groupKey}
-              onToggle={() => setExpandedGroupKey(prev => prev === groupKey ? null : groupKey)}
               getItemKey={(asset) => String(asset.id)}
               renderAggregate={() => {
                 const ticker = groupKey;
@@ -214,8 +203,8 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
                 const currentRate = getCryptoRate(ticker, 'rub', rates);
               
                 return (
-                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/90 dark:bg-slate-950/90 backdrop-blur-2xl border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-all duration-300 min-h-[160px] overflow-hidden">
-                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/95 dark:bg-slate-950/95 border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden">
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
               
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
                       <span className="text-[9px] font-black tracking-tight px-2 py-1 rounded-lg shadow-sm uppercase border text-amber-500 dark:text-amber-400 bg-amber-500/10 border-amber-500/20">
@@ -301,12 +290,12 @@ export function CryptoList({ cryptoAssets, isPrivate = false }: CryptoListProps)
 
                 return (
                   <div className={cn(
-                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] hover:border-amber-500/30 dark:hover:border-amber-500/20 shadow-sm hover:shadow-md transition-all duration-300 min-h-[160px] overflow-hidden",
+                    "group relative flex flex-col justify-between p-5 rounded-[1.8rem] border border-slate-200/50 dark:border-white/[0.05] pointer-fine:hover:border-amber-500/30 dark:pointer-fine:hover:border-amber-500/20 shadow-sm pointer-fine:hover:shadow-md transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden",
                     group.length === 1
-                      ? "bg-white/45 dark:bg-slate-950/40 backdrop-blur-xl"
+                      ? "bg-white/80 dark:bg-slate-950/60"
                       : "bg-slate-50/60 dark:bg-slate-950/40"
                   )}>
-                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-amber-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     {hasDynamics && profitPercent !== 0 && (
                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-1.5 pt-1">
