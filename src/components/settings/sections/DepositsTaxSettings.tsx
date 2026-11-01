@@ -134,8 +134,10 @@ export function DepositsTaxSettings() {
                       </div>
                     )}
                     <button
+                      type="button"
+                      aria-label="Удалить период"
                       onClick={(e) => { e.stopPropagation(); setYearToDelete(setting.year); }}
-                      className="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer opacity-100 lg:opacity-40 lg:group-hover:opacity-100"
+                      className="relative p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer opacity-100 lg:opacity-40 lg:group-hover:opacity-100 after:content-[''] after:absolute after:-inset-2"
                     >
                       <Trash2 className="w-4 h-4 stroke-[2px]" />
                     </button>

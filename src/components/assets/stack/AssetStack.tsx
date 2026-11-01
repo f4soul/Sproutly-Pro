@@ -61,6 +61,14 @@ export function AssetStack<T>({
         <div 
           className="relative w-full cursor-pointer group isolate z-20 pointer-fine:hover:-translate-y-1 transition-transform duration-300"
           onClick={handleToggle}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleToggle();
+            }
+          }}
           style={{ marginBottom: `${Math.min(items.length - 1, 2) * 8}px` }}
         >
           <div className="relative z-20 w-full">
@@ -116,8 +124,10 @@ export function AssetStack<T>({
                       )}
                     </div>
                     <button 
+                      type="button"
                       onClick={handleToggle}
-                      className="w-9 h-9 shrink-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer relative z-20"
+                      aria-label="Закрыть"
+                      className="w-9 h-9 shrink-0 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer relative z-20 after:content-[''] after:absolute after:-inset-1.5"
                     >
                       <X className="w-5 h-5 text-slate-500" />
                     </button>

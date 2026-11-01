@@ -323,8 +323,9 @@ export function BentoDashboard({
               </div>
               {setIsPrivate && (
                 <button
+                  type="button"
                   onClick={() => setIsPrivate(!isPrivate)}
-                  className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                  className="relative p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 after:content-[''] after:absolute after:-inset-1.5"
                   title={isPrivate ? "Показать данные" : "Скрыть данные"}
                   data-tour="privacy-toggle"
                 >
@@ -669,7 +670,7 @@ export function BentoDashboard({
                             <div 
                               className={cn(
                                 "flex items-center justify-between gap-2", 
-                                hasSubItems && "cursor-pointer select-none py-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors -mx-1 px-1"
+                                hasSubItems && "relative cursor-pointer select-none py-0.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors -mx-1 px-1 after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-1"
                               )}
                               onClick={hasSubItems ? () => setIsInvestBreakdownOpen(v => !v) : undefined}
                               role={hasSubItems ? "button" : undefined}

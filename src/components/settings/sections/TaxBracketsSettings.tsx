@@ -158,8 +158,10 @@ export function TaxBracketsSettings() {
                     )}
 
                     <button
+                      type="button"
+                      aria-label="Удалить период"
                       onClick={(e) => { e.stopPropagation(); setBracketYearToDelete(year); }}
-                      className="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer opacity-100 lg:opacity-40 lg:group-hover:opacity-100"
+                      className="relative p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer opacity-100 lg:opacity-40 lg:group-hover:opacity-100 after:content-[''] after:absolute after:-inset-2"
                     >
                       <Trash2 className="w-4 h-4 stroke-[2px]" />
                     </button>
@@ -211,9 +213,11 @@ export function TaxBracketsSettings() {
                                 )}
 
                                 <button
+                                  type="button"
+                                  aria-label="Удалить ступень"
                                   onClick={(e) => { e.stopPropagation(); setBracketToDelete({ year, index }); }}
                                   disabled={yearBrackets.length <= 1}
-                                  className="p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all disabled:opacity-30"
+                                  className="relative p-1.5 text-slate-500 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all disabled:opacity-30 after:content-[''] after:absolute after:-inset-2"
                                   title="Удалить ступень"
                                 >
                                   <Trash2 className="w-3.5 h-3.5 stroke-[2px]" />

@@ -204,7 +204,7 @@ export function AdminReleaseSettings() {
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                className="text-[10px] font-bold text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer"
+                className="relative text-[10px] font-bold text-amber-500 hover:text-amber-600 dark:text-amber-400 dark:hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-1.5"
                 title="Сбросить к тексту релиза по умолчанию"
               >
                 <RotateCcw className="w-3 h-3 stroke-[2.2]" />
@@ -231,7 +231,7 @@ export function AdminReleaseSettings() {
                 <button
                   type="button"
                   onClick={() => setPushTitle('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer after:content-[''] after:absolute after:-inset-2"
                   title="Очистить заголовок"
                 >
                   <X className="w-3 h-3 stroke-[2.2]" />
@@ -261,7 +261,7 @@ export function AdminReleaseSettings() {
                 <button
                   type="button"
                   onClick={() => setPushBody('')}
-                  className="absolute right-2 top-2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer"
+                  className="absolute right-2 top-2 p-1 text-slate-400 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400 transition-colors cursor-pointer after:content-[''] after:absolute after:-inset-2"
                   title="Очистить текст сообщения"
                 >
                   <X className="w-3 h-3 stroke-[2.2]" />
@@ -310,7 +310,7 @@ export function AdminReleaseSettings() {
           </div>
 
           {/* Bottom: Target Release Meta & Action Buttons */}
-          <div className="flex flex-col gap-0.5 pt-2.5 border-t border-slate-200/60 dark:border-white/[0.06]">
+          <div className="flex flex-col gap-1 pt-2.5 border-t border-slate-200/60 dark:border-white/[0.06]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">

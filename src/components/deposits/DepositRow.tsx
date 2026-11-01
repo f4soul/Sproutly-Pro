@@ -287,21 +287,25 @@ export const DepositRow: React.FC<DepositRowProps> = React.memo(({
         >
           <div className="flex flex-nowrap items-center justify-center gap-2.5 transition-opacity">
             <button
+              type="button"
+              aria-label="Редактировать"
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(deposit);
               }}
-              onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
+              onPointerDown={(e) => e.stopPropagation()} className="relative p-1.5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-lg text-slate-500 hover:text-primary-600 transition-all cursor-pointer opacity-60 hover:opacity-100 after:content-[''] after:absolute after:-inset-y-2.5 after:-left-2 after:-right-1"
               title="Редактировать"
             >
               <Edit2 className="w-3.5 h-3.5 stroke-[1.5px]" />
             </button>
             <button
+              type="button"
+              aria-label="В архив"
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete(deposit);
               }}
-              onPointerDown={(e) => e.stopPropagation()} className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-600 transition-all cursor-pointer opacity-60 hover:opacity-100"
+              onPointerDown={(e) => e.stopPropagation()} className="relative p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg text-slate-500 hover:text-rose-600 transition-all cursor-pointer opacity-60 hover:opacity-100 after:content-[''] after:absolute after:-inset-y-2.5 after:-left-1 after:-right-2"
               title="В архив"
             >
               <Trash2 className="w-3.5 h-3.5 stroke-[1.5px]" />

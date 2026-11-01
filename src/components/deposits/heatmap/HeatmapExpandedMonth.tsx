@@ -102,8 +102,10 @@ export function HeatmapExpandedMonth({
              </div>
            </div>
            <button 
+             type="button"
+             aria-label="Закрыть"
              onClick={() => { setExpandedMonth(null); setSelectedDay(null); }}
-             className="w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white"
+             className="relative w-10 h-10 flex items-center justify-center bg-slate-100 dark:bg-white/[0.05] hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors text-slate-500 hover:text-slate-950 dark:text-slate-400 dark:hover:text-white after:content-[''] after:absolute after:-inset-1"
            >
              <X className="w-5 h-5" />
            </button>

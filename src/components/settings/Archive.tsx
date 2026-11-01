@@ -35,8 +35,9 @@ export const ArchiveHeaderActions = ({ items }: { items: any[] }) => {
   return (
     <>
       <button
+        type="button"
         onClick={() => setIsClearModalOpen(true)}
-        className="apple-button flex items-center justify-center p-2 lg:p-2.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl transition-all"
+        className="relative apple-button flex items-center justify-center p-2 lg:p-2.5 bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 rounded-xl transition-all after:content-[''] after:absolute after:-inset-1.5"
         title="Очистить"
       >
         <BrushCleaning className="w-4 h-4 text-orange-600 md:w-5 md:h-5 stroke-[1.5px]" />
@@ -169,15 +170,19 @@ export const Archive: React.FC<{ items: any[] }> = ({ items: items }) => {
               
               <div className="flex items-center gap-0.5 shrink-0 mt-1">
                 <button
+                  type="button"
+                  aria-label="Восстановить"
                   onClick={() => handleRestore(deposit.id!)}
-                  className="p-1.5 text-primary-600 hover:bg-primary-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center"
+                  className="relative p-1.5 text-primary-600 hover:bg-primary-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center after:content-[''] after:absolute after:-inset-y-2.5 after:-left-2 after:right-0"
                   title="Восстановить"
                 >
                   <RefreshCcw className="w-4 h-4 stroke-[2px]" />
                 </button>
                 <button
+                  type="button"
+                  aria-label="Удалить навсегда"
                   onClick={() => handlePermanentDelete(deposit.id!)}
-                  className="p-1.5 text-rose-600 hover:bg-rose-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center"
+                  className="relative p-1.5 text-rose-600 hover:bg-rose-500/10 active:scale-95 rounded-xl transition-all cursor-pointer flex justify-center after:content-[''] after:absolute after:-inset-y-2.5 after:left-0 after:-right-2"
                   title="Удалить навсегда"
                 >
                   <Trash2 className="w-4 h-4 stroke-[2px]" />

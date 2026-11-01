@@ -216,16 +216,18 @@ export function ScenarioSimulator({ simulation, onUpdate, bonusBase = 0, average
           <div className="flex items-center gap-2 self-center sm:self-auto shrink-0">
             {simulation.isActive ? (
               <button 
+                type="button"
                 onClick={stopSimulation}
-                className="group flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-slate-100 dark:bg-white/5 hover:bg-rose-500/10 text-slate-700 dark:text-white hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all border border-slate-200 dark:border-white/10 hover:border-rose-500/20 active:scale-95"
+                className="relative group flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-slate-100 dark:bg-white/5 hover:bg-rose-500/10 text-slate-700 dark:text-white hover:text-rose-500 dark:hover:text-rose-400 rounded-xl transition-all border border-slate-200 dark:border-white/10 hover:border-rose-500/20 active:scale-95 after:content-[''] after:absolute after:-inset-1.5"
                 title="Остановить симуляцию"
               >
                 <SquareStop size={16} fill="currentColor" className="transition-transform group-hover:scale-110" />
               </button>
             ) : (
               <button 
+                type="button"
                 onClick={startSimulation}
-                className="group flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-all shadow-[0_0_20px_rgba(var(--rgb-primary),0.3)] hover:shadow-[0_0_25px_rgba(var(--rgb-primary),0.5)] active:scale-95"
+                className="relative group flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 bg-primary-500 hover:bg-primary-600 text-white rounded-xl transition-all shadow-[0_0_20px_rgba(var(--rgb-primary),0.3)] hover:shadow-[0_0_25px_rgba(var(--rgb-primary),0.5)] active:scale-95 after:content-[''] after:absolute after:-inset-1.5"
                 title="Запустить симуляцию"
               >
                 <Zap size={16} fill="currentColor" className="transition-transform group-hover:scale-110" />

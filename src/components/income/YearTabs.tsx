@@ -135,16 +135,18 @@ export const YearTabs = ({
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-white/[0.05] shadow-sm p-0.5 gap-0.5 h-9">
             <button
+              type="button"
               onClick={addNewYear}
-              className="flex items-center justify-center w-[30px] h-full text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-800 focus:outline-none"
+              className="relative flex items-center justify-center w-[30px] h-full text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-800 focus:outline-none after:content-[''] after:absolute after:-inset-y-1.5 after:-left-1.5 after:right-0"
               title="Добавить новый год"
             >
               <Plus size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setIsDeleteYearModalOpen(true)}
               disabled={availableYears.length <= 1}
-              className="flex items-center justify-center w-[30px] h-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent focus:outline-none"
+              className="relative flex items-center justify-center w-[30px] h-full text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors rounded-lg hover:bg-white dark:hover:bg-slate-800 disabled:opacity-30 disabled:hover:bg-transparent focus:outline-none after:content-[''] after:absolute after:-inset-y-1.5 after:left-0 after:-right-1.5"
               title="Удалить текущий год"
             >
               <Trash2 size={16} />

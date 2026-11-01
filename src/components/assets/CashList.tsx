@@ -428,25 +428,29 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
 
                       <div className="flex items-center gap-0.5 opacity-70 hover:opacity-100 xl:opacity-0 xl:group-hover:opacity-100 xl:hover:!opacity-100 transition-opacity duration-200 pr-1.5 shrink-0">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
                             setEditingAsset(asset);
                             setIsFormOpen(true);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-cash-500 dark:hover:text-cash-400 hover:bg-cash-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          className="relative p-1.5 text-slate-400 hover:text-cash-500 dark:hover:text-cash-400 hover:bg-cash-500/10 rounded-xl transition-all cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-2.5 after:-left-2.5 after:right-0"
                           title="Редактировать"
+                          aria-label="Редактировать"
                         >
                           <Edit3 size={13.5} className="stroke-[2.5px]" />
                         </button>
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             e.preventDefault();
                             setDeletingAsset(asset);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                          className="relative p-1.5 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-2.5 after:left-0 after:-right-2.5"
                           title="Удалить"
+                          aria-label="Удалить"
                         >
                           <Trash2 size={13.5} className="stroke-[2.5px]" />
                         </button>

@@ -276,21 +276,23 @@ export const DepositCard: React.FC<DepositCardProps> = React.memo(({
 
             <div className="flex justify-end gap-2 mt-2">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(deposit);
                 }}
-                onPointerDown={(e) => e.stopPropagation()} className="apple-button bg-slate-50 dark:bg-slate-800/50 hover:bg-primary-50 dark:hover:bg-deposit-500/10 text-slate-500 hover:text-primary-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                onPointerDown={(e) => e.stopPropagation()} className="relative apple-button bg-slate-50 dark:bg-slate-800/50 hover:bg-primary-50 dark:hover:bg-deposit-500/10 text-slate-500 hover:text-primary-600 flex items-center gap-1.5 px-3 py-1.5 text-xs after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-0.5"
               >
                 <Edit2 className="w-3.5 h-3.5" />
                 Изменить
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete(deposit);
                 }}
-                onPointerDown={(e) => e.stopPropagation()} className="apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs"
+                onPointerDown={(e) => e.stopPropagation()} className="relative apple-button bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 flex items-center gap-1.5 px-3 py-1.5 text-xs after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-0.5"
               >
                 <Trash2 className="w-3.5 h-3.5" />В архив
               </button>

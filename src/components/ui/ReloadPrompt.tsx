@@ -77,7 +77,7 @@ export const PwaUpdateToast = React.forwardRef<HTMLDivElement, { isMobile: boole
                 e.stopPropagation();
                 dismissPwaUpdate();
               }}
-              className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer"
+              className="relative p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer after:content-[''] after:absolute after:-inset-2.5"
               title="Скрыть уведомление"
               aria-label="Скрыть уведомление об обновлении"
             >

@@ -236,8 +236,9 @@ export const BankIconEditor: React.FC<BankIconEditorProps> = ({ bank, onChange }
                  fileInputRef.current.click();
                }
             }}
-            className="absolute top-3 right-3 w-8 h-8 rounded-[12px] bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white shadow-sm border border-white/10 z-30 active:scale-95 transition-all"
+            className="absolute top-3 right-3 w-8 h-8 rounded-[12px] bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white shadow-sm border border-white/10 z-30 active:scale-95 transition-all after:content-[''] after:absolute after:-inset-1.5"
             title="Загрузить новое изображение"
+            aria-label="Загрузить новое изображение"
           >
              <Upload size={14} strokeWidth={2.5} />
           </button>

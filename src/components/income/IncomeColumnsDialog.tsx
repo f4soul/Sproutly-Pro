@@ -66,7 +66,7 @@ function SortableColumn({ col, onUpdate, onRemove }: SortableColumnProps) {
           e.preventDefault();
           controls.start(e);
         }}
-        className="text-slate-400 cursor-grab px-0.5 sm:px-1 active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 pb-[9px] lg:pb-[10px] shrink-0 select-none touch-none"
+        className="relative text-slate-400 cursor-grab px-0.5 sm:px-1 active:cursor-grabbing hover:text-slate-600 dark:hover:text-slate-300 pb-[9px] lg:pb-[10px] shrink-0 select-none touch-none after:content-[''] after:absolute after:-inset-2"
       >
         <GripVertical className="w-5 h-5" />
       </div>
@@ -98,8 +98,9 @@ function SortableColumn({ col, onUpdate, onRemove }: SortableColumnProps) {
       </div>
 
       <button type="button" 
+        aria-label="Удалить столбец"
         onClick={() => onRemove(col.id)}
-        className="w-[38px] lg:w-[40px] h-[38px] lg:h-[40px] text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors shrink-0 flex items-center justify-center"
+        className="relative w-[38px] lg:w-[40px] h-[38px] lg:h-[40px] text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors shrink-0 flex items-center justify-center after:content-[''] after:absolute after:-inset-1"
       >
         <Trash2 className="w-5 h-5" />
       </button>
@@ -177,8 +178,9 @@ export function IncomeColumnsDialog({ isOpen, onClose, columns: initialColumns, 
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium">Пользовательские столбцы</p>
               </div>
               <button type="button"
+                aria-label="Закрыть"
                 onClick={onClose}
-                className="p-2 sm:p-2.5 bg-white/60 hover:bg-white dark:bg-slate-900/60 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-sm border border-slate-200/50 dark:border-white/[0.05]"
+                className="relative p-2 sm:p-2.5 bg-white/60 hover:bg-white dark:bg-slate-900/60 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-sm border border-slate-200/50 dark:border-white/[0.05] after:content-[''] after:absolute after:-inset-1.5"
               >
                 <X className="w-5 h-5" />
               </button>

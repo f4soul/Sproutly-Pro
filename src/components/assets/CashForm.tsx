@@ -114,7 +114,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
                   </h3>
                   <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-xs font-medium mt-1">Информация о наличных сбережениях</p>
                 </div>
-                <button type="button" onClick={() => safeClose()} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4">
+                <button type="button" onClick={() => safeClose()} aria-label="Закрыть" className="relative p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4 after:content-[''] after:absolute after:-inset-1.5">
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
               </div>

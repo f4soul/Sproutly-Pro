@@ -138,7 +138,7 @@ function PremiumAccordionItem({
             aria-checked={checked}
             onClick={(e) => { e.stopPropagation(); onToggle(!checked); if (checked) setIsExpanded(false); }}
             className={cn(
-              "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+              "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1.5",
               checked ? "bg-primary-500" : "bg-[#E9E9EA] dark:bg-[#39393D]"
             )}
           >
@@ -249,8 +249,9 @@ export function IncomeSettingsDialog({
                 <p className="text-[11px] sm:text-xs text-slate-500 mt-1 font-medium">Сконфигурируйте премии под себя</p>
               </div>
               <button type="button"
+                aria-label="Закрыть"
                 onClick={onClose}
-                className="p-2 sm:p-2.5 bg-white/60 hover:bg-white dark:bg-slate-900/60 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-sm border border-slate-200/50 dark:border-white/[0.05]"
+                className="relative p-2 sm:p-2.5 bg-white/60 hover:bg-white dark:bg-slate-900/60 dark:hover:bg-slate-800 rounded-full transition-colors text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shrink-0 shadow-sm border border-slate-200/50 dark:border-white/[0.05] after:content-[''] after:absolute after:-inset-1.5"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -299,7 +300,7 @@ export function IncomeSettingsDialog({
                           aria-checked={applyBaseToAll}
                           onClick={() => setApplyBaseToAll(!applyBaseToAll)}
                           className={cn(
-                            "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+                            "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1.5",
                             applyBaseToAll ? "bg-teal-500 shadow-[0_4px_12px_rgba(20,184,166,0.35)]" : "bg-[#E9E9EA] dark:bg-[#39393D]"
                           )}
                         >

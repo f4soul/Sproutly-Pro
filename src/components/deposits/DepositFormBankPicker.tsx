@@ -118,7 +118,8 @@ export function DepositFormBankPicker({
                     setBankInputMode("text");
                   }, 150);
                 }}
-                className="h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors"
+                className="relative h-8 w-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer transition-colors after:content-[''] after:absolute after:-inset-y-1.5 after:left-0 after:-right-1.5"
+                aria-label="Открыть список банков"
               >
                 <ChevronDown
                   className="h-4 w-4"
@@ -194,8 +195,9 @@ export function DepositFormBankPicker({
                                     handleEditBank(e as any as React.MouseEvent, bank);
                                   }}
                                   onClick={(e) => handleEditBank(e, bank)}
-                                  className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-deposit-500 hover:bg-deposit-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
+                                  className="relative h-7 w-7 flex items-center justify-center text-slate-400 hover:text-deposit-500 hover:bg-deposit-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0 after:content-[''] after:absolute after:-inset-y-1.5 after:-left-1.5 after:-right-0.5"
                                   title="Редактировать банк"
+                                  aria-label="Редактировать банк"
                                 >
                                   <Edit2 size={13} className="stroke-[2px]" />
                                 </button>
@@ -207,8 +209,9 @@ export function DepositFormBankPicker({
                                       bank.id as string | number,
                                     )
                                   }
-                                  className="h-7 w-7 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0"
+                                  className="relative h-7 w-7 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all cursor-pointer z-10 shrink-0 after:content-[''] after:absolute after:-inset-y-1.5 after:-left-0.5 after:-right-1.5"
                                   title="Удалить банк"
+                                  aria-label="Удалить банк"
                                 >
                                   <Trash2 size={13} className="stroke-[2px]" />
                                 </button>

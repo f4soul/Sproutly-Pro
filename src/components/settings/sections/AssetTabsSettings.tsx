@@ -42,7 +42,7 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
       <div className="flex items-center gap-3 sm:gap-4">
         <div
           onPointerDown={(e) => controls.start(e)}
-          className="w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing shrink-0"
+          className="relative w-8 h-8 flex items-center justify-center text-slate-400 dark:text-slate-500 cursor-grab active:cursor-grabbing shrink-0 after:content-[''] after:absolute after:-inset-2"
           style={{ touchAction: 'none' }}
         >
           <GripVertical size={20} />
@@ -54,11 +54,13 @@ function AssetTabRow({ tab, hasAssets, isHidden, onToggle }: AssetTabRowProps) {
       </div>
       <button
         type="button"
+        role="switch"
+        aria-checked={!isHidden}
         disabled={isLocked}
         onClick={() => onToggle(tab)}
         title={isLocked ? "Нельзя скрыть раздел, в котором есть активы" : ""}
         className={cn(
-          "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0",
+          "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1.5",
           !isHidden ? meta.toggleOn : "bg-[#E9E9EA] dark:bg-[#39393D]",
           isLocked ? "opacity-50 cursor-not-allowed" : "cursor-pointer active:scale-95"
         )}

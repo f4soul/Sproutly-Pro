@@ -44,7 +44,7 @@ export const TaxReferenceModal = ({
             </div>
             <h3 className="text-lg sm:text-xl font-bold tracking-tight">Справка: НДФЛ {year}</h3>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4">
+          <button type="button" aria-label="Закрыть" onClick={onClose} className="relative p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-4 -mr-2 sm:-mr-4 after:content-[''] after:absolute after:-inset-1.5">
             <X className="w-5 h-5 text-slate-500" />
           </button>
         </div>

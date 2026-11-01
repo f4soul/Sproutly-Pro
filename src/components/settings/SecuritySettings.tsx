@@ -376,9 +376,11 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                   </div>
                   <button
                     type="button"
+                    role="switch"
+                    aria-checked={!!lockSettings?.useBiometrics}
                     onClick={handleToggleBiometrics}
                     className={cn(
-                      "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95",
+                      "w-10 h-[22px] rounded-full transition-colors duration-200 relative flex items-center p-[2px] outline-none shrink-0 cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-2.5 after:-inset-x-1.5",
                       lockSettings?.useBiometrics ? "bg-primary-500" : "bg-[#E9E9EA] dark:bg-[#39393D]"
                     )}
                   >
@@ -421,7 +423,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                                   showToast('Ошибка сброса устройств', 'error');
                                 }
                               }}
-                              className="text-[8px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
+                              className="relative text-[8px] font-black uppercase tracking-wider text-rose-500 bg-rose-500/10 hover:bg-rose-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-1"
                             >
                               Сбросить остальные
                             </button>
@@ -473,7 +475,7 @@ export function SecuritySettings({ appSettings }: SecuritySettingsProps) {
                               showToast('Ошибка регистрации ключа устройства', 'error');
                             }
                           }}
-                          className="text-[8px] font-black uppercase tracking-wider text-deposit-500 hover:text-deposit-600 transition-colors bg-deposit-500/10 hover:bg-deposit-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none"
+                          className="relative text-[8px] font-black uppercase tracking-wider text-deposit-500 hover:text-deposit-600 transition-colors bg-deposit-500/10 hover:bg-deposit-500/20 px-2 py-1 rounded-md h-6 flex items-center cursor-pointer shadow-sm hover:shadow active:scale-95 transition-all outline-none after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-1"
                         >
                           Привязать это устройство
                         </button>

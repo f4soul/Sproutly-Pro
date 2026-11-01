@@ -52,7 +52,7 @@ function SyncStatusCircle({
       type="button"
       onClick={(e) => onRetry(e)}
       className={cn(
-        "w-9 h-9 p-0 rounded-full flex items-center justify-center border shrink-0 outline-none transition-all duration-300 relative select-none active:scale-95",
+        "w-9 h-9 p-0 rounded-full flex items-center justify-center border shrink-0 outline-none transition-all duration-300 relative select-none active:scale-95 after:content-[''] after:absolute after:-inset-1.5",
         syncStatus === 'error'
           ? "cursor-pointer bg-rose-50/80 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/50 dark:border-rose-500/20 hover:bg-rose-100/90 dark:hover:bg-rose-500/20 shadow-sm"
           : "bg-primary-50/80 dark:bg-primary-500/10 text-primary-600 dark:text-primary-400 border-primary-200/50 dark:border-primary-500/20 shadow-sm",
@@ -409,9 +409,12 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                               close();
                             }}
                             className={cn(
-                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                              "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none after:content-[''] after:absolute after:-inset-y-3 after:-inset-x-2",
                               showTourHints ? "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.3)]" : "bg-slate-200 dark:bg-slate-800"
                             )}
+                            role="switch"
+                            aria-checked={showTourHints}
+                            aria-label="Переключить подсказки"
                           >
                             <span
                               className={cn(
@@ -634,9 +637,12 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
                                   close();
                                 }}
                                 className={cn(
-                                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none after:content-[''] after:absolute after:-inset-y-3 after:-inset-x-2",
                                   showTourHints ? "bg-teal-500 shadow-[0_0_10px_rgba(20,184,166,0.3)]" : "bg-slate-200 dark:bg-slate-800"
                                 )}
+                                role="switch"
+                                aria-checked={showTourHints}
+                                aria-label="Переключить подсказки"
                               >
                                 <span
                                   className={cn(

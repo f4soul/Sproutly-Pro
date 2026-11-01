@@ -71,8 +71,10 @@ export function ReleaseNotesDialog({ isLocked = false }: { isLocked?: boolean })
                 <div className="relative pt-8 pb-6 px-6 overflow-hidden bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent shrink-0">
                   <div className="absolute top-0 right-0 p-4 z-20">
                     <button
+                      type="button"
                       onClick={handleClose}
-                      className="p-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:hover:text-white backdrop-blur-md transition-all active:scale-90 border border-slate-200/50 dark:border-slate-700/50 cursor-pointer"
+                      aria-label="Закрыть"
+                      className="relative p-2 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-500 hover:text-slate-800 dark:hover:text-white backdrop-blur-md transition-all active:scale-90 border border-slate-200/50 dark:border-slate-700/50 cursor-pointer after:content-[''] after:absolute after:-inset-1.5"
                     >
                       <X className="w-4 h-4 stroke-[2.5px]" />
                     </button>

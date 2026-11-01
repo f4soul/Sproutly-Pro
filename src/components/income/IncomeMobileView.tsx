@@ -420,7 +420,7 @@ export function IncomeMobileView({
                   {formatVal(yearlyTotals.totalGross)}
                 </span>
                 <div 
-                  className="flex items-center gap-1 mt-1 cursor-pointer group active:scale-95 transition-transform"
+                  className="relative flex items-center gap-1 mt-1 cursor-pointer group active:scale-95 transition-transform after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-2"
                   onClick={onShowTaxInfo}
                   role="button"
                 >

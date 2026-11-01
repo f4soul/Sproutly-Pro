@@ -116,12 +116,13 @@ export function UnifiedDashboard({ deposits, cashAssets = [], investmentAssets =
 
           <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/50 p-0.5 gap-0.5 relative z-20">
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowYearDropdown(!showYearDropdown);
               }}
               className={cn(
-                "px-2 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl transition-all w-[30px] h-[30px] focus:outline-none",
+                "relative px-2 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 hover:text-primary-600 dark:hover:text-primary-400 rounded-xl transition-all w-[30px] h-[30px] focus:outline-none after:content-[''] after:absolute after:-inset-1.5",
                 showYearDropdown && "bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm"
               )}
               title={`Выбрать год (текущий: ${selectedYear})`}

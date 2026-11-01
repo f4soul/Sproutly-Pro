@@ -35,8 +35,9 @@ export function ClearButton({
         onClick(e);
       }}
       title={title}
+      aria-label={title}
       className={cn(
-        "p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer flex items-center justify-center select-none pointer-events-auto relative z-20",
+        "p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer flex items-center justify-center select-none pointer-events-auto relative z-20 after:content-[''] after:absolute after:-inset-2",
         className
       )}
     >

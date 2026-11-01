@@ -567,7 +567,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                 <button
                   type="button"
                   onClick={() => safeClose()}
-                  className="p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-2 -mr-2 sm:-mr-2"
+                  aria-label="Закрыть"
+                  className="relative p-2 hover:bg-slate-50 dark:hover:bg-white/5 rounded-full transition-all active:scale-90 cursor-pointer -mt-2 -mr-2 sm:-mr-2 after:content-[''] after:absolute after:-inset-1.5"
                 >
                   <X className="w-5 h-5 text-slate-500" />
                 </button>
@@ -916,7 +917,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
                     <button
                       type="button"
                       onClick={() => setShowBankEditor(false)}
-                      className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full"
+                      aria-label="Закрыть настройку банка"
+                      className="relative text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-colors cursor-pointer p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-full after:content-[''] after:absolute after:-inset-1.5"
                     >
                       <X size={18} strokeWidth={2.5} />
                     </button>
@@ -1255,8 +1257,9 @@ function ToggleChip({
     <button
       type="button"
       onClick={() => onChange(!checked)}
+      aria-pressed={checked}
       className={cn(
-        "flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0",
+        "relative flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-0.5",
         checked
           ? "border-deposit-500/30 bg-deposit-500/10 dark:bg-deposit-500/15 text-deposit-700 dark:text-deposit-300 active:scale-95 shadow-[0_2px_12px_rgba(20,184,166,0.15)]"
           : "border-slate-200/60 dark:border-white/[0.08] bg-white/40 dark:bg-slate-900/60 backdrop-blur-md text-slate-500 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/5 active:scale-95 shadow-sm",

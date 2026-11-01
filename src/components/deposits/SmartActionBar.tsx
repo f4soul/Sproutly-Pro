@@ -180,8 +180,10 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
               {searchQuery && (
                 <button 
+                  type="button"
+                  aria-label="Очистить поиск"
                   onClick={() => setSearchQuery('')} 
-                  className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer bg-slate-100/50 dark:bg-white/5 rounded-full"
+                  className="relative p-1.5 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer bg-slate-100/50 dark:bg-white/5 rounded-full after:content-[''] after:absolute after:-inset-2"
                 >
                   <X className="w-3.5 h-3.5 stroke-[2.5px]" />
                 </button>
@@ -419,8 +421,9 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                     
                     {sortConfig && (
                       <button 
+                        type="button"
                         onClick={resetSort}
-                        className="p-1 px-[6px] text-slate-400 hover:text-rose-500 rounded-lg transition-all ml-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/80 flex items-center justify-center cursor-pointer h-full"
+                        className="relative p-1 px-[6px] text-slate-400 hover:text-rose-500 rounded-lg transition-all ml-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/80 flex items-center justify-center cursor-pointer h-full after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-1"
                         title="Сбросить сортировку"
                       >
                         <X className="w-3.5 h-3.5 stroke-[2.5px]" />
@@ -587,7 +590,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         <Popover className="relative shrink-0 z-50">
                           <Popover.Button
                             className={cn(
-                              "flex items-center justify-center gap-1.5 px-2.5 h-[32px] sm:h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md cursor-pointer active:scale-95 select-none focus:outline-none",
+                              "relative flex items-center justify-center gap-1.5 px-2.5 h-[32px] sm:h-8 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border shrink-0 backdrop-blur-md cursor-pointer active:scale-95 select-none focus:outline-none after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-0.5",
                               selectedYear !== null
                                 ? "bg-deposit-500/10 dark:bg-deposit-500/20 text-deposit-600 dark:text-deposit-400 border-deposit-500/30"
                                 : "bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 border-slate-200/60 dark:border-white/[0.05] hover:bg-white dark:hover:bg-slate-800"
@@ -718,7 +721,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                       {/* Mobile & Portrait Tablet Sort Dropdown */}
                       <Popover className="relative shrink-0 z-50 portrait:block hidden">
                         <Popover.Button className={cn(
-                          "relative flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-2.5 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95",
+                          "relative flex items-center justify-center md:gap-1.5 w-[32px] md:w-auto px-0 md:px-2.5 h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-0.5",
                           sortConfig 
                             ? "text-deposit-600 dark:text-deposit-400 border-deposit-500/30 bg-deposit-500/5 dark:bg-deposit-500/10" 
                             : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-800"
@@ -818,8 +821,9 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                         
                         {sortConfig && (
                           <button 
+                            type="button"
                             onClick={resetSort}
-                            className="p-1 px-[6px] text-slate-400 hover:text-rose-500 rounded-lg transition-all ml-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/80 flex items-center justify-center cursor-pointer h-full"
+                            className="relative p-1 px-[6px] text-slate-400 hover:text-rose-500 rounded-lg transition-all ml-0.5 hover:bg-slate-200/50 dark:hover:bg-slate-800/80 flex items-center justify-center cursor-pointer h-full after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-1"
                             title="Сбросить сортировку"
                           >
                             <X className="w-3.5 h-3.5 stroke-[2.5px]" />
@@ -832,7 +836,7 @@ export const SmartActionBar: React.FC<SmartActionBarProps> = ({
                     <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                       {/* Export popover aligned to right */}
                       <Popover className="relative shrink-0 z-50">
-                      <Popover.Button className="flex items-center justify-center p-2 portrait:px-2 portrait:w-[32px] landscape:px-3 landscape:w-auto h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] text-slate-500 hover:text-deposit-600 dark:text-slate-400 dark:hover:text-deposit-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95">
+                      <Popover.Button className="relative flex items-center justify-center p-2 portrait:px-2 portrait:w-[32px] landscape:px-3 landscape:w-auto h-[32px] bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/50 dark:border-white/[0.05] text-slate-500 hover:text-deposit-600 dark:text-slate-400 dark:hover:text-deposit-400 hover:bg-white dark:hover:bg-slate-800 rounded-xl transition-all focus:outline-none cursor-pointer active:scale-95 after:content-[''] after:absolute after:-inset-y-1.5 after:-inset-x-0.5">
                         <Download className="w-3 h-3 stroke-[2px]" />
                         <span className="hidden landscape:inline-block ml-1.5 text-[9px] font-black uppercase tracking-widest leading-none mt-[1px]">Экспорт</span>
                       </Popover.Button>

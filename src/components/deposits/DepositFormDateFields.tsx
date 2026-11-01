@@ -116,8 +116,9 @@ export function DepositFormDateFields({
           <button
             type="button"
             onClick={() => setIsStartDateOpen(!isStartDateOpen)}
-            className="datepicker-toggle-btn-start absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+            className="datepicker-toggle-btn-start absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center after:content-[''] after:absolute after:-inset-1.5"
             title="Выбрать дату"
+            aria-label="Выбрать дату открытия"
           >
             <Calendar className="w-4 h-4 stroke-[1.5px]" />
           </button>
@@ -216,7 +217,7 @@ export function DepositFormDateFields({
               }
             }}
             className={cn(
-              "flex items-center justify-center gap-1.5 h-6 px-2.5 md:w-6 md:h-6 md:px-0 lg:w-auto lg:h-6 lg:px-2.5 rounded-lg border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 active:scale-95 shrink-0",
+              "relative flex items-center justify-center gap-1.5 h-6 px-2.5 md:w-6 md:h-6 md:px-0 lg:w-auto lg:h-6 lg:px-2.5 rounded-lg border transition-all duration-200 select-none cursor-pointer text-[9px] font-bold uppercase tracking-wider min-w-0 active:scale-95 shrink-0 after:content-[''] after:absolute after:-inset-y-2 after:-inset-x-1.5",
               formData.isClosed
                 ? "border-deposit-500/30 bg-deposit-500/10 dark:bg-deposit-500/15 text-deposit-700 dark:text-deposit-300 shadow-[0_2px_12px_rgba(20,184,166,0.15)]"
                 : "border-slate-200/60 dark:border-white/[0.08] bg-white/40 dark:bg-slate-900/60 backdrop-blur-md text-slate-500 dark:text-slate-400 hover:bg-white/80 dark:hover:bg-white/5 shadow-sm"
@@ -292,8 +293,9 @@ export function DepositFormDateFields({
           <button
             type="button"
             onClick={() => setIsEndDateOpen(!isEndDateOpen)}
-            className="datepicker-toggle-btn-end absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center"
+            className="datepicker-toggle-btn-end absolute right-3 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-primary-500 transition-colors rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 active:scale-90 cursor-pointer z-20 flex items-center justify-center after:content-[''] after:absolute after:-inset-1.5"
             title="Выбрать дату"
+            aria-label="Выбрать дату закрытия"
           >
             <CalendarX className="w-4 h-4 stroke-[1.5px]" />
           </button>
