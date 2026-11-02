@@ -44,6 +44,10 @@ const TICKER_TO_BYBIT: Record<string, string> = {
   'SOL': 'SOLUSDT'
 };
 
+export function getCachedCryptoRates(): CryptoRates | null {
+  return cachedCryptoRates;
+}
+
 export async function getCryptoRates(): Promise<CryptoRates | null> {
   const now = Date.now();
   const isSameDay = new Date(lastCryptoFetchTime).toDateString() === new Date().toDateString();

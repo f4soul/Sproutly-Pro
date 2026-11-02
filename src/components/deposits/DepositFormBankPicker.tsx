@@ -128,7 +128,7 @@ export function DepositFormBankPicker({
               </Combobox.Button>
             </div>
           </div>
-          <DropdownPortal targetRef={comboboxRef} matchWidth>
+          <DropdownPortal targetRef={comboboxRef} matchWidth isOpen={open}>
           <Transition
             as={Fragment}
             leave="transition ease-in duration-100"

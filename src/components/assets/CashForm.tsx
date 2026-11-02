@@ -7,7 +7,7 @@ import { db, emitSyncEvent, syncWithFirebase } from "../../config/db";
 import { cn, maskDateInput, toISOLocalDate, parseISOLocalDate } from "../../lib/utils";
 import { auth } from "../../config/firebase";
 import { motion, AnimatePresence } from "motion/react";
-import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { getExchangeRates, getCachedExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
 import { formatCurrency } from "../../lib/taxCalculator";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -36,11 +36,15 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
     },
   );
 
-  const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [rates, setRates] = useState<CurrencyRates | null>(() => getCachedExchangeRates());
   const [isPurchaseDateOpen, setIsPurchaseDateOpen] = useState(false);
 
   useEffect(() => {
-    getExchangeRates().then(setRates);
+    getExchangeRates().then((nextRates) => {
+      if (nextRates) {
+        setRates((prev) => (prev === nextRates ? prev : nextRates));
+      }
+    });
   }, []);
 
   const [amountStr, setAmountStr] = useState<string>(
@@ -91,7 +95,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -301,7 +305,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
                 <div 
                   className={cn(
-                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    "grid",
                     ((formData.amount || 0) > 0 && rates && formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 mt-2 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
                   )}
                 >
@@ -314,7 +318,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
                 <div 
                   className={cn(
-                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    "grid",
                     (formData.currency && formData.currency !== "RUB") ? "grid-rows-[1fr] opacity-100 mt-6 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
                   )}
                 >
@@ -386,7 +390,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
 
                 </div>
               </div>
-              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+              <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950 z-20">
                 <button
                   type="button"
                   onClick={() => safeClose()}

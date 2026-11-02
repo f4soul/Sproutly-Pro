@@ -9,7 +9,7 @@ import { auth } from "../../config/firebase";
 import { InvestmentForm, getBrokerLogoUrl } from "./InvestmentForm";
 import { cn, formatCurrency, getPlural } from "../../lib/utils";
 import { PrivacyBlur } from "../ui/PrivacyBlur";
-import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { getExchangeRates, getCachedExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
 import { BankLogo } from "../deposits/BankLogo";
 import { AssetStack } from "./stack/AssetStack";
 
@@ -23,10 +23,14 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
   const [editingAsset, setEditingAsset] = useState<InvestmentAsset | undefined>();
   const [deletingAsset, setDeletingAsset] = useState<InvestmentAsset | undefined>();
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
-  const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [rates, setRates] = useState<CurrencyRates | null>(() => getCachedExchangeRates());
 
   React.useEffect(() => {
-    getExchangeRates().then(setRates);
+    getExchangeRates().then((nextRates) => {
+      if (nextRates) {
+        setRates((prev) => (prev === nextRates ? prev : nextRates));
+      }
+    });
   }, []);
 
   const activeAssets = useMemo(() => {
@@ -132,10 +136,10 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
     <div className="w-full">
       {/* Header Stats */}
       <div className="relative mb-8">
-        <div className="relative overflow-hidden bg-gradient-to-tr from-white/60 to-white/90 dark:from-slate-900/60 dark:to-slate-950/80 backdrop-blur-2xl rounded-[2rem] p-6 lg:p-8 border border-white/20 dark:border-[rgba(255,255,255,0.05)] shadow-[0_12px_40px_rgba(0,0,0,0.04)] z-10">
+        <div className="relative overflow-hidden bg-gradient-to-tr from-white/95 to-white dark:from-slate-900/95 dark:to-slate-950 rounded-[2rem] p-6 lg:p-8 border border-white/20 dark:border-[rgba(255,255,255,0.05)] shadow-[0_12px_40px_rgba(0,0,0,0.04)] z-10">
           
-        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-invest-500/15 dark:bg-invest-500/5 blur-3xl rounded-full pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary-500/10 dark:bg-primary-500/5 blur-2xl rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 w-72 h-72 bg-invest-500/15 dark:bg-invest-500/5 blur-3xl rounded-full pointer-events-none transform-gpu" />
+        <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-primary-500/10 dark:bg-primary-500/5 blur-2xl rounded-full pointer-events-none transform-gpu" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-5 lg:w-[60%]">
@@ -196,6 +200,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
       </div>
       </div>
 
+      {useMemo(() => (
       <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 lg:gap-6 md:gap-3 sm:gap-2 items-start">
         {groupedAssets.map((groupData) => {
           const { key: groupKey, items: group, aggregate } = groupData;
@@ -430,6 +435,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
           </div>
         )}
       </div>
+      ), [groupedAssets, activeAssets.length, rates, isPrivate])}
 
       <AnimatePresence>
         {isFormOpen && (
@@ -458,7 +464,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
               aria-hidden="true"
             />
             <div className="fixed inset-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -468,7 +474,7 @@ export function InvestmentList({ investmentAssets, isPrivate = false }: Investme
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 32, scale: 0.98, transition: { duration: 0.18, ease: "easeInOut" } }}
                   transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
-                  className="bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-3xl rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 max-w-sm w-full transform-gpu will-change-[transform,opacity]"
+                  className="bg-white dark:bg-[#0B0F19] rounded-t-[2rem] sm:rounded-[2.5rem] shadow-[0_24px_60px_rgba(37,99,235,0.06)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.8)] border border-slate-200/60 dark:border-white/[0.08] flex flex-col pointer-events-auto px-6 pt-6 pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] sm:p-8 max-w-sm w-full transform-gpu will-change-[transform,opacity]"
                 >
                   <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center mb-6 self-center">
                     <Trash2 className="w-6 h-6 text-rose-500 stroke-[1.5px]" />

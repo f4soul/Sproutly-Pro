@@ -36,7 +36,7 @@ import {
 } from "../../lib/banks";
 import { calculateIncome } from "../../lib/depositCalculations";
 import { BankLogo } from "./BankLogo";
-import { getExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
+import { getExchangeRates, getCachedExchangeRates, convertToRub, CurrencyRates } from "../../services/currency";
 import { formatCurrency } from "../../lib/taxCalculator";
 
 import { DepositFormBankPicker } from "./DepositFormBankPicker";
@@ -161,10 +161,14 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     }
   }, [formData.exchangeRateOnOpen]);
 
-  const [rates, setRates] = useState<CurrencyRates | null>(null);
+  const [rates, setRates] = useState<CurrencyRates | null>(() => getCachedExchangeRates());
 
   useEffect(() => {
-    getExchangeRates().then(setRates);
+    getExchangeRates().then((nextRates) => {
+      if (nextRates) {
+        setRates((prev) => (prev === nextRates ? prev : nextRates));
+      }
+    });
   }, []);
 
   const isForeignCurrency = Boolean(
@@ -529,7 +533,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -794,7 +798,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
 
               <div
                 className={cn(
-                  "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                  "grid",
                   isForeignCurrency
                     ? "grid-rows-[1fr] opacity-100 pointer-events-auto"
                     : "grid-rows-[0fr] opacity-0 -mt-4 pointer-events-none"
@@ -1130,7 +1134,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               </div>
             </div>
           </div>
-          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950 z-20">
               <button
                 type="button"
                 onClick={() => safeClose()}
@@ -1183,7 +1187,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+              className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
               aria-hidden="true"
             />
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">

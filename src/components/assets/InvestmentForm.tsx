@@ -129,7 +129,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-900/10 dark:bg-slate-950/80 backdrop-blur-sm"
+        className="fixed inset-y-0 right-0 left-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
         aria-hidden="true"
       />
       <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">
@@ -261,7 +261,8 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                     value={formData.name || ""}
                     onChange={(val) => setFormData((prev) => ({ ...prev, name: val || undefined }))}
                   >
-                    <div ref={comboboxRef} className="relative">
+                    {({ open }) => (
+                    <div ref={comboboxRef} className={cn("relative", open ? "z-[60]" : "z-30")}>
                       <div className="relative w-full cursor-default overflow-hidden bg-transparent text-left focus:outline-none">
                         <Combobox.Input
                           required
@@ -276,7 +277,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                           <ChevronDown className="h-4 w-4 text-slate-400" aria-hidden="true" />
                         </Combobox.Button>
                       </div>
-                      <DropdownPortal targetRef={comboboxRef} matchWidth>
+                      <DropdownPortal targetRef={comboboxRef} matchWidth isOpen={open}>
                       <Transition
                         as={Fragment}
                         leave="transition ease-in duration-100"
@@ -316,6 +317,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                       </Transition>
                       </DropdownPortal>
                     </div>
+                    )}
                   </Combobox>
                 </div>
 
@@ -515,7 +517,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
                 
                 <div 
                   className={cn(
-                    "grid transition-[grid-template-rows,opacity,margin] duration-300 ease-out",
+                    "grid",
                     (formData.type === 'iis' && (formData.iisType === 'A' || formData.iisType === '3')) ? "grid-rows-[1fr] opacity-100 mt-4 pointer-events-auto" : "grid-rows-[0fr] opacity-0 mt-0 pointer-events-none"
                   )}
                 >
@@ -575,7 +577,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
               </div>
               </div>
 
-            <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50/90 dark:bg-slate-950/90 backdrop-blur-xl z-20">
+            <div className="shrink-0 px-5 sm:px-6 pt-5 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:pb-6 flex gap-3 sm:gap-2 sm:flex-row justify-end border-t border-slate-200/50 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-950 z-20">
               <button
                 type="button"
                 onClick={() => safeClose()}

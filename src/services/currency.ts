@@ -35,6 +35,10 @@ try {
   logger.error('Failed to load cached exchange rates from localStorage:', e);
 }
 
+export function getCachedExchangeRates(): CurrencyRates | null {
+  return cachedRates;
+}
+
 export async function getExchangeRates(): Promise<CurrencyRates | null> {
   const now = Date.now();
   const isSameDay = new Date(lastFetchTime).toDateString() === new Date().toDateString();

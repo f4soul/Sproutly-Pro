@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react';
+import React, { Fragment, useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@headlessui/react';
 import { X } from 'lucide-react';
@@ -46,6 +46,18 @@ export function AssetStack<T>({
     }
   }, [items.length, internalExpanded]);
 
+  const renderedModalItems = useMemo(() => {
+    if (!expanded || items.length <= 1) return null;
+    return items.map((item, index) => (
+      <div key={getItemKey(item)} className="relative flex items-stretch ml-1 pl-3">
+        <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-full opacity-60", accentClassName)} />
+        <div className="flex-1 min-w-0">
+          {renderItem(item, index)}
+        </div>
+      </div>
+    ));
+  }, [expanded, items, getItemKey, accentClassName, renderItem]);
+
   if (items.length === 1) {
     return (
       <div className="w-full">
@@ -92,14 +104,14 @@ export function AssetStack<T>({
       {/* Expanded Modal */}
       <AnimatePresence>
         {expanded && (
-          <Dialog as="div" className="relative z-[100]" open={expanded} onClose={handleToggle} static>
+          <Dialog as="div" className="relative z-[100]" open={true} onClose={handleToggle} static>
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end pointer-fine:items-center justify-center p-0 pointer-fine:p-4 pointer-events-none">
               <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/70 cursor-pointer pointer-events-auto"
+                className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/75 cursor-pointer pointer-events-auto"
                 onClick={handleToggle}
               />
               <Dialog.Panel as={Fragment}>
@@ -111,7 +123,7 @@ export function AssetStack<T>({
                   className="relative z-10 w-full max-w-xl bg-white dark:bg-slate-950 rounded-t-[2rem] rounded-b-none pointer-fine:rounded-[2.5rem] shadow-2xl overflow-hidden pointer-events-auto border border-slate-200/60 dark:border-white/[0.08] flex flex-col max-h-[90vh] pointer-fine:max-h-[85vh] transform-gpu will-change-[transform,opacity]"
                 >
                   {/* Modal Header */}
-                  <div className="sticky top-0 z-20 px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start shrink-0 bg-inherit">
+                  <div className="relative z-20 px-6 py-5 sm:px-8 sm:py-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start shrink-0 bg-white dark:bg-slate-950">
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold tracking-tight text-slate-950 dark:text-white flex items-center gap-3">
                         {groupIcon}
@@ -135,14 +147,7 @@ export function AssetStack<T>({
 
                   {/* Modal Body */}
                   <div className="p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 overflow-y-auto flex flex-col gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                    {items.map((item, index) => (
-                      <div key={getItemKey(item)} className="relative flex items-stretch ml-1 pl-3">
-                        <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-full opacity-60", accentClassName)} />
-                        <div className="flex-1 min-w-0">
-                          {renderItem(item, index)}
-                        </div>
-                      </div>
-                    ))}
+                    {renderedModalItems}
                   </div>
                 </motion.div>
               </Dialog.Panel>

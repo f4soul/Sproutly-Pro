@@ -8,6 +8,7 @@ interface DropdownPortalProps {
   matchWidth?: boolean;
   minWidth?: number;
   offset?: number;
+  isOpen?: boolean;
 }
 
 export function DropdownPortal({ 
@@ -16,13 +17,29 @@ export function DropdownPortal({
   align = 'left',
   matchWidth = false,
   minWidth,
-  offset = 8
+  offset = 8,
+  isOpen = true,
 }: DropdownPortalProps) {
   const [coords, setCoords] = useState<{ top: number | 'auto', bottom: number | 'auto', left: number, right: number, width: number }>({ top: -9999, bottom: 'auto', left: -9999, right: -9999, width: 0 });
   const [isMounted, setIsMounted] = useState(false);
+  const [keepMounted, setKeepMounted] = useState(isOpen);
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setKeepMounted(true);
+      return;
+    }
+    const timer = setTimeout(() => setKeepMounted(false), 150);
+    return () => clearTimeout(timer);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     let animationFrameId: number;
     let isRunning = true;
 
@@ -83,6 +100,8 @@ export function DropdownPortal({
       }
     };
 
+    updatePosition();
+
     const loop = () => {
       if (!isRunning) return;
       updatePosition();
@@ -100,9 +119,10 @@ export function DropdownPortal({
       window.removeEventListener('resize', updatePosition);
       window.removeEventListener('scroll', updatePosition, { capture: true });
     };
-  }, [targetRef, offset]);
+  }, [isOpen, targetRef, offset, align, minWidth]);
 
-  if (!isMounted || typeof document === 'undefined') return null;
+  const active = isOpen || keepMounted;
+  if (!isMounted || !active || typeof document === 'undefined') return null;
 
   return createPortal(
     <div 

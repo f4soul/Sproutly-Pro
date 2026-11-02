@@ -27,7 +27,7 @@ export const ToastContainer = ({
   }, []);
 
   useEffect(() => {
-    if (typeof document === 'undefined') return;
+    if (!needRefresh || typeof document === 'undefined') return;
     const checkModal = () => {
       setIsModalOpen(Boolean(document.querySelector('[role="dialog"]')));
     };
@@ -35,7 +35,7 @@ export const ToastContainer = ({
     const observer = new MutationObserver(checkModal);
     observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, []);
+  }, [needRefresh]);
 
   const visibleToasts = isLocked
     ? toasts.filter(toast => toast.type === 'error')
