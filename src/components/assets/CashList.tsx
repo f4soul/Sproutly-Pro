@@ -309,7 +309,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
                 const isRub = groupKey === "RUB";
 
                 return (
-                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white/95 dark:bg-slate-950/95 border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden">
+                  <div className="group relative flex flex-col justify-between p-5 rounded-[1.8rem] bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-white/[0.08] shadow-lg transition-[border-color,box-shadow] duration-200 min-h-[160px] overflow-hidden">
                     <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-cash-500/40 to-transparent opacity-0 pointer-fine:group-hover:opacity-100 transition-opacity pointer-events-none" />
               
                     <div className="absolute top-5 right-4 z-20 flex flex-col items-end gap-1.5">

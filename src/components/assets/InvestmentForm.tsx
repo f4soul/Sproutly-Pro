@@ -14,6 +14,7 @@ import { ru } from "date-fns/locale/ru";
 import { DropdownPortal } from "../ui/DropdownPortal";
 import { ClearButton } from "../ui/ClearButton";
 import { useSafeModalClose } from "../../hooks/useSafeModalClose";
+import { useModalScrollLock } from "../../lib/useModalScrollLock";
 
 const POPULAR_BROKERS = [
   "ВТБ Мои Инвестиции",
@@ -47,6 +48,8 @@ interface InvestmentFormProps {
 export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
   const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   const comboboxRef = useRef<HTMLDivElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+  useModalScrollLock(true, modalBodyRef);
   const [formData, setFormData] = useState<Partial<InvestmentAsset>>(
     assetToEdit || {
       name: "",
@@ -123,7 +126,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
   };
 
   return (
-    <Dialog as="div" className="relative z-[100]" open={true} onClose={() => safeClose()} static>
+    <Dialog as="div" className="fixed inset-0 z-[100] pointer-events-none" open={true} onClose={() => safeClose()} static __demoMode>
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -201,7 +204,7 @@ export function InvestmentForm({ onClose, assetToEdit }: InvestmentFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col shrink min-h-0 relative">
-              <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div ref={modalBodyRef} className="shrink min-h-0 overflow-y-auto overscroll-contain custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="relative w-full flex flex-col flex-shrink-0">
                 <AnimatePresence mode="wait">
                   <motion.div 

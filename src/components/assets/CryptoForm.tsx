@@ -17,6 +17,7 @@ import { StepperButton } from "../ui/StepperButton";
 import { getCryptoRates, getCachedCryptoRates, getCryptoRate, CryptoRates } from "../../services/crypto";
 import { formatCurrency } from "../../lib/taxCalculator";
 import { useSafeModalClose } from "../../hooks/useSafeModalClose";
+import { useModalScrollLock } from "../../lib/useModalScrollLock";
 
 registerLocale("ru", ru);
 
@@ -44,6 +45,8 @@ function extractLegacyCommentRate(comment?: string): { rate?: number; cleanComme
 export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   const comboboxRef = useRef<HTMLDivElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+  useModalScrollLock(true, modalBodyRef);
 
   const initialLegacy = assetToEdit && !assetToEdit.purchaseRate
     ? extractLegacyCommentRate(assetToEdit.comment)
@@ -155,7 +158,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
   };
 
   return (
-    <Dialog as="div" className="relative z-[100]" open={true} onClose={() => safeClose()} static>
+    <Dialog as="div" className="fixed inset-0 z-[100] pointer-events-none" open={true} onClose={() => safeClose()} static __demoMode>
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -191,7 +194,7 @@ export function CryptoForm({ onClose, assetToEdit }: CryptoFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col shrink min-h-0 relative">
-              <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div ref={modalBodyRef} className="shrink min-h-0 overflow-y-auto overscroll-contain custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

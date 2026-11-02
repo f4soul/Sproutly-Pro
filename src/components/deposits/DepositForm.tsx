@@ -45,6 +45,7 @@ import { DepositFormDateFields } from "./DepositFormDateFields";
 import { ClearButton } from "../ui/ClearButton";
 import { StepperButton } from "../ui/StepperButton";
 import { useSafeModalClose } from "../../hooks/useSafeModalClose";
+import { useModalScrollLock } from "../../lib/useModalScrollLock";
 
 registerLocale("ru", ru);
 
@@ -426,6 +427,8 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
     null,
   );
   const cancelDeleteBankRef = useRef<HTMLButtonElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+  useModalScrollLock(true, modalBodyRef);
 
   const confirmDeleteBank = async () => {
     if (!bankToDelete) return;
@@ -523,10 +526,11 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
   return (
     <Dialog
       as="div"
-      className="relative z-[100]"
+      className="fixed inset-0 z-[100] pointer-events-none"
       open={true}
       onClose={() => safeClose()}
       static
+      __demoMode
     >
       <motion.div
         initial={{ opacity: 0 }}
@@ -583,7 +587,7 @@ export function DepositForm({ deposit, onClose }: DepositFormProps) {
               onSubmit={handleSubmit}
               className="flex flex-col shrink min-h-0 relative"
             >
-              <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div ref={modalBodyRef} className="shrink min-h-0 overflow-y-auto overscroll-contain custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-4 sm:p-5 flex flex-col gap-4 flex-shrink-0">
               <div
                 className={cn(

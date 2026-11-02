@@ -128,11 +128,15 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
+    if (typeof document !== "undefined" && document.querySelector('[role="dialog"]')) {
+      return;
+    }
     const previous = scrollY.getPrevious() ?? 0;
-    if (latest > previous && latest > 100) {
-      setIsMobileHeaderHidden(true);
-    } else {
-      setIsMobileHeaderHidden(false);
+    const diff = latest - previous;
+    if (diff > 6 && latest > 100) {
+      setIsMobileHeaderHidden((prev) => (prev ? prev : true));
+    } else if (diff < -6 || latest <= 20) {
+      setIsMobileHeaderHidden((prev) => (prev ? false : prev));
     }
   });
 

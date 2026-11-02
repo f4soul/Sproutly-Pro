@@ -15,6 +15,7 @@ import { ru } from "date-fns/locale/ru";
 import { DropdownPortal } from "../ui/DropdownPortal";
 import { ClearButton } from "../ui/ClearButton";
 import { useSafeModalClose } from "../../hooks/useSafeModalClose";
+import { useModalScrollLock } from "../../lib/useModalScrollLock";
 
 registerLocale("ru", ru);
 
@@ -26,6 +27,8 @@ interface CashFormProps {
 export function CashForm({ onClose, assetToEdit }: CashFormProps) {
   const { safeClose, isSubmitting } = useSafeModalClose(onClose);
   const currencyButtonRef = useRef<HTMLDivElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+  useModalScrollLock(true, modalBodyRef);
   const [formData, setFormData] = useState<Partial<CashAsset>>(
     assetToEdit || {
       amount: 0,
@@ -89,7 +92,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
   };
 
   return (
-    <Dialog as="div" className="relative z-[100]" open={true} onClose={() => safeClose()} static>
+    <Dialog as="div" className="fixed inset-0 z-[100] pointer-events-none" open={true} onClose={() => safeClose()} static __demoMode>
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -125,7 +128,7 @@ export function CashForm({ onClose, assetToEdit }: CashFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col shrink min-h-0 relative">
-              <div className="shrink min-h-0 overflow-y-auto custom-scrollbar [scrollbar-gutter:stable] relative">
+              <div ref={modalBodyRef} className="shrink min-h-0 overflow-y-auto overscroll-contain custom-scrollbar [scrollbar-gutter:stable] relative">
                 <div className="p-6 sm:p-8 flex flex-col gap-6 flex-shrink-0">
                 <div className="space-y-2 relative z-20">
                 <label className="h-6 flex items-center text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">

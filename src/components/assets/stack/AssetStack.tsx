@@ -1,8 +1,9 @@
-import React, { Fragment, useState, useEffect, useMemo } from 'react';
+import React, { Fragment, useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Dialog } from '@headlessui/react';
 import { X } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+import { useModalScrollLock } from '../../../lib/useModalScrollLock';
 
 interface AssetStackProps<T> {
   items: T[];
@@ -31,6 +32,9 @@ export function AssetStack<T>({
 }: AssetStackProps<T>) {
   const [internalExpanded, setInternalExpanded] = useState(false);
   const expanded = isExpanded !== undefined ? isExpanded : internalExpanded;
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+
+  useModalScrollLock(expanded, modalBodyRef);
 
   const handleToggle = () => {
     if (onToggle) {
@@ -47,7 +51,7 @@ export function AssetStack<T>({
   }, [items.length, internalExpanded]);
 
   const renderedModalItems = useMemo(() => {
-    if (!expanded || items.length <= 1) return null;
+    if (items.length <= 1) return null;
     return items.map((item, index) => (
       <div key={getItemKey(item)} className="relative flex items-stretch ml-1 pl-3">
         <div className={cn("absolute left-0 top-3 bottom-3 w-[3px] rounded-full opacity-60", accentClassName)} />
@@ -56,7 +60,7 @@ export function AssetStack<T>({
         </div>
       </div>
     ));
-  }, [expanded, items, getItemKey, accentClassName, renderItem]);
+  }, [items, getItemKey, accentClassName, renderItem]);
 
   if (items.length === 1) {
     return (
@@ -71,7 +75,7 @@ export function AssetStack<T>({
       <div className="w-full">
         {/* Aggregate Card / Group Header */}
         <div 
-          className="relative w-full cursor-pointer group isolate z-20 pointer-fine:hover:-translate-y-1 transition-transform duration-300"
+          className="relative w-full cursor-pointer group isolate z-20 pointer-fine:hover:-translate-y-1 pointer-fine:transition-transform pointer-fine:duration-300"
           onClick={handleToggle}
           role="button"
           tabIndex={0}
@@ -90,12 +94,12 @@ export function AssetStack<T>({
           {/* Peeking cards for stack effect */}
           {items.length > 1 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/75 dark:bg-slate-900/80 border border-slate-200/50 dark:border-white/[0.08] shadow-sm transition-transform duration-300 z-[19] translate-y-2 scale-[0.96] pointer-fine:group-hover:translate-y-2.5"
+              className="absolute inset-x-0 bottom-0 h-12 pointer-events-none rounded-[1.8rem] bg-white/75 dark:bg-slate-900/80 border border-slate-200/50 dark:border-white/[0.08] shadow-sm pointer-fine:transition-transform pointer-fine:duration-300 z-[19] translate-y-2 scale-[0.96] pointer-fine:group-hover:translate-y-2.5"
             />
           )}
           {items.length > 2 && (
             <div 
-              className="absolute top-0 left-0 w-full h-full pointer-events-none rounded-[1.8rem] bg-white/55 dark:bg-slate-900/60 border border-slate-200/30 dark:border-white/[0.08] shadow-sm transition-transform duration-300 z-[18] translate-y-4 scale-[0.92] pointer-fine:group-hover:translate-y-5"
+              className="absolute inset-x-0 bottom-0 h-12 pointer-events-none rounded-[1.8rem] bg-white/55 dark:bg-slate-900/60 border border-slate-200/30 dark:border-white/[0.08] shadow-sm pointer-fine:transition-transform pointer-fine:duration-300 z-[18] translate-y-4 scale-[0.92] pointer-fine:group-hover:translate-y-5"
             />
           )}
         </div>
@@ -104,7 +108,7 @@ export function AssetStack<T>({
       {/* Expanded Modal */}
       <AnimatePresence>
         {expanded && (
-          <Dialog as="div" className="relative z-[100]" open={true} onClose={handleToggle} static>
+          <Dialog as="div" className="fixed inset-0 z-[100] pointer-events-none" open={true} onClose={handleToggle} static __demoMode>
             <div className="fixed inset-y-0 right-0 left-0 md:left-68 flex items-end pointer-fine:items-center justify-center p-0 pointer-fine:p-4 pointer-events-none">
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -146,7 +150,10 @@ export function AssetStack<T>({
                   </div>
 
                   {/* Modal Body */}
-                  <div className="p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 overflow-y-auto flex flex-col gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <div
+                    ref={modalBodyRef}
+                    className="p-4 sm:p-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] sm:pb-6 overflow-y-auto overscroll-contain flex flex-col gap-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                  >
                     {renderedModalItems}
                   </div>
                 </motion.div>
@@ -158,4 +165,5 @@ export function AssetStack<T>({
     </>
   );
 }
+
 
