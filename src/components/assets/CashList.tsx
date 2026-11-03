@@ -641,7 +641,7 @@ export function CashList({ cashAssets, isPrivate = false }: CashListProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 md:left-68 bg-slate-950/40 dark:bg-slate-950/75"
+              className="fixed inset-0 md:left-68 bg-slate-950/60 dark:bg-slate-950/85 backdrop-blur-sm"
               aria-hidden="true"
             />
             <div className="fixed inset-0 md:left-68 flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-none">

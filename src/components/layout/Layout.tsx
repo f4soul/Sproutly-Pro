@@ -465,6 +465,16 @@ export function Layout({ children, activeTab, onTabChange, theme, isLocked = fal
         </div>
       </aside>
 
+      {/* Mobile Status Bar Shield: prevents scrolled page content from colliding with iOS clock, battery, and Dynamic Island */}
+      <div
+        className={cn(
+          "md:hidden fixed top-0 inset-x-0 z-[55] pointer-events-none transition-colors duration-200",
+          theme === 'dark' ? "bg-slate-950" : "bg-slate-50"
+        )}
+        style={{ height: 'calc(env(safe-area-inset-top, 0px) + 12px)' }}
+        aria-hidden="true"
+      />
+
       {/* Header for Mobile */}
       <div className="md:hidden">
         <motion.header

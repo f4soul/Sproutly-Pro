@@ -115,7 +115,7 @@ export function AssetStack<T>({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="absolute inset-0 bg-slate-950/40 dark:bg-slate-950/75 cursor-pointer pointer-events-auto"
+                className="fixed inset-0 md:left-68 bg-slate-950/60 dark:bg-slate-950/90 cursor-pointer pointer-events-auto"
                 onClick={handleToggle}
               />
               <Dialog.Panel as={Fragment}>
